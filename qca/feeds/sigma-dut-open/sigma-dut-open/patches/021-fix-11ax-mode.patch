@@ -1,0 +1,37 @@
+--- a/ap.c
++++ b/ap.c
+@@ -767,7 +767,7 @@ static enum sigma_cmd_result cmd_ap_set_
+ 			free(str);
+ 			return STATUS_SENT;
+ 		}
+-		if ((dut->ap_mode == AP_11ac || dut->ap_mode == AP_11ax)
++		if ((dut->ap_mode == AP_11ac || (dut->ap_mode == AP_11ax && dut->use_5g))
+ 		     && dut->ap_80plus80 != 1)
+ 			dut->ap_chwidth = AP_80;
+ 
+@@ -779,7 +779,7 @@ static enum sigma_cmd_result cmd_ap_set_
+ 				free(str);
+ 				return STATUS_SENT;
+ 			}
+-			if (dut->ap_mode_1 == AP_11ac || dut->ap_mode == AP_11ax)
++			if (dut->ap_mode_1 == AP_11ac || (dut->ap_mode == AP_11ax && dut->use_5g))
+ 				dut->ap_chwidth_1 = AP_80;
+ 			dut->ap_is_dual = 1;
+ 		}
+@@ -7706,6 +7706,7 @@ enum sigma_cmd_result cmd_ap_config_comm
+ 		fprintf(f, "ieee80211n=1\n");
+ 		if (dut->ap_mode == AP_11ax)
+ 			fprintf(f, "ieee80211ax=1\n");
++
+ 		if (dut->ap_mode == AP_11ng &&
+ 		    (dut->ap_chwidth == AP_40 ||
+ 		     (dut->ap_chwidth == AP_AUTO &&
+@@ -7778,7 +7779,7 @@ enum sigma_cmd_result cmd_ap_config_comm
+ 	if ((drv == DRIVER_MAC80211 || drv == DRIVER_QNXNTO ||
+ 	     drv == DRIVER_LINUX_WCN) &&
+ 	    (dut->ap_mode == AP_11ac || dut->ap_mode == AP_11na ||
+-	     (dut->ap_mode == AP_11ax && dut->ap_channel >= 36))) {
++	     (dut->ap_mode == AP_11ax && dut->use_5g))) {
+ 		if (dut->ap_countrycode[0])
+ 			fprintf(f, "country_code=%s\n", dut->ap_countrycode);
+                 else

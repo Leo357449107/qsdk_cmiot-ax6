@@ -1,0 +1,890 @@
+From 353f9b94d5f8a9a307ae80d62cd5fb503f126563 Mon Sep 17 00:00:00 2001
+From: John Crispin <john@phrozen.org>
+Date: Wed, 3 Jun 2020 16:32:11 +0200
+Subject: [PATCH 1/7] multiple_bssid: add the config file
+
+This patch adds a new config option to enable this feature.
+
+Signed-off-by: John Crispin <john@phrozen.org>
+
+---
+ hostapd/config_file.c | 2 ++
+ src/ap/ap_config.h    | 2 ++
+ 2 files changed, 4 insertions(+)
+
+diff --git a/hostapd/config_file.c b/hostapd/config_file.c
+index a8b152a..6c87d60 100644
+--- a/hostapd/config_file.c
++++ b/hostapd/config_file.c
+@@ -4663,6 +4663,8 @@ static int hostapd_config_fill(struct hostapd_config *conf,
+ 		}
+ 		bss->mka_psk_set |= MKA_PSK_SET_CKN;
+ #endif /* CONFIG_MACSEC */
++	} else if (os_strcmp(buf, "multiple_bssid") == 0) {
++		conf->multiple_bssid = atoi(pos);
+ 	} else if (os_strcmp(buf, "disable_11n") == 0) {
+ 		bss->disable_11n = !!atoi(pos);
+ 	} else if (os_strcmp(buf, "disable_11ac") == 0) {
+diff --git a/src/ap/ap_config.h b/src/ap/ap_config.h
+index 59d4646..7aa4abf 100644
+--- a/src/ap/ap_config.h
++++ b/src/ap/ap_config.h
+@@ -1015,6 +1015,8 @@ struct hostapd_config {
+ 	u8 vht_oper_centr_freq_seg1_idx;
+ 	u8 ht40_plus_minus_allowed;
+ 
++	u8 multiple_bssid;
++
+ 	/* Use driver-generated interface addresses when adding multiple BSSs */
+ 	u8 use_driver_iface_addr;
+ 
+-- 
+2.7.4
+
+From 48631921e18420675715c6d84f17f127f159f3b3 Mon Sep 17 00:00:00 2001
+From: John Crispin <john@phrozen.org>
+Date: Mon, 24 Aug 2020 22:50:54 -0700
+Subject: [PATCH 2/7] multiple_bssid: add 2 new helper functions
+
+Wehn dealing with multiple bssid support we need to have a means to get
+a
+BSSs index and hostapd_data of the transmitting interface.
+
+Signed-off-by: John Crispin <john@phrozen.org>
+---
+ src/ap/hostapd.c | 20 ++++++++++++++++++++
+ src/ap/hostapd.h |  2 ++
+ 2 files changed, 22 insertions(+)
+
+diff --git a/src/ap/hostapd.c b/src/ap/hostapd.c
+index 3f3731b..1a4a6c2 100644
+--- a/src/ap/hostapd.c
++++ b/src/ap/hostapd.c
+@@ -87,6 +87,26 @@ int hostapd_for_each_interface(struct hapd_interfaces *interfaces,
+ }
+ 
+ 
++int hostapd_get_bss_index(struct hostapd_data *hapd)
++{
++	size_t i;
++
++	for (i = 1; i < hapd->iface->num_bss; i++)
++		if (hapd->iface->bss[i] == hapd)
++			return i;
++	return 0;
++}
++
++
++struct hostapd_data * hostapd_get_primary_bss(struct hostapd_data *hapd)
++{
++	if (hapd->iconf->multiple_bssid)
++		return hapd->iface->bss[0];
++
++	return hapd;
++}
++
++
+ void hostapd_reconfig_encryption(struct hostapd_data *hapd)
+ {
+ 	if (hapd->wpa_auth)
+diff --git a/src/ap/hostapd.h b/src/ap/hostapd.h
+index 0a422b6..f040035 100644
+--- a/src/ap/hostapd.h
++++ b/src/ap/hostapd.h
+@@ -604,6 +604,8 @@ struct hostapd_iface {
+ int hostapd_for_each_interface(struct hapd_interfaces *interfaces,
+ 			       int (*cb)(struct hostapd_iface *iface,
+ 					 void *ctx), void *ctx);
++int hostapd_get_bss_index(struct hostapd_data *hapd);
++struct hostapd_data * hostapd_get_primary_bss(struct hostapd_data *hapd);
+ int hostapd_reload_config(struct hostapd_iface *iface);
+ void hostapd_reconfig_encryption(struct hostapd_data *hapd);
+ struct hostapd_data *
+-- 
+2.7.4
+
+From 30f1951fa7c548d81b5662bda3a36e876f543245 Mon Sep 17 00:00:00 2001
+From: John Crispin <john@phrozen.org>
+Date: Mon, 24 Aug 2020 22:57:58 -0700
+Subject: [PATCH 3/7] multiple_bssid: add support for non/transmitting mode
+
+When starting the non-transmitting BSSs we need to let if_add() known what
+the bss_index and bss_parent are.
+
+Signed-off-by: John Crispin <john@phrozen.org>
+---
+ src/ap/ap_drv_ops.c       |  8 +++++---
+ src/ap/ap_drv_ops.h       |  3 ++-
+ src/ap/beacon.c           |  4 ++++
+ src/ap/hostapd.c          |  9 ++++++++-
+ src/drivers/driver.h      | 10 +++++++++-
+ wpa_supplicant/driver_i.h |  2 +-
+ 6 files changed, 29 insertions(+), 7 deletions(-)
+
+diff --git a/src/ap/ap_drv_ops.c b/src/ap/ap_drv_ops.c
+index d1642d7..08bd81b 100644
+--- a/src/ap/ap_drv_ops.c
++++ b/src/ap/ap_drv_ops.c
+@@ -321,7 +321,7 @@ int hostapd_vlan_if_add(struct hostapd_data *hapd, const char *ifname)
+ 	char force_ifname[IFNAMSIZ];
+ 	u8 if_addr[ETH_ALEN];
+ 	return hostapd_if_add(hapd, WPA_IF_AP_VLAN, ifname, hapd->own_addr,
+-			      NULL, NULL, force_ifname, if_addr, NULL, 0);
++			      NULL, NULL, force_ifname, if_addr, NULL, 0, 0, NULL);
+ }
+ 
+ 
+@@ -497,13 +497,15 @@ int hostapd_set_ssid(struct hostapd_data *hapd, const u8 *buf, size_t len)
+ int hostapd_if_add(struct hostapd_data *hapd, enum wpa_driver_if_type type,
+ 		   const char *ifname, const u8 *addr, void *bss_ctx,
+ 		   void **drv_priv, char *force_ifname, u8 *if_addr,
+-		   const char *bridge, int use_existing)
++		   const char *bridge, int use_existing,
++		   int multi_bssid_mode, const char *multi_bssid_parent)
+ {
+ 	if (hapd->driver == NULL || hapd->driver->if_add == NULL)
+ 		return -1;
+ 	return hapd->driver->if_add(hapd->drv_priv, type, ifname, addr,
+ 				    bss_ctx, drv_priv, force_ifname, if_addr,
+-				    bridge, use_existing, 1);
++				    bridge, use_existing, 1,
++				    multi_bssid_mode, multi_bssid_parent);
+ }
+ 
+ 
+diff --git a/src/ap/ap_drv_ops.h b/src/ap/ap_drv_ops.h
+index 582ab61..c97daec 100644
+--- a/src/ap/ap_drv_ops.h
++++ b/src/ap/ap_drv_ops.h
+@@ -54,7 +54,8 @@ int hostapd_set_ssid(struct hostapd_data *hapd, const u8 *buf, size_t len);
+ int hostapd_if_add(struct hostapd_data *hapd, enum wpa_driver_if_type type,
+ 		   const char *ifname, const u8 *addr, void *bss_ctx,
+ 		   void **drv_priv, char *force_ifname, u8 *if_addr,
+-		   const char *bridge, int use_existing);
++		   const char *bridge, int use_existin,
++		   int multi_bssid_mode, const char *multi_bssid_parent);
+ int hostapd_if_remove(struct hostapd_data *hapd, enum wpa_driver_if_type type,
+ 		      const char *ifname);
+ int hostapd_set_ieee8021x(struct hostapd_data *hapd,
+diff --git a/src/ap/beacon.c b/src/ap/beacon.c
+index 510670d..05fefd3 100644
+--- a/src/ap/beacon.c
++++ b/src/ap/beacon.c
+@@ -1807,6 +1807,10 @@ int ieee802_11_set_beacon(struct hostapd_data *hapd)
+ 	params.unsol_bcast_probe_resp_tmpl =
+ 		hostapd_unsol_bcast_probe_resp(hapd, &params);
+ #endif /* CONFIG_IEEE80211AX */
++        if (hapd->iconf->multiple_bssid) {
++		params.multiple_bssid_index = hostapd_get_bss_index(hapd);
++		params.multiple_bssid_count = iface->num_bss;
++	}
+ 	hapd->reenable_beacon = 0;
+ #ifdef CONFIG_SAE
+ 	params.sae_pwe = hapd->conf->sae_pwe;
+diff --git a/src/ap/hostapd.c b/src/ap/hostapd.c
+index 1a4a6c2..a4b1635 100644
+--- a/src/ap/hostapd.c
++++ b/src/ap/hostapd.c
+@@ -1152,6 +1152,13 @@ static int hostapd_setup_bss(struct hostapd_data *hapd, int first)
+ 
+ 	if (!first || first == -1) {
+ 		u8 *addr = hapd->own_addr;
++		int multiple_bssid_non_transmitted = false;
++		const char *multiple_bssid_parent = NULL;
++
++		if (hapd->iconf->multiple_bssid) {
++			multiple_bssid_non_transmitted = true;
++			multiple_bssid_parent = hapd->iface->bss[0]->conf->iface;
++		}
+ 
+ 		if (!is_zero_ether_addr(conf->bssid)) {
+ 			/* Allocate the configured BSSID. */
+@@ -1179,7 +1186,7 @@ static int hostapd_setup_bss(struct hostapd_data *hapd, int first)
+ 				   conf->iface, addr, hapd,
+ 				   &hapd->drv_priv, force_ifname, if_addr,
+ 				   conf->bridge[0] ? conf->bridge : NULL,
+-				   first == -1)) {
++				   first == -1, multiple_bssid_non_transmitted, multiple_bssid_parent)) {
+ 			wpa_printf(MSG_ERROR, "Failed to add BSS (BSSID="
+ 				   MACSTR ")", MAC2STR(hapd->own_addr));
+ 			hapd->interface_added = 0;
+diff --git a/src/drivers/driver.h b/src/drivers/driver.h
+index 8ea88b1..e427007 100644
+--- a/src/drivers/driver.h
++++ b/src/drivers/driver.h
+@@ -1582,6 +1582,13 @@ struct wpa_driver_ap_params {
+ 	 * Unsolicited broadcast Probe Response template length
+ 	 */
+ 	size_t unsol_bcast_probe_resp_tmpl_len;
++
++	/**
++	 * multiple_bssid_mode - The multi bssid mode
++	 */
++	int multiple_bssid_mode;
++	unsigned int multiple_bssid_index;
++	unsigned int multiple_bssid_count;
+ };
+ 
+ struct wpa_driver_mesh_bss_params {
+@@ -3344,7 +3351,8 @@ struct wpa_driver_ops {
+ 	int (*if_add)(void *priv, enum wpa_driver_if_type type,
+ 		      const char *ifname, const u8 *addr, void *bss_ctx,
+ 		      void **drv_priv, char *force_ifname, u8 *if_addr,
+-		      const char *bridge, int use_existing, int setup_ap);
++		      const char *bridge, int use_existing, int setup_ap,
++		      int multi_bssid_mode, const char *multi_bssid_parent);
+ 
+ 	/**
+ 	 * if_remove - Remove a virtual interface
+diff --git a/wpa_supplicant/driver_i.h b/wpa_supplicant/driver_i.h
+index e97af75..73d34ea 100644
+--- a/wpa_supplicant/driver_i.h
++++ b/wpa_supplicant/driver_i.h
+@@ -444,7 +444,7 @@ static inline int wpa_drv_if_add(struct wpa_supplicant *wpa_s,
+ 	if (wpa_s->driver->if_add)
+ 		return wpa_s->driver->if_add(wpa_s->drv_priv, type, ifname,
+ 					     addr, bss_ctx, NULL, force_ifname,
+-					     if_addr, bridge, 0, 0);
++					     if_addr, bridge, 0, 0, 0, NULL);
+ 	return -1;
+ }
+ 
+-- 
+2.7.4
+
+From 1b43dccf472a6d3067831cab41c7d3f8860e06db Mon Sep 17 00:00:00 2001
+From: John Crispin <john@phrozen.org>
+Date: Mon, 24 Aug 2020 23:07:38 -0700
+Subject: [PATCH 4/7] multiple_bssid: add nl80211 support
+
+Add the code required to send the multiple bssid setup info to the kernel.
+
+Signed-off-by: John Crispin <john@phrozen.org>
+---
+ src/drivers/driver.h                 | 34 ++++++++++++++++++--
+ src/drivers/driver_nl80211.c         | 60 ++++++++++++++++++++++++++++++------
+ src/drivers/driver_nl80211.h         |  4 ++-
+ src/drivers/driver_nl80211_monitor.c |  2 +-
+ src/drivers/nl80211_copy.h           | 21 +++++++++++++
+ 5 files changed, 108 insertions(+), 13 deletions(-)
+
+diff --git a/src/drivers/driver.h b/src/drivers/driver.h
+index e427007..50324f9 100644
+--- a/src/drivers/driver.h
++++ b/src/drivers/driver.h
+@@ -1226,6 +1226,8 @@ struct wowlan_triggers {
+ 	u8 rfkill_release;
+ };
+ 
++#define MULTIPLE_BSSID_IE_MAX	8
++
+ struct wpa_driver_ap_params {
+ 	/**
+ 	 * head - Beacon head from IEEE 802.11 header to IEs before TIM IE
+@@ -1584,11 +1586,39 @@ struct wpa_driver_ap_params {
+ 	size_t unsol_bcast_probe_resp_tmpl_len;
+ 
+ 	/**
+-	 * multiple_bssid_mode - The multi bssid mode
++	 * multiple_bssid_non_transmitted - Is this a non transmitted BSS
++	 */
++	int multiple_bssid_non_transmitted;
++
++	/**
++	 * multiple_bssid_index - The index of this BSS in the group
+ 	 */
+-	int multiple_bssid_mode;
+ 	unsigned int multiple_bssid_index;
++
++	/**
++	 * multiple_bssid_count - The number of BSSs in the group
++	 */
+ 	unsigned int multiple_bssid_count;
++
++	/**
++	 * multiple_bssid_ies - This buffer contains all of the IEs
++	 */
++	u8 *multiple_bssid_ies;
++
++	/**
++	 * multiple_bssid_ie_len - The IE buffer length
++	 */
++	int multiple_bssid_ie_len;
++
++	/**
++	 * multiple_bssid_ie_offsets - The offsets to the IEs inside multiple_bssid_ies
++	 */
++	u8 *multiple_bssid_ie_offsets[MULTIPLE_BSSID_IE_MAX];
++
++	/**
++	 * multiple_bssid_ie_count - The the number of offsets inside multiple_bssid_ie_offsets
++	 */
++	int multiple_bssid_ie_count;
+ };
+ 
+ struct wpa_driver_mesh_bss_params {
+diff --git a/src/drivers/driver_nl80211.c b/src/drivers/driver_nl80211.c
+index f4c6461..41962eb 100644
+--- a/src/drivers/driver_nl80211.c
++++ b/src/drivers/driver_nl80211.c
+@@ -4763,6 +4763,27 @@ static int wpa_driver_nl80211_set_ap(void *priv,
+ 		goto fail;
+ #endif /* CONFIG_FILS */
+ 
++	if (params->multiple_bssid_count) {
++		nla_put_u8(msg, NL80211_ATTR_MULTIPLE_BSSID_INDEX,
++			   params->multiple_bssid_index);
++		nla_put_u8(msg, NL80211_ATTR_MULTIPLE_BSSID_COUNT,
++			   params->multiple_bssid_count);
++	}
++
++	if (params->multiple_bssid_ie_len) {
++		struct nlattr *ies = nla_nest_start(msg, NL80211_ATTR_MULTIPLE_BSSID_IES);
++		u8 **offs = params->multiple_bssid_ie_offsets;
++		int i;
++
++		for (i = 0; i < params->multiple_bssid_ie_count - 1; i++)
++			nla_put(msg, i + 1,
++				offs[i + 1] - offs[i], offs[i]);
++		nla_put(msg, i + 1,
++			*offs + params->multiple_bssid_ie_len - offs[i],
++			offs[i]);
++		nla_nest_end(msg, ies);
++	}
++
+ 	ret = send_and_recv_msgs_owner(drv, msg, get_connect_handle(bss), 1,
+ 				       NULL, NULL, NULL, NULL);
+ 	if (ret) {
+@@ -5362,13 +5383,13 @@ const char * nl80211_iftype_str(enum nl80211_iftype mode)
+ 	}
+ }
+ 
+-
+ static int nl80211_create_iface_once(struct wpa_driver_nl80211_data *drv,
+ 				     const char *ifname,
+ 				     enum nl80211_iftype iftype,
+ 				     const u8 *addr, int wds,
+ 				     int (*handler)(struct nl_msg *, void *),
+-				     void *arg)
++				     void *arg, int multiple_bssid_non_transmitted,
++				     const char *multiple_bssid_parent)
+ {
+ 	struct nl_msg *msg;
+ 	int ifidx;
+@@ -5397,6 +5418,17 @@ static int nl80211_create_iface_once(struct wpa_driver_nl80211_data *drv,
+ 			goto fail;
+ 	}
+ 
++	if (multiple_bssid_non_transmitted) {
++		if (!multiple_bssid_parent)
++			goto fail;
++		ifidx = if_nametoindex(multiple_bssid_parent);
++		if (ifidx <= 0)
++			goto fail;
++		nla_put_flag(msg, NL80211_ATTR_MULTIPLE_BSSID_NON_TRANSMITTING);
++		nla_put_u32(msg, NL80211_ATTR_MULTIPLE_BSSID_PARENT,
++			    ifidx);
++	}
++
+ 	/*
+ 	 * Tell cfg80211 that the interface belongs to the socket that created
+ 	 * it, and the interface should be deleted when the socket is closed.
+@@ -5454,12 +5486,15 @@ int nl80211_create_iface(struct wpa_driver_nl80211_data *drv,
+ 			 const char *ifname, enum nl80211_iftype iftype,
+ 			 const u8 *addr, int wds,
+ 			 int (*handler)(struct nl_msg *, void *),
+-			 void *arg, int use_existing)
++			 void *arg, int use_existing,
++			 int multiple_bssid_non_transmitted,
++			 const char *multiple_bssid_parent)
+ {
+ 	int ret;
+ 
+ 	ret = nl80211_create_iface_once(drv, ifname, iftype, addr, wds, handler,
+-					arg);
++					arg, multiple_bssid_non_transmitted,
++					multiple_bssid_parent);
+ 
+ 	/* if error occurred and interface exists already */
+ 	if (ret == -ENFILE && if_nametoindex(ifname)) {
+@@ -5485,7 +5520,9 @@ int nl80211_create_iface(struct wpa_driver_nl80211_data *drv,
+ 
+ 		/* Try to create the interface again */
+ 		ret = nl80211_create_iface_once(drv, ifname, iftype, addr,
+-						wds, handler, arg);
++						wds, handler, arg,
++						multiple_bssid_non_transmitted,
++						multiple_bssid_parent);
+ 	}
+ 
+ 	if (ret >= 0 && is_p2p_net_interface(iftype)) {
+@@ -7491,7 +7528,7 @@ static int i802_set_wds_sta(void *priv, const u8 *addr, int aid, int val,
+ 		if (!if_nametoindex(name)) {
+ 			if (nl80211_create_iface(drv, name,
+ 						 NL80211_IFTYPE_AP_VLAN,
+-						 bss->addr, 1, NULL, NULL, 0) <
++						 bss->addr, 1, NULL, NULL, 0, 0, NULL) <
+ 			    0)
+ 				return -1;
+ 			if (bridge_ifname &&
+@@ -7838,7 +7875,9 @@ static int wpa_driver_nl80211_if_add(void *priv, enum wpa_driver_if_type type,
+ 				     void *bss_ctx, void **drv_priv,
+ 				     char *force_ifname, u8 *if_addr,
+ 				     const char *bridge, int use_existing,
+-				     int setup_ap)
++				     int setup_ap,
++				     int multiple_bssid_non_transmitted,
++				     const char *multiple_bssid_parent)
+ {
+ 	enum nl80211_iftype nlmode;
+ 	struct i802_bss *bss = priv;
+@@ -7855,7 +7894,8 @@ static int wpa_driver_nl80211_if_add(void *priv, enum wpa_driver_if_type type,
+ 		os_memset(&p2pdev_info, 0, sizeof(p2pdev_info));
+ 		ifidx = nl80211_create_iface(drv, ifname, nlmode, addr,
+ 					     0, nl80211_wdev_handler,
+-					     &p2pdev_info, use_existing);
++					     &p2pdev_info, use_existing,
++					     0, NULL);
+ 		if (!p2pdev_info.wdev_id_set || ifidx != 0) {
+ 			wpa_printf(MSG_ERROR, "nl80211: Failed to create a P2P Device interface %s",
+ 				   ifname);
+@@ -7871,7 +7911,9 @@ static int wpa_driver_nl80211_if_add(void *priv, enum wpa_driver_if_type type,
+ 			   (long long unsigned int) p2pdev_info.wdev_id);
+ 	} else {
+ 		ifidx = nl80211_create_iface(drv, ifname, nlmode, addr,
+-					     0, NULL, NULL, use_existing);
++					     0, NULL, NULL, use_existing,
++					     multiple_bssid_non_transmitted,
++					     multiple_bssid_parent);
+ 		if (use_existing && ifidx == -ENFILE) {
+ 			added = 0;
+ 			ifidx = if_nametoindex(ifname);
+diff --git a/src/drivers/driver_nl80211.h b/src/drivers/driver_nl80211.h
+index 940d82c..389767d 100644
+--- a/src/drivers/driver_nl80211.h
++++ b/src/drivers/driver_nl80211.h
+@@ -251,7 +251,9 @@ int nl80211_create_iface(struct wpa_driver_nl80211_data *drv,
+ 			 const char *ifname, enum nl80211_iftype iftype,
+ 			 const u8 *addr, int wds,
+ 			 int (*handler)(struct nl_msg *, void *),
+-			 void *arg, int use_existing);
++			 void *arg, int use_existing,
++			 int multi_bssid_mode,
++			 const char *multi_bssid_parent);
+ void nl80211_remove_iface(struct wpa_driver_nl80211_data *drv, int ifidx);
+ unsigned int nl80211_get_assoc_freq(struct wpa_driver_nl80211_data *drv);
+ int nl80211_get_assoc_ssid(struct wpa_driver_nl80211_data *drv, u8 *ssid);
+diff --git a/src/drivers/driver_nl80211_monitor.c b/src/drivers/driver_nl80211_monitor.c
+index 7ff55f1..ac935d8 100644
+--- a/src/drivers/driver_nl80211_monitor.c
++++ b/src/drivers/driver_nl80211_monitor.c
+@@ -381,7 +381,7 @@ int nl80211_create_monitor_interface(struct wpa_driver_nl80211_data *drv)
+ 
+ 	drv->monitor_ifidx =
+ 		nl80211_create_iface(drv, buf, NL80211_IFTYPE_MONITOR, NULL,
+-				     0, NULL, NULL, 0);
++				     0, NULL, NULL, 0, 0, NULL);
+ 
+ 	if (drv->monitor_ifidx == -EOPNOTSUPP) {
+ 		/*
+diff --git a/src/drivers/nl80211_copy.h b/src/drivers/nl80211_copy.h
+index a4a6119..7c386fd 100644
+--- a/src/drivers/nl80211_copy.h
++++ b/src/drivers/nl80211_copy.h
+@@ -2566,6 +2566,20 @@ enum nl80211_commands {
+  * @NL80211_ATTR_HE_MUEDCA_PARAMS: MU-EDCA AC parameters for the
+ 	NL80211_CMD_UPDATE_HE_MUEDCA_PARAMS command.
+  *
++ * @NL80211_ATTR_MULTIPLE_BSSID_NON_TRANSMITTING: Set the Non-Transmitted flag for this
++ *	BSSIDs beacon.
++ *
++ * @NL80211_ATTR_MULTIPLE_BSSID_PARENT: If this is a Non-Transmitted BSSID, define
++ *	the parent (transmitting) interface.
++ *
++ * @NL80211_ATTR_MULTIPLE_BSSID_INDEX: The index of this BSS inside the multi bssid
++ *	element.
++ *
++ * @NL80211_ATTR_MULTIPLE_BSSID_COUNT: The number of BSSs inside the multi bssid element.
++ *
++ * @NL80211_ATTR_MULTIPLE_BSSID_IES: The Elements that describe our multiple BSS group.
++ * these get passed separately as the kernel might need to split them up for EMA VAP.
++ *
+  * @NUM_NL80211_ATTR: total number of nl80211_attrs available
+  * @NL80211_ATTR_MAX: highest attribute number currently defined
+  * @__NL80211_ATTR_AFTER_LAST: internal use
+@@ -3064,6 +3078,13 @@ enum nl80211_attrs {
+ 	NL80211_ATTR_DISABLE_HE,
+ 
+ 	NL80211_ATTR_HE_MUEDCA_PARAMS,
++
++	NL80211_ATTR_MULTIPLE_BSSID_NON_TRANSMITTING,
++	NL80211_ATTR_MULTIPLE_BSSID_PARENT,
++	NL80211_ATTR_MULTIPLE_BSSID_INDEX,
++	NL80211_ATTR_MULTIPLE_BSSID_COUNT,
++	NL80211_ATTR_MULTIPLE_BSSID_IES,
++
+ 	/* add attributes here, update the policy in nl80211.c */
+ 
+ 	__NL80211_ATTR_AFTER_LAST,
+-- 
+2.7.4
+
+From dab7f91edbc5b0207a02656ccb55845f746c1c9f Mon Sep 17 00:00:00 2001
+From: John Crispin <john@phrozen.org>
+Date: Wed, 3 Jun 2020 17:04:01 +0200
+Subject: [PATCH 5/7] multiple_bssid: add the new IE
+
+For multiple bssid to work we need to add a new IE to the beacon and probe
+responses that includes the information on the non-transmitting BSSs. If
+all the information does not fit into the 255 bytes, we need to split it
+up over multiple IEs of the same type.
+
+Signed-off-by: John Crispin <john@phrozen.org>
+Signed-off-by: Aloka Dixit <alokad@codeaurora.org>
+---
+ src/ap/ieee802_11.c          | 114 +++++++++++++++++++++++++++++++++++++++++++
+ src/ap/ieee802_11.h          |   6 ++-
+ src/common/ieee802_11_defs.h |   2 +
+ 3 files changed, 121 insertions(+), 1 deletion(-)
+
+diff --git a/src/ap/ieee802_11.c b/src/ap/ieee802_11.c
+index e821066..98968f6 100644
+--- a/src/ap/ieee802_11.c
++++ b/src/ap/ieee802_11.c
+@@ -6,6 +6,7 @@
+  * See README for more details.
+  */
+ 
++#include <math.h>
+ #include "utils/includes.h"
+ 
+ #ifndef CONFIG_NATIVE_WINDOWS
+@@ -6961,4 +6962,117 @@ u8 * hostapd_eid_wb_chsw_wrapper(struct hostapd_data *hapd, u8 *eid)
+ 	return eid;
+ }
+ 
++
++static int hostapd_eid_multiple_bssid_chunk_len(struct hostapd_data *hapd,
++						int *count)
++{
++	/* ID + size + count */
++	int i, len = 3;
++
++	for (i = *count; i < hapd->iface->num_bss; i++) {
++		struct hostapd_data *bss = hapd->iface->bss[i];
++		/* 11 mbssid + ssid len + 32 RSN */
++		int ssid_len = 11 + bss->conf->ssid.ssid_len + 32;
++
++		if (len + ssid_len > 255) {
++			goto multiple_bssid_too_big;
++		}
++		len += ssid_len;
++	}
++
++multiple_bssid_too_big:
++	*count = i;
++
++	return len;
++}
++
++
++int hostapd_eid_multiple_bssid_len(struct hostapd_data *hapd)
++{
++	int count = 1, len = 0;
++
++	while (count < hapd->iface->num_bss)
++		len += hostapd_eid_multiple_bssid_chunk_len(hapd, &count);
++
++	return len;
++}
++
++
++static u8 * hostapd_eid_multiple_bssid_chunk(struct hostapd_data *hapd,
++					     u8 *eid, u8 *end, int *count,
++					     u8 is_beacon)
++{
++	u8 *size_offset, *num_offset, num = 0;
++	int i;
++
++	*eid++ = WLAN_EID_MULTIPLE_BSSID;
++	size_offset = eid++;
++	num_offset = eid++;
++
++	for (i = *count; i < hapd->iface->num_bss; i++) {
++		struct hostapd_data *bss = hapd->iface->bss[i];
++		u8 *bss_size_offset, *index_size_offset, *pos = eid;
++		u16 capab_info;
++
++		*eid++ = WLAN_EID_SUBELEMENT_NONTRANSMITTED_BSSID_PROFILE;
++		bss_size_offset = eid++;
++
++		*eid++ = WLAN_EID_NONTRANSMITTED_BSSID_CAPA;
++		*eid++ = sizeof(capab_info);
++		capab_info = host_to_le16(hostapd_own_capab_info(bss));
++		os_memcpy(eid, (const void*)&capab_info, sizeof(capab_info));
++		eid += sizeof(capab_info);
++
++		*eid++ = WLAN_EID_SSID;
++		*eid++ = bss->conf->ssid.ssid_len;
++		os_memcpy(eid, bss->conf->ssid.ssid, bss->conf->ssid.ssid_len);
++		eid += bss->conf->ssid.ssid_len;
++
++		*eid++ = WLAN_EID_MULTIPLE_BSSID_INDEX;
++		index_size_offset = eid++;
++		*eid++ = i;
++		if (is_beacon) {
++			*eid++ = bss->conf->dtim_period;
++			*eid++ = 0xFF;
++		}
++		*index_size_offset = (eid - index_size_offset) - 1;
++
++		eid = hostapd_get_rsne(bss, eid, end - eid);
++		*bss_size_offset = (eid - bss_size_offset) - 1;
++
++		if ((eid - size_offset) - 1 > 255) {
++			eid = pos;
++			goto multiple_bssid_too_big;
++		}
++		num++;
++	}
++
++multiple_bssid_too_big:
++	*count = i;
++	*num_offset = (u8)ceil(log2(hapd->iface->num_bss));
++	if (*num_offset < 1)
++		*num_offset = 1;
++	*size_offset = (eid - size_offset) - 1;
++
++	return eid;
++}
++
++
++u8 * hostapd_eid_multiple_bssid(struct hostapd_data *hapd, u8 *eid, u8 *end,
++				u8 is_beacon, u8 **eid_offsets, int *eid_count,
++				int eid_max)
++{
++	int count = 1;
++
++	while (count < hapd->iface->num_bss) {
++		if (eid_offsets && *eid_count < eid_max) {
++			eid_offsets[*eid_count] = eid;
++			*eid_count = *eid_count + 1;
++		}
++		eid = hostapd_eid_multiple_bssid_chunk(hapd, eid, end, &count,
++						       is_beacon);
++	}
++	return eid;
++}
++
+ #endif /* CONFIG_NATIVE_WINDOWS */
+diff --git a/src/ap/ieee802_11.h b/src/ap/ieee802_11.h
+index ad330d4..5a42439 100644
+--- a/src/ap/ieee802_11.h
++++ b/src/ap/ieee802_11.h
+@@ -119,7 +119,10 @@ u8 * hostapd_eid_time_zone(struct hostapd_data *hapd, u8 *eid);
+ int hostapd_update_time_adv(struct hostapd_data *hapd);
+ void hostapd_client_poll_ok(struct hostapd_data *hapd, const u8 *addr);
+ u8 * hostapd_eid_bss_max_idle_period(struct hostapd_data *hapd, u8 *eid);
+-
++u8 * hostapd_eid_multiple_bssid(struct hostapd_data *hapd, u8 *eid, u8 *end,
++				u8 is_beacon, u8 **eid_offsets, int *eid_count,
++				int eid_max);
++int hostapd_eid_multiple_bssid_len(struct hostapd_data *hapd);
+ int auth_sae_init_committed(struct hostapd_data *hapd, struct sta_info *sta);
+ #ifdef CONFIG_SAE
+ void sae_clear_retransmit_timer(struct hostapd_data *hapd,
+@@ -197,5 +200,6 @@ int get_tx_parameters(struct sta_info *sta, int ap_max_chanwidth,
+ 
+ void auth_sae_process_commit(void *eloop_ctx, void *user_ctx);
+ u8 * hostapd_eid_rsnxe(struct hostapd_data *hapd, u8 *eid, size_t len);
++u8 * hostapd_get_rsne(struct hostapd_data *hapd, u8 *pos, size_t len);
+ 
+ #endif /* IEEE802_11_H */
+diff --git a/src/common/ieee802_11_defs.h b/src/common/ieee802_11_defs.h
+index c887cbb..5611e9f 100644
+--- a/src/common/ieee802_11_defs.h
++++ b/src/common/ieee802_11_defs.h
+@@ -457,6 +457,8 @@
+ #define WLAN_EID_RSNX 244
+ #define WLAN_EID_EXTENSION 255
+ 
++#define WLAN_EID_SUBELEMENT_NONTRANSMITTED_BSSID_PROFILE 0
++
+ /* Element ID Extension (EID 255) values */
+ #define WLAN_EID_EXT_ASSOC_DELAY_INFO 1
+ #define WLAN_EID_EXT_FILS_REQ_PARAMS 2
+-- 
+2.7.4
+
+From fccd886d293446f75bef20ef7325f5657a3ebe35 Mon Sep 17 00:00:00 2001
+From: John Crispin <john@phrozen.org>
+Date: Mon, 24 Aug 2020 23:10:09 -0700
+Subject: [PATCH 6/7] multiple_bssid: always use the transmitting BSSs when
+ generating the beacons
+
+Add the multiple bssid IEs to the probe response. If this is a unicast
+request only add the requested non-transmitting BSS. Beacons track the
+IEs in an additional array and pass them to the kernel which will be
+responsible for creating the EMA beacons.
+
+When generating a beacon or probe response for a non transmitting BSS,
+always use the transmittings BSSs data. If this is a legacy beacon, the
+helper becomes a no-op.
+
+Signed-off-by: John Crispin <john@phrozen.org>
+---
+ src/ap/beacon.c            | 30 ++++++++++++++++++++++++++++--
+ src/ap/ieee802_11_shared.c |  2 ++
+ 2 files changed, 30 insertions(+), 2 deletions(-)
+
+diff --git a/src/ap/beacon.c b/src/ap/beacon.c
+index 05fefd3..a6b1e19 100644
+--- a/src/ap/beacon.c
++++ b/src/ap/beacon.c
+@@ -293,7 +293,7 @@ static const u8 * hostapd_vendor_wpa_ie(struct hostapd_data *hapd,
+ }
+ 
+ 
+-static u8 * hostapd_get_rsne(struct hostapd_data *hapd, u8 *pos, size_t len)
++u8 * hostapd_get_rsne(struct hostapd_data *hapd, u8 *pos, size_t len)
+ {
+ 	const u8 *ie;
+ 
+@@ -436,6 +436,9 @@ static u8 * hostapd_gen_probe_resp(struct hostapd_data *hapd,
+ 	u8 *pos, *epos, *csa_pos;
+ 	size_t buflen;
+ 
++	if (hapd->iconf->multiple_bssid)
++		hapd = hostapd_get_primary_bss(hapd);
++
+ #define MAX_PROBERESP_LEN 768
+ 	buflen = MAX_PROBERESP_LEN;
+ #ifdef CONFIG_WPS
+@@ -472,6 +475,8 @@ static u8 * hostapd_gen_probe_resp(struct hostapd_data *hapd,
+ 	buflen += hostapd_mbo_ie_len(hapd);
+ 	buflen += hostapd_eid_owe_trans_len(hapd);
+ 	buflen += hostapd_eid_dpp_cc_len(hapd);
++	if (hapd->iconf->multiple_bssid)
++		buflen += hostapd_eid_multiple_bssid_len(hapd);
+ 
+ 	resp = os_zalloc(buflen);
+ 	if (resp == NULL)
+@@ -529,6 +534,9 @@ static u8 * hostapd_gen_probe_resp(struct hostapd_data *hapd,
+ 	pos = hostapd_eid_rm_enabled_capab(hapd, pos, epos - pos);
+ 	pos = hostapd_get_mde(hapd, pos, epos - pos);
+ 
++        if (hapd->iconf->multiple_bssid)
++		pos = hostapd_eid_multiple_bssid(hapd, pos, epos, 0, NULL, 0, 0);
++
+ 	/* eCSA IE */
+ 	csa_pos = hostapd_eid_ecsa(hapd, pos);
+ 	if (csa_pos != pos)
+@@ -836,6 +844,10 @@ void handle_probe_req(struct hostapd_data *hapd,
+                .frame_info = fi,
+        };
+ 
++        if (hapd->iconf->multiple_bssid &&
++	    hapd != hostapd_get_primary_bss(hapd))
++		return;
++
+ 	if (len < IEEE80211_HDRLEN)
+ 		return;
+ 	ie = ((const u8 *) mgmt) + IEEE80211_HDRLEN;
+@@ -1085,7 +1097,7 @@ void handle_probe_req(struct hostapd_data *hapd,
+ 				hapd->cs_c_off_ecsa_proberesp;
+ 	}
+ 
+-	ret = hostapd_drv_send_mlme(hapd, resp, resp_len, noack,
++	ret = hostapd_drv_send_mlme(hostapd_get_primary_bss(hapd), resp, resp_len, noack,
+ 				    csa_offs_len ? csa_offs : NULL,
+ 				    csa_offs_len, 0);
+ 
+@@ -1746,6 +1758,8 @@ void ieee802_11_free_ap_params(struct wpa_driver_ap_params *params)
+ 	params->head = NULL;
+ 	os_free(params->proberesp);
+ 	params->proberesp = NULL;
++	os_free(params->multiple_bssid_ies);
++	params->multiple_bssid_ies = NULL;
+ #ifdef CONFIG_FILS
+ 	os_free(params->fd_frame_tmpl);
+ 	params->fd_frame_tmpl = NULL;
+@@ -1808,8 +1822,20 @@ int ieee802_11_set_beacon(struct hostapd_data *hapd)
+ 		hostapd_unsol_bcast_probe_resp(hapd, &params);
+ #endif /* CONFIG_IEEE80211AX */
+         if (hapd->iconf->multiple_bssid) {
++		int len = hostapd_eid_multiple_bssid_len(hapd);
++		u8 *end;
++
+ 		params.multiple_bssid_index = hostapd_get_bss_index(hapd);
+ 		params.multiple_bssid_count = iface->num_bss;
++		params.multiple_bssid_ies = os_zalloc(len);
++		if (params.multiple_bssid_ies == NULL)
++			goto fail;
++		end = hostapd_eid_multiple_bssid(hapd, params.multiple_bssid_ies,
++						 params.multiple_bssid_ies + len,
++						 1, params.multiple_bssid_ie_offsets,
++						 &params.multiple_bssid_ie_count,
++						 MULTIPLE_BSSID_IE_MAX);
++		params.multiple_bssid_ie_len = end - params.multiple_bssid_ies;
+ 	}
+ 	hapd->reenable_beacon = 0;
+ #ifdef CONFIG_SAE
+diff --git a/src/ap/ieee802_11_shared.c b/src/ap/ieee802_11_shared.c
+index 7c20f3b..ac25963 100644
+--- a/src/ap/ieee802_11_shared.c
++++ b/src/ap/ieee802_11_shared.c
+@@ -357,6 +357,8 @@ static void hostapd_ext_capab_byte(struct hostapd_data *hapd, u8 *pos, int idx)
+ 			*pos |= 0x02; /* Bit 17 - WNM-Sleep Mode */
+ 		if (hapd->conf->bss_transition)
+ 			*pos |= 0x08; /* Bit 19 - BSS Transition */
++		if (hapd->iconf->multiple_bssid)
++                        *pos |= 0x40; /* Bit 22 - Multiple BSSID */
+ 		break;
+ 	case 3: /* Bits 24-31 */
+ #ifdef CONFIG_WNM_AP
+-- 
+2.7.4
+
+From 65a6aa2616be3589a0549c83ed7b1774344625a2 Mon Sep 17 00:00:00 2001
+From: John Crispin <john@phrozen.org>
+Date: Wed, 3 Jun 2020 16:36:42 +0200
+Subject: [PATCH 7/7] multiple_bssid: make the AID space shared
+
+There is only one shared TIM field in the transmitted beacon for all BSSs.
+AID0 becomes AIDx where x is the bss_index. The STA AID offset needs to be
+shifted accordingly.
+
+Signed-off-by: John Crispin <john@phrozen.org>
+---
+ src/ap/ieee802_11.c | 8 ++++++--
+ 1 file changed, 6 insertions(+), 2 deletions(-)
+
+diff --git a/src/ap/ieee802_11.c b/src/ap/ieee802_11.c
+index 98968f6..45924bb 100644
+--- a/src/ap/ieee802_11.c
++++ b/src/ap/ieee802_11.c
+@@ -3863,7 +3863,11 @@ int hostapd_get_aid(struct hostapd_data *hapd, struct sta_info *sta)
+ 	}
+ 	if (j == 32)
+ 		return -1;
+-	aid = i * 32 + j + 1;
++	aid = i * 32 + j;
++	if (hapd->iconf->multiple_bssid)
++		aid += hapd->iface->num_bss;
++	else
++		aid += 1;
+ 	if (aid > 2007)
+ 		return -1;
+ 
+@@ -5556,7 +5560,7 @@ static void handle_assoc(struct hostapd_data *hapd,
+ 		goto fail;
+ 	omit_rsnxe = !get_ie(pos, left, WLAN_EID_RSNX);
+ 
+-	if (hostapd_get_aid(hapd, sta) < 0) {
++	if (hostapd_get_aid(hostapd_get_primary_bss(hapd), sta) < 0) {
+ 		hostapd_logger(hapd, mgmt->sa, HOSTAPD_MODULE_IEEE80211,
+ 			       HOSTAPD_LEVEL_INFO, "No room for more AIDs");
+ 		resp = WLAN_STATUS_AP_UNABLE_TO_HANDLE_NEW_STA;
+-- 
+2.7.4
+

@@ -1,0 +1,22 @@
+diff -Nur a/handler.c netifd-2015-12-16/handler.c
+--- a/handler.c	2019-06-04 15:15:07.018421845 -0700
++++ netifd-2015-12-16/handler.c	2019-06-04 15:16:26.238423840 -0700
+@@ -132,6 +132,7 @@
+ 	for (i = 0; i < g.gl_pathc; i++)
+ 		netifd_parse_script_handler(g.gl_pathv[i], cb);
+ 	netifd_dir_pop(prev_fd);
++	globfree(&g);
+ }
+ 
+ char *
+diff -Nur a/system-linux.c netifd-2015-12-16/system-linux.c
+--- a/system-linux.c	2019-06-04 15:15:07.014421845 -0700
++++ netifd-2015-12-16/system-linux.c	2019-06-04 15:16:04.550423294 -0700
+@@ -1252,6 +1252,7 @@
+ 	snprintf(val_buf, sizeof(val_buf), "%x", val);
+ 	for (i = 0; i < gl.gl_pathc; i++)
+ 		system_set_sysctl(gl.gl_pathv[i], val_buf);
++	globfree(&gl);
+ }
+ 
+ static void

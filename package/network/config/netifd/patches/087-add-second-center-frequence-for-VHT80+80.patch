@@ -1,0 +1,24 @@
+diff --git a/scripts/netifd-wireless.sh b/scripts/netifd-wireless.sh
+old mode 100644
+new mode 100755
+index 68a122b..48eb47e
+--- a/scripts/netifd-wireless.sh
++++ b/scripts/netifd-wireless.sh
+@@ -39,7 +39,7 @@ prepare_key_wep() {
+ }
+ 
+ _wdev_prepare_channel() {
+-	json_get_vars channel hwmode
++	json_get_vars channel hwmode cfreq2
+ 
+ 	auto_channel=0
+ 	enable_ht=0
+@@ -315,7 +315,7 @@ for_each_interface() {
+ }
+ 
+ _wdev_common_device_config() {
+-	config_add_string channel hwmode htmode
++	config_add_string channel hwmode htmode cfreq2
+ }
+ 
+ _wdev_common_iface_config() {

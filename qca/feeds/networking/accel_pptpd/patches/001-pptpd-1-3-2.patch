@@ -1,0 +1,62 @@
+--- accel-pptp-0.8.5/pptpd-1.3.3/bcrelay.c	2010-10-06 18:57:46.000000000 +0530
++++ accel-pptp-0.8.5/pptpd-1.3.3/bcrelay.c	2018-07-25 10:24:00.049755611 +0530
+@@ -662,7 +662,7 @@
+                  * there is no need to concern about the physical/link layer header because it is
+                  * filled in automatically (based on the contents of sa).
+                  */
+-                if ((nrsent = sendto(cur_ifsnr[j].sock_nr, ipp_p, rlen, MSG_DONTWAIT|MSG_TRYHARD, (struct sockaddr *)&sa, salen)) < 0)
++                if ((nrsent = sendto(cur_ifsnr[j].sock_nr, ipp_p, rlen, MSG_DONTWAIT|MSG_DONTROUTE, (struct sockaddr *)&sa, salen)) < 0)
+                 {
+ 		  if (errno == ENETDOWN) {
+ 		    syslog(LOG_NOTICE, "ignored ENETDOWN from sendto(), a network interface was going down?");
+--- accel-pptp-0.8.5/pptpd-1.3.3/configure	2010-10-06 18:57:46.000000000 +0530
++++ accel-pptp-0.8.5/pptpd-1.3.3/configure	2018-07-26 09:39:42.076963771 +0530
+@@ -6221,7 +6221,7 @@
+ CFLAGS="${CFLAGS} -I. -I${header}"
+ kernel_headers=${header}
+ 
+-
++if test $cross_compiling != "yes"; then
+ { echo "$as_me:$LINENO: checking for pppd" >&5
+ echo $ECHO_N "checking for pppd... $ECHO_C" >&6; }
+ pppd=`which pppd 2>&1`
+@@ -6245,6 +6245,9 @@
+ pppd_ver=`${pppd} --version 2>&1 | grep version | sed 's/pppd version //'`
+ { echo "$as_me:$LINENO: result: $pppd ($pppd_ver)" >&5
+ echo "${ECHO_T}$pppd ($pppd_ver)" >&6; }
++else
++pppd_ver=${pppdver}
++fi
+ cat >>confdefs.h <<_ACEOF
+ #define PPPD_VERSION "${pppd_ver}"
+ _ACEOF
+--- accel-pptp-0.8.5/pptpd-1.3.3/defaults.h	2010-10-06 18:57:46.000000000 +0530
++++ accel-pptp-0.8.5/pptpd-1.3.3/defaults.h	2018-07-25 10:24:00.053755624 +0530
+@@ -49,12 +49,12 @@
+ 
+ #define STIMEOUT_DEFAULT		10 /* seconds */
+ #define PTIMEOUT_DEFAULT		1000 /* msec */
+-
++#define SBINDIR				"/usr/sbin/"
+ /* Location of binaries */
+ 
+-#define PPTP_CTRL_BIN			SBINDIR "/pptpctrl"
+-#define PPTPD_BIN			SBINDIR "/pptpd"
+-#define BCRELAY_BIN			SBINDIR "/bcrelay"
++#define PPTP_CTRL_BIN			SBINDIR"/pptpctrl"
++#define PPTPD_BIN			SBINDIR"/pptpd"
++#define BCRELAY_BIN			SBINDIR"/bcrelay"
+ 
+ /* Parameters permitted in the config file */
+ 
+--- accel-pptp-0.8.5/pptpd-1.3.3/pptpctrl.c	2010-10-06 18:57:46.000000000 +0530
++++ accel-pptp-0.8.5/pptpd-1.3.3/pptpctrl.c	2018-07-25 10:24:00.053755624 +0530
+@@ -661,7 +661,7 @@
+ 	if (*pppaddrs[0] || *pppaddrs[1]) {
+ 		char pppInterfaceIPs[33];
+ 		sprintf(pppInterfaceIPs, "%s:%s", pppaddrs[0], pppaddrs[1]);
+-		pppd_argv[an++] = pppInterfaceIPs;
++		pppd_argv[an++] = strdup(pppInterfaceIPs);
+ 	}
+ #endif
+ 

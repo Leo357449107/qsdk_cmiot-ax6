@@ -1,0 +1,43 @@
+#!/bin/sh
+
+. /lib/functions.sh
+. /lib/functions/network.sh
+
+plutoid=$(cat /var/run/pluto/pluto.pid)
+#if it never starts, here we return
+[ ! -e /var/run/pluto/ ] && return
+
+#but if it is stopped , we won't restart it neither
+[ -z "$plutoid" ] && return
+
+proto=$(uci_get ipsec setup protostack)
+
+[ -z "$proto" ] && return
+
+ifaces=$(uci_get ipsec setup interfaces)
+wan_iface=$(uci get network.wan.ifname)
+
+[ -z "$ifaces" ] && ifaces="ipsec0=$wan_iface"
+
+network_get_device ifname $INTERFACE
+
+restart_service(){
+	found=
+	for iface in $ifaces; do
+	        phyif=$(echo $iface |cut -d"=" -f 2)
+	        [ $ifname = $phyif ] && {
+			found=yes
+			break
+		}
+	done
+	if ! test "$found"
+	then
+		exit 0
+	fi
+	if [ -f /tmp/qca_nss_ipsec_ol ]; then
+		/etc/init.d/qca-nss-ipsec restart
+	else
+		/etc/init.d/ipsec restart
+	fi
+}
+[ "$ACTION" = "ifup" ] && restart_service

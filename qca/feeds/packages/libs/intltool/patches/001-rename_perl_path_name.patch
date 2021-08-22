@@ -1,0 +1,10 @@
+Index: intltool-0.40.6/intltool-update.in
+===================================================================
+--- intltool-0.40.6.orig/intltool-update.in	2009-02-15 03:42:28.000000000 +0530
++++ intltool-0.40.6/intltool-update.in	2019-07-24 18:07:50.290236352 +0530
+@@ -1,4 +1,4 @@
+-#!@INTLTOOL_PERL@ -w
++#!/usr/bin/perl -w
+ # -*- Mode: perl; indent-tabs-mode: nil; c-basic-offset: 4  -*-
+ 
+ #

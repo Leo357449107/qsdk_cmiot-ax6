@@ -1,0 +1,30 @@
+#!/bin/sh /etc/rc.common
+# Copyright (C) 2006-2011 OpenWrt.org
+# Copyright (c) 2013 The Linux Foundation. All rights reserved.
+
+. /lib/functions/network.sh
+
+load_relay() {
+	local enable client server
+	local client_iface server_iface
+	config_get enable $1 enable 0
+	config_get client $1 client "lan"
+	config_get server $1 server "wan"
+	client_iface=$(uci_get_state network "$client" ifname "$client")
+	network_get_physdev server_iface $server
+	[ $enable == 1 ] && {
+		OPTIONS="-C $client_iface -S $server_iface"
+		service_start /usr/sbin/pppoe-relay $OPTIONS
+	} || {
+		service_stop /usr/sbin/pppoe-relay
+	}
+}
+
+start() {
+	config_load pppoe
+	config_foreach load_relay pppoe_relay
+}
+
+stop() {
+	service_stop /usr/sbin/pppoe-relay
+}

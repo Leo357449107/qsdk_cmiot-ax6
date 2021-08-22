@@ -1,0 +1,13 @@
+Index: openvpn-easy-rsa-2013-01-30/easy-rsa/2.0/whichopensslcnf
+===================================================================
+--- openvpn-easy-rsa-2013-01-30.orig/easy-rsa/2.0/whichopensslcnf
++++ openvpn-easy-rsa-2013-01-30/easy-rsa/2.0/whichopensslcnf
+@@ -7,7 +7,7 @@ if [ "$OPENSSL" ]; then
+ 		cnf="$1/openssl-0.9.6.cnf"
+ 	elif $OPENSSL version | grep -E "0\.9\.8[[:alnum:]]?" > /dev/null; then
+ 		cnf="$1/openssl-0.9.8.cnf"
+-	elif $OPENSSL version | grep -E "1\.0\.[[:digit:]][[:alnum:]]?" > /dev/null; then
++	elif $OPENSSL version | grep -E "1\.[[:digit:]]\.[[:digit:]][[:alnum:]]?" > /dev/null; then
+                 cnf="$1/openssl-1.0.0.cnf"
+ 	else
+ 		cnf="$1/openssl.cnf"

@@ -1,0 +1,35 @@
+diff -Nur a/system-linux.c netifd-2015-12-16/system-linux.c
+--- a/system-linux.c	2018-10-16 16:06:39.832526152 -0700
++++ netifd-2015-12-16/system-linux.c	2018-10-16 16:08:19.744528668 -0700
+@@ -2493,14 +2493,20 @@
+ #endif
+ #ifdef IFLA_IPTUN_MAX
+ 	} else if (!strcmp(str, "ipip6")) {
+-		struct nl_msg *nlm = nlmsg_alloc_simple(RTM_NEWLINK,
+-				NLM_F_REQUEST | NLM_F_REPLACE | NLM_F_CREATE);
++		struct nl_msg *nlm = nlmsg_alloc_size(65536);
+ 		struct ifinfomsg ifi = { .ifi_family = AF_UNSPEC };
+ 		int ret = 0;
+ 
+ 		if (!nlm)
+ 			return -1;
+ 
++		struct nlmsghdr *new = nlm->nm_nlh;
++		new->nlmsg_type = RTM_NEWLINK;
++		new->nlmsg_flags = NLM_F_REQUEST | NLM_F_REPLACE | NLM_F_CREATE;
++		new->nlmsg_seq = 0;
++		new->nlmsg_pid = 0;
++
++
+ 		nlmsg_append(nlm, &ifi, sizeof(ifi), 0);
+ 		nla_put_string(nlm, IFLA_IFNAME, name);
+ 
+@@ -2576,6 +2582,8 @@
+ 				}
+ 
+ 				struct nlattr *rule = nla_nest_start(nlm, ++fmrcnt);
++				if (rule == NULL)
++					continue;
+ 
+ 				nla_put(nlm, IFLA_IPTUN_FMR_IP6_PREFIX, sizeof(ip6prefix), &ip6prefix);
+ 				nla_put(nlm, IFLA_IPTUN_FMR_IP4_PREFIX, sizeof(ip4prefix), &ip4prefix);

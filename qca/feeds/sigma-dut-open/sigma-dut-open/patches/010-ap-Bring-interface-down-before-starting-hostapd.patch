@@ -1,0 +1,23 @@
+--- a/ap.c
++++ b/ap.c
+@@ -8731,6 +8731,12 @@ skip_key_mgmt:
+ 			sigma_dut_print(dut, DUT_MSG_ERROR, "Failed to remove "
+ 					"monitor interface");
+ 
++		snprintf(buf, sizeof(buf), "ifconfig %s down", ifname);
++		if (system(buf) != 0) {
++			sigma_dut_print(dut, DUT_MSG_INFO,
++					"Failed to run '%s'", buf);
++		}
++
+ 		snprintf(path, sizeof(path), "%shostapd",
+ 			 file_exists("hostapd") ? "./" : "");
+ 		snprintf(buf, sizeof(buf),
+@@ -8746,6 +8752,7 @@ skip_key_mgmt:
+ 			 dut->use_hostapd_pid_file ?
+ 			 " -P " SIGMA_DUT_HOSTAPD_PID_FILE : "",
+ 			 dut->sigma_tmpdir);
++
+ 		if (dut->ap_is_dual) {
+ 			snprintf(buf_dual, sizeof(buf_dual), "%shostapd -B%s%s%s%s " SIGMA_TMPDIR
+ 				"/sigma_dut_dual-ap.conf",

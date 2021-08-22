@@ -1,0 +1,64 @@
+--- a/ap.c
++++ b/ap.c
+@@ -1279,6 +1279,10 @@ static enum sigma_cmd_result cmd_ap_set_
+ 		}
+ 	}
+ 
++	val = get_param(cmd, "MU_TxBF");
++	if (val)
++		dut->ap_mu_txBF = strcasecmp(val, "enable") == 0;
++
+ 	/* UNSUPPORTED: tx_lgi_rate */
+ 
+ 	val = get_param(cmd, "wpsnfc");
+@@ -7691,7 +7695,9 @@ enum sigma_cmd_result cmd_ap_config_comm
+ 	     drv == DRIVER_LINUX_WCN) &&
+ 	    (dut->ap_mode == AP_11ng || dut->ap_mode == AP_11na ||
+ 	     (dut->ap_mode == AP_11ax && !dut->use_5g))) {
+-		int ht40plus = 0, ht40minus = 0, tx_stbc = 0;
++		int ht40plus = 0, ht40minus = 0;
++		char ht_caps[60];
++		int len = 0;
+ 
+ 		fprintf(f, "ieee80211n=1\n");
+ 		if (dut->ap_mode == AP_11ax)
+@@ -7718,9 +7724,6 @@ enum sigma_cmd_result cmd_ap_config_comm
+ 				ht40minus = 1;
+ 		}
+ 
+-		if (dut->ap_tx_stbc)
+-			tx_stbc = 1;
+-
+ 		/* Overwrite the ht_capab with offset value if configured */
+ 		if (dut->ap_chwidth == AP_40 &&
+ 		    dut->ap_chwidth_offset == SEC_CH_40ABOVE) {
+@@ -7732,10 +7735,16 @@ enum sigma_cmd_result cmd_ap_config_comm
+ 			ht40plus = 0;
+ 		}
+ 
+-		fprintf(f, "ht_capab=%s%s%s\n",
+-			ht40plus ? "[HT40+]" : "",
+-			ht40minus ? "[HT40-]" : "",
+-			tx_stbc ? "[TX-STBC]" : "");
++		if (ht40plus) {
++			len += snprintf(ht_caps + len, sizeof(ht_caps) - len, "%s", "[HT40+]");
++		} else if (ht40minus) {
++			len += snprintf(ht_caps + len, sizeof(ht_caps) - len, "%s", "[HT40-]");
++		}
++
++		len += snprintf(ht_caps + len, sizeof(ht_caps) - len, "%s", "[SHORT-GI-20][SHORT-GI-40]");
++		len += snprintf(ht_caps + len, sizeof(ht_caps) - len, "%s", "[TX-STBC][RX-STBC1]");
++		fprintf(f, "ht_capab=%s\n", ht_caps);
++
+ 	}
+ 
+ 	if ((drv == DRIVER_MAC80211 || drv == DRIVER_QNXNTO ||
+@@ -8539,7 +8548,7 @@ skip_key_mgmt:
+ 				"[SU-BEAMFORMER][SU-BEAMFORMEE][BF-ANTENNA-2][SOUNDING-DIMENSION-2]" : "",
+ 				(dut->ap_ldpc == VALUE_ENABLED) ?
+ 				"[RXLDPC]" : "",
+-				dut->ap_tx_stbc ? "[TX-STBC-2BY1]" : "",
++				dut->ap_tx_stbc ? "[TX-STBC-2BY1][RX-STBC-1]" : "",
+ 				dut->ap_mu_txBF ? "[MU-BEAMFORMER]" : "");
+ 		}
+ 	}

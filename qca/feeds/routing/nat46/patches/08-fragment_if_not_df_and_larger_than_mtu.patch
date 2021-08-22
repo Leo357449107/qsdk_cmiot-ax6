@@ -1,0 +1,17 @@
+diff -Nur a/nat46/modules/nat46-core.c nat46-6/nat46/modules/nat46-core.c
+--- a/nat46/modules/nat46-core.c	2019-03-21 12:24:07.710512234 -0700
++++ nat46-6/nat46/modules/nat46-core.c	2019-03-21 12:26:21.194508283 -0700
+@@ -2168,10 +2168,11 @@
+   nat46debug(5, "v4 packet flags: %02x",  IPCB(old_skb)->flags);
+   if(0 == (ntohs(hdr4->frag_off) & 0x3FFF) ) { /* Checking for MF */
+     do_l4_translate = 1;
+-    if (add_dummy_header) {
+-      if (0 == (ntohs(hdr4->frag_off) & IP_DF)) {
++    if (0 == (ntohs(hdr4->frag_off) & IP_DF)) {
++	if (add_dummy_header) {
+          add_frag_header = 1;
+       }
++      old_skb->ignore_df = 1;
+     }
+   } else {
+     add_frag_header = 1;

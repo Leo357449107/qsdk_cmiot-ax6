@@ -1,0 +1,93 @@
+From 260a4753916f375dae3fbff0363e20ae763eda37 Mon Sep 17 00:00:00 2001
+From: John Crispin <john@phrozen.org>
+Date: Thu, 25 Apr 2019 21:09:26 +0200
+Subject: [PATCH 09/10] HE: add code to dynamically turn on TWT
+
+This allows us to dynamically turn TWT on and off using a nl80211
+attribute.
+
+Signed-off-by: John Crispin <john@phrozen.org>
+---
+ src/ap/beacon.c              | 3 +++
+ src/ap/ieee802_11.h          | 1 +
+ src/ap/ieee802_11_he.c       | 7 +++++++
+ src/common/ieee802_11_defs.h | 2 ++
+ src/drivers/driver.h         | 5 +++++
+ src/drivers/driver_nl80211.c | 8 ++++++++
+ src/drivers/nl80211_copy.h   | 2 ++
+ 7 files changed, 28 insertions(+)
+
+--- a/src/ap/beacon.c
++++ b/src/ap/beacon.c
+@@ -1437,6 +1437,7 @@ int ieee802_11_set_beacon(struct hostapd
+ 	params.assocresp_ies = assocresp;
+ 	params.reenable = hapd->reenable_beacon;
+ #ifdef CONFIG_IEEE80211AX
++	params.twt_responder = hostapd_get_he_twt_responder(hapd);
+ 	params.he_spr = !!hapd->iface->conf->spr.sr_control;
+ 	params.he_spr_srg_obss_pd_min_offset =
+ 		hapd->iface->conf->spr.srg_obss_pd_min_offset;
+--- a/src/ap/ieee802_11.h
++++ b/src/ap/ieee802_11.h
+@@ -95,6 +95,7 @@ u16 set_sta_vht_opmode(struct hostapd_da
+ u16 copy_sta_he_capab(struct hostapd_data *hapd, struct sta_info *sta,
+ 		      enum ieee80211_op_mode opmode, const u8 *he_capab,
+ 		      size_t he_capab_len);
++int hostapd_get_he_twt_responder(struct hostapd_data *hapd);
+ void hostapd_tx_status(struct hostapd_data *hapd, const u8 *addr,
+ 		       const u8 *buf, size_t len, int ack);
+ void hostapd_eapol_tx_status(struct hostapd_data *hapd, const u8 *dst,
+--- a/src/ap/ieee802_11_he.c
++++ b/src/ap/ieee802_11_he.c
+@@ -402,3 +402,10 @@ u16 copy_sta_he_capab(struct hostapd_dat
+ 
+ 	return WLAN_STATUS_SUCCESS;
+ }
++
++int hostapd_get_he_twt_responder(struct hostapd_data *hapd)
++{
++	u8 *mac_cap = hapd->iface->current_mode->he_capab[IEEE80211_MODE_AP].mac_cap;
++
++	return mac_cap[0] & HE_MACCAP_TWT_RESPONDER;
++}
+--- a/src/common/ieee802_11_defs.h
++++ b/src/common/ieee802_11_defs.h
+@@ -2150,6 +2150,8 @@ struct ieee80211_spatial_reuse {
+ 
+ /* HE Capabilities Information defines */
+ 
++#define HE_MACCAP_TWT_RESPONDER			((u8) BIT(3))
++
+ #define HE_PHYCAP_CHANNEL_WIDTH_SET_IDX		0
+ #define HE_PHYCAP_CHANNEL_WIDTH_MASK		((u8) (BIT(1) | BIT(2) | \
+ 						      BIT(3) | BIT(4)))
+--- a/src/drivers/driver.h
++++ b/src/drivers/driver.h
+@@ -1480,6 +1480,11 @@ struct wpa_driver_ap_params {
+ 	const struct wpabuf *civic;
+ 
+ 	/**
++	 * twt_responder - Whether Target Wait Time responder is enabled
++	 */
++	int twt_responder;
++
++	/**
+ 	 * he_spr - Whether Spatial Reuse is enabled
+ 	 */
+ 	 int he_spr;
+--- a/src/drivers/driver_nl80211.c
++++ b/src/drivers/driver_nl80211.c
+@@ -4312,6 +4312,13 @@ static int wpa_driver_nl80211_set_ap(voi
+ 	}
+ 
+ #ifdef CONFIG_IEEE80211AX
++	if (params->twt_responder) {
++		wpa_printf(MSG_DEBUG, "nl80211: twt_responder=%d",
++			   params->twt_responder);
++		if (nla_put_flag(msg, NL80211_ATTR_TWT_RESPONDER))
++			goto fail;
++	}
++
+ 	if (params->he_spr) {
+ 		struct nlattr *spr;
+ 

@@ -1,0 +1,434 @@
+++++++++++++++++++++++++++++++++++++++
+<!-- WSDG Chapter User Interface -->
+++++++++++++++++++++++++++++++++++++++
+
+[[ChapterUserInterface]]
+
+== User Interface
+
+[[ChUIIntro]]
+
+=== Introduction
+
+Wireshark can be logically separated into the backend (dissecting protocols,
+file loading and saving, capturing, etc.) and the frontend (the user interface).
+
+The following frontends are currently maintained by the Wireshark
+development team:
+
+* Wireshark, Qt based
+
+* Wireshark, GTK{plus} 2.x based
+
+* Wireshark, GTK{plus} 3.x based
+
+* TShark, console based
+
+There are other Wireshark frontends which are not developed nor maintained by
+the Wireshark development team:
+
+* Packetyzer. Native Windows interface, written in Delphi and released
+under the GPL. Not actively maintained. https://sourceforge.net/projects/packetyzer/[]
+
+* hethereal Web interface. Not actively maintained and not
+finished.
+
+This chapter is focused on the Wireshark frontend, and especially on
+the Qt interface.
+
+[[ChUIQt]]
+
+=== The Qt Application Framework
+
+Qt is a cross-platform application development framework. While we mainly use
+the core (QtCore) and user interface (QtWidgets) modules, it also supports a
+number of other modules for specialized application development, such as
+networking (QtNetwork) and web browsing (QtWebKit).
+
+At the time of this writing (September 2016) most of the main Wireshark
+application has been ported to Qt. The sections below provide an
+overview of the application and tips for Qt development in our
+environment.
+
+==== User Experience Considerations
+
+When creating or modifying Wireshark try to make sure that it will work
+well on Windows, macOS, and Linux. See <<ChUIGUIDocs>> for details.
+Additionally, try to keep the following in mind:
+
+*Workflow*. Excessive navigation and gratuitous dialogs should be
+avoided or reduced. For example, the two GTK+ flow graph dialogs have
+been combined into one in Qt. Many alert dialogs have been replaced with
+status bar messages. Statistics dialogs are displayed immediately
+instead of requiring that options be specified.
+
+*Discoverability and feedback*. Most users don't like to read
+documentation and instead prefer to learn an application as they use it.
+Providing feedback increases your sense of control and awareness, and
+makes the application more enjoyable to use. Most of the Qt dialogs
+provide a ``hint'' area near the bottom which shows useful information.
+For example, the ``Follow Stream'' dialog shows the packet corresponding
+to the text under the mouse. The profile management dialog shows a
+clickable path to the current profile. The main welcome screen shows
+live interface traffic. Most dialogs have a context menu that shows
+keyboard shortcuts.
+
+==== Qt Creator
+
+Qt Creator is a full-featured IDE and user interface editor. It makes
+adding new UI features much easier. It doesn't work well on Windows at
+the present time, so it's recommended that you use it on macOS or Linux.
+
+To edit and build Wireshark using Qt Cretor, open the top-level
+'CMakeLists.txt' within Qt Creator. It should ask you to choose a build
+location. Do so. It should then ask you to run CMake. Fill in any
+desired build arguments (e.g. "-D CMAKE_BUILD_TYPE=Debug" or "-D
+ENABLE_GTK3=OFF") and click the ``Run CMake'' button. When that
+completes select ``Build → Open Build and Run Kit Selector...'' and make
+sure 'wireshark' is selected.
+
+Note that Qt Creator uses output created by CMake's *CodeBlocks*
+generator. If you run CMake outside of Qt Creator you should use the
+``CodeBlocks - Unix Makefiles'' generator, otherwise Qt Creator will
+prompt you to re-run CMake.
+
+==== Source Code Overview
+
+Wireshark's `main` entry point is in 'wireshark-qt.cpp'. Command-line arguments
+are processed there and the main application class (`WiresharkApplication`)
+instance is created there along with the main window.
+
+The main window along with the rest of the application resides in 'ui/qt'. Due
+to its size the main window code is split into two modules, 'main_window.cpp'
+and 'main_window_slots.cpp'.
+
+Most of the modules in 'ui/qt' are dialogs. Although we follow Qt naming
+conventions for class names, we follow our own conventions by separating file
+name components with underscores. For example, ColoringRulesDialog is defined in
+'coloring_rules_dialog.cpp', 'coloring_rules_dialog.h', and
+'coloring_rules_dialog.ui'.
+
+General-purpose dialogs are subclasses of `QDialog`. Dialogs that rely on the
+current capture file can subclass `WiresharkDialog`, which provides methods and
+members that make it easier to access the capture file and to keep the dialog
+open when the capture file closes.
+
+==== Coding Practices and Naming Conventions
+
+===== Names
+
+The code in 'ui/qt' directory uses three APIs: Qt (which uses
+InterCapConvention), GLib (which uses underscore_convention), and the Wireshark
+API (which also uses underscore_convention). As a general rule Wireshark's Qt
+code uses InterCapConvention for class names, interCapConvention for methods,
+and underscore_convention for variables, with a trailing_underscore_ for member
+variables.
+
+===== Dialogs
+
+Dialogs that work with capture file information shouldn't close just because the
+capture file closes. Subclassing `WiresharkDialog` as described above can make
+it easier to persist across capture files.
+
+When you create a window with a row of standard ``OK'' and ``Close'' buttons at
+the bottom using Qt Creator you will end up with a subclass of QDialog. This is
+fine for traditional modal dialogs, but many times the ``dialog'' needs to behave
+like a QWindow instead.
+
+Modal dialogs should be constructed with `QDialog(parent)`. Modeless dialogs
+(windows) should be constructed with `QDialog(NULL, Qt::Window)`. Other
+combinations (particularly `QDialog(parent, Qt::Window)`) can lead to odd and
+inconsistent behavior. Again, subclassing `WiresharkDialog` will take care of
+this for you.
+
+Most of the dialogs in ui/qt share many similarities, including method names,
+widget names, and behavior. Most dialogs should have the following, although
+it's not strictly required:
+
+- An `updateWidgets()` method, which enables and disables widgets depending on
+  the current state and constraints of the dialog. For example, the Coloring
+  Rules dialog disables the *Save* button if the user has entered an
+  invalid display filter.
+- A `hintLabel()` widget subclassed from `QLabel` or `ElidedLabel`, placed just
+  above the dialog button box. The hint label provides guidance and feedback to
+  the user.
+- A context menu (`ctx_menu_`) for additional actions not present in the
+  button box.
+- If the dialog box contains a `QTreeWidget` you might want to add your own
+  `QTreeWidgetItem` subclass with the following methods:
+  `drawData()`:: Draws column data with any needed formatting.
+  `colData()`:: Returns the data for each column as a `QVariant`. Used for
+    copying as CSV, YAML, etc.
+  `operator<()`:: Allows sorting columns based on their raw data.
+
+===== Strings
+
+If you're using GLib string functions or plain old C character array idioms in
+Qt-only code you're probably doing something wrong. QStrings are generally
+*much* safer and easier to use. They also make translations easier.
+
+If you need to pass strings between Qt and GLib you can use a number
+of convenience routines which  are defined in 'ui/qt/qt_ui_utils.h'.
+
+If you're calling a function that returns wmem-allocated memory it might make
+more sense to add a wrapper function to 'qt_ui_utils' than to call wmem_free in
+your code.
+
+===== Mixing C and $$C++$$
+
+Sometimes we have to call $$C++$$ functions from one of
+Wireshark's C callbacks and pass $$C++$$ objects to or from C. Tap
+listeners are a common example. The $$C++$$ FAQ link:$$http://www.
+parashift.com/c++-faq/mixing-c-and-cpp.html$$:[describes how to do this
+safely].
+
+Tapping usually involves declaring static methods for callbacks, passing `this`
+as the tap data.
+
+===== Internationalization and Translation
+
+Qt provides a convenient method for translating text: `Qobject::tr()`,
+usually available as `tr()`.
+
+However, please avoid using `tr()` for static strings and define them in '*.ui'
+files instead. `tr()` on manually created objects like `QMenu` are not
+automatically retranslated and must instead be manually translated using
+`changeEvent()` and `retranslateUi()`. See 'summary_dialog.[ch]' for an example
+of this.
+
+NOTE: If your object life is short and your components are (re)created
+dynamically then it is ok to use `tr()`.
+
+In most cases you should handle the changeEvent in order to catch
+`QEvent::LanguageChange`.
+
+Qt makes translating the Wireshark UI into different languages easy. To add a new
+translation, do the following:
+
+- Add your translation ('ui/qt/wireshark_XX.ts') to 'ui/qt/Makefile.am' and 'ui/qt/CMakeLists.txt'
+- (Recommended) Add a flag image for your language in 'images/languages/XX.svg'. Update 'image/languages/languages.qrc' accordingly.
+- Run `lupdate ui/qt -ts ui/qt/wireshark_XX.ts` to generate/update your translation file.
+- Translate with Qt Linguist: `linguist ui/qt/wireshark_XX.ts`.
+- Do a test build and make sure the generated 'wireshark_XX.qm' binary file is included.
+- Push your translation to Gerrit for review. See <<ChSrcContribute>> for details.
+
+Alternatively you can put your QM and flag files in the 'languages'
+directory in the Wireshark user configuration directory
+('$XDG_CONFIG_HOME/wireshark/languages/' or '$HOME/.wireshark/languages/' on
+UNIX).
+
+For more information about Qt Linguist see
+http://qt-project.org/doc/qt-4.8/linguist-manual.html[its manual].
+
+You can also manage translations online with
+https://www.transifex.com/projects/p/wireshark/[Transifex].
+
+Each week translations are automatically synchronized with the source
+code through the following steps:
+
+- pull ts from Transifex
+- lupdate ts file
+- push and commit on Gerrit
+- push ts on Transifex
+
+===== Colors
+
+Qt provides a number of colors via the http://doc.qt.io/qt-5/qpalette.html[QPalette]
+class. Use this class when you need a standard color provided by the
+underlying operating system.
+
+Wireshark uses an extended version of the
+http://tango.freedesktop.org/Tango_Icon_Theme_Guidelines[Tango Color Palette]
+for many interface elements that require custom colors. This includes the
+I/O graphs, sequence diagrams, and RTP streams. Please use this palette
+(defined in `tango_colors.h` and the *ColorUtils* class) if *QPalette*
+doesn't meet your needs.
+
+==== Other Issues and Information
+
+The main window has many QActions which are shared with child widgets. See
+'ui/qt/proto_tree.cpp' for an example of this.
+
+http://www.kdab.com/kdab-products/gammaray/[GammaRay] lets you inspect
+the internals of a running Qt application similar to $$Spy++$$ on Windows.
+
+[[ChUIGTK]]
+
+=== The GTK library
+
+.We have switched to Qt
+[NOTE]
+====
+Wireshark's default interface uses Qt. If you would like to add a new
+interface feature you should use it and not GTK{plus}.
+The documentation below is primarily historical.
+====
+
+Wireshark was initially based on the GTK{plus} toolkit. See
+http://www.gtk.org[] for details. GTK{plus} is designed to hide the
+details of the underlying GUI in a platform independent way. As GTK is
+intended to be a multiplatform tool, there are some drawbacks, as the
+result is a somewhat "non native" look and feel.
+
+GTK{plus} is available for many different platforms including, but not limited to:
+Unix/Linux, macOS and Win32. It's the foundation of the famous GNOME desktop,
+so the future development of GTK should be certain. GTK is implemented in plain
+C (as is Wireshark itself), and available under the LGPL (Lesser General Public
+License), making it free to used by commercial and noncommercial applications.
+
+There are other similar toolkits like wxWidgets which could also be used for
+Wireshark. There's no "one and only" reason for or against any of these
+toolkits. However, the decision towards GTK was made a long time ago :-)
+
+There are two major GTK versions available:
+
+[[ChUIGTK2x]]
+
+==== GTK Version 2.x
+
+GTK 2.x depends on the following libraries:
+
+* GObject (Object library. Basis for GTK and others)
+
+* GLib (A general-purpose utility library, not specific to graphical user
+  interfaces. GLib provides many useful data types, macros, type conversions,
+  string utilities, file utilities, a main loop abstraction, and so on.)
+
+* Pango (Pango is a library for internationalized text handling. It centers
+  around the PangoLayout object, representing a paragraph of text. Pango
+  provides the engine for GtkTextView, GtkLabel, GtkEntry, and other widgets
+  that display text.)
+
+* ATK (ATK is the Accessibility Toolkit. It provides a set of generic interfaces
+  allowing accessibility technologies to interact with a graphical user
+  interface. For example, a screen reader uses ATK to discover the text in an
+  interface and read it to blind users. GTK+ widgets have built-in support for
+  accessibility using the ATK framework.)
+
+* GdkPixbuf (This is a small library which allows you to create GdkPixbuf
+  ("pixel buffer") objects from image data or image files. Use a
+  GdkPixbuf in combination with GtkImage to display images.)
+
+* GDK (GDK is the abstraction layer that allows GTK+ to support multiple
+  windowing systems. GDK provides drawing and window system facilities on X11,
+  Windows, and the Linux framebuffer device.)
+
+[[ChUIGTK3x]]
+
+==== GTK Version 3.x
+
+Wireshark (as of version 1.10) has been ported to use the GTK3 library.
+
+GTK 3.x depends on the following libraries:
+
+(See GTK 2.x)
+
+[[ChUIGTKCompat]]
+
+==== Compatibility GTK versions
+
+The GTK library itself defines some values which makes it easy to distinguish
+between the versions, e.g. +GTK_MAJOR_VERSION+ and +GTK_MINOR_VERSION+ will be
+set to the GTK version at compile time inside the gtkversion.h header.
+
+[[ChUIGTKWeb]]
+
+==== GTK resources on the web
+
+You can find several resources about GTK.
+
+First of all, have a look at http://www.gtk.org[]. This
+will be the first place to look at. If you want to develop GTK related
+things for Wireshark, the most important place might be the GTK API
+documentation at http://library.gnome.org/devel/gtk/stable/[].
+
+Several mailing lists are available about GTK development, see
+http://mail.gnome.org/mailman/listinfo[], the gtk-app-devel-list may be your
+friend.
+
+As it's often done wrong: You should post a mail to *help* the developers
+there instead of only complaining. Posting such a thing like "I don't like
+your dialog, it looks ugly" won't be of much help. You might think about
+what you dislike and describe why you dislike it and provide a suggestion
+for a better way.
+
+[[ChUIGUIDocs]]
+
+=== Human Interface Reference Documents
+
+Wireshark runs on a number of platforms, primarily Windows, macOS, and
+Linux. It should conform to the Windows, macOS, GNOME, and KDE human
+interface guidelines as much as possible. Unfortunately, creating a
+feature that works well across these platforms can sometimes be a
+juggling act since the human interface guidelines for each platform
+often contradict one another. If you run into trouble you can ask the
+_wireshark-dev_ mailing list as well as the User Experience Stack
+Exchange listed below.
+
+For further reference, see the following:
+
+* Android Design:
+http://developer.android.com/design/index.html[]. Wireshark doesn't have
+a mobile frontend (not yet, at least) but there is still useful
+information here.
+
+* GNOME Human Interface Guidelines:
+http://library.gnome.org/devel/hig-book/stable/[]
+
+* The KDE Usability/HIG project:
+http://techbase.kde.org/Projects/Usability/HIG[]
+
+* macOS Human Interface Guidelines:
+https://developer.apple.com/library/mac/documentation/UserExperience/Conceptual/AppleHIGuidelines/Intro/Intro.html[]
+
+* Design apps for the Windows desktop:
+http://msdn.microsoft.com/en-us/library/Aa511258.aspx[]
+
+* User Experience Stack Exchange:
+https://ux.stackexchange.com/[]
+
+[[ChUIGTKDialogs]]
+
+=== Adding/Extending Dialogs
+
+This is usually the main area for contributing new user interface features.
+
+XXX: add the various functions from gtk/dlg_utils.h
+
+[[ChUIGTKWidgetNamings]]
+
+=== Widget naming
+
+It seems to be common sense to name the widgets with some
+descriptive trailing characters, like:
+
+* xy_lb = gtk_label_new();
+
+* xy_cb = gtk_checkbox_new();
+
+* XXX: add more examples
+
+However, this schema isn't used at all places inside the code.
+
+[[ChUIGTKPitfalls]]
+
+=== Common GTK programming pitfalls
+
+There are some common pitfalls in GTK programming.
+
+[[ChUIGTKShowAll]]
+
+==== Usage of gtk_widget_show() / gtk_widget_show_all()
+
+When a GTK widget is created it will be hidden by default. In order to
+show it, a call to gtk_widget_show() has to be done.
+
+
+It isn't necessary to do this for each and every widget created. A call
+to gtk_widget_show_all() on the parent of all the widgets in question
+(e.g. a dialog window) can be done, so all of its child widgets will
+be shown too.
+
+++++++++++++++++++++++++++++++++++++++
+<!-- End of WSDG Chapter User Interface -->
+++++++++++++++++++++++++++++++++++++++

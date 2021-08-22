@@ -1,0 +1,288 @@
+From b681161dc192688db0f8adc3e23b22de5b89721d Mon Sep 17 00:00:00 2001
+From: Adil Saeed Musthafa <adilm@codeaurora.org>
+Date: Thu, 7 Dec 2017 17:22:16 -0800
+Subject: [PATCH 2/2] IEEE802.11 Draft 2.0 changes
+
+Copyright (c) 2017, The Linux Foundation. All rights reserved.
+Redistribution and use in source and binary forms, with or without
+modification, are permitted (subject to the limitations in the
+disclaimer below) provided that the following conditions are met:
+•       Redistributions of source code must retain the above copyright
+notice, this list of conditions and the following disclaimer.
+•       Redistributions in binary form must reproduce the above
+copyright notice, this list of conditions and the following
+disclaimer in the documentation and/or other materials provided
+with the distribution.
+•       Neither the name of The Linux Foundation nor the names of its
+contributors may be used to endorse or promote products derived
+from this software without specific prior written permission.
+NO EXPRESS OR IMPLIED LICENSES TO ANY PARTY'S PATENT RIGHTS ARE
+GRANTED BY THIS LICENSE. THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT
+HOLDERS AND CONTRIBUTORS "AS IS" AND ANY EXPRESS OR IMPLIED
+WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES OF
+MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED.
+IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE FOR
+ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL
+DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE
+GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS
+INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER
+IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR
+OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN
+IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE
+
+---
+IEEE802.11 Draft 2.0 changes
+---
+ wireshark-2.4.2/epan/dissectors/packet-ieee80211.c | 114 ++++++++++++++-------
+ 1 file changed, 75 insertions(+), 39 deletions(-)
+ mode change 100755 => 100644 wireshark-2.4.2/epan/dissectors/packet-ieee80211.c
+
+diff --git a/wireshark-2.4.2/epan/dissectors/packet-ieee80211.c b/wireshark-2.4.2/epan/dissectors/packet-ieee80211.c
+old mode 100755
+new mode 100644
+index 5cfe54e..541d512
+--- a/wireshark-2.4.2/epan/dissectors/packet-ieee80211.c
++++ b/wireshark-2.4.2/epan/dissectors/packet-ieee80211.c
+@@ -2434,19 +2434,14 @@ static const value_string he_phy_cap_numsts_minus_one[] = {
+   { 0x00, NULL }
+ };
+ 
+-static const value_string he_mac_mcs_nss[] = {
++static const value_string he_mcs_nss[] = {
+   { 0x00, "HE-MCS 0-7" },
+-  { 0x01, "HE-MCS 0-8" },
+-  { 0x02, "HE-MCS 0-9" },
+-  { 0x03, "HE-MCS 0-10" },
+-  { 0x04, "HE-MCS 0-11" },
+-  { 0x05, "Reserved" },
+-  { 0x06, "Reserved" },
+-  { 0x07, "Reserved" },
++  { 0x01, "HE-MCS 0-9"},
++  { 0x02, "HE-MCS 0-11"},
++  { 0x03, "Not Supported"},
+   { 0x00, NULL }
+ };
+ 
+-
+ static const value_string he_cap_ppet_constellation[] = {
+   { 0x00, "BPSK" },
+   { 0x01, "QPSK" },
+@@ -4140,6 +4135,7 @@ static int hf_ieee80211_he_mac_abqr_support = -1;
+ static int hf_ieee80211_he_mac_sr_responder = -1;
+ static int hf_ieee80211_he_mac_ndp_fdbk_support = -1;
+ static int hf_ieee80211_he_mac_ops_support = -1;
++static int hf_ieee80211_he_mac_amsdu_in_ampdu = -1;
+ static int hf_ieee80211_he_mac_reserved = -1;
+ 
+ static int hf_ieee80211_he_phy_cap_part1 = -1;
+@@ -4157,11 +4153,11 @@ static int hf_ieee80211_he_phy_preamble_puncture_rx_bit10 = -1;
+ static int hf_ieee80211_he_phy_preamble_puncture_rx_bit11 = -1;
+ static int hf_ieee80211_he_phy_device_class = -1;
+ static int hf_ieee80211_he_phy_LDPC_coding_payload = -1;
+-static int hf_ieee80211_he_phy_bit14 = -1;
+-static int hf_ieee80211_he_phy_bit15_bit16 = -1;
+-static int hf_ieee80211_he_phy_bit17 = -1;
+-static int hf_ieee80211_he_phy_bit18 = -1;
+-static int hf_ieee80211_he_phy_bit19 = -1;
++static int hf_ieee80211_he_phy_1x_ltf_800ns = -1;
++static int hf_ieee80211_he_phy_midamble = -1;
++static int hf_ieee80211_he_phy_4x_ltf_3200ns = -1;
++static int hf_ieee80211_he_phy_stbc_tx_lteq_80mhz = -1;
++static int hf_ieee80211_he_phy_stbc_rx_lteq_80mhz = -1;
+ static int hf_ieee80211_he_phy_doppler_tx = -1;
+ static int hf_ieee80211_he_phy_doppler_rx = -1;
+ static int hf_ieee80211_he_phy_ul_mumimo_full_bw = -1;
+@@ -4197,6 +4193,11 @@ static int hf_ieee80211_he_phy_stbc_tx_gt_80M = -1;
+ static int hf_ieee80211_he_phy_stbc_rx_gt_80M = -1;
+ static int hf_ieee80211_he_phy_cap_part3 = -1;
+ static int hf_ieee80211_he_phy_ersu_4x_ltf_800ns = -1;
++static int hf_ieee80211_he_phy_heppdu20in40mhz2g = -1;
++static int hf_ieee80211_he_phy_heppdu20in160or80p80mhz = -1;
++static int hf_ieee80211_he_phy_heppdu80in160or80p80mhz = -1;
++static int hf_ieee80211_he_phy_ersu_1x_ltf_800ns = -1;
++static int hf_ieee80211_he_phy_midamblerx2xand1xheltf  = -1;
+ static int hf_ieee80211_he_phy_reserved = -1;
+ 
+ static int hf_ieee80211_he_txrx_mcs_support_tree = -1;
+@@ -12088,6 +12089,7 @@ dissect_he_capability_ie(tvbuff_t *tvb, packet_info *pinfo, proto_tree *tree, in
+   proto_tree_add_item(cap_tree, hf_ieee80211_he_mac_sr_responder, tvb, offset, 1, ENC_LITTLE_ENDIAN);
+   proto_tree_add_item(cap_tree, hf_ieee80211_he_mac_ndp_fdbk_support, tvb, offset, 1, ENC_LITTLE_ENDIAN);
+   proto_tree_add_item(cap_tree, hf_ieee80211_he_mac_ops_support, tvb, offset, 1, ENC_LITTLE_ENDIAN);
++  proto_tree_add_item(cap_tree, hf_ieee80211_he_mac_amsdu_in_ampdu, tvb, offset, 1, ENC_LITTLE_ENDIAN);
+   proto_tree_add_item(cap_tree, hf_ieee80211_he_mac_reserved, tvb, offset, 1, ENC_LITTLE_ENDIAN);
+ 
+   offset += 1;
+@@ -12119,12 +12121,12 @@ dissect_he_capability_ie(tvbuff_t *tvb, packet_info *pinfo, proto_tree *tree, in
+   proto_tree_add_item(cap_tree, hf_ieee80211_he_phy_preamble_puncture_rx_bit11, tvb, offset, 4, ENC_LITTLE_ENDIAN);
+   proto_tree_add_item(cap_tree, hf_ieee80211_he_phy_device_class, tvb, offset, 4, ENC_LITTLE_ENDIAN);
+   proto_tree_add_item(cap_tree, hf_ieee80211_he_phy_LDPC_coding_payload, tvb, offset, 4, ENC_LITTLE_ENDIAN);
+-  proto_tree_add_item(cap_tree, hf_ieee80211_he_phy_bit14, tvb, offset, 4, ENC_LITTLE_ENDIAN);
+-  proto_tree_add_item(cap_tree, hf_ieee80211_he_phy_bit15_bit16, tvb, offset, 4, ENC_LITTLE_ENDIAN);
++  proto_tree_add_item(cap_tree, hf_ieee80211_he_phy_1x_ltf_800ns, tvb, offset, 4, ENC_LITTLE_ENDIAN);
++  proto_tree_add_item(cap_tree, hf_ieee80211_he_phy_midamble, tvb, offset, 4, ENC_LITTLE_ENDIAN);
++  proto_tree_add_item(cap_tree, hf_ieee80211_he_phy_4x_ltf_3200ns, tvb, offset, 4, ENC_LITTLE_ENDIAN);
++  proto_tree_add_item(cap_tree, hf_ieee80211_he_phy_stbc_tx_lteq_80mhz, tvb, offset, 4, ENC_LITTLE_ENDIAN);
++  proto_tree_add_item(cap_tree, hf_ieee80211_he_phy_stbc_rx_lteq_80mhz, tvb, offset, 4, ENC_LITTLE_ENDIAN);
+ 
+-  proto_tree_add_item(cap_tree, hf_ieee80211_he_phy_bit17, tvb, offset, 4, ENC_LITTLE_ENDIAN);
+-  proto_tree_add_item(cap_tree, hf_ieee80211_he_phy_bit18, tvb, offset, 4, ENC_LITTLE_ENDIAN);
+-  proto_tree_add_item(cap_tree, hf_ieee80211_he_phy_bit19, tvb, offset, 4, ENC_LITTLE_ENDIAN);
+   proto_tree_add_item(cap_tree, hf_ieee80211_he_phy_doppler_tx, tvb, offset, 4, ENC_LITTLE_ENDIAN);
+   proto_tree_add_item(cap_tree, hf_ieee80211_he_phy_doppler_rx, tvb, offset, 4, ENC_LITTLE_ENDIAN);
+   proto_tree_add_item(cap_tree, hf_ieee80211_he_phy_ul_mumimo_full_bw, tvb, offset, 4, ENC_LITTLE_ENDIAN);
+@@ -12184,6 +12186,11 @@ dissect_he_capability_ie(tvbuff_t *tvb, packet_info *pinfo, proto_tree *tree, in
+   cap_item = proto_tree_add_item(tree, hf_ieee80211_he_phy_cap_part3, tvb, offset, 1, ENC_LITTLE_ENDIAN);
+   cap_tree = proto_item_add_subtree(cap_item, ett_vht_cap_tree);
+   proto_tree_add_item(cap_tree, hf_ieee80211_he_phy_ersu_4x_ltf_800ns, tvb, offset, 1, ENC_LITTLE_ENDIAN);
++  proto_tree_add_item(cap_tree, hf_ieee80211_he_phy_heppdu20in40mhz2g, tvb, offset, 1, ENC_LITTLE_ENDIAN);
++  proto_tree_add_item(cap_tree, hf_ieee80211_he_phy_heppdu20in160or80p80mhz, tvb, offset, 1, ENC_LITTLE_ENDIAN);
++  proto_tree_add_item(cap_tree, hf_ieee80211_he_phy_heppdu80in160or80p80mhz, tvb, offset, 1, ENC_LITTLE_ENDIAN);
++  proto_tree_add_item(cap_tree, hf_ieee80211_he_phy_ersu_1x_ltf_800ns, tvb, offset, 1, ENC_LITTLE_ENDIAN);
++  proto_tree_add_item(cap_tree, hf_ieee80211_he_phy_midamblerx2xand1xheltf, tvb, offset, 1, ENC_LITTLE_ENDIAN);
+   proto_tree_add_item(cap_tree, hf_ieee80211_he_phy_reserved, tvb, offset, 1, ENC_LITTLE_ENDIAN);
+ 
+   /*
+@@ -12259,7 +12266,7 @@ guint32 tag_len, ieee80211_tagged_field_data_t* field_data)
+   guint32 he_op_params;
+   int cnt;
+ 
+-  if (tag_len < 7) {
++  if (tag_len < 6) {
+ 	  expert_add_info_format(pinfo, field_data->item_tag_length, &ei_ieee80211_tag_length,
+                            "HE OPERATION IE Length not correct");
+     return (offset+tag_len);
+@@ -12287,15 +12294,15 @@ guint32 tag_len, ieee80211_tagged_field_data_t* field_data)
+   offset  += 4;
+   tag_len -= 4;
+ 
+-  cap_item = proto_tree_add_item(tree, hf_ieee80211_he_operation_mcs_nss_set_tree, tvb, offset, 3, ENC_LITTLE_ENDIAN);
++  cap_item = proto_tree_add_item(tree, hf_ieee80211_he_operation_mcs_nss_set_tree, tvb, offset, 2, ENC_LITTLE_ENDIAN);
+   cap_tree = proto_item_add_subtree(cap_item, ett_vht_cap_tree);
+ 
+   for (cnt=0;cnt<MAX_NSS;cnt++) {
+-    proto_tree_add_item(cap_tree, hf_ieee80211_he_operation_mcs_nss_set[cnt], tvb, offset, 3, ENC_LITTLE_ENDIAN);
++    proto_tree_add_item(cap_tree, hf_ieee80211_he_operation_mcs_nss_set[cnt], tvb, offset, 2, ENC_LITTLE_ENDIAN);
+   }
+ 
+-  offset  += 3;
+-  tag_len -= 3;
++  offset  += 2;
++  tag_len -= 2;
+ 
+   if (he_op_params & HE_OP_VHT_INFO_PRESENT_MASK) {
+     if (tag_len < 3) {
+@@ -20529,7 +20536,7 @@ dissect_data_encap(tvbuff_t *tvb, packet_info *pinfo, proto_tree *tree, void* da
+ void add_he_operation_mcs_nss_set_subfields(int protocol)
+ {
+   static hf_register_info max_mcs_desc[MAX_NSS];
+-  const INT NUM_MCS_BITS = 3;
++  const INT NUM_MCS_BITS = 2;
+   int cnt;
+   /*
+   * Max HE MCS For MAX_NSS
+@@ -20538,7 +20545,7 @@ void add_he_operation_mcs_nss_set_subfields(int protocol)
+   static char max_mcs_abbrev[MAX_NSS][60];
+ 
+   header_field_info hfinfo = { "", "wlan_mgt.he.operation.mcs.nss.set",
+-    FT_UINT24, BASE_DEC, VALS(he_mac_mcs_nss), 0,
++    FT_UINT16, BASE_DEC, VALS(he_mcs_nss), 0,
+     NULL, HFILL };
+ 
+   for (cnt = 0; cnt<MAX_NSS; cnt++) {
+@@ -25695,9 +25702,14 @@ proto_register_ieee80211(void)
+        FT_UINT8, BASE_DEC, NULL, 0x20,
+        NULL, HFILL } },
+ 
++    {&hf_ieee80211_he_mac_amsdu_in_ampdu,
++     {"A-MSDU in A-MPDU support", "wlan_mgt.he.mac.amsdu.in.ampdu.support",
++      FT_UINT8, BASE_DEC, NULL, 0x40,
++      NULL, HFILL }},
++
+        { &hf_ieee80211_he_mac_reserved,
+        { "Reserved", "wlan_mgt.he.mac.reserved",
+-       FT_UINT8, BASE_HEX, NULL, 0xC0,
++       FT_UINT8, BASE_HEX, NULL, 0x80,
+        NULL, HFILL } },
+ 
+ 
+@@ -25776,28 +25788,28 @@ proto_register_ieee80211(void)
+          FT_UINT32, BASE_DEC, NULL, 0x00002000,
+          NULL, HFILL } },
+ 
+-         { &hf_ieee80211_he_phy_bit14,
+-         { "HE SU PPDU With 1x HELTF And 0.8 us GI", "wlan_mgt.he.phy.bit14",
++         { &hf_ieee80211_he_phy_1x_ltf_800ns,
++         { "HE SU PPDU With 1x HELTF And 0.8 us GI", "wlan_mgt.he.phy.1x.ltf.800ns",
+          FT_UINT32, BASE_DEC, NULL, 0x00004000,
+          NULL, HFILL } },
+ 
+-         { &hf_ieee80211_he_phy_bit15_bit16,
+-         { "Reserved", "wlan_mgt.he.phy.bit15_bit16",
++         { &hf_ieee80211_he_phy_midamble,
++         { "Midamble Rx Max NSTS", "wlan_mgt.he.phy.midamble",
+          FT_UINT32, BASE_DEC, NULL, 0x00018000,
+          NULL, HFILL } },
+ 
+-         { &hf_ieee80211_he_phy_bit17,
+-         { "NDP With 4x HE-LTF And 3.2 us GI", "wlan_mgt.he.phy.bit17",
++         { &hf_ieee80211_he_phy_4x_ltf_3200ns,
++         { "NDP With 4x HE-LTF And 3.2 us GI", "wlan_mgt.he.phy.4x.ltf.3200ns",
+          FT_UINT32, BASE_DEC, NULL, 0x00020000,
+          NULL, HFILL } },
+ 
+-         { &hf_ieee80211_he_phy_bit18,
+-         { "STBC Tx <= 80 MHz", "wlan_mgt.he.phy.bit18",
++         { &hf_ieee80211_he_phy_stbc_tx_lteq_80mhz,
++         { "STBC Tx <= 80 MHz", "wlan_mgt.he.phy.stbc.tx.lteq.80mhz",
+          FT_UINT32, BASE_DEC, NULL, 0x00040000,
+          NULL, HFILL } },
+ 
+-         { &hf_ieee80211_he_phy_bit19,
+-         { "STBC Rx <= 80 MHz", "wlan_mgt.he.phy.bit19",
++         { &hf_ieee80211_he_phy_stbc_rx_lteq_80mhz,
++         { "STBC Rx <= 80 MHz", "wlan_mgt.he.phy.stbc.rx.lteq.80mhz",
+          FT_UINT32, BASE_DEC, NULL, 0x00080000,
+          NULL, HFILL } },
+ 
+@@ -25976,12 +25988,36 @@ proto_register_ieee80211(void)
+          FT_UINT8, BASE_DEC, NULL, 0x01,
+          NULL, HFILL } },
+ 
++         { &hf_ieee80211_he_phy_heppdu20in40mhz2g,
++         { "20MHz in 40 MHz HE PPDU in 2.4 GHz", "wlan_mgt.he.phy.20mhz.in.40mhz.he.ppdu.in.2.4.ghz",
++         FT_UINT8, BASE_DEC, NULL, 0x02,
++         NULL, HFILL }},
++
++         { &hf_ieee80211_he_phy_heppdu20in160or80p80mhz,
++         { "20MHz in 160/80p80 MHz HE PPDU", "wlan_mgt.he.phy.20mhz.in.160or80p80.mhz.he.ppdu",
++         FT_UINT8, BASE_DEC, NULL, 0x04,
++         NULL, HFILL }},
++
++         { &hf_ieee80211_he_phy_heppdu80in160or80p80mhz,
++         { "80MHz in 160/80p80 MHz HE PPDU", "wlan_mgt.he.phy.80mhz.in.160or80p80.mhz.he.ppdu",
++         FT_UINT8, BASE_DEC, NULL, 0x08,
++         NULL, HFILL }},
++
++         { &hf_ieee80211_he_phy_ersu_1x_ltf_800ns,
++         { "HE ERSU PPDU With 1x HE-LTF And 0.8us GI", "wlan_mgt.he.phy.ersu.1x.ltf.800ns",
++         FT_UINT8, BASE_DEC, NULL, 0x10,
++         NULL, HFILL }},
++
++         { &hf_ieee80211_he_phy_midamblerx2xand1xheltf,
++         { "Midamble Rx 2x And 1x HE-LTF", "wlan_mgt.he.phy.midamble.rx.2x.and.1x.he.ltf",
++         FT_UINT8, BASE_DEC, NULL, 0x20,
++         NULL, HFILL }},
++
+          { &hf_ieee80211_he_phy_reserved,
+          { "Reserved", "wlan_mgt.he.phy.reserved",
+-         FT_UINT8, BASE_DEC, NULL, 0xFE,
++         FT_UINT8, BASE_DEC, NULL, 0xC0,
+          NULL, HFILL } },
+ 
+-
+         { &hf_ieee80211_he_txrx_mcs_support_tree,
+         { "Tx Rx HE MCS Support", "wlan_mgt.he.capabilities.txrx.mcs.support",
+         FT_UINT64, BASE_HEX, NULL, 0,
+-- 
+1.9.1
+

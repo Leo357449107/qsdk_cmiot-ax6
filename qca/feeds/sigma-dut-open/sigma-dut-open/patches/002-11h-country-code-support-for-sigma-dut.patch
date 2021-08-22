@@ -1,0 +1,14 @@
+--- a/ap.c
++++ b/ap.c
+@@ -7768,6 +7768,11 @@ enum sigma_cmd_result cmd_ap_config_comm
+ 			fprintf(f, "ieee80211d=1\n");
+ 			fprintf(f, "ieee80211h=1\n");
+ 		}
++		else if(dut->ap_channel >= 52 && dut->ap_channel <=144) {
++				fprintf(f, "country_code=US\n"
++					"ieee80211d=1\n"
++					"ieee80211h=1\n");
++		}
+ 	}
+ 
+ 	if (drv == DRIVER_LINUX_WCN && dut->ap_mode == AP_11ax) {

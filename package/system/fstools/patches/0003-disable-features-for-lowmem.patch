@@ -1,0 +1,85 @@
+--- a/CMakeLists.txt
++++ b/CMakeLists.txt
+@@ -5,6 +5,14 @@ ADD_DEFINITIONS(-Os -ggdb -Wall -Werror
+ 
+ SET(CMAKE_SHARED_LIBRARY_LINK_C_FLAGS "")
+ 
++IF(DEFINED CMAKE_LOWMEM_FLASH)
++ADD_LIBRARY(fstools SHARED
++		libfstools/overlay.c
++		libfstools/volume.c
++		libfstools/mtd.c
++		libfstools/mount.c
++		libfstools/find.c)
++ELSE(DEFINED CMAKE_LOWMEM_FLASH)
+ ADD_LIBRARY(fstools SHARED
+ 		libfstools/snapshot.c
+ 		libfstools/extroot.c
+@@ -15,6 +23,8 @@ ADD_LIBRARY(fstools SHARED
+ 		libfstools/mount.c
+ 		libfstools/ubi.c
+ 		libfstools/find.c)
++ENDIF(DEFINED CMAKE_LOWMEM_FLASH)
++
+ TARGET_LINK_LIBRARIES(fstools ubox)
+ INSTALL(TARGETS fstools LIBRARY DESTINATION lib)
+ 
+@@ -74,6 +74,7 @@ ADD_EXECUTABLE(jffs2reset jffs2reset.c)
+ TARGET_LINK_LIBRARIES(jffs2reset fstools)
+ INSTALL(TARGETS jffs2reset RUNTIME DESTINATION sbin)
+ 
++IF(NOT DEFINED CMAKE_LOWMEM_FLASH)
+ ADD_EXECUTABLE(snapshot_tool snapshot.c)
+ TARGET_LINK_LIBRARIES(snapshot_tool fstools)
+ INSTALL(TARGETS snapshot_tool RUNTIME DESTINATION sbin)
+@@ -81,3 +82,4 @@ INSTALL(TARGETS snapshot_tool RUNTIME DE
+ ADD_EXECUTABLE(ubi ubi.c)
+ TARGET_LINK_LIBRARIES(ubi ubi-utils ubox)
+ INSTALL(TARGETS ubi RUNTIME DESTINATION sbin)
++ENDIF(DEFINED CMAKE_LOWMEM_FLASH)
+--- a/mount_root.c
++++ b/mount_root.c
+@@ -45,12 +45,13 @@ start(int argc, char *argv[1])
+ 	 * extroot configured. Following call will handle reading config from
+ 	 * the "rootfs_data" on its own.
+ 	 */
++#ifndef LOWMEM_FLASH 
+ 	extroot_prefix = "";
+ 	if (!mount_extroot()) {
+ 		ULOG_NOTE("switched to extroot\n");
+ 		return 0;
+ 	}
+-
++#endif
+ 	/* There isn't extroot, so just try to mount "rootfs_data" */
+ 	switch (volume_identify(data)) {
+ 	case FS_NONE:
+@@ -73,7 +74,11 @@ start(int argc, char *argv[1])
+ 		break;
+ 
+ 	case FS_SNAPSHOT:
++#ifndef LOWMEM_FLASH
+ 		mount_snapshot(data);
++#else
++		ULOG_WARN(" FS_SNAPSHOT is not supported for lowmem\n");
++#endif
+ 		break;
+ 	}
+ 
+--- a/libfstools/overlay.c
++++ b/libfstools/overlay.c
+@@ -361,12 +361,13 @@ int mount_overlay(struct volume *v)
+ 
+ 	overlay_mount_fs(v);
+ 
++#ifndef LOWMEM_FLASH
+ 	extroot_prefix = "/tmp/overlay";
+ 	if (!mount_extroot()) {
+ 		ULOG_INFO("switched to extroot\n");
+ 		return 0;
+ 	}
+-
++#endif
+ 	switch(fs_state_get("/tmp/overlay")) {
+ 	case FS_STATE_UNKNOWN:
+ 		fs_state_set("/tmp/overlay", FS_STATE_PENDING);

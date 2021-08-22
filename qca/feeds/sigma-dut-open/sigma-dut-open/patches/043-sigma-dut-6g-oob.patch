@@ -1,0 +1,40 @@
+From f3f1d2f20fb182fce33efcd1c3c04f4915bb0bda Mon Sep 17 00:00:00 2001
+From: Sriram R <srirrama@codeaurora.org>
+Date: Sat, 17 Oct 2020 16:47:19 +0530
+Subject: [PATCH] sigma_dut: Add hostapd config for 6G OoB Support
+
+Add "rnr_beacon=1" and "he_co_locate=1" configs
+for dual radio OoB support for 6GHz"
+
+Signed-off-by: Sriram R <srirrama@codeaurora.org>
+---
+ ap.c | 6 ++++++
+ 1 file changed, 6 insertions(+)
+
+diff --git a/ap.c b/ap.c
+index 91d97f7..ead9e2d 100644
+--- a/ap.c
++++ b/ap.c
+@@ -7926,6 +7926,9 @@ static int fill_dual_radio_caps(struct sigma_dut *dut, FILE *f)
+ 			fprintf(f, "he_rts_threshold=1023\n");
+ 		else
+ 			fprintf(f, "he_rts_threshold=0\n");
++
++		if (dut->ap_dual_band == BAND_5G || dut->ap_dual_band == BAND_2G)
++			fprintf(f, "rnr_beacon=1\n");
+ 	}
+ 
+ 	return 0;
+@@ -8179,6 +8182,9 @@ enum sigma_cmd_result cmd_ap_config_commit(struct sigma_dut *dut,
+ 			op_freq_seg0_idx);
+ 
+ 		fprintf(f, "sae_pwe=1\n");
++
++		if (dut->ap_is_dual)
++			fprintf(f, "he_co_locate=1\n");
+ 	}
+ 
+ 	if (drv == DRIVER_LINUX_WCN && dut->ap_mode == AP_11ax) {
+-- 
+2.7.4
+

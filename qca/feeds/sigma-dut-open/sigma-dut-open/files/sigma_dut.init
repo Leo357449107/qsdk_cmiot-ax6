@@ -1,0 +1,29 @@
+START=90
+SERVICE_PID_FILE=/var/run/sigma-dut.pid
+SERVICE_DAEMONIZE=1
+SERVICE_WRITE_PID=1
+
+start () {
+	config_load sigma-dut
+	local ARGS
+
+	local enable
+	config_get_bool enable global enable 0
+	[ "${enable}" -gt 0 ] || return
+
+	local port radio_name
+	config_get port global port
+	[ -n "${port}" ] && append ARGS "-p ${port} "
+
+	config_get radio_name global radio_name
+	[ -n "${radio_name}" ] && append ARGS "-R ${radio_name} "
+
+	config_get bridge_iface global bridge_iface
+	[ -n "${bridge_iface}" ] && append ARGS "-b ${bridge_iface} "
+
+	service_start /usr/sbin/sigma_dut -c MAC80211 ${ARGS}
+}
+
+stop() {
+	service_stop /usr/sbin/sigma_dut
+}

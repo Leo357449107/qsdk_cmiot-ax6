@@ -1,0 +1,25 @@
+From 02ff4cca7a9e0df42af190fcb3040cccdee7e237 Mon Sep 17 00:00:00 2001
+From: Venkateswara Naralasetty <vnaralas@codeaurora.org>
+Date: Wed, 31 Mar 2021 11:24:54 +0530
+Subject: [PATCH] sigma-dut-open: extend ath11k-fwtest wrapper to ath11k_pci
+
+As of now ath11k-fwtest commands are excuted only for the driver
+type ath11k, extend this wrapper function to support the fwtest
+commands for ath11k_pci driver as well.
+
+Signed-off-by: Venkateswara Naralasetty <vnaralas@codeaurora.org>
+---
+ ap.c | 3 ++-
+ 1 file changed, 2 insertions(+), 1 deletion(-)
+
+--- a/ap.c
++++ b/ap.c
+@@ -128,7 +128,7 @@ static int fwtest_cmd_wrapper(struct sig
+ {
+ 	int ret = -1;
+ 
+-	if (strcmp(dut->device_driver, "ath11k") == 0)
++	if (strncmp(dut->device_driver, "ath11k", 6) == 0)
+ 		ret = run_system_wrapper(dut, "ath11k-fwtest -i %s %s",
+ 					 ifname, arg);
+ 

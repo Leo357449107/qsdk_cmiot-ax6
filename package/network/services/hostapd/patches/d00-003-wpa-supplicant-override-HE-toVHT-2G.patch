@@ -1,0 +1,33 @@
+--- a/wpa_supplicant/wpa_supplicant.c
++++ b/wpa_supplicant/wpa_supplicant.c
+@@ -2299,10 +2299,6 @@ void ibss_mesh_setup_freq(struct wpa_sup
+ 		freq->he_enabled = mode->he_capab[ieee80211_mode].he_supported;
+ #endif /* CONFIG_HE_OVERRIDES */
+ 
+-	/* Setup higher BW only for 5 GHz */
+-	if (mode->mode != HOSTAPD_MODE_IEEE80211A)
+-		return;
+-
+ 	for (chan_idx = 0; chan_idx < mode->num_channels; chan_idx++) {
+ 		pri_chan = &mode->channels[chan_idx];
+ 		if (pri_chan->chan == channel)
+@@ -2422,6 +2418,11 @@ skip_ht40:
+ 	/* Enable HE for VHT */
+ 	vht_freq.he_enabled = mode->he_capab[ieee80211_mode].he_supported;
+ 
++#ifdef CONFIG_HE_OVERRIDES
++	if (is_24ghz)
++		goto skip_vht80;
++#endif /* CONFIG_HE_OVERRIDES */
++
+ 	/* setup center_freq1, bandwidth */
+ 	for (j = 0; j < ARRAY_SIZE(vht80); j++) {
+ 		if (freq->channel >= vht80[j] &&
+@@ -2495,6 +2496,7 @@ skip_ht40:
+ #endif /* CONFIG_HT_OVERRIDES */
+ 	}
+ #ifdef CONFIG_HE_OVERRIDES
++skip_vht80:
+ 	if (ssid->disable_he)
+ 		vht_freq.he_enabled = 0;
+ #endif /* CONFIG_HE_OVERRIDES */

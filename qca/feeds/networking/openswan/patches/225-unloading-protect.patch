@@ -1,0 +1,142 @@
+diff -Nur a/linux/include/openswan/ipsec_param2.h openswan-2.6.41/linux/include/openswan/ipsec_param2.h
+--- a/linux/include/openswan/ipsec_param2.h	2018-03-19 11:43:28.676355077 -0700
++++ openswan-2.6.41/linux/include/openswan/ipsec_param2.h	2018-03-23 15:44:03.405696334 -0700
+@@ -29,7 +29,7 @@
+ #if defined(IP_SELECT_IDENT) && defined(IP_SELECT_IDENT_NEW2)
+ #undef KLIPS_IP_SELECT_IDENT
+ # if (LINUX_VERSION_CODE < KERNEL_VERSION(4, 1, 0))
+-#  define KLIPS_IP_SELECT_IDENT(iph, skb) __ip_select_ident(skb, 1)
++#  define KLIPS_IP_SELECT_IDENT(iph, skb) __ip_select_ident(iph, 1)
+ # else
+ #  define KLIPS_IP_SELECT_IDENT(iph, skb) __ip_select_ident(dev_net(skb->dev), iph, 1)
+ #endif
+diff -Nur a/linux/include/openswan/ipsec_tunnel.h openswan-2.6.41/linux/include/openswan/ipsec_tunnel.h
+--- a/linux/include/openswan/ipsec_tunnel.h	2018-03-19 11:43:28.676355077 -0700
++++ openswan-2.6.41/linux/include/openswan/ipsec_tunnel.h	2018-03-23 15:44:03.405696334 -0700
+@@ -156,4 +156,5 @@
+ extern void ipsec_xmit_state_cache_cleanup (void);
+ struct ipsec_xmit_state *ipsec_xmit_state_new (struct net_device *dev);
+ void ipsec_xmit_state_delete (struct ipsec_xmit_state *ixs);
++extern int ipsec_unloading;
+ 
+diff -Nur a/linux/net/ipsec/ipsec_init.c openswan-2.6.41/linux/net/ipsec/ipsec_init.c
+--- a/linux/net/ipsec/ipsec_init.c	2018-03-19 11:43:28.676355077 -0700
++++ openswan-2.6.41/linux/net/ipsec/ipsec_init.c	2018-03-23 15:44:03.405696334 -0700
+@@ -377,6 +377,7 @@
+         return error;
+ }	
+ 
++int ipsec_unloading = 0;
+ 
+ #ifdef NET_26
+ void
+@@ -387,6 +388,8 @@
+ {
+ 	int error = 0;
+ 
++	ipsec_unloading = 1;
++
+ #ifdef CONFIG_SYSCTL
+         ipsec_sysctl_unregister();
+ #endif                                                                          
+diff -Nur a/linux/net/ipsec/ipsec_rcv.c openswan-2.6.41/linux/net/ipsec/ipsec_rcv.c
+--- a/linux/net/ipsec/ipsec_rcv.c	2018-03-19 11:43:28.676355077 -0700
++++ openswan-2.6.41/linux/net/ipsec/ipsec_rcv.c	2018-03-23 15:44:55.013694806 -0700
+@@ -1984,7 +1984,7 @@
+ 		}
+ 	}
+ 
+-	while (irs->state != IPSEC_RSM_DONE) {
++	while (irs->state != IPSEC_RSM_DONE && !ipsec_unloading) {
+ 		int rc;
+ 
+ 		irs->next_state = rcv_state_table[irs->state].next_state;
+@@ -2355,14 +2355,22 @@
+ void
+ ipsec_rcv_state_cache_cleanup (void)
+ {
+-        if (unlikely (irs_cache_allocated_count))
+-                printk ("ipsec: deleting ipsec_irs kmem_cache while in use\n");
++	int try = ipsec_irs_cache_allocated_max / 10;
+ 
++	while (irs_cache_allocated_count && try--) {
++		msleep_interruptible(100);
++	}
++
++	if (unlikely (irs_cache_allocated_count))
++		 printk ("ipsec: deleting ipsec_irs kmem_cache while in use[%d]\n", irs_cache_allocated_count);
++
++        spin_lock_bh (&irs_cache_lock);
+         if (irs_cache_allocator) {
+                 kmem_cache_destroy (irs_cache_allocator);
+                 irs_cache_allocator = NULL;
+         }
+         irs_cache_allocated_count = 0;
++        spin_unlock_bh (&irs_cache_lock);
+ }
+ 
+ static struct ipsec_rcv_state *
+@@ -2426,6 +2434,9 @@
+         spin_lock_bh (&irs_cache_lock);
+ 
+         irs_cache_allocated_count--;
++
++	BUG_ON (!irs_cache_allocator);
++
+         kmem_cache_free (irs_cache_allocator, irs);
+ 
+         spin_unlock_bh (&irs_cache_lock);
+diff -Nur a/linux/net/ipsec/ipsec_tunnel.c openswan-2.6.41/linux/net/ipsec/ipsec_tunnel.c
+--- a/linux/net/ipsec/ipsec_tunnel.c	2018-03-19 11:43:28.676355077 -0700
++++ openswan-2.6.41/linux/net/ipsec/ipsec_tunnel.c	2018-03-23 15:44:03.409696334 -0700
+@@ -2306,14 +2306,23 @@
+ void
+ ipsec_xmit_state_cache_cleanup (void)
+ {
+-        if (unlikely (ixs_cache_allocated_count))
+-                printk ("ipsec: deleting ipsec_ixs kmem_cache while in use\n");
++	int try = ipsec_ixs_cache_allocated_max / 10;
+ 
++	while (ixs_cache_allocated_count && try--) {
++		msleep_interruptible(100);
++	}
++
++	if (unlikely (ixs_cache_allocated_count))
++		printk ("ipsec: deleting ipsec_ixs kmem_cache while in use[%d]\n", ixs_cache_allocated_count);
++
++        spin_lock_bh (&ixs_cache_lock);
+         if (ixs_cache_allocator) {
+                 kmem_cache_destroy (ixs_cache_allocator);
+                 ixs_cache_allocator = NULL;
+         }
+-        ixs_cache_allocated_count = 0;
++	ixs_cache_allocated_count = 0;
++
++	spin_unlock_bh (&ixs_cache_lock);
+ }
+ 
+ struct ipsec_xmit_state *
+@@ -2396,6 +2405,7 @@
+ 
+         spin_lock_bh (&ixs_cache_lock);
+         ixs_cache_allocated_count--;
++	BUG_ON(!ixs_cache_allocator);
+         kmem_cache_free (ixs_cache_allocator, ixs);
+ #if defined(HAS_NETIF_QUEUE) || defined (HAVE_NETIF_QUEUE)
+         if (dev && netif_queue_stopped(dev))
+diff -Nur a/linux/net/ipsec/ipsec_xmit.c openswan-2.6.41/linux/net/ipsec/ipsec_xmit.c
+--- a/linux/net/ipsec/ipsec_xmit.c	2018-03-19 11:43:28.676355077 -0700
++++ openswan-2.6.41/linux/net/ipsec/ipsec_xmit.c	2018-03-23 15:44:03.409696334 -0700
+@@ -2807,6 +2807,12 @@
+ 	more_allowed = 1000;
+ 	while (ixs->state != IPSEC_XSM_DONE && --more_allowed) {
+ 
++		if (ipsec_unloading) {
++			printk("%s: discard pending packets while unloading.\n", __func__);
++			stat = IPSEC_XSM_DONE;
++			break;
++		}
++
+ 		ixs->next_state = xmit_state_table[ixs->state].next_state;
+ 
+ 		stat = xmit_state_table[ixs->state].action(ixs);

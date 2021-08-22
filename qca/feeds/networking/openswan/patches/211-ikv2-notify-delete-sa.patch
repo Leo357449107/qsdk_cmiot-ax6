@@ -1,0 +1,33 @@
+diff -Nur a/programs/pluto/ikev2_parent.c openswan-2.6.51.3/programs/pluto/ikev2_parent.c
+--- a/programs/pluto/ikev2_parent.c	2019-04-04 14:09:50.798514527 -0700
++++ openswan-2.6.51.3/programs/pluto/ikev2_parent.c	2019-04-04 14:10:53.782512662 -0700
+@@ -699,13 +699,13 @@
+     zero(&e_pbs);
+     zero(&e_pbs_cipher);
+ 
+-    /* beginning of data going out */
+-    authstart = reply_stream.cur;
+-
+     /* make sure HDR is at start of a clean buffer */
+     zero(reply_buffer);
+     init_pbs(&reply_stream, reply_buffer, sizeof(reply_buffer), "enc notification msg");
+ 
++    /* beginning of data going out */
++    authstart = reply_stream.cur;
++
+     openswan_log("sending encrypted notification %s/%s to %s:%u"
+                  , enum_name(&exchange_names, xchg_type)
+                  , enum_name(&ikev2_notify_names, ntf_type)
+diff -Nur a/programs/pluto/state.c openswan-2.6.51.3/programs/pluto/state.c
+--- a/programs/pluto/state.c	2019-04-04 14:09:50.802514526 -0700
++++ openswan-2.6.51.3/programs/pluto/state.c	2019-04-04 14:11:55.870510824 -0700
+@@ -539,7 +539,8 @@
+ 
+     /* tell the other side of any IPSEC SAs that are going down */
+     if (IS_IPSEC_SA_ESTABLISHED(st->st_state)
+-    || IS_ISAKMP_SA_ESTABLISHED(st->st_state))
++    || IS_ISAKMP_SA_ESTABLISHED(st->st_state)
++    || IS_CHILD_SA_ESTABLISHED(st))
+ 	send_delete(st);
+ 
+     delete_event(st);	/* delete any pending timer event */

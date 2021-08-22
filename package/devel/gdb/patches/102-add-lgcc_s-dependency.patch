@@ -1,0 +1,13 @@
+Index: gdb-7.8/Makefile.in
+===================================================================
+--- gdb-7.8.orig/Makefile.in	2014-07-29 18:22:28.000000000 +0530
++++ gdb-7.8/Makefile.in	2017-04-15 22:02:58.835721194 +0530
+@@ -729,7 +729,7 @@
+ 	"BOOT_LDFLAGS=$(BOOT_LDFLAGS)" \
+ 	"CFLAGS=$(CFLAGS)" \
+ 	"CXXFLAGS=$(CXXFLAGS)" \
+-	"LDFLAGS=$(LDFLAGS)" \
++	"LDFLAGS=$(LDFLAGS) -lgcc_s" \
+ 	"LIBCFLAGS=$(LIBCFLAGS)" \
+ 	"LIBCXXFLAGS=$(LIBCXXFLAGS)" \
+ 	"STAGE1_CHECKING=$(STAGE1_CHECKING)" \

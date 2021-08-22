@@ -1,0 +1,456 @@
+/* Copyright (c) 2018-2020, The Linux Foundation. All rights reserved.
+ *
+ * Permission to use, copy, modify, and/or distribute this software for any
+ * purpose with or without fee is hereby granted, provided that the above
+ * copyright notice and this permission notice appear in all copies.
+ *
+ * THE SOFTWARE IS PROVIDED "AS IS" AND THE AUTHOR DISCLAIMS ALL WARRANTIES
+ * WITH REGARD TO THIS SOFTWARE INCLUDING ALL IMPLIED WARRANTIES OF
+ * MERCHANTABILITY AND FITNESS. IN NO EVENT SHALL THE AUTHOR BE LIABLE FOR
+ * ANY SPECIAL, DIRECT, INDIRECT, OR CONSEQUENTIAL DAMAGES OR ANY DAMAGES
+ * WHATSOEVER RESULTING FROM LOSS OF USE, DATA OR PROFITS, WHETHER IN AN
+ * ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF
+ * OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
+ */
+
+#include "qcom-ipq5018-mp03.3.dts"
+
+/ {
+	#address-cells = <0x2>;
+	#size-cells = <0x2>;
+	model = "Qualcomm Technologies, Inc. IPQ5018/AP-MP03.4-C1";
+	compatible = "qcom,ipq5018-mp03.4-c1", "qcom,ipq5018";
+	interrupt-parent = <&intc>;
+
+	/delete-node/ reserved-memory;
+
+	reserved-memory {
+#ifdef __IPQ_MEM_PROFILE_512_MB__
+	/*                      512 MB Profile
+	 * +=========+==============+========================+
+	 * |        |              |                         |
+	 * | Region | Start Offset |          Size           |
+	 * |        |              |                         |
+	 * +--------+--------------+-------------------------+
+	 * |        |              |                         |
+	 * |  NSS   |  0x40000000  |          16MB           |
+	 * |        |              |                         |
+	 * +--------+--------------+-------------------------+
+	 * |        |              |                         |
+	 * |        |              |                         |
+	 * | Linux  |  0x41000000  | Depends on total memory |
+	 * |        |              |                         |
+	 * |        |              |                         |
+	 * +--------+--------------+-------------------------+
+	 * | uboot  |  0x4A600000  |           4MB           |
+	 * +--------+--------------+-------------------------+
+	 * |  SBL   |  0x4AA00000  |           1MB           |
+	 * +--------+--------------+-------------------------+
+	 * |  smem  |  0x4AB00000  |           1MB           |
+	 * +--------+--------------+-------------------------+
+	 * |   TZ   |  0x4AC00000  |           4MB           |
+	 * +--------+--------------+-------------------------+
+	 * |        |              |                         |
+	 * |   Q6   |  0x4B000000  |          24MB           |
+	 * |        |              |                         |
+	 * +--------+--------------+-------------------------+
+	 * | M3 Dump|  0x4C800000  |           1MB           |
+	 * +--------+--------------+-------------------------+
+	 * |  QDSS  |  0x4C900000  |           1MB           |
+	 * +--------+--------------+-------------------------+
+	 * | caldb  |  0x4CA00000  |           2MB           |
+	 * +--------+--------------+-------------------------+
+	 * |QCN9000 |  0x4CC00000  |          30MB           |
+	 * +--------+--------------+-------------------------+
+	 * |QCN9000 |  0x4EA00000  |          30MB           |
+	 * +--------+--------------+-------------------------+
+	 * |  MHI0  |  0x50800000  |          16MB           |
+	 * +--------+--------------+-------------------------+
+	 * |  MHI1  |  0x51800000  |          16MB           |
+	 * +--------+--------------+-------------------------+
+	 * |                                                 |
+	 * |      Rest of the memory for Linux               |
+	 * |                                                 |
+	 * +=================================================+
+	 */
+		#address-cells = <2>;
+		#size-cells = <2>;
+		ranges;
+
+		nss@40000000 {
+			no-map;
+			reg = <0x0 0x40000000 0x0 0x01000000>;
+		};
+
+		uboot@4a800000 {
+			no-map;
+			reg = <0x0 0x4a800000 0x0 0x00200000>;
+		};
+
+		sbl@4aa00000 {
+			no-map;
+			reg = <0x0 0x4aa00000 0x0 0x00100000>;
+		};
+
+		smem_region:smem@4ab00000 {
+			no-map;
+			reg = <0x0 0x4ab00000 0x0 0x00100000>;
+		};
+
+		tz@4ac00000 {	/* TZ */
+			no-map;
+			reg = <0x0 0x4ac00000 0x0 0x00400000>;
+		};
+
+#ifdef ENABLE_QSEECOM
+		tzapp:tzapp@4a400000 {	/* TZAPPS */
+			no-map;
+		};
+#endif
+
+		bt_region: bt@7000000 {
+			no-map;
+			reg = <0x0 0x07000000 0x0 0x58000>;
+		};
+
+		q6_region: wcnss@4b000000 {
+			no-map;
+			reg = <0x0 0x4b000000 0x0 0x01800000>;
+		};
+
+		m3_dump@4c800000 {
+			no-map;
+			reg = <0x0 0x4c800000 0x0 0x100000>;
+		};
+
+		q6_etr_region:q6_etr_dump@4c900000 {
+			no-map;
+			reg = <0x0 0x4c900000 0x0 0x100000>;
+		};
+
+		q6_caldb_region:q6_caldb_region@4ca00000 {
+			no-map;
+			reg = <0x0 0x4ca00000 0x0 0x200000>;
+		};
+
+		qcn9000_pcie0@4cc00000 {
+			no-map;
+			reg = <0x0 0x4CC00000 0x0 0x01E00000>;
+		};
+
+		qcn9000_pcie1@4ea00000 {
+			no-map;
+			reg = <0x0 0x4EA00000 0x0 0x01E00000>;
+		};
+
+		mhi_region0: dma_pool0@50800000 {
+			compatible = "shared-dma-pool";
+			no-map;
+			reg = <0x0 0x50800000 0x0 0x01000000>;
+		};
+
+		mhi_region1: dma_pool1@51800000 {
+			compatible = "shared-dma-pool";
+			no-map;
+			reg = <0x0 0x51800000 0x0 0x01000000>;
+		};
+#else
+	/*                      1G Profile
+	 * +=========+==============+========================+
+	 * |        |              |                         |
+	 * | Region | Start Offset |          Size           |
+	 * |        |              |                         |
+	 * +--------+--------------+-------------------------+
+	 * |        |              |                         |
+	 * |  NSS   |  0x40000000  |          16MB           |
+	 * |        |              |                         |
+	 * +--------+--------------+-------------------------+
+	 * |        |              |                         |
+	 * |        |              |                         |
+	 * | Linux  |  0x41000000  | Depends on total memory |
+	 * |        |              |                         |
+	 * |        |              |                         |
+	 * +--------+--------------+-------------------------+
+	 * | uboot  |  0x4A600000  |           4MB           |
+	 * +--------+--------------+-------------------------+
+	 * |  SBL   |  0x4AA00000  |           1MB           |
+	 * +--------+--------------+-------------------------+
+	 * |  smem  |  0x4AB00000  |           1MB           |
+	 * +--------+--------------+-------------------------+
+	 * |   TZ   |  0x4AC00000  |           4MB           |
+	 * +--------+--------------+-------------------------+
+	 * |        |              |                         |
+	 * |   Q6   |  0x4B000000  |          24MB           |
+	 * |        |              |                         |
+	 * +--------+--------------+-------------------------+
+	 * | M3 Dump|  0x4C800000  |           1MB           |
+	 * +--------+--------------+-------------------------+
+	 * |  QDSS  |  0x4C900000  |           1MB           |
+	 * +--------+--------------+-------------------------+
+	 * | caldb  |  0x4CA00000  |           2MB           |
+	 * +--------+--------------+-------------------------+
+	 * |QCN9000 |  0x4CC00000  |          45MB           |
+	 * +--------+--------------+-------------------------+
+	 * |QCN9000 |  0x4F900000  |          45MB           |
+	 * +--------+--------------+-------------------------+
+	 * |  MHI0  |  0x52600000  |          24MB           |
+	 * +--------+--------------+-------------------------+
+	 * |  MHI1  |  0x53E00000  |          24MB           |
+	 * +--------+--------------+-------------------------+
+	 * |                                                 |
+	 * |      Rest of the memory for Linux               |
+	 * |                                                 |
+	 * +=================================================+
+	 */
+
+		#address-cells = <2>;
+		#size-cells = <2>;
+		ranges;
+
+		nss@40000000 {
+			no-map;
+			reg = <0x0 0x40000000 0x0 0x01000000>;
+		};
+
+		uboot@4a800000 {
+			no-map;
+			reg = <0x0 0x4a800000 0x0 0x00200000>;
+		};
+
+		sbl@4aa00000 {
+			no-map;
+			reg = <0x0 0x4aa00000 0x0 0x00100000>;
+		};
+
+		smem_region:smem@4ab00000 {
+			no-map;
+			reg = <0x0 0x4ab00000 0x0 0x00100000>;
+		};
+
+		tz@4ac00000 {	/* TZ */
+			no-map;
+			reg = <0x0 0x4ac00000 0x0 0x00400000>;
+		};
+
+#ifdef ENABLE_QSEECOM
+		tzapp:tzapp@4a400000 {	/* TZAPPS */
+			no-map;
+		};
+#endif
+
+		bt_region: bt@7000000 {
+			no-map;
+			reg = <0x0 0x07000000 0x0 0x58000>;
+		};
+
+		q6_region: wcnss@4b000000 {
+			no-map;
+			reg = <0x0 0x4b000000 0x0 0x01800000>;
+		};
+
+		m3_dump@4c800000 {
+			no-map;
+			reg = <0x0 0x4c800000 0x0 0x100000>;
+		};
+
+		q6_etr_region:q6_etr_dump@4c900000 {
+			no-map;
+			reg = <0x0 0x4c900000 0x0 0x100000>;
+		};
+
+		q6_caldb_region:q6_caldb_region@4ca00000 {
+			no-map;
+			reg = <0x0 0x4ca00000 0x0 0x200000>;
+		};
+
+		qcn9000_pcie0@4cc00000 {
+			no-map;
+			reg = <0x0 0x4CC00000 0x0 0x02D00000>;
+		};
+
+		qcn9000_pcie1@4f900000 {
+			no-map;
+			reg = <0x0 0x4F900000 0x0 0x02D00000>;
+		};
+
+		mhi_region0: dma_pool0@52600000 {
+			compatible = "shared-dma-pool";
+			no-map;
+			reg = <0x0 0x52600000 0x0 0x01800000>;
+		};
+
+		mhi_region1: dma_pool1@53E00000 {
+			compatible = "shared-dma-pool";
+			no-map;
+			reg = <0x0 0x53E00000 0x0 0x01800000>;
+		};
+#endif
+	};
+};
+
+&pcie_x1 {
+	status = "ok";
+};
+
+&pcie_x1phy {
+	status = "ok";
+};
+
+&pcie_x1_rp {
+	status = "ok";
+
+	/delete-node/ qcom,mhi@0;
+	mhi_1: qcom,mhi@1 {
+		reg = <0 0 0 0 0 >;
+		qrtr_instance_id = <0x21>;
+		#address-cells = <0x2>;
+		#size-cells = <0x2>;
+		memory-region = <&mhi_region1>;
+	};
+};
+
+&pcie_x2_rp {
+	status = "ok";
+
+	/delete-node/ qcom,mhi@1;
+	mhi_0: qcom,mhi@0 {
+		reg = <0 0 0 0 0 >;
+		qrtr_instance_id = <0x20>;
+		#address-cells = <0x2>;
+		#size-cells = <0x2>;
+		memory-region = <&mhi_region0>;
+	};
+};
+
+&qcom_q6v5_wcss {
+	/delete-property/ qcom,multipd_arch;
+	/delete-property/ memory-region;
+
+	#ifdef __IPQ_MEM_PROFILE_256_MB__
+		memory-region = <&q6_region>, <&q6_etr_region>;
+	#else
+		memory-region = <&q6_region>, <&q6_etr_region>,
+				<&q6_caldb_region>;
+	#endif
+
+	/delete-node/ q6v5_wcss_userpd1;
+	/delete-node/ q6v5_wcss_userpd2;
+};
+
+&wifi0 {
+	/delete-property/ qcom,multipd_arch;
+	qcom,bdf-addr = <0x4BA00000 0x4BA00000 0x4BA00000 0x0 0x0>;
+	qcom,caldb-addr = <0x4CA00000 0x4CA00000 0x0 0x0 0x0>;
+	qcom,caldb-size = <0x200000>;
+	qcom,board_id = <0x24>;
+	status = "ok";
+};
+
+&wifi1 {
+	/delete-property/ qcom,multipd_arch;
+	status = "disabled";
+};
+
+#ifndef __IPQ_MEM_PROFILE_256_MB__
+&wifi3 {
+	/* QCN9000 6G */
+	compatible = "qcom,cnss-qcn9000";
+	board_id = <0xa4>;
+	qrtr_node_id = <0x20>;
+	status = "ok";
+#ifdef __IPQ_MEM_PROFILE_512_MB__
+	/* QCN9000 tgt-mem-mode=1 layout - 30MB
+	 * +=========+==============+=========+
+	 * |  Region | Start Offset |   Size  |
+	 * +---------+--------------+---------+
+	 * | HREMOTE |  0x4CC00000  |   20MB  |
+	 * +---------+--------------+---------+
+	 * | M3 Dump |  0x4E000000  |   1MB   |
+	 * +---------+--------------+---------+
+	 * |   ETR   |  0x4E100000  |   1MB   |
+	 * +---------+--------------+---------+
+	 * |  Caldb  |  0x4E200000  |   8MB   |
+	 * +==================================+
+	 */
+	base-addr = <0x4CC00000>;
+	m3-dump-addr = <0x4E000000>;
+	etr-addr = <0x4E100000>;
+	caldb-addr = <0x4E200000>;
+	caldb-size = <0x800000>;
+	hremote-size = <0x1400000>;
+	tgt-mem-mode = <0x1>;
+#else
+	/* QCN9000 tgt-mem-mode=0 layout - 45MB
+	 * +=========+==============+=========+
+	 * |  Region | Start Offset |   Size  |
+	 * +---------+--------------+---------+
+	 * | HREMOTE |  0x4CC00000  |   35MB  |
+	 * +---------+--------------+---------+
+	 * | M3 Dump |  0x4EF00000  |   1MB   |
+	 * +---------+--------------+---------+
+	 * |   ETR   |  0x4F000000  |   1MB   |
+	 * +---------+--------------+---------+
+	 * |  Caldb  |  0x4F100000  |   8MB   |
+	 * +==================================+
+	 */
+	base-addr = <0x4CC00000>;
+	m3-dump-addr = <0x4EF00000>;
+	etr-addr = <0x4F000000>;
+	caldb-addr = <0x4F100000>;
+	hremote-size = <0x2300000>;
+	caldb-size = <0x800000>;
+	tgt-mem-mode = <0x0>;
+#endif
+};
+
+&wifi4 {
+	/* QCN9000 5G */
+	compatible = "qcom,cnss-qcn9000";
+	board_id = <0xa3>;
+	qrtr_node_id = <0x21>;
+	status = "ok";
+#ifdef __IPQ_MEM_PROFILE_512_MB__
+	/* QCN9000 tgt-mem-mode=1 layout - 30MB
+	 * +=========+==============+=========+
+	 * |  Region | Start Offset |   Size  |
+	 * +---------+--------------+---------+
+	 * | HREMOTE |  0x4EA00000  |   20MB  |
+	 * +---------+--------------+---------+
+	 * | M3 Dump |  0x4FE00000  |   1MB   |
+	 * +---------+--------------+---------+
+	 * |   ETR   |  0x4FF00000  |   1MB   |
+	 * +---------+--------------+---------+
+	 * |  Caldb  |  0x50000000  |   8MB   |
+	 * +==================================+
+	 */
+	base-addr = <0x4EA00000>;
+	m3-dump-addr = <0x4FE00000>;
+	etr-addr = <0x4FF00000>;
+	caldb-addr = <0x50000000>;
+	caldb-size = <0x800000>;
+	hremote-size = <0x1400000>;
+	tgt-mem-mode = <0x1>;
+#else
+	/* QCN9000 tgt-mem-mode=0 layout - 45MB
+	 * +=========+==============+=========+
+	 * |  Region | Start Offset |   Size  |
+	 * +---------+--------------+---------+
+	 * | HREMOTE |  0x4F900000  |   35MB  |
+	 * +---------+--------------+---------+
+	 * | M3 Dump |  0x51C00000  |   1MB   |
+	 * +---------+--------------+---------+
+	 * |   ETR   |  0x51D00000  |   1MB   |
+	 * +---------+--------------+---------+
+	 * |  Caldb  |  0x51E00000  |   8MB   |
+	 * +==================================+
+	 */
+	base-addr = <0x4F900000>;
+	m3-dump-addr = <0x51C00000>;
+	etr-addr = <0x51D00000>;
+	caldb-addr = <0x51E00000>;
+	hremote-size = <0x2300000>;
+	caldb-size = <0x800000>;
+	tgt-mem-mode = <0x0>;
+#endif
+};
+#endif

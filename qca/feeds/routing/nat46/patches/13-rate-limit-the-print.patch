@@ -1,0 +1,13 @@
+--- old/nat46/modules/nat46-core.c	2020-07-14 16:20:31.025999000 +0530
++++ new/nat46/modules/nat46-core.c	2020-07-14 16:22:21.258075000 +0530
+@@ -2253,7 +2253,9 @@
+   }
+ 
+   if(!pairs_xlate_v4_to_v6_outer(nat46, &apair, hdr4, sport, dport, v6saddr, v6daddr)) {
+-    nat46debug(0, "[nat46] Could not translate v4->v6");
++    if (net_ratelimit()) {
++      nat46debug(0, "[nat46] Could not translate v4->v6");
++    }
+     goto done;
+   }
+ 

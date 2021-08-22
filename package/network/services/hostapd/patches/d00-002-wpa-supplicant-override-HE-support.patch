@@ -1,0 +1,110 @@
+--- a/src/drivers/driver.h
++++ b/src/drivers/driver.h
+@@ -1186,6 +1186,12 @@ struct wpa_driver_associate_params {
+ 	 * fils_erp_rrk_len - Length of fils_erp_rrk in bytes
+ 	 */
+ 	size_t fils_erp_rrk_len;
++#ifdef CONFIG_HE_OVERRIDES
++	/**
++ 	* Disable HE for this connection
++ 	*/
++	int disable_he;
++#endif /* CONFIG_HE_OVERRIDES */
+ };
+ 
+ enum hide_ssid {
+--- a/wpa_supplicant/Makefile
++++ b/wpa_supplicant/Makefile
+@@ -198,6 +198,10 @@ ifdef CONFIG_VHT_OVERRIDES
+ CFLAGS += -DCONFIG_VHT_OVERRIDES
+ endif
+ 
++ifdef CONFIG_HE_OVERRIDES
++CFLAGS += -DCONFIG_HE_OVERRIDES
++endif
++
+ ifndef CONFIG_BACKEND
+ CONFIG_BACKEND=file
+ endif
+--- a/wpa_supplicant/config.c
++++ b/wpa_supplicant/config.c
+@@ -2728,6 +2728,9 @@ static const struct parse_data ssid_fiel
+ 	{ INT_RANGE(owe_only, 0, 1) },
+ 	{ INT_RANGE(multi_ap_backhaul_sta, 0, 1) },
+ 	{ INT_RANGE(ft_eap_pmksa_caching, 0, 1) },
++#ifdef CONFIG_HE_OVERRIDES
++	{ INT_RANGE(disable_he,0,1)},
++#endif
+ };
+ 
+ #undef OFFSET
+--- a/wpa_supplicant/config_file.c
++++ b/wpa_supplicant/config_file.c
+@@ -946,6 +946,9 @@ static void wpa_config_write_network(FIL
+ 	INT_DEF(vht_tx_mcs_nss_7, -1);
+ 	INT_DEF(vht_tx_mcs_nss_8, -1);
+ #endif /* CONFIG_VHT_OVERRIDES */
++#ifdef CONFIG_HE_OVERRIDES
++	INT(disable_he);
++#endif /* CONFIG_HE_OVERRIDES */
+ 
+ #undef STR
+ #undef INT
+--- a/wpa_supplicant/config_ssid.h
++++ b/wpa_supplicant/config_ssid.h
+@@ -1039,6 +1039,12 @@ struct wpa_ssid {
+ 	 * FT initial mobility domain association.
+ 	 */
+ 	int ft_eap_pmksa_caching;
++#ifdef CONFIG_HE_OVERRIDES
++	/**
++ 	* Disable HE for this connection
++ 	*/
++	int disable_he;
++#endif /* CONFIG_HE_OVERRIDES */
+ };
+ 
+ #endif /* CONFIG_SSID_H */
+--- a/wpa_supplicant/wpa_cli.c
++++ b/wpa_supplicant/wpa_cli.c
+@@ -1472,6 +1472,9 @@ static const char *network_fields[] = {
+ 	"update_identifier",
+ #endif /* CONFIG_HS20 */
+ 	"mac_addr", "pbss", "wps_disabled"
++#ifdef CONFIG_HE_OVERRIDES
++	"disable_he"
++#endif /* CONFIG_HE_OVERRIDES */
+ };
+ 
+ 
+--- a/wpa_supplicant/wpa_supplicant.c
++++ b/wpa_supplicant/wpa_supplicant.c
+@@ -2287,8 +2287,17 @@ void ibss_mesh_setup_freq(struct wpa_sup
+ 		return;
+ 
+ 	/* Allow HE on 2.4 GHz without VHT: see nl80211_put_freq_params() */
++#ifdef CONFIG_HE_OVERRIDES
++	if (is_24ghz) {
++		if (ssid->disable_he)
++			freq->he_enabled = 0;
++		else
++			freq->he_enabled = mode->he_capab[ieee80211_mode].he_supported;
++	}
++#else
+ 	if (is_24ghz)
+ 		freq->he_enabled = mode->he_capab[ieee80211_mode].he_supported;
++#endif /* CONFIG_HE_OVERRIDES */
+ 
+ 	/* Setup higher BW only for 5 GHz */
+ 	if (mode->mode != HOSTAPD_MODE_IEEE80211A)
+@@ -2485,6 +2494,10 @@ skip_ht40:
+ 			seg0 = 0;
+ #endif /* CONFIG_HT_OVERRIDES */
+ 	}
++#ifdef CONFIG_HE_OVERRIDES
++	if (ssid->disable_he)
++		vht_freq.he_enabled = 0;
++#endif /* CONFIG_HE_OVERRIDES */
+ 
+ 	if (hostapd_set_freq_params(&vht_freq, mode->mode, freq->freq,
+ 				    freq->channel, ssid->enable_edmg,

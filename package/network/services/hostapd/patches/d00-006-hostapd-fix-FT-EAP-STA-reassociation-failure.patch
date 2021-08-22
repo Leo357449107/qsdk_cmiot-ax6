@@ -1,0 +1,32 @@
+--- a/src/ap/ieee802_11.c
++++ b/src/ap/ieee802_11.c
+@@ -3500,6 +3500,7 @@ static int add_associated_sta(struct hos
+ 	struct ieee80211_vht_capabilities vht_cap;
+ 	struct ieee80211_he_capabilities he_cap;
+ 	int set = 1;
++	int ft_over_air = !hapd->conf->ft_over_ds;
+ 
+ 	/*
+ 	 * Remove the STA entry to ensure the STA PS state gets cleared and
+@@ -3521,16 +3522,17 @@ static int add_associated_sta(struct hos
+ 	 * reinstallation is not a concern for this case.
+ 	 */
+ 	wpa_printf(MSG_DEBUG, "Add associated STA " MACSTR
+-		   " (added_unassoc=%d auth_alg=%u ft_over_ds=%u reassoc=%d authorized=%d ft_tk=%d fils_tk=%d)",
++		   " (added_unassoc=%d auth_alg=%u ft_over_ds=%u ft_over_air=%u reassoc=%d authorized=%d flags=%x ft_tk=%d fils_tk=%d)",
+ 		   MAC2STR(sta->addr), sta->added_unassoc, sta->auth_alg,
+-		   sta->ft_over_ds, reassoc,
+-		   !!(sta->flags & WLAN_STA_AUTHORIZED),
++		   sta->ft_over_ds, ft_over_air, reassoc,
++		   !!(sta->flags & WLAN_STA_AUTHORIZED), sta->flags,
+ 		   wpa_auth_sta_ft_tk_already_set(sta->wpa_sm),
+ 		   wpa_auth_sta_fils_tk_already_set(sta->wpa_sm));
+ 
+ 	if (!sta->added_unassoc &&
+ 	    (!(sta->flags & WLAN_STA_AUTHORIZED) ||
+-	     (reassoc && sta->ft_over_ds && sta->auth_alg == WLAN_AUTH_FT) ||
++	     (reassoc && (sta->ft_over_ds || ft_over_air) &&
++	      sta->auth_alg == WLAN_AUTH_FT) ||
+ 	     (!wpa_auth_sta_ft_tk_already_set(sta->wpa_sm) &&
+ 	      !wpa_auth_sta_fils_tk_already_set(sta->wpa_sm)))) {
+ 		hostapd_drv_sta_remove(hapd, sta->addr);

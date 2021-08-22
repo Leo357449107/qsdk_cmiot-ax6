@@ -1,0 +1,206 @@
+From 8cdb17d2c58d5c3ecb57bdaf1981cd72b4948db1 Mon Sep 17 00:00:00 2001
+From: Felix Fietkau <nbd@nbd.name>
+Date: Mon, 26 Feb 2018 12:21:00 +0100
+Subject: remove rps/xps configuration support
+
+It is overly complex, yet does not cover common scenarios very well.
+It will be replaced with a simpler shell script that provides a better
+default policy
+
+Signed-off-by: Felix Fietkau <nbd@nbd.name>
+
+--- a/device.c
++++ b/device.c
+@@ -29,7 +29,6 @@
+ #include "config.h"
+ 
+ static struct avl_tree devices;
+-static bool default_ps = false;
+ 
+ static const struct blobmsg_policy dev_attrs[__DEV_ATTR_MAX] = {
+ 	[DEV_ATTR_TYPE] = { .name = "type", .type = BLOBMSG_TYPE_STRING },
+@@ -45,8 +44,6 @@ static const struct blobmsg_policy dev_a
+ 	[DEV_ATTR_IGMPVERSION] = { .name = "igmpversion", .type = BLOBMSG_TYPE_INT32 },
+ 	[DEV_ATTR_MLDVERSION] = { .name = "mldversion", .type = BLOBMSG_TYPE_INT32 },
+ 	[DEV_ATTR_NEIGHREACHABLETIME] = { .name = "neighreachabletime", .type = BLOBMSG_TYPE_INT32 },
+-	[DEV_ATTR_RPS] = { .name = "rps", .type = BLOBMSG_TYPE_BOOL },
+-	[DEV_ATTR_XPS] = { .name = "xps", .type = BLOBMSG_TYPE_BOOL },
+ 	[DEV_ATTR_DADTRANSMITS] = { .name = "dadtransmits", .type = BLOBMSG_TYPE_INT32 },
+ 	[DEV_ATTR_MULTICAST_TO_UNICAST] = { .name = "multicast_to_unicast", .type = BLOBMSG_TYPE_BOOL },
+ 	[DEV_ATTR_MULTICAST_ROUTER] = { .name = "multicast_router", .type = BLOBMSG_TYPE_INT32 },
+@@ -269,20 +266,6 @@ device_init_settings(struct device *dev,
+ 		s->flags |= DEV_OPT_NEIGHREACHABLETIME;
+ 	}
+ 
+-	if ((cur = tb[DEV_ATTR_RPS])) {
+-		s->rps = blobmsg_get_bool(cur);
+-		s->flags |= DEV_OPT_RPS;
+-	}
+-	else
+-		s->rps = default_ps;
+-
+-	if ((cur = tb[DEV_ATTR_XPS])) {
+-		s->xps = blobmsg_get_bool(cur);
+-		s->flags |= DEV_OPT_XPS;
+-	}
+-	else
+-		s->xps = default_ps;
+-
+ 	if ((cur = tb[DEV_ATTR_DADTRANSMITS])) {
+ 		s->dadtransmits = blobmsg_get_u32(cur);
+ 		s->flags |= DEV_OPT_DADTRANSMITS;
+@@ -426,8 +409,6 @@ int device_init(struct device *dev, cons
+ 
+ 	system_if_clear_state(dev);
+ 	device_check_state(dev);
+-	dev->settings.rps = default_ps;
+-	dev->settings.xps = default_ps;
+ 
+ 	return 0;
+ }
+@@ -786,41 +767,6 @@ device_reset_old(void)
+ 	}
+ }
+ 
+-void
+-device_set_default_ps(bool state)
+-{
+-	struct device *dev;
+-
+-	if (state == default_ps)
+-		return;
+-
+-	default_ps = state;
+-
+-	avl_for_each_element(&devices, dev, avl) {
+-		struct device_settings *s = &dev->settings;
+-		unsigned int apply_mask = 0;
+-
+-		if (!(s->flags & DEV_OPT_RPS)) {
+-			s->rps = default_ps;
+-			apply_mask |= DEV_OPT_RPS;
+-		}
+-
+-		if (!(s->flags & DEV_OPT_XPS)) {
+-			s->xps = default_ps;
+-			apply_mask |= DEV_OPT_XPS;
+-		}
+-
+-		if (!apply_mask)
+-			continue;
+-
+-		if (!(dev->external || (dev->present && dev->active)) ||
+-				dev->config_pending)
+-			continue;
+-
+-		system_if_apply_settings(dev, s, apply_mask);
+-	}
+-}
+-
+ struct device *
+ device_create(const char *name, const struct device_type *type,
+ 	      struct blob_attr *config)
+--- a/device.h
++++ b/device.h
+@@ -39,8 +39,6 @@ enum {
+ 	DEV_ATTR_IGMPVERSION,
+ 	DEV_ATTR_MLDVERSION,
+ 	DEV_ATTR_NEIGHREACHABLETIME,
+-	DEV_ATTR_RPS,
+-	DEV_ATTR_XPS,
+ 	DEV_ATTR_DADTRANSMITS,
+ 	DEV_ATTR_MULTICAST_TO_UNICAST,
+ 	DEV_ATTR_MULTICAST_ROUTER,
+@@ -80,8 +78,7 @@ enum {
+ 	DEV_OPT_IGMPVERSION		= (1 << 7),
+ 	DEV_OPT_MLDVERSION		= (1 << 8),
+ 	DEV_OPT_NEIGHREACHABLETIME	= (1 << 9),
+-	DEV_OPT_RPS			= (1 << 10),
+-	DEV_OPT_XPS			= (1 << 11),
++	/* 2 bit hole */
+ 	DEV_OPT_MTU6			= (1 << 12),
+ 	DEV_OPT_DADTRANSMITS		= (1 << 13),
+ 	DEV_OPT_MULTICAST_TO_UNICAST	= (1 << 14),
+@@ -141,8 +138,6 @@ struct device_settings {
+ 	unsigned int mldversion;
+ 	unsigned int neigh4reachabletime;
+ 	unsigned int neigh6reachabletime;
+-	bool rps;
+-	bool xps;
+ 	unsigned int dadtransmits;
+ 	bool multicast_to_unicast;
+ 	unsigned int multicast_router;
+@@ -225,7 +220,6 @@ device_apply_config(struct device *dev,
+ 
+ void device_reset_config(void);
+ void device_reset_old(void);
+-void device_set_default_ps(bool state);
+ 
+ void device_init_virtual(struct device *dev, const struct device_type *type, const char *name);
+ int device_init(struct device *iface, const struct device_type *type, const char *ifname);
+--- a/system-linux.c
++++ b/system-linux.c
+@@ -1271,39 +1271,6 @@ system_if_get_settings(struct device *de
+ 	}
+ }
+ 
+-static void
+-system_if_set_rps_xps_val(const char *path, int val)
+-{
+-	char val_buf[8];
+-	glob_t gl;
+-	int i;
+-
+-	if (glob(path, 0, NULL, &gl))
+-		return;
+-
+-	snprintf(val_buf, sizeof(val_buf), "%x", val);
+-	for (i = 0; i < gl.gl_pathc; i++)
+-		system_set_sysctl(gl.gl_pathv[i], val_buf);
+-	globfree(&gl);
+-}
+-
+-static void
+-system_if_apply_rps_xps(struct device *dev, struct device_settings *s)
+-{
+-	long n_cpus = sysconf(_SC_NPROCESSORS_ONLN);
+-	int val;
+-
+-	if (n_cpus < 2)
+-		return;
+-
+-	val = (1 << n_cpus) - 1;
+-	snprintf(dev_buf, sizeof(dev_buf), "/sys/class/net/%s/queues/*/rps_cpus", dev->ifname);
+-	system_if_set_rps_xps_val(dev_buf, s->rps ? val : 0);
+-
+-	snprintf(dev_buf, sizeof(dev_buf), "/sys/class/net/%s/queues/*/xps_cpus", dev->ifname);
+-	system_if_set_rps_xps_val(dev_buf, s->xps ? val : 0);
+-}
+-
+ void
+ system_if_apply_settings(struct device *dev, struct device_settings *s, unsigned int apply_mask)
+ {
+@@ -1361,8 +1328,6 @@ system_if_apply_settings(struct device *
+ 		snprintf(buf, sizeof(buf), "%d", s->dadtransmits);
+ 		system_set_dadtransmits(dev, buf);
+ 	}
+-
+-	system_if_apply_rps_xps(dev, s);
+ }
+ 
+ int system_if_up(struct device *dev)
+--- a/config.c
++++ b/config.c
+@@ -332,12 +332,6 @@ config_init_globals(void)
+ 	const char *ula_prefix = uci_lookup_option_string(
+ 			uci_ctx, globals, "ula_prefix");
+ 	interface_ip_set_ula_prefix(ula_prefix);
+-
+-	const char *default_ps = uci_lookup_option_string(
+-			uci_ctx, globals, "default_ps");
+-
+-	if (default_ps)
+-		device_set_default_ps(strcmp(default_ps, "1") ? false : true);
+ }
+ 
+ static void

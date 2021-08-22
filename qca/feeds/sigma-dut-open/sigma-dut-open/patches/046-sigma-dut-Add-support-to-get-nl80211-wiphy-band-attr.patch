@@ -1,0 +1,158 @@
+From a02a7ea1a4fa436d5089c2a240555f0e556cbdf1 Mon Sep 17 00:00:00 2001
+From: Lavanya Suresh <lavaks@codeaurora.org>
+Date: Wed, 11 Nov 2020 22:48:54 +0530
+Subject: [PATCH] sigma-dut: Add support to get nl80211 wiphy band attr info
+
+Added support to fetch wiphy band info using NL80211_CMD_GET_WIPHY,
+to get ht and vht capabilities in sigma.
+
+Signed-off-by: Lavanya Suresh <lavaks@codeaurora.org>
+---
+ ap.c        | 92 +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+ sigma_dut.c |  1 +
+ sigma_dut.h |  9 ++++++
+ 3 files changed, 102 insertions(+)
+
+--- a/ap.c
++++ b/ap.c
+@@ -10351,6 +10351,64 @@ static int antenna_mask_to_nss(unsigned
+ 	return msb + 1;
+ }
+ 
++static void phy_info_ht_capa(struct dut_hw_modes *mode, struct nlattr *capa,
++			     struct nlattr *ampdu_factor,
++			     struct nlattr *ampdu_density,
++			     struct nlattr *mcs_set)
++{
++	if (capa)
++		mode->ht_capab = nla_get_u16(capa);
++
++	if (ampdu_factor)
++		mode->ampdu_params |= nla_get_u8(ampdu_factor) & AMPDU_FACTOR_BITS;
++
++	if (ampdu_density)
++		mode->ampdu_params |= nla_get_u8(ampdu_density) << AMPDU_DENSITY_OFFSET;
++
++	if (mcs_set && nla_len(mcs_set) >= 16) {
++		u8 *mcs;
++		mcs = nla_data(mcs_set);
++		memcpy(mode->mcs_set, mcs, 16);
++	}
++}
++
++static void phy_info_vht_capa(struct dut_hw_modes *mode,
++			      struct nlattr *capa,
++			      struct nlattr *mcs_set)
++{
++	if (capa)
++		mode->vht_capab = nla_get_u32(capa);
++
++	if (mcs_set && nla_len(mcs_set) >= 8) {
++		u8 *mcs;
++		mcs = nla_data(mcs_set);
++		memcpy(mode->vht_mcs_set, mcs, 8);
++	}
++}
++
++static int phy_info_band(struct dut_hw_modes *mode, struct nlattr *nl_band)
++{
++	struct nlattr *tb_band[NL80211_BAND_ATTR_MAX + 1];
++
++	if (!mode)
++		return 1;
++
++	nla_parse(tb_band, NL80211_BAND_ATTR_MAX, nla_data(nl_band),
++			   nla_len(nl_band), NULL);
++
++	phy_info_ht_capa(mode, tb_band[NL80211_BAND_ATTR_HT_CAPA],
++			 tb_band[NL80211_BAND_ATTR_HT_AMPDU_FACTOR],
++			 tb_band[NL80211_BAND_ATTR_HT_AMPDU_DENSITY],
++			 tb_band[NL80211_BAND_ATTR_HT_MCS_SET]);
++
++	phy_info_vht_capa(mode, tb_band[NL80211_BAND_ATTR_VHT_CAPA],
++			  tb_band[NL80211_BAND_ATTR_VHT_MCS_SET]);
++
++	/* Other nl80211 band attributes can be parsed here, if required */
++
++	return NL_OK;
++}
++
+ 
+ static int wiphy_info_handler(struct nl_msg *msg, void *arg)
+ {
+@@ -10358,6 +10416,8 @@ static int wiphy_info_handler(struct nl_
+ 	struct genlmsghdr *gnlh = nlmsg_data(nlmsg_hdr(msg));
+ 	struct sigma_dut *dut = arg;
+ 	unsigned int tx_antenna_mask;
++	struct nlattr *nl_band;
++	int rem_band;
+ 
+ 	nla_parse(tb, NL80211_ATTR_MAX, genlmsg_attrdata(gnlh, 0),
+ 		  genlmsg_attrlen(gnlh, 0), NULL);
+@@ -10368,6 +10428,16 @@ static int wiphy_info_handler(struct nl_
+ 		dut->ap_tx_streams = antenna_mask_to_nss(tx_antenna_mask);
+ 	}
+ 
++	if (!tb[NL80211_ATTR_WIPHY_BANDS])
++		return 1;
++
++	nla_for_each_nested(nl_band, tb[NL80211_ATTR_WIPHY_BANDS], rem_band)
++	{
++		int res = phy_info_band(dut->hw_modes, nl_band);
++		if (res != NL_OK)
++			return res;
++	}
++
+ 	return 0;
+ }
+ 
+--- a/sigma_dut.c
++++ b/sigma_dut.c
+@@ -1264,6 +1264,11 @@ int main(int argc, char *argv[])
+ 
+ #ifdef NL80211_SUPPORT
+ 	sigma_dut.nl_ctx = nl80211_init(&sigma_dut);
++	sigma_dut.hw_modes = calloc(1, sizeof(struct dut_hw_modes));
++	if (sigma_dut.hw_modes == NULL)
++		sigma_dut_print(&sigma_dut, DUT_MSG_ERROR,
++				"Could not allocate memory for hw_modes");
++
+ #endif /* NL80211_SUPPORT */
+ 	sigma_dut_register_cmds();
+ 
+@@ -1331,6 +1336,7 @@ int main(int argc, char *argv[])
+ 	deinit_sigma_dut(&sigma_dut);
+ #ifdef NL80211_SUPPORT
+ 	nl80211_deinit(&sigma_dut, sigma_dut.nl_ctx);
++	free(sigma_dut.hw_modes);
+ #endif /* NL80211_SUPPORT */
+ 	sigma_dut_unreg_cmds(&sigma_dut);
+ #ifdef ANDROID
+--- a/sigma_dut.h
++++ b/sigma_dut.h
+@@ -117,6 +117,17 @@ struct wfa_p2p_attribute {
+ 	uint8_t variable[0];
+ } __attribute__((packed));
+ 
++#define AMPDU_FACTOR_BITS	0x3
++#define AMPDU_DENSITY_OFFSET	2
++
++struct dut_hw_modes {
++        u16 ht_capab;
++        u8 mcs_set[16];
++        u8 ampdu_params;
++        u32 vht_capab;
++        u8 vht_mcs_set[8];
++};
++
+ #define WPA_GET_BE32(a) ((((u32) (a)[0]) << 24) | (((u32) (a)[1]) << 16) | \
+ 			 (((u32) (a)[2]) << 8) | ((u32) (a)[3]))
+ #define WPA_PUT_BE32(a, val)					\
+@@ -968,6 +979,7 @@ struct sigma_dut {
+ #ifdef NL80211_SUPPORT
+ 	struct nl80211_ctx *nl_ctx;
+ 	int config_rsnie;
++	struct dut_hw_modes *hw_modes;
+ #endif /* NL80211_SUPPORT */
+ 
+ 	int sta_nss;

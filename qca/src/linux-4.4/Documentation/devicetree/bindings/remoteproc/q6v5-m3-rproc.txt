@@ -1,0 +1,33 @@
+QCA Wakeup M3 Remoteproc Driver
+=====================================
+
+The IPQ807x family of devices uses a M3 co-processor. The M3
+requires a firmware binary to boot. The q6-wcss remoteproc driver handles
+the loading of firmware of M3. Q6V5-WCSS is dependent on this M3.
+
+M3 Device Node:
+================
+A M3 device node is used to represent the M3 processor
+instance within the SoC. It is needed as child node to SOC parent node
+through which it is accessible to the IPQ807x.
+
+Required properties:
+--------------------
+- compatible:		Should be one of,
+				"qca,q6v5-m3-rproc" for IPQ807x SoCs
+- firmware:		Name of firmware file to be used for loading and
+			booting the q6-wcss remote processor.
+- qca,auto-restart      states that q6 is restarted after receiving error fatal
+			from q6
+- qca,secure		notifies that TZ is used for bringing q6 out of reset
+
+Example:
+--------
+/* IPQ807x */
+q6v5_m3: q6v5_m3 {
+	compatible = "qca,q6v5-m3-rproc";
+	firmware = "IPQ8074/m3_fw.mdt";
+	qca,auto-restart;
+	qcom,restart-group = <&q6v5_m3 &q6v5_wcss>;
+};
+

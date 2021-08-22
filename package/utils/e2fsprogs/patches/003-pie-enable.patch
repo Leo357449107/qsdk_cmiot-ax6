@@ -1,0 +1,12 @@
+Index: e2fsprogs-1.42.12/e2fsck/Makefile.in
+===================================================================
+--- e2fsprogs-1.42.12.orig/e2fsck/Makefile.in
++++ e2fsprogs-1.42.12/e2fsck/Makefile.in
+@@ -14,6 +14,7 @@ INSTALL = @INSTALL@
+ PROGS=		e2fsck
+ MANPAGES=	e2fsck.8
+ FMANPAGES=	e2fsck.conf.5
++ALL_LDFLAGS+= -pie
+ 
+ LIBS= $(LIBQUOTA) $(LIBEXT2FS) $(LIBCOM_ERR) $(LIBBLKID) $(LIBUUID) \
+ 	$(LIBINTL) $(LIBE2P) $(SYSLIBS)

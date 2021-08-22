@@ -1,0 +1,67 @@
+From acb28af7a0ca9c769ed2c8999cbcd3304f4fac85 Mon Sep 17 00:00:00 2001
+From: Sriram R <srirrama@codeaurora.org>
+Date: Wed, 14 Oct 2020 12:35:21 +0530
+Subject: [PATCH] sigma-dut: Enable MBO config by default for 6GHZ
+
+Enable MBO config by default when 6G band is advertised in CAPI
+
+Signed-off-by: Sriram R <srirrama@codeaurora.org>
+---
+ ap.c | 25 +++++++++++++++++++++++--
+ 1 file changed, 23 insertions(+), 2 deletions(-)
+
+--- a/ap.c
++++ b/ap.c
+@@ -764,6 +764,7 @@ static enum sigma_cmd_result cmd_ap_set_
+ 	if (val) {
+ 		dut->use_6g = 1;
+ 		is_6g = 1;
++		dut->ap_mbo = 1;
+ 	}
+ 
+ 	val = get_param(cmd, "Band6Gonly");
+@@ -10509,6 +10510,23 @@ static enum sigma_cmd_result cmd_ap_rese
+ 			dut->ap_dfs_mode = AP_DFS_MODE_ENABLED;
+ 
+ 		memset(&dut->mbss, 0, sizeof(struct mbss_support));
++
++		/* Defaults for MBO on HE 6GHz */
++		dut->ap_mbo = 0;
++		dut->ap_ne_class = 0;
++		dut->ap_ne_op_ch = 0;
++		dut->ap_set_bssidpref = 1;
++		dut->ap_btmreq_disassoc_imnt = 0;
++		dut->ap_btmreq_term_bit = 0;
++		dut->ap_disassoc_timer = 0;
++		dut->ap_btmreq_bss_term_dur = 0;
++		dut->ap_cell_cap_pref = 0;
++		dut->ap_gas_cb_delay = 0;
++		dut->mbo_self_ap_tuple.ap_ne_class = -1;
++		dut->mbo_self_ap_tuple.ap_ne_pref = -1; /* Not set */
++		dut->mbo_self_ap_tuple.ap_ne_op_ch = -1;
++		dut->ap_btmreq_bss_term_tsf = 0;
++		dut->ap_assoc_delay = 0;
+ 	}
+ 
+ 	dut->ap_oper_chn = 0;
+@@ -11941,7 +11959,8 @@ enum sigma_cmd_result cmd_ap_send_frame(
+ 			return ap_send_frame_vht(dut, conn, cmd);
+ 		if (strcasecmp(val, "LOC") == 0)
+ 			return ap_send_frame_loc(dut, conn, cmd);
+-		if (strcasecmp(val, "MBO") == 0)
++		if ((strcasecmp(val, "MBO") == 0) ||
++		    (strcasecmp(val, "HE") == 0))
+ 			return ap_send_frame_mbo(dut, conn, cmd);
+ 		if (strcasecmp(val, "60GHz") == 0)
+ 			return ap_send_frame_60g(dut, conn, cmd);
+@@ -14479,7 +14498,9 @@ static int mac80211_update_mbo_pref_ap_l
+ 
+ 	/* Now add the self AP Address */
+ 	if (dut->mbo_self_ap_tuple.ap_ne_class == -1) {
+-		if (dut->ap_channel <= 11)
++		if (dut->use_6g)
++			ap_ne_class = 131;
++		else if (dut->ap_channel <= 11)
+ 			ap_ne_class = 81;
+ 		else
+ 			ap_ne_class = 115;

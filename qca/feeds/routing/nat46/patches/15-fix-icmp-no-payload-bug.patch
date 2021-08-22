@@ -1,0 +1,29 @@
+nat46: Fix for ICMP error packets with no payload bug
+
+When no payload is attached to the original packet, any
+ICMP error message generated in response to such packets
+gets drooped due to malformed packet at CE.
+
+During the translation of packet-in-error in ICMP,
+the IPv6 header in ICMPv6 payload gets corrupted.
+Hence the translated packet gets dropped at CE.
+
+This fix updates the outer IPv4 header's total length
+before translating to IPv6 header.
+
+Change-Id: Iab0df3452d3c780b31c3c49b5e42d73004988a77
+Signed-off-by: Apoorv Gupta <apoogupt@codeaurora.org>
+
+--- nat46-6/nat46/modules/nat46-core.c	2020-09-17 21:31:32.529644733 +0530
++++ nat46-6/nat46/modules/nat46-core.c	2020-09-24 10:35:15.623644141 +0530
+@@ -2099,9 +2099,8 @@ static uint16_t xlate_pkt_in_err_v4_to_v
+     memmove(((char *)iiph + IPV6HDRSIZE), (iiph + 1),
+       ntohs(iph->tot_len) - 2 * IPV4HDRSIZE - sizeof(struct icmphdr));
+     memcpy(iiph, &ip6h, IPV6HDRSIZE);
+-    nat46 = get_nat46_instance(old_skb);
+-    iph = ip_hdr(old_skb);
+   }
++  iph->tot_len = htons(ntohs(iph->tot_len) + IPV6V4HDRDELTA);
+
+   /* Swapping Ports for outer header */
+   /* Another work-around till LPM is not present. */

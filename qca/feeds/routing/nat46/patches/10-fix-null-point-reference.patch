@@ -1,0 +1,25 @@
+diff -Nur a/nat46/modules/nat46-core.c nat46-6/nat46/modules/nat46-core.c
+--- a/nat46/modules/nat46-core.c	2019-05-02 16:16:12.282711171 -0700
++++ nat46-6/nat46/modules/nat46-core.c	2019-05-02 16:26:07.066726150 -0700
+@@ -1732,6 +1732,10 @@
+   int l3_infrag_payload_len = ntohs(ip6h->payload_len);
+   int do_l4_translate = 0;
+ 
++  if (nat46 == NULL) {
++    printk("nat46:%p skb is droped for no valid instance found\n", old_skb);
++    return;
++  }
+   nat46debug(4, "nat46_ipv6_input packet");
+ 
+   if(ip6_input_not_interested(nat46, ip6h, old_skb)) {
+@@ -2187,6 +2191,10 @@
+ 
+   char v6saddr[16], v6daddr[16];
+ 
++  if (nat46 == NULL) {
++    printk("nat46:%p skb is droped for no valid instance found\n", old_skb);
++    return;
++  }
+   memset(v6saddr, 1, 16);
+   memset(v6daddr, 2, 16);
+ 

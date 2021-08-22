@@ -1,0 +1,42 @@
+menu "Diag Support"
+
+config DIAG_CHAR
+	tristate "char driver interface and diag forwarding to/from modem"
+	default m
+	depends on ARCH_QCOM
+	select CRC_CCITT
+	help
+	 Char driver interface for diag user space and diag-forwarding to modem ARM and back.
+	 This enables diagchar for maemo usb gadget or android usb gadget based on config selected.
+endmenu
+
+menu "DIAG traffic over USB"
+
+config DIAG_OVER_USB
+	bool "Enable DIAG traffic to go over USB"
+        depends on ARCH_QCOM
+	default y
+	help
+	 This feature helps segregate code required for DIAG traffic to go over USB.
+endmenu
+
+menu "DIAG traffic over QRTR"
+
+config DIAG_OVER_QRTR
+	bool "Enable DIAG traffic to go over QRTR"
+        depends on QRTR
+	default n
+	help
+	 This feature helps segregate code required for DIAG traffic to go over QRTR.
+endmenu
+
+menu "HSIC/SMUX support for DIAG"
+
+config DIAGFWD_BRIDGE_CODE
+	bool "Enable QSC/9K DIAG traffic over SMUX/HSIC"
+	depends on DIAG_CHAR
+	depends on USB_QCOM_DIAG_BRIDGE || MHI_BUS
+	default y
+	help
+	 SMUX/HSIC Transport Layer for DIAG Router
+endmenu

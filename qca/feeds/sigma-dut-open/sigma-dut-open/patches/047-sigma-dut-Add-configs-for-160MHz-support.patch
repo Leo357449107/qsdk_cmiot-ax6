@@ -1,0 +1,56 @@
+From a89970a2d29aa0efea80a8b95b3b88d5e3a305ea Mon Sep 17 00:00:00 2001
+From: Lavanya Suresh <lavaks@codeaurora.org>
+Date: Mon, 9 Nov 2020 23:32:29 +0530
+Subject: [PATCH] sigma-dut: Add configs for 160MHz support
+
+160MHz config is added in vht_capab to set proper
+channel width subfield value.
+
+Signed-off-by: Lavanya Suresh <lavaks@codeaurora.org>
+---
+ ap.c | 10 ++++++----
+ 1 file changed, 6 insertions(+), 4 deletions(-)
+
+--- a/ap.c
++++ b/ap.c
+@@ -7870,15 +7870,16 @@ static int fill_dual_radio_caps(struct s
+ 		if (dut->ap_sgi80 || dut->ap_txBF ||
+ 		    dut->ap_ldpc != VALUE_NOT_SET ||
+ 		    dut->ap_tx_stbc || dut->ap_mu_txBF ||
+-		    dut->ap_ampdu_exp) {
+-			len += snprintf(vht_capab + len, sizeof(vht_capab) - len, "%s%s%s%s%s",
++		    dut->ap_ampdu_exp || dut->ap_chwidth_1) {
++			len += snprintf(vht_capab + len, sizeof(vht_capab) - len, "%s%s%s%s%s%s",
+ 					dut->ap_sgi80 ? "[SHORT-GI-80]" : "",
+ 					dut->ap_txBF ?
+ 					"[SU-BEAMFORMER][SU-BEAMFORMEE][BF-ANTENNA-2][SOUNDING-DIMENSION-2]" : "",
+ 					(dut->ap_ldpc == VALUE_ENABLED) ?
+ 					"[RXLDPC]" : "",
+ 					dut->ap_tx_stbc ? "[TX-STBC-2BY1][RX-STBC-1]" : "",
+-					dut->ap_mu_txBF ? "[MU-BEAMFORMER]" : "");
++					dut->ap_mu_txBF ? "[MU-BEAMFORMER]" : "",
++					(dut->ap_chwidth_1 == AP_160) ? "[VHT160-80PLUS80]" : "");
+ 			len += snprintf(vht_capab + len, sizeof(vht_capab) - len,
+ 					"[MAX-A-MPDU-LEN-EXP%d][MAX-MPDU-11454]", dut->ap_ampdu_exp);
+ 			fprintf(f, "vht_capab=%s\n", vht_capab);
+@@ -9031,15 +9032,17 @@ skip_key_mgmt:
+ 
+ 		if (dut->ap_sgi80 || dut->ap_txBF ||
+ 		    dut->ap_ldpc != VALUE_NOT_SET ||
+-		    dut->ap_tx_stbc || dut->ap_mu_txBF) {
+-			fprintf(f, "vht_capab=%s%s%s%s%s\n",
++		    dut->ap_tx_stbc || dut->ap_mu_txBF ||
++			dut->ap_chwidth) {
++			fprintf(f, "vht_capab=%s%s%s%s%s%s\n",
+ 				dut->ap_sgi80 ? "[SHORT-GI-80]" : "",
+ 				dut->ap_txBF ?
+ 				"[SU-BEAMFORMER][SU-BEAMFORMEE][BF-ANTENNA-2][SOUNDING-DIMENSION-2]" : "",
+ 				(dut->ap_ldpc == VALUE_ENABLED) ?
+ 				"[RXLDPC]" : "",
+ 				dut->ap_tx_stbc ? "[TX-STBC-2BY1][RX-STBC-1]" : "",
+-				dut->ap_mu_txBF ? "[MU-BEAMFORMER]" : "");
++				dut->ap_mu_txBF ? "[MU-BEAMFORMER]" : "",
++				(dut->ap_chwidth == AP_160) ? "[VHT160-80PLUS80]" : "");
+ 		}
+ 	}
+ 

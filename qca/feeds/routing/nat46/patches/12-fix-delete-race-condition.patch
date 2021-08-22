@@ -1,0 +1,39 @@
+diff -Nur a/nat46/modules/nat46-module.c nat46-6/nat46/modules/nat46-module.c
+--- a/nat46/modules/nat46-module.c	2020-07-01 10:25:23.549124614 -0700
++++ nat46-6/nat46/modules/nat46-module.c	2020-07-01 10:26:27.532881996 -0700
+@@ -61,6 +61,7 @@
+ module_param(add_dummy_header, bool, 0);
+ MODULE_PARM_DESC(add_dummy_header, "Add dummy fragment header");
+ 
++static DEFINE_MUTEX(add_del_lock);
+ static struct proc_dir_entry *nat46_proc_entry;
+ static struct proc_dir_entry *nat46_proc_parent;
+ 
+@@ -115,19 +116,27 @@
+ 		if (0 == strcmp(arg_name, "add")) {
+ 			devname = get_devname(&tail);
+ 			printk(KERN_INFO "nat46: adding device (%s)\n", devname);
++			mutex_lock(&add_del_lock);
+ 			nat46_create(devname);
++			mutex_unlock(&add_del_lock);
+ 		} else if (0 == strcmp(arg_name, "del")) {
+ 			devname = get_devname(&tail);
+ 			printk(KERN_INFO "nat46: deleting device (%s)\n", devname);
++			mutex_lock(&add_del_lock);
+ 			nat46_destroy(devname);
++			mutex_unlock(&add_del_lock);
+ 		} else if (0 == strcmp(arg_name, "config")) {
+ 			devname = get_devname(&tail);
+ 			printk(KERN_INFO "nat46: configure device (%s) with '%s'\n", devname, tail);
++			mutex_lock(&add_del_lock);
+ 			nat46_configure(devname, tail);
++			mutex_unlock(&add_del_lock);
+ 		} else if (0 == strcmp(arg_name, "insert")) {
+ 			devname = get_devname(&tail);
+ 			printk(KERN_INFO "nat46: insert new rule into device (%s) with '%s'\n", devname, tail);
++			mutex_lock(&add_del_lock);
+ 			nat46_insert(devname, tail);
++			mutex_unlock(&add_del_lock);
+ 		}
+ 	}
+ 

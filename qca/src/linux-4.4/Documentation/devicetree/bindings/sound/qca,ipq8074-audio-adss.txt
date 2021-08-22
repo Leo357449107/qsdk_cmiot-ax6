@@ -1,0 +1,55 @@
+* Qualcomm Technologies, Inc IPQ8074 ASoC audio subsystem driver
+
+This node models the Qualcomm Technologies, Inc IPQ8074 ASoC audio subsystem driver
+
+Required properties:
+
+- compatible	: "qca,ipq8074-audio-adss"
+- reg		: should have the stereo register address, length
+- resets	: references to the reset controllers
+- reset-names	: should be "blk_rst"
+
+Additionally, for slave mode we require a boolean called "slave;" in the node.
+
+Example:
+
+master:
+audio: audio@7700000 {
+	compatible = "qca,ipq8074-audio-adss";
+	reg = <0x7700000 0x34>;
+	resets = <&gcc AUDIO_BLK_ARES>;
+	reset-names = "blk_rst";
+	status = "disabled";
+};
+
+slave:
+audio: audio@7700000 {
+	compatible = "qca,ipq8074-audio-adss";
+	reg = <0x7700000 0x34>;
+	resets = <&gcc AUDIO_BLK_ARES>;
+	reset-names = "blk_rst";
+	status = "disabled";
+	slave;
+}
+
+If the user wants to use pcm alone and not full fledged audio, and is going to
+disable all other audio nodes, then "adss_init" must be added in pcm node as
+shown below. Without adding this boolean, pcm will not work because adss_init
+will not be done.
+
+Example:
+
+pcm: pcm@7704000 {
+	compatible = "qca,ipq8074-pcm";
+	reg = <0x7704000 0x2000>;
+	adss_init;
+	dma-tx-channel = <MBOX3_TX_ID>;
+	dma-rx-channel = <MBOX0_RX_ID>;
+	stereo-tx-port = <STEREO3_ID>;
+	stereo-rx-port = <STEREO0_ID>;
+	clocks = <&adss_clk ADSS_AUDIO_PCM_CLK>;
+	clock-names = "audio_pcm_clk";
+};
+
+Note: When full fledged audio is enabled, ipq_audio_adss_init is done in the
+sound card driver probe (ipq_audio_probe).

@@ -1,0 +1,17 @@
+diff -Nur a/programs/pluto/kernel.c openswan-2.6.51.3/programs/pluto/kernel.c
+--- a/programs/pluto/kernel.c	2019-08-12 10:07:39.306136491 -0700
++++ openswan-2.6.51.3/programs/pluto/kernel.c	2019-08-12 10:07:55.006016536 -0700
+@@ -150,6 +150,13 @@
+      * which can't do this itself.
+      */
+     {
++        ip_address src, dst;
++        networkof(ours, &src);
++        networkof(his, &dst);
++        if (has_bare_hold(&src, &dst, transport_proto)) {
++            loglog(RC_COMMENT, "This hold acquire already existing");
++            return;
++        }
+         struct bare_shunt *bs = alloc_thing(struct bare_shunt, "bare shunt");
+ 
+         bs->why = clone_str(why, "story for bare shunt");

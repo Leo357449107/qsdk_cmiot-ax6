@@ -1,0 +1,122 @@
+/dts-v1/;
+/*
+ * Copyright (c) 2019, The Linux Foundation. All rights reserved.
+ *
+ * Permission to use, copy, modify, and/or distribute this software for any
+ * purpose with or without fee is hereby granted, provided that the above
+ * copyright notice and this permission notice appear in all copies.
+ *
+ * THE SOFTWARE IS PROVIDED "AS IS" AND THE AUTHOR DISCLAIMS ALL WARRANTIES
+ * WITH REGARD TO THIS SOFTWARE INCLUDING ALL IMPLIED WARRANTIES OF
+ * MERCHANTABILITY AND FITNESS. IN NO EVENT SHALL THE AUTHOR BE LIABLE FOR
+ * ANY SPECIAL, DIRECT, INDIRECT, OR CONSEQUENTIAL DAMAGES OR ANY DAMAGES
+ * WHATSOEVER RESULTING FROM LOSS OF USE, DATA OR PROFITS, WHETHER IN AN
+ * ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF
+ * OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
+ */
+
+#include "qcom-ipq6018-cp01.dtsi"
+#include "qcom-ipq6018-rpm-regulator.dtsi"
+#include "qcom-ipq6018-cpr-regulator.dtsi"
+#include "qcom-ipq6018-cp-cpu.dtsi"
+#include "qcom-ipq6018-ion.dtsi"
+
+/ {
+	model = "Qualcomm Technologies, Inc. IPQ6018/AP-CP01-C2";
+
+	/*
+	 * +=========+==============+========================+
+	 * |        |              |                         |
+	 * | Region | Start Offset |          Size           |
+	 * |        |              |                         |
+	 * +--------+--------------+-------------------------+
+	 * |        |              |                         |
+	 * |        |              |                         |
+	 * |        |              |                         |
+	 * |        |              |                         |
+	 * | Linux  |  0x41000000  |         119MB           |
+	 * |        |              |                         |
+	 * |        |              |                         |
+	 * |        |              |                         |
+	 * +--------+--------------+-------------------------+
+	 * |        |              |                         |
+	 * | LPASS  |              |                         |
+	 * |   Q6   |  0x48700000  |          26MB           |
+	 * |        |              |                         |
+	 * +--------+--------------+-------------------------+
+	 *
+	 * From the available 145 MB for Linux in the first 256 MB,
+	 * we are reserving 26 MB for LPASS.
+	 *
+	 * Refer arch/arm64/boot/dts/qcom/qcom-ipq6018-memory.dtsi
+	 * for memory layout.
+	 */
+
+	reserved-memory {
+		lpass_q6_region: lpass@48700000 {
+			no-map;
+			reg = <0x0 0x48700000 0x0 0x01a00000>;
+		};
+	};
+};
+
+#if !defined(__IPQ_MEM_PROFILE_256_MB__) && !defined(__IPQ_MEM_PROFILE_512_MB__)
+&smmu500 {
+	status = "ok";
+};
+
+&adsprpc_mem {
+	memory-region = <&adsp_mem>;
+	status = "ok";
+};
+
+&fastrpc_cb {
+	status = "ok";
+};
+
+&glink_adsp {
+	status = "ok";
+};
+
+&ipc_router_adsp {
+	status = "ok";
+};
+
+&smp2p_adsp {
+	status = "ok";
+};
+
+&q6v6_adsp {
+	status = "ok";
+};
+
+&qcom_q6v6_adsp {
+	memory-region = <&lpass_q6_region>;
+	status = "ok";
+};
+
+&glink_adsp_ssr {
+	status = "ok";
+};
+
+&adsprpc_loader {
+	status = "ok";
+};
+#endif
+
+&gadget_diag {
+	status = "ok";
+};
+
+&dwc_0 {
+	dr_mode = "peripheral";
+};
+
+&sdhc_2 {
+	pinctrl-0 = <&sd_pins>;
+	pinctrl-names = "default";
+	cd-gpios = <&tlmm 62 1>;
+	sd-ldo-gpios = <&tlmm 66 0>;
+	vqmmc-supply = <&ipq6018_l2_corner>;
+	status = "ok";
+};

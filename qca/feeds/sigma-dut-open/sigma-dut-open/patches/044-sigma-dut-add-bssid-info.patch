@@ -1,0 +1,45 @@
+From e1b2a087ce3251d81f03e587489c721bf606968a Mon Sep 17 00:00:00 2001
+From: Sriram R <srirrama@codeaurora.org>
+Date: Sat, 17 Oct 2020 18:39:23 +0530
+Subject: [PATCH] sigma-dut: Add bssid value to hostapd conf
+
+Add the bssid value of the main iface to the hostapd conf.
+Currently only bssid of the additional iface is being added.
+
+Signed-off-by: Sriram R <srirrama@codeaurora.org>
+---
+ ap.c | 11 +++++++++++
+ 1 file changed, 11 insertions(+)
+
+diff --git a/ap.c b/ap.c
+index ead9e2d..1677548 100644
+--- a/ap.c
++++ b/ap.c
+@@ -7996,6 +7996,7 @@ enum sigma_cmd_result cmd_ap_config_commit(struct sigma_dut *dut,
+ #ifdef ANDROID
+ 	struct group *gr;
+ #endif /* ANDROID */
++	unsigned char main_bssid[6];
+ 
+ 	drv = get_driver_type(dut);
+ 
+@@ -8217,6 +8218,16 @@ enum sigma_cmd_result cmd_ap_config_commit(struct sigma_dut *dut,
+ 	if (dut->ap_bcnint)
+ 		fprintf(f, "beacon_int=%d\n", dut->ap_bcnint);
+ 
++	/* add the bssid of the main iface before other bss are added to this conf */
++	if (get_hwaddr(ifname, main_bssid)) {
++		fclose(f);
++		return -2;
++	}
++
++	fprintf(f, "bssid=%02x:%02x:%02x:%02x:%02x:%02x\n",
++		main_bssid[0], main_bssid[1], main_bssid[2], main_bssid[3],
++		main_bssid[4], main_bssid[5]);
++
+ 	if (dut->ap_akm_values) {
+ 		struct {
+ 			int akm;
+-- 
+2.7.4
+

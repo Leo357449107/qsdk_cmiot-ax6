@@ -1,0 +1,48 @@
+From a2bbbb0b4c13f060b21e5ea34839ec665963a635 Mon Sep 17 00:00:00 2001
+From: Venkateswara Naralasetty <vnaralas@codeaurora.org>
+Date: Thu, 19 Dec 2019 17:42:24 +0530
+Subject: [PATCH] authsae: add support to parse encypiton tye sae and sae-mixed
+
+this patch add support to parse encyption type sae and
+sae-mixed mode.
+
+Signed-off-by: Venkateswara Naralasetty <vnaralas@codeaurora.org>
+---
+ scripts/netifd-wireless.sh | 7 +++++--
+ 1 file changed, 5 insertions(+), 2 deletions(-)
+
+diff --git a/scripts/netifd-wireless.sh b/scripts/netifd-wireless.sh
+index 48eb47e..e7a5339 100755
+--- a/scripts/netifd-wireless.sh
++++ b/scripts/netifd-wireless.sh
+@@ -201,7 +201,7 @@ wireless_vif_parse_encryption() {
+ 
+ 	case "$encryption" in
+ 		*tkip+aes|*tkip+ccmp|*aes+tkip|*ccmp+tkip) wpa_pairwise="CCMP TKIP";;
+-		*aes|*ccmp| psk2 | wpa2) wpa_pairwise="CCMP";;
++		*aes|*ccmp| psk2 | wpa2 |sae*) wpa_pairwise="CCMP";;
+ 		*tkip | wpa | psk) wpa_pairwise="TKIP";;
+ 	esac
+ 
+@@ -216,7 +216,7 @@ wireless_vif_parse_encryption() {
+ 			wpa=0
+ 			wpa_pairwise=
+ 		;;
+-		wpa2*|*psk2*)
++		wpa2*|*psk2*|sae*)
+ 			wpa=2
+ 		;;
+ 		*mixed*)
+@@ -267,6 +267,9 @@ wireless_vif_parse_encryption() {
+ 				;;
+ 			esac
+ 		;;
++		sae-mixed)
++			auth_type=sae-mixed
++		;;
+ 		*sae*)
+ 			auth_type=sae
+ 		;;
+-- 
+2.7.4
+

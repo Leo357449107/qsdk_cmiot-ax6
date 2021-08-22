@@ -1,0 +1,25 @@
+Index: rp-pppoe-3.11/src/Makefile.in
+===================================================================
+--- rp-pppoe-3.11.orig/src/Makefile.in	2018-06-04 11:33:27.998304900 +0530
++++ rp-pppoe-3.11/src/Makefile.in	2018-06-04 11:34:56.878168883 +0530
+@@ -67,16 +67,16 @@
+ 	@echo "Type 'make install' as root to install the software."
+ 
+ pppoe-sniff: pppoe-sniff.o if.o common.o debug.o
+-	@CC@ -o $@ $^ $(LDFLAGS)
++	@CC@ -o $@ $^ $(LDFLAGS) -pie
+ 
+ pppoe-server: pppoe-server.o if.o debug.o common.o md5.o libevent/libevent.a @PPPOE_SERVER_DEPS@
+-	@CC@ -o $@ @RDYNAMIC@ $^ $(LDFLAGS) $(PPPOE_SERVER_LIBS) -Llibevent -levent
++	@CC@ -o $@ @RDYNAMIC@ $^ $(LDFLAGS) -pie $(PPPOE_SERVER_LIBS)
+ 
+ pppoe: pppoe.o if.o debug.o common.o ppp.o discovery.o
+-	@CC@ -o $@ $^ $(LDFLAGS)
++	@CC@ -o $@ $^ $(LDFLAGS) -pie
+ 
+ pppoe-relay: relay.o if.o debug.o common.o
+-	@CC@ -o $@ $^ $(LDFLAGS)
++	@CC@ -o $@ $^ $(LDFLAGS) -pie
+ 
+ pppoe.o: pppoe.c pppoe.h
+ 	@CC@ $(CFLAGS) '-DVERSION="$(VERSION)"' -c -o $@ $<

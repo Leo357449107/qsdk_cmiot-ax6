@@ -1,0 +1,21 @@
+--- a/incdefs.sh
++++ b/incdefs.sh
+@@ -68,6 +68,7 @@ kernel_flags()
+ 		# With KBUILD_OUTPUT set, we are building against
+ 		# either a custom kernel or a cross compiled kernel.
+ 		build=${KBUILD_OUTPUT}
++		tstamp=/include/linux/net_tstamp.h
+ 	else
+ 		# If the currently running kernel is a custom build
+ 		# with the headers installed, then we should use them.
+@@ -76,7 +77,6 @@ kernel_flags()
+ 
+ 	if [ -f ${build}${tstamp} ]; then
+ 		prefix=${build}
+-		printf " -I%s/usr/include" $prefix
+ 	fi
+ 
+ 	if grep -q HWTSTAMP_TX_ONESTEP_SYNC ${prefix}${tstamp}; then
+-- 
+1.9.1
+

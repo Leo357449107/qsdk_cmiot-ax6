@@ -1,0 +1,52 @@
+QTI Inter-processor communication driver binding
+
+This binding describes the QTI Blutooth Inter-processor communication
+driver, used to download firmware/patch and means to communicate and transfer
+data between Bluetooth device and host subsystems.
+
+- compatible:
+	Usage: required
+	Value type: <stringlist>
+	Definition: must be:
+		    "qcom,bt"
+
+-firmware:
+	Usage: required
+	Value type: <string>
+	Definition: firmware/pathc location in filesystem.
+
+- memory-region:
+	Usage: required
+	Value type: <prop-encoded-array>
+	Definition: handle to memory reservation for main shared memory region.
+
+- qcom,ipc:
+	Usage: required
+	Value type: <prop-encoded-array>
+	Definition: three entries specifying the outgoing ipc bit used for
+		    signaling the remote processor
+		    - phandle to a syscon node representing the apcs registers
+		    - u32 representing offset to the register within the syscon
+		    - u32 representing the ipc bit within the register
+
+- interrupts:
+	Usage: required
+	Value type: <prop-encoded-array>
+	Definition: one entry specifying the bt ipc interrupt
+
+= EXAMPLE
+The following example shows the BT Inter-processor communication driver setup
+for IPQ5018.
+
+	bt: bt@7000000 {
+		compatible = "qcom,bt";
+		firmware = "IPQ5018/bt.mdt";
+
+		memory-region = <&bt_region>;
+
+		qcom,ipc = <&apcs 8 23>;
+		interrupts = <GIC_SPI 162 IRQ_TYPE_EDGE_RISING>;
+
+		resets = <&gcc GCC_BTSS_BCR>;
+		reset-names = "btss_reset";
+	};

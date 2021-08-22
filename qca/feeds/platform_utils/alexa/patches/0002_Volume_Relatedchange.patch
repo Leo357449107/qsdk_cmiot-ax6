@@ -1,0 +1,168 @@
+diff -Naur a/CapabilityAgents/SpeakerManager/src/SpeakerManager.cpp b/CapabilityAgents/SpeakerManager/src/SpeakerManager.cpp
+--- a/CapabilityAgents/SpeakerManager/src/SpeakerManager.cpp	2018-06-28 03:14:18.000000000 +0530
++++ b/CapabilityAgents/SpeakerManager/src/SpeakerManager.cpp	2018-10-24 13:12:16.000000000 +0530
+@@ -504,10 +509,12 @@
+     SpeakerManagerObserverInterface::Source source,
+     bool forceNoNotifications) {
+     ACSDK_DEBUG9(LX("executeSetVolumeCalled").d("volume", static_cast<int>(volume)));
++    bool onlynotify = true;
+     if (m_speakerMap.count(type) == 0) {
+         ACSDK_ERROR(LX("executeSetVolumeFailed").d("reason", "noSpeakersWithType").d("type", type));
+         return false;
+     }
++    if (!forceNoNotifications) {
+     // Go through list of Speakers with SpeakerInterface::Type equal to type, and call setVolume.
+     auto beginIteratorAndEndIterator = m_speakerMap.equal_range(type);
+     auto begin = beginIteratorAndEndIterator.first;
+@@ -518,7 +520,11 @@
+         // In the future retry logic could be useful to ensure speakers are consistent.
+         if (!speaker->setVolume(volume)) {
+             return false;
++            }
++            break;
+         }
++    } else {
++        onlynotify = false;
+     }
+ 
+     SpeakerInterface::SpeakerSettings settings;
+@@ -531,7 +536,7 @@
+ 
+     updateContextManager(type, settings);
+ 
+-    if (forceNoNotifications) {
++    if (forceNoNotifications && onlynotify) {
+         ACSDK_INFO(LX("executeSetVolume").m("Skipping sending notifications").d("reason", "forceNoNotifications"));
+     } else {
+         executeNotifySettingsChanged(settings, VOLUME_CHANGED, source, type);
+@@ -593,6 +599,7 @@
+         if (!speaker->adjustVolume(delta)) {
+             return false;
+         }
++        break;
+     }
+ 
+     if (!validateSpeakerSettingsConsistency(type, &settings)) {
+@@ -642,6 +649,7 @@
+         if (!speaker->setMute(mute)) {
+             return false;
+         }
++        break;
+     }
+ 
+     SpeakerInterface::SpeakerSettings settings;
+diff -Naur a/CapabilityAgents/DoNotDisturb/src/DoNotDisturbCapabilityAgent.cpp
+--- a/CapabilityAgents/DoNotDisturb/src/DoNotDisturbCapabilityAgent.cpp
++++ b/CapabilityAgents/DoNotDisturb/src/DoNotDisturbCapabilityAgent.cpp
+@@ -75,8 +75,8 @@ std::shared_ptr<DoNotDisturbCapabilityAgent> DoNotDisturbCapabilityAgent::create
+     std::shared_ptr<registrationManager::CustomerDataManager> customerDataManager,
+     std::shared_ptr<ExceptionEncounteredSenderInterface> exceptionEncounteredSender,
+     std::shared_ptr<MessageSenderInterface> messageSender,
+-    std::shared_ptr<settings::DeviceSettingsManager> settingsManager,
+-    std::shared_ptr<settings::storage::DeviceSettingStorageInterface> settingsStorage) {
++    std::shared_ptr<alexaClientSDK::settings::DeviceSettingsManager> settingsManager,
++    std::shared_ptr<alexaClientSDK::settings::storage::DeviceSettingStorageInterface> settingsStorage) {
+     if (!messageSender) {
+         ACSDK_ERROR(LX("createFailed").d("reason", "messageSenderNull"));
+         return nullptr;
+@@ -117,7 +117,7 @@ DoNotDisturbCapabilityAgent::DoNotDisturbCapabilityAgent(
+     std::shared_ptr<registrationManager::CustomerDataManager> customerDataManager,
+     std::shared_ptr<ExceptionEncounteredSenderInterface> exceptionEncounteredSender,
+     std::shared_ptr<MessageSenderInterface> messageSender,
+-    std::shared_ptr<settings::DeviceSettingsManager> settingsManager) :
++    std::shared_ptr<alexaClientSDK::settings::DeviceSettingsManager> settingsManager) :
+         CapabilityAgent{NAMESPACE, exceptionEncounteredSender},
+         RequiresShutdown{"DoNotDisturbCA"},
+         CustomerDataHandler{customerDataManager},
+@@ -129,19 +129,20 @@ DoNotDisturbCapabilityAgent::DoNotDisturbCapabilityAgent(
+ }
+ 
+ bool DoNotDisturbCapabilityAgent::initialize(
+-    std::shared_ptr<settings::storage::DeviceSettingStorageInterface> settingsStorage) {
++    std::shared_ptr<alexaClientSDK::settings::storage::DeviceSettingStorageInterface> settingsStorage) {
+     // TODO: ACSDK-2089 - Clear the data when SettingsAPI allows. There will be no need to keep settings storage in CA.
+     m_settingsStorage = settingsStorage;
+ 
+-    const settings::SettingEventMetadata metadata = {
++    const alexaClientSDK::settings::SettingEventMetadata metadata = {
+         .eventNamespace = NAMESPACE,
+         .eventChangedName = EVENT_DONOTDISTURBCHANGED.name,
+         .eventReportName = EVENT_REPORTDONOTDISTURB.name,
+         .settingName = JSON_KEY_ENABLED,
+     };
+     auto protocol = DNDSettingProtocol::create(metadata, shared_from_this(), settingsStorage);
+-    m_dndModeSetting = settings::Setting<bool>::create(false, std::move(protocol));
+-    return m_settingsManager->addSetting<settings::DeviceSettingsIndex::DO_NOT_DISTURB>(m_dndModeSetting);
++    m_dndModeSetting = alexaClientSDK::settings::Setting<bool>::create(false, std::move(protocol));
++    return m_settingsManager->addSetting<alexaClientSDK::settings::DeviceSettingsIndex::DO_NOT_DISTURB>(
++        m_dndModeSetting);
+ }
+ 
+ void DoNotDisturbCapabilityAgent::generateCapabilityConfiguration() {
+@@ -247,7 +248,7 @@ std::unordered_set<std::shared_ptr<avsCommon::avs::CapabilityConfiguration>> DoN
+ }
+ 
+ void DoNotDisturbCapabilityAgent::doShutdown() {
+-    m_settingsManager->removeSetting<settings::DeviceSettingsIndex::DO_NOT_DISTURB>(m_dndModeSetting);
++    m_settingsManager->removeSetting<alexaClientSDK::settings::DeviceSettingsIndex::DO_NOT_DISTURB>(m_dndModeSetting);
+     m_dndModeSetting.reset();
+ }
+
+--- a/CapabilityAgents/DoNotDisturb/include/DoNotDisturbCA/DoNotDisturbCapabilityAgent.h
++++ b/CapabilityAgents/DoNotDisturb/include/DoNotDisturbCA/DoNotDisturbCapabilityAgent.h
+@@ -56,7 +56,7 @@
+         , public avsCommon::sdkInterfaces::ConnectionStatusObserverInterface
+         , public avsCommon::utils::RequiresShutdown
+         , public registrationManager::CustomerDataHandler
+-        , public settings::SettingEventSenderInterface {
++        , public alexaClientSDK::settings::SettingEventSenderInterface {
+ public:
+     /**
+      * Destructor.
+@@ -77,8 +77,8 @@
+         std::shared_ptr<registrationManager::CustomerDataManager> customerDataManager,
+         std::shared_ptr<avsCommon::sdkInterfaces::ExceptionEncounteredSenderInterface> exceptionEncounteredSender,
+         std::shared_ptr<avsCommon::sdkInterfaces::MessageSenderInterface> messageSender,
+-        std::shared_ptr<settings::DeviceSettingsManager> settingsManager,
+-        std::shared_ptr<settings::storage::DeviceSettingStorageInterface> settingsStorage);
++        std::shared_ptr<alexaClientSDK::settings::DeviceSettingsManager> settingsManager,
++        std::shared_ptr<alexaClientSDK::settings::storage::DeviceSettingStorageInterface> settingsStorage);
+ 
+     /// @name CapabilityAgent Functions
+     /// @{
+@@ -128,7 +128,7 @@
+         std::shared_ptr<registrationManager::CustomerDataManager> customerDataManager,
+         std::shared_ptr<avsCommon::sdkInterfaces::ExceptionEncounteredSenderInterface> exceptionEncounteredSender,
+         std::shared_ptr<avsCommon::sdkInterfaces::MessageSenderInterface> messageSender,
+-        std::shared_ptr<settings::DeviceSettingsManager> settingsManager);
++        std::shared_ptr<alexaClientSDK::settings::DeviceSettingsManager> settingsManager);
+ 
+     /**
+      * Method to initialize the new instance of the capability agent.
+@@ -136,7 +136,7 @@
+      * @param settingsStorage The storage interface that will be used to store device settings.
+      * @return True on succes, false otherwise.
+      */
+-    bool initialize(std::shared_ptr<settings::storage::DeviceSettingStorageInterface> settingsStorage);
++    bool initialize(std::shared_ptr<alexaClientSDK::settings::storage::DeviceSettingStorageInterface> settingsStorage);
+ 
+     /**
+      * Sends a DND event to the AVS.
+@@ -173,13 +173,13 @@
+     std::shared_ptr<avsCommon::sdkInterfaces::MessageSenderInterface> m_messageSender;
+ 
+     /// The device settings manager object.
+-    std::shared_ptr<settings::DeviceSettingsManager> m_settingsManager;
++    std::shared_ptr<alexaClientSDK::settings::DeviceSettingsManager> m_settingsManager;
+ 
+     /// The do not disturb mode setting.
+-    std::shared_ptr<settings::Setting<bool>> m_dndModeSetting;
++    std::shared_ptr<alexaClientSDK::settings::Setting<bool>> m_dndModeSetting;
+ 
+     /// The storage interface that will be used to store device settings.
+-    std::shared_ptr<settings::storage::DeviceSettingStorageInterface> m_settingsStorage;
++    std::shared_ptr<alexaClientSDK::settings::storage::DeviceSettingStorageInterface> m_settingsStorage;
+ 
+     /**
+      * Flag indicating latest reported connection status. True if SDK is connected to the AVS and ready,
+ 

@@ -1,0 +1,37 @@
+diff -Naur a/linux/include/openswan/ipsec_esp.h openswan-2.6.51.3/linux/include/openswan/ipsec_esp.h
+--- a/linux/include/openswan/ipsec_esp.h	2019-08-23 10:41:32.935529564 +0530
++++ openswan-2.6.51.3/linux/include/openswan/ipsec_esp.h	2019-08-23 10:44:36.253037083 +0530
+@@ -70,6 +70,7 @@
+
+ struct ipsec_skb_cb {
+ 	struct net_device *tunnel_dev;
++	struct sock *sk;
+ 	uint32_t flags;
+ 	uint16_t replay_win;
+ 	uint16_t magic;
+diff -Naur a/linux/net/ipsec/ipsec_ocf.c openswan-2.6.51.3/linux/net/ipsec/ipsec_ocf.c
+--- a/linux/net/ipsec/ipsec_ocf.c	2019-08-23 10:41:32.939529597 +0530
++++ openswan-2.6.51.3/linux/net/ipsec/ipsec_ocf.c	2019-08-23 10:43:20.428413546 +0530
+@@ -736,7 +736,6 @@
+ 	 */
+ 	struct ipsec_sa *iter;
+ 	struct ipsec_skb_cb *skb_cb = (struct ipsec_skb_cb *)irs->skb->cb;
+-	memset(skb_cb, 0, sizeof(struct ipsec_skb_cb));
+
+ 	/*
+ 	 * Set transport mode as default. Update if it is tunnel mode.
+diff -Naur a/linux/net/ipsec/ipsec_rcv.c openswan-2.6.51.3/linux/net/ipsec/ipsec_rcv.c
+--- a/linux/net/ipsec/ipsec_rcv.c	2019-08-23 10:41:32.939529597 +0530
++++ openswan-2.6.51.3/linux/net/ipsec/ipsec_rcv.c	2019-09-16 14:36:16.176346502 +0530
+@@ -2233,6 +2233,11 @@
+ 	/* modify the protocol (it's ESP!) */
+ 	iph->protocol = IPPROTO_ESP;
+
++	/*
++	 * Update socket information in skb->cb;
++	 */
++	((struct ipsec_skb_cb *)skb->cb)->sk = sk;
++
+ 	/* process ESP */
+ 	KLIPS_PRINT(debug_rcv, "starting processing ESP packet\n");
+ 	ret = klips26_rcv_encap(skb, encap_type);

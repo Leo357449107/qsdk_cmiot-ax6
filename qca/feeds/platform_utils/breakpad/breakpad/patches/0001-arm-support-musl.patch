@@ -1,0 +1,327 @@
+--- a/configure.ac
++++ b/configure.ac
+@@ -72,7 +72,7 @@ AC_ARG_ENABLE(m32,
+ AC_HEADER_STDC
+ AC_SYS_LARGEFILE
+ AX_PTHREAD
+-AC_CHECK_HEADERS([a.out.h sys/random.h])
++AC_CHECK_HEADERS([a.out.h stab.h sys/random.h sys/reg.h])
+ AC_CHECK_FUNCS([arc4random getrandom])
+ 
+ AX_CXX_COMPILE_STDCXX(11, noext, mandatory)
+--- a/src/client/linux/crash_generation/crash_generation_server.cc
++++ b/src/client/linux/crash_generation/crash_generation_server.cc
+@@ -28,7 +28,6 @@
+ // OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+ 
+ #include <assert.h>
+-#include <dirent.h>
+ #include <fcntl.h>
+ #include <limits.h>
+ #include <poll.h>
+@@ -49,6 +48,8 @@
+ #include "common/linux/guid_creator.h"
+ #include "common/linux/safe_readlink.h"
+ 
++#include <dirent.h>
++
+ static const char kCommandQuit = 'x';
+ 
+ namespace google_breakpad {
+@@ -229,8 +230,18 @@ CrashGenerationServer::ClientEvent(short
+   // Walk the control payload and extract the file descriptor and validated pid.
+   pid_t crashing_pid = -1;
+   int signal_fd = -1;
++#ifndef __GLIBC__
++  // In musl-libc, CMSG_NXTHDR typecasts char* to cmsghdr* which causes
++  // clang to throw sign-compare warning. This is to suppress the warning
++  // inline.
++  #pragma clang diagnostic push
++  #pragma clang diagnostic ignored "-Wsign-compare"
++#endif
+   for (struct cmsghdr *hdr = CMSG_FIRSTHDR(&msg); hdr;
+        hdr = CMSG_NXTHDR(&msg, hdr)) {
++#ifndef __GLIBC__
++  #pragma clang diagnostic pop
++#endif
+     if (hdr->cmsg_level != SOL_SOCKET)
+       continue;
+     if (hdr->cmsg_type == SCM_RIGHTS) {
+--- a/src/client/linux/dump_writer_common/thread_info.cc
++++ b/src/client/linux/dump_writer_common/thread_info.cc
+@@ -229,7 +229,6 @@ void ThreadInfo::FillCPUContext(RawConte
+ }
+ 
+ #elif defined(__mips__)
+-
+ uintptr_t ThreadInfo::GetInstructionPointer() const {
+   return mcontext.pc;
+ }
+@@ -263,8 +262,11 @@ void ThreadInfo::FillCPUContext(RawConte
+   out->cause = 0; // Not stored in mcontext
+ 
+   for (int i = 0; i < MD_FLOATINGSAVEAREA_MIPS_FPR_COUNT; ++i)
++#ifdef __GLIBC__
+     out->float_save.regs[i] = mcontext.fpregs.fp_r.fp_fregs[i]._fp_fregs;
+-
++#else
++    out->float_save.regs[i] = mcontext.fpregs[i];
++#endif
+   out->float_save.fpcsr = mcontext.fpc_csr;
+ #if _MIPS_SIM == _ABIO32
+   out->float_save.fir = mcontext.fpc_eir;
+--- a/src/client/linux/dump_writer_common/ucontext_reader.cc
++++ b/src/client/linux/dump_writer_common/ucontext_reader.cc
+@@ -49,7 +49,7 @@ uintptr_t UContextReader::GetInstruction
+ }
+ 
+ void UContextReader::FillCPUContext(RawContextCPU *out, const ucontext_t *uc,
+-                                    const struct _libc_fpstate* fp) {
++                                    const struct _fpstate* fp) {
+   const greg_t* regs = uc->uc_mcontext.gregs;
+ 
+   out->context_flags = MD_CONTEXT_X86_FULL |
+@@ -97,7 +97,7 @@ uintptr_t UContextReader::GetInstruction
+ }
+ 
+ void UContextReader::FillCPUContext(RawContextCPU *out, const ucontext_t *uc,
+-                                    const struct _libc_fpstate* fpregs) {
++                                    const struct _fpstate* fpregs) {
+   const greg_t* regs = uc->uc_mcontext.gregs;
+ 
+   out->context_flags = MD_CONTEXT_AMD64_FULL;
+@@ -247,8 +247,11 @@ void UContextReader::FillCPUContext(RawC
+   out->cause = 0;  // Not reported in signal context.
+ 
+   for (int i = 0; i < MD_FLOATINGSAVEAREA_MIPS_FPR_COUNT; ++i)
++#ifdef __GLIBC__
+     out->float_save.regs[i] = uc->uc_mcontext.fpregs.fp_r.fp_dregs[i];
+-
++#else
++    out->float_save.regs[i] = uc->uc_mcontext.fpregs[i];
++#endif
+   out->float_save.fpcsr = uc->uc_mcontext.fpc_csr;
+ #if _MIPS_SIM == _ABIO32
+   out->float_save.fir = uc->uc_mcontext.fpc_eir;  // Unused.
+--- a/src/client/linux/dump_writer_common/ucontext_reader.h
++++ b/src/client/linux/dump_writer_common/ucontext_reader.h
+@@ -50,7 +50,7 @@ struct UContextReader {
+   //   info: the collection of register structures.
+ #if defined(__i386__) || defined(__x86_64)
+   static void FillCPUContext(RawContextCPU *out, const ucontext_t *uc,
+-                             const struct _libc_fpstate* fp);
++                             const struct _fpstate* fp);
+ #elif defined(__aarch64__)
+   static void FillCPUContext(RawContextCPU *out, const ucontext_t *uc,
+                              const struct fpsimd_context* fpregs);
+--- a/src/client/linux/handler/exception_handler.cc
++++ b/src/client/linux/handler/exception_handler.cc
+@@ -78,7 +78,7 @@
+ #include <sys/wait.h>
+ #include <unistd.h>
+ 
+-#include <sys/signal.h>
++#include <signal.h>
+ #include <sys/ucontext.h>
+ #include <sys/user.h>
+ #include <ucontext.h>
+@@ -490,7 +490,19 @@ bool ExceptionHandler::SimulateSignalDel
+   siginfo.si_code = SI_USER;
+   siginfo.si_pid = getpid();
+   ucontext_t context;
++#if defined(__GLIBC__)
+   getcontext(&context);
++#else
++  // Extreme hack: Allow musl builds to compile - but don't expect them to work.
++  // Although musl provides a definition for getcontext() in ucontext.h (which
++  // enough to build libbreakpad_client) musl does not provide a corresponding
++  // getcontext() function, so builds will fail when attempting to link anything
++  // with libbreakpad_client. Disabling calls to getcontext() is a temporary
++  // hack. The real fix is probably to enable Breakpad's own implementation of
++  // getcontext() when building for musl (it's currently only enabled when
++  // building for Android).
++  memset (&context, 0, sizeof(context));
++#endif
+   return HandleSignal(sig, &siginfo, &context);
+ }
+ 
+@@ -675,9 +687,14 @@ bool ExceptionHandler::WriteMinidump() {
+   sys_prctl(PR_SET_DUMPABLE, 1, 0, 0, 0);
+ 
+   CrashContext context;
++#if defined(__GLIBC__)
+   int getcontext_result = getcontext(&context.context);
+   if (getcontext_result)
+     return false;
++#else
++  // Extreme hack - see comments above.
++  memset (&context.context, 0, sizeof(&context.context));
++#endif
+ 
+ #if defined(__i386__)
+   // In CPUFillFromUContext in minidumpwriter.cc the stack pointer is retrieved
+--- a/src/client/linux/minidump_writer/linux_core_dumper.cc
++++ b/src/client/linux/minidump_writer/linux_core_dumper.cc
+@@ -198,7 +198,7 @@ bool LinuxCoreDumper::EnumerateThreads()
+         info.tgid = status->pr_pgrp;
+         info.ppid = status->pr_ppid;
+ #if defined(__mips__)
+-#if defined(__ANDROID__)
++#if defined(__ANDROID__) || !defined(__GLIBC__)
+         for (int i = EF_R0; i <= EF_R31; i++)
+           info.mcontext.gregs[i - EF_R0] = status->pr_reg[i];
+ #else  // __ANDROID__
+--- a/src/client/linux/minidump_writer/minidump_writer.h
++++ b/src/client/linux/minidump_writer/minidump_writer.h
+@@ -48,7 +48,7 @@ class ExceptionHandler;
+ #if defined(__aarch64__)
+ typedef struct fpsimd_context fpstate_t;
+ #elif !defined(__ARM_EABI__) && !defined(__mips__)
+-typedef struct _libc_fpstate fpstate_t;
++typedef struct _fpstate fpstate_t;
+ #endif
+ 
+ // These entries store a list of memory regions that the client wants included
+--- a/src/common/dwarf/elf_reader.cc
++++ b/src/common/dwarf/elf_reader.cc
+@@ -29,10 +29,14 @@
+ #ifndef _GNU_SOURCE
+ #define _GNU_SOURCE  // needed for pread()
+ #endif
+-
++#include <config.h>
+ #include <sys/types.h>
+ #include <sys/stat.h>
+ #include <sys/mman.h>
++#ifdef HAVE_SYS_REG_H
++#include <sys/reg.h>
++#endif
++#include <limits.h>
+ #include <unistd.h>
+ #include <fcntl.h>
+ #include <string.h>
+@@ -1053,9 +1057,9 @@ ElfReader::~ElfReader() {
+ 
+ 
+ // The only word-size specific part of this file is IsNativeElfFile().
+-#if __WORDSIZE == 32
++#if ULONG_MAX == 0xffffffff
+ #define NATIVE_ELF_ARCH Elf32
+-#elif __WORDSIZE == 64
++#elif ULONG_MAX == 0xffffffffffffffff
+ #define NATIVE_ELF_ARCH Elf64
+ #else
+ #error "Invalid word size"
+--- a/src/common/linux/elf_core_dump.h
++++ b/src/common/linux/elf_core_dump.h
+@@ -33,10 +33,14 @@
+ #ifndef COMMON_LINUX_ELF_CORE_DUMP_H_
+ #define COMMON_LINUX_ELF_CORE_DUMP_H_
+ 
++#include <config.h>
+ #include <elf.h>
+ #include <link.h>
+ #include <stddef.h>
+-
++#ifdef HAVE_SYS_REG_H
++#include <sys/reg.h>
++#endif
++#include <limits.h>
+ #include "common/memory_range.h"
+ 
+ namespace google_breakpad {
+@@ -51,9 +55,9 @@ class ElfCoreDump {
+   typedef ElfW(Phdr) Phdr;
+   typedef ElfW(Word) Word;
+   typedef ElfW(Addr) Addr;
+-#if __WORDSIZE == 32
++#if ULONG_MAX == 0xffffffff
+   static const int kClass = ELFCLASS32;
+-#elif __WORDSIZE == 64
++#elif ULONG_MAX == 0xffffffffffffffff
+   static const int kClass = ELFCLASS64;
+ #else
+ #error "Unsupported __WORDSIZE for ElfCoreDump."
+--- a/src/common/stabs_reader.cc
++++ b/src/common/stabs_reader.cc
+@@ -34,7 +34,9 @@
+ #include "common/stabs_reader.h"
+ 
+ #include <assert.h>
++#ifdef HAVE_STAB_H
+ #include <stab.h>
++#endif
+ #include <string.h>
+ 
+ #include <string>
+--- a/src/common/stabs_reader.h
++++ b/src/common/stabs_reader.h
+@@ -58,6 +58,30 @@
+ #elif defined(HAVE_A_OUT_H)
+ #include <a.out.h>
+ #endif
++// Definitions from <stab.h> and <a.out.h> for systems which
++// do not have them
++#ifndef HAVE_A_OUT_H
++#undef N_UNDF
++#define N_UNDF 0x0
++#ifndef N_FUN
++#define N_FUN 0x24
++#endif
++#ifndef N_SLINE
++#define N_SLINE 0x44
++#endif
++#ifndef N_SO
++#define N_SO 0x64
++#endif
++#ifndef N_LSYM
++#define N_LSYM 0x80
++#endif
++#ifndef N_BINCL
++#define N_BINCL 0x82
++#endif
++#ifndef N_SOL
++#define N_SOL 0x84
++#endif
++#endif
+ 
+ #include <string>
+ #include <vector>
+--- a/src/common/stabs_reader_unittest.cc
++++ b/src/common/stabs_reader_unittest.cc
+@@ -33,7 +33,9 @@
+ 
+ #include <assert.h>
+ #include <errno.h>
++#ifdef HAVE_STAB_H
+ #include <stab.h>
++#endif
+ #include <stdarg.h>
+ #include <stdlib.h>
+ #include <string.h>
+--- a/src/tools/linux/md2core/minidump-2-core.cc
++++ b/src/tools/linux/md2core/minidump-2-core.cc
+@@ -525,8 +525,12 @@ ParseThreadRegisters(CrashedProcess::Thr
+   thread->mcontext.lo3 = rawregs->lo[2];
+ 
+   for (int i = 0; i < MD_FLOATINGSAVEAREA_MIPS_FPR_COUNT; ++i) {
++#ifdef __GLIBC__
+     thread->mcontext.fpregs.fp_r.fp_fregs[i]._fp_fregs =
+         rawregs->float_save.regs[i];
++#else
++    thread->mcontext.fpregs[i] = rawregs->float_save.regs[i];
++#endif
+   }
+ 
+   thread->mcontext.fpc_csr = rawregs->float_save.fpcsr;
+--- a/src/common/memory_allocator.h
++++ b/src/common/memory_allocator.h
+@@ -171,7 +171,7 @@ struct PageStdAllocator : public std::al
+ 
+   template <class Other> PageStdAllocator(const PageStdAllocator<Other>& other)
+       : allocator_(other.allocator_),
+-        stackdata_(nullptr),
++        stackdata_(NULL),
+         stackdata_size_(0)
+   {}
+ 

@@ -1,0 +1,13 @@
+Qualcomm Technologies, Inc. Diag Driver
+
+This binding describes diag driver used for logging and debugging purposes
+across all subsystems. It collects logging data from all subsystems and
+forwards that data to the requesting client.
+
+Required properties:
+-compatible : should be "qcom,diag".
+
+Example:
+qcom,diag {
+	compatible = "qcom,diag";
+};

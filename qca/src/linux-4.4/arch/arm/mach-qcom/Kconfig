@@ -1,0 +1,114 @@
+menuconfig ARCH_QCOM
+	bool "Qualcomm Support" if ARCH_MULTI_V7
+	select ARCH_SUPPORTS_BIG_ENDIAN
+	select ARM_GIC
+	select ARM_AMBA
+	select PINCTRL
+	select ARCH_WANT_KMAP_ATOMIC_FLUSH
+	select QCOM_SCM if SMP
+	select PCI_DOMAINS if PCI
+	select ARM_GIC_V2M if PCI_MSI
+	help
+	  Support for Qualcomm's devicetree based systems.
+
+if ARCH_QCOM
+
+config ARCH_MSM8X60
+	bool "Enable support for MSM8X60"
+	select CLKSRC_QCOM
+
+config ARCH_MSM8960
+	bool "Enable support for MSM8960"
+	select CLKSRC_QCOM
+
+config ARCH_MSM8974
+	bool "Enable support for MSM8974"
+	select HAVE_ARM_ARCH_TIMER
+
+config ARCH_IPQ256M
+	bool "Enable 256M config"
+	default n
+	help
+	  This sets the text offset of 256M profile, which makes kernel aware of
+          first 16MB of DDR.
+
+config SKB_FIXED_SIZE_2K
+	bool "SKB size fixed at 2K"
+	default n
+	help
+		This is a hint to the NSS driver that the ‘skbuff’ size might
+		need to be fixed at 2KB, to conserve memory.
+
+config ARCH_IPQ40XX
+	bool "Enable Support for IPQ40XX"
+	help
+	  This enables support for the IPQ40XX chipset. This config can
+	  be used to enable/disable modules based on target type.
+	  If you dont know what do here, say N
+
+config ARCH_IPQ806x
+	bool "Enable Support for IPQ806x"
+	help
+	  This enables support for the IPQ806x chipset. This config can
+	  be used to enable/disable modules based on target type.
+	  If you dont know what do here, say N
+
+config ARCH_IPQ807x
+	bool "Enable Support for IPQ807x"
+	select PINCTRL_IPQ807x
+	select COMMON_CLK_QCOM
+	select IPQ_APSS_807x
+	select IPQ_GCC_807x
+	help
+	  This enables support for the IPQ807x chipset. If you dont
+	  know what do here, say N
+
+config ARCH_IPQ6018
+	bool "Enable Support for IPQ6018"
+	select PINCTRL_IPQ6018
+	select COMMON_CLK_QCOM
+	select IPQ_APSS_6018
+	select IPQ_GCC_6018
+	select SOC_BUS
+	help
+	  This enables support for the IPQ6018 chipset. If you dont
+	  know what do here, say N
+
+config ARCH_IPQ5018
+	bool "Enable Support for IPQ5018"
+	select PINCTRL_IPQ5018
+	select COMMON_CLK_QCOM
+	select IPQ_APSS_5018
+	select IPQ_GCC_5018
+	help
+	  This enables support for the IPQ5018 chipset. If you dont
+	  know what do here, say N
+
+config IPQ_MEM_PROFILE
+	int "Select Memory Profile"
+	range 0 1024
+	default 0
+	---help---
+	This option select memory profile to be used,which defines
+	the reserved memory configuration used in device tree.
+
+	If unsure, say 0
+
+config IPQ_FLASH_16M_PROFILE
+	bool "Enable 16M Flash Profile"
+	default n
+	---help---
+	This option select flash profile to be used.
+
+	If unsure, say n
+
+config IPQ_FLASH_16M_PROFILE_DEBUG
+	bool "Enable 16M Flash Profile"
+	depends on IPQ_FLASH_16M_PROFILE
+	default n
+	---help---
+	This option selects 16M flash debug profile.
+
+	If unsure, say n
+
+endif

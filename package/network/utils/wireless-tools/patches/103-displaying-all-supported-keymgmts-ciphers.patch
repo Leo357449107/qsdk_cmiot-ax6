@@ -1,0 +1,68 @@
+diff --git a/iwlist.c b/iwlist.c
+index 4a633a3..69c7e52 100644
+--- a/iwlist.c
++++ b/iwlist.c
+@@ -150,6 +150,14 @@ static const char *	iw_ie_cypher_name[] = {
+ 	"WRAP",
+ 	"CCMP",
+ 	"WEP-104",
++	"AES_CMAC",
++	"NO_GROUP_ADDR",
++	"GCMP",
++	"GCMP_256",
++	"CCMP_256",
++	"BIP_GMAC_128",
++	"BIP_GMAC_256",
++	"BIP_CMAC_256",
+ };
+ #define	IW_IE_CYPHER_NUM	IW_ARRAY_LEN(iw_ie_cypher_name)
+ 
+@@ -158,6 +166,22 @@ static const char *	iw_ie_key_mgmt_name[] = {
+ 	"none",
+ 	"802.1x",
+ 	"PSK",
++	"FT_8021x",
++	"FT_PSK",
++	"8021x_SHA256",
++	"PSK_SHA256",
++	"TPK_HANDSHAKE",
++	"SAE",
++	"FT_SAE",
++	"Unknown Keymgmt(10)",
++	"8021X_SUITE_B",
++	"8021X_SUITE_B_192",
++	"FT_802_1X_SHA384",
++	"FILS_SHA256",
++	"FILS_SHA384",
++	"FT_FILS_SHA256",
++	"FT_FILS_SHA384",
++	"OWE",
+ };
+ #define	IW_IE_KEY_MGMT_NUM	IW_ARRAY_LEN(iw_ie_key_mgmt_name)
+ 
+@@ -374,9 +398,22 @@ iw_print_ie_wpa(unsigned char *	iebuf,
+   for(i = 0; i < cnt; i++)
+     {
+       if(memcmp(&iebuf[offset], wpa_oui, 3) != 0)
+- 	{
+- 	  printf(" Proprietary");
+- 	}
++        {
++          char dpp[4] = {0x50, 0x6F, 0x9A, 0x02};
++          char wapi_cert[4] = {0x01, 0x72, 0x14, 0x00};
++          char wapi_psk[4] = {0x02, 0x72, 0x14, 0x00};
++          char wapi_auto[4] = {0x03, 0x72, 0x14, 0x00};
++          if(memcmp(&iebuf[offset], dpp, 4) == 0)
++            printf(" DPP");
++          else if (memcmp(&iebuf[offset], wapi_cert, 4) == 0)
++            printf(" WAPI_CERT");
++          else if (memcmp(&iebuf[offset], wapi_psk, 4) == 0)
++            printf(" WAPI_PSK");
++          else if (memcmp(&iebuf[offset], wapi_auto, 4) == 0)
++            printf(" WAPI_AUTO");
++          else
++            printf(" Unknown suite\n");
++        }
+       else
+ 	{
+ 	  iw_print_value_name(iebuf[offset+3],

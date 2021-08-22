@@ -1,0 +1,39 @@
+diff -Nur a/nat46/modules/nat46-glue.c nat46-6/nat46/modules/nat46-glue.c
+--- a/nat46/modules/nat46-glue.c	2020-07-16 14:23:58.838592505 -0700
++++ nat46-6/nat46/modules/nat46-glue.c	2020-07-16 14:20:01.803810611 -0700
+@@ -18,6 +18,7 @@
+ #include "nat46-glue.h"
+ #include "nat46-core.h"
+ 
++static DEFINE_MUTEX(ref_lock);
+ int is_valid_nat46(nat46_instance_t *nat46) {
+   return (nat46 && (nat46->sig == NAT46_SIGNATURE));
+ }
+@@ -46,20 +47,26 @@
+ 
+ nat46_instance_t *get_nat46_instance(struct sk_buff *sk) {
+   nat46_instance_t *nat46 = netdev_nat46_instance(sk->dev);
++  mutex_lock(&ref_lock);
+   if (is_valid_nat46(nat46)) {
+     nat46->refcount++;
++    mutex_unlock(&ref_lock);
+     return nat46;
+   } else {
++    mutex_unlock(&ref_lock);
+     printk("[nat46] get_nat46_instance: Could not find a valid NAT46 instance!");
+     return NULL;
+   }
+ }
+ 
+ void release_nat46_instance(nat46_instance_t *nat46) {
++  mutex_lock(&ref_lock);
+   nat46->refcount--;
+   if(0 == nat46->refcount) {
+-    printk("[nat46] release_nat46_instance: freeing nat46 instance with %d pairs\n", nat46->npairs);
+     nat46->sig = FREED_NAT46_SIGNATURE;
++    mutex_unlock(&ref_lock);
++    printk("[nat46] release_nat46_instance: freeing nat46 instance with %d pairs\n", nat46->npairs);
+     kfree(nat46);
+   }
++  mutex_unlock(&ref_lock);
+ }

@@ -1,0 +1,30 @@
+--- a/ap.c
++++ b/ap.c
+@@ -7681,6 +7681,8 @@ static void fwtest_set_he_params(struct
+ 		pdev_id = 3;
+ 	}
+ 
++	/* disbale sending basic triggers */
++	fwtest_cmd_wrapper(dut, "-m 0x47 -v 0 42 0", ifname);
+ 	/* he_dynamic_muedca 0 */
+ 	fwtest_cmd_wrapper(dut, "-m 0x00 -p %d 0xBF 0x00", ifname, pdev_id);
+ 
+@@ -13986,6 +13988,8 @@ static void mac80211_set_assoc_disallow(
+ static void mac80211_set_trigger_type_0(struct sigma_dut *dut, const char *ifname)
+ {
+ 	/* TriggerType "0" for Basic trigger */
++	run_system_wrapper(dut, "ath11k-fwtest -i %s -m 0x47 -v 0 42 7",
++			   ifname);
+ 	run_system_wrapper(dut, "ath11k-fwtest -i %s -m 0x47 -v 0 43 6",
+ 			   ifname);
+ }
+@@ -14050,6 +14054,9 @@ static void mac80211_set_trigger_type_4(
+ 	run_system_wrapper(dut, "ath11k-fwtest -i %s -m 0x48 -v 0 63 1000",
+ 			   ifname);
+ 
++	run_system_wrapper(dut, "ath11k-fwtest -i %s -m 0x47 -v 0 42 7",
++			   ifname);
++
+ 	/* Send BSRP command */
+ 	run_system_wrapper(dut, "ath11k-fwtest -i %s -m 0x47 -v 0 43 7",
+ 			   ifname);

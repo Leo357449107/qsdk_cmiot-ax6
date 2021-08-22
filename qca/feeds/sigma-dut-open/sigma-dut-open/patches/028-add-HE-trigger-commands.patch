@@ -1,0 +1,120 @@
+--- a/ap.c
++++ b/ap.c
+@@ -13947,6 +13947,103 @@ static void mac80211_set_assoc_disallow(
+ 	}
+ }
+ 
++static void mac80211_set_trigger_type_0(struct sigma_dut *dut, const char *ifname)
++{
++	/* TriggerType "0" for Basic trigger */
++	run_system_wrapper(dut, "ath11k-fwtest -i %s -m 0x47 -v 0 43 6",
++			   ifname);
++}
++
++static void mac80211_set_trigger_type_1(struct sigma_dut *dut, const char *ifname)
++{
++	/* TriggerType "1" for MU BRP */
++	run_system_wrapper(dut, "ath11k-fwtest -i %s -m 0x47 -v 0 7 1",
++			   ifname);
++	/* sets force_1x1_peer to 1 which should be reset to zero for
++	 * non MU test cases
++	 */
++	run_system_wrapper(dut, "ath11k-fwtest -i %s -m 0x48 -v 0 118 1",
++			   ifname);
++	/* Disable DL OFDMA */
++	run_system_wrapper(dut, "ath11k-fwtest -i %s -m 0x47 -v 0 11 0",
++			   ifname);
++}
++
++static void mac80211_set_trigger_type_2(struct sigma_dut *dut, const char *ifname)
++{
++	/* TriggerType "2" for MU BAR */
++	if (dut->ap_channel >= 36) {
++		/* RU allocation RU 242 - DL OFDMA data */
++		run_system_wrapper(dut,
++				   "ath11k-fwtest -i %s -m 0x4b -v 0 1 0 3 1 3 2 3 3 3",
++				   ifname);
++		/* RU allocation RU 52 - UL BA */
++		run_system_wrapper(dut,
++				   "ath11k-fwtest -i %s -m 0x4b -v 0 4 0 2 1 2 2 2 3 2",
++				   ifname);
++	} else {
++		/* RU allocation RU 52 - DL OFDMA data */
++		run_system_wrapper(dut,
++				   "ath11k-fwtest -i %s -m 0x4b -v 0 1 0 1 1 1 2 1 3 1",
++				   ifname);
++	}
++	/* Force TBPPDU duration to 400 us */
++	run_system_wrapper(dut, "ath11k-fwtest -i %s -m 0x48 -v 0 63 400",
++			   ifname);
++	run_system_wrapper(dut, "ath11k-fwtest -i %s -m 0x47 -v 0 49 0",
++			   ifname);
++	/* enable MU BAR */
++	run_system_wrapper(dut, "ath11k-fwtest -i %s -m 0x47 -v 0 64 0",
++			   ifname);
++}
++
++static void mac80211_set_trigger_type_3(struct sigma_dut *dut, const char *ifname)
++{
++	/* TriggerType "3" for MU RTS */
++	/* Send MU RTS Trigger - '1' is to enable MU RTS */
++	run_system_wrapper(dut, "ath11k-fwtest -i %s -m 0x47 -v 0 101 1",
++			   ifname);
++}
++
++static void mac80211_set_trigger_type_4(struct sigma_dut *dut, const char *ifname)
++{
++	/* TriggerType "4" for BSRP */
++	run_system_wrapper(dut, "ath11k-fwtest -i %s -m 0x48 -v 0 63 1000",
++			   ifname);
++
++	/* Send BSRP command */
++	run_system_wrapper(dut, "ath11k-fwtest -i %s -m 0x47 -v 0 43 7",
++			   ifname);
++}
++
++static int mac80211_set_trigger_type(struct sigma_dut *dut, const char *ifname,
++				      const char *val)
++{
++	int trigtype = atoi(val);
++
++	switch (trigtype) {
++	case 0:
++		mac80211_set_trigger_type_0(dut, ifname);
++		break;
++	case 1:
++		mac80211_set_trigger_type_1(dut, ifname);
++		break;
++	case 2:
++		mac80211_set_trigger_type_2(dut, ifname);
++		break;
++	case 3:
++		mac80211_set_trigger_type_3(dut, ifname);
++		break;
++	case 4:
++		mac80211_set_trigger_type_4(dut, ifname);
++		break;
++	default:
++		return STATUS_SENT_ERROR;
++	}
++
++	return SUCCESS_SEND_STATUS;
++}
++
+ static enum sigma_cmd_result
+ mac80211_he_tx_bandwidth(struct sigma_dut *dut, struct sigma_conn *conn,
+ 			 const char *ifname, const char *val, const char *type)
+@@ -14156,6 +14253,13 @@ static enum sigma_cmd_result mac80211_ap
+ 	if (val)
+ 		dut->ap_btmreq_bss_term_tsf = atoi(val);
+ 
++	val = get_param(cmd, "TriggerType");
++	if (val && mac80211_set_trigger_type(dut, ifname, val) < 0) {
++		send_resp(dut, conn, SIGMA_ERROR,
++			  "errorCode,TriggerType not supported");
++		return STATUS_SENT_ERROR;
++	}
++
+ 	val = get_param(cmd, "txBandwidth");
+ 	if (val) {
+ 		res = mac80211_he_tx_bandwidth(dut, conn, ifname, val,

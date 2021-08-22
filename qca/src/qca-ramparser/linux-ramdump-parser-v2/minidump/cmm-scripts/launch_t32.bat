@@ -1,0 +1,1 @@
+start C:\T32\bin\windows64\t32MARM64.exe -c t32_config.t32 -s startup_t32.cmm

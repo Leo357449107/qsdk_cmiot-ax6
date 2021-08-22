@@ -1,0 +1,88 @@
+--- old/nat46/modules/nat46-module.c	2018-10-11 19:31:13.972094000 +0530
++++ new/nat46/modules/nat46-module.c	2018-10-11 19:40:04.978814965 +0530
+@@ -57,6 +57,9 @@
+ int                     debug = 0;
+ module_param(debug, int, 0);
+ MODULE_PARM_DESC(debug, "debugging messages level (default=1)");
++bool add_dummy_header = 0;
++module_param(add_dummy_header, bool, 0);
++MODULE_PARM_DESC(add_dummy_header, "Add dummy fragment header");
+ 
+ static struct proc_dir_entry *nat46_proc_entry;
+ static struct proc_dir_entry *nat46_proc_parent;
+--- old/nat46/modules/nat46-module.h	2018-10-11 19:56:06.816234000 +0530
++++ new/nat46/modules/nat46-module.h	2018-10-11 19:56:27.876770419 +0530
+@@ -14,3 +14,4 @@
+  */
+ 
+ extern int debug;
++extern bool add_dummy_header;
+--- old/nat46/modules/nat46-core.c	2018-10-11 18:44:05.064436000 +0530
++++ new/nat46/modules/nat46-core.c	2018-12-03 11:08:38.870614957 +0530
+@@ -20,6 +20,7 @@
+ 
+ #include "nat46-glue.h"
+ #include "nat46-core.h"
++#include "nat46-module.h"
+ 
+ static uint16_t xlate_pkt_in_err_v4_to_v6(nat46_instance_t *nat46, struct iphdr *iph,
+ 					struct sk_buff *old_skb, uint16_t *sport, uint16_t *dport);
+@@ -2099,6 +2100,11 @@
+   nat46debug(5, "v4 packet flags: %02x",  IPCB(old_skb)->flags);
+   if(0 == (ntohs(hdr4->frag_off) & 0x3FFF) ) { /* Checking for MF */
+     do_l4_translate = 1;
++    if (add_dummy_header) {
++      if (0 == (ntohs(hdr4->frag_off) & IP_DF)) {
++         add_frag_header = 1;
++      }
++    }
+   } else {
+     add_frag_header = 1;
+     if (0 == (ntohs(hdr4->frag_off) & 0x1FFF)) { /* Checking for Frag Offset */
+@@ -2219,3 +2225,25 @@
+ 	return true;
+ }
+ EXPORT_SYMBOL(nat46_get_rule_config);
++
++/*
++ * Function to get MAP-T rules and flags.
++ */
++bool nat46_get_info(struct net_device *dev, nat46_xlate_rulepair_t **nat46_rule_pair,
++		 int *count, u8 *flag) {
++	if ((dev == NULL) || (nat46_rule_pair == NULL) || (count == NULL)
++			|| (flag == NULL)) {
++		return false;
++	}
++
++	if (!nat46_get_rule_config(dev, nat46_rule_pair, count)) {
++		return false;
++	}
++
++	/* Check add dummy header flag */
++	if (add_dummy_header) {
++		*flag = ADD_DUMMY_HEADER;
++	}
++	return true;
++}
++EXPORT_SYMBOL(nat46_get_info);
+--- old/nat46/modules/nat46-core.h	2018-10-12 12:06:16.340899000 +0530
++++ new/nat46/modules/nat46-core.h	2018-12-02 20:40:11.356065302 +0530
+@@ -36,6 +36,9 @@
+ #define IPV4HDRSIZE 20
+ #define IPV6V4HDRDELTA (IPV6HDRSIZE - IPV4HDRSIZE)
+ 
++/* Flag definations for MAP-T */
++#define ADD_DUMMY_HEADER 0x01
++
+ /* 
+  * A generic v4<->v6 translation structure.
+  * The currently supported translation styles:
+@@ -111,6 +114,7 @@
+ int xlate_4_to_6(struct net_device *dev, struct iphdr *hdr4, int sport, int dport, void *v6saddr, void *v6daddr);
+ bool nat46_get_rule_config(struct net_device *dev, nat46_xlate_rulepair_t **nat46_rule_pair, int *count);
+ int nat46_get_npairs(struct net_device *dev);
+-
++bool nat46_get_info(struct net_device *dev, nat46_xlate_rulepair_t **nat46_rule_pair,
++		int *count, u8 *flag);
+ 
+ #endif

@@ -1,0 +1,12 @@
+--- LVM2.2.02.119_orig/conf/example.conf.in	2019-06-27 23:17:43.128590178 +0530
++++ LVM2.2.02.119/conf/example.conf.in	2019-06-27 23:18:59.463222635 +0530
+@@ -48,6 +48,9 @@ devices {
+ 	# This configuration option is advanced.
+ 	scan = [ "/dev" ]
+ 
++	# Remove rpmb partition scaning for eMMC device
++	global_filter = [ "r|/dev/mmcblk.*rpmb|" ]
++
+ 	# Configuration option devices/obtain_device_list_from_udev.
+ 	# Obtain the list of available devices from udev.
+ 	# This avoids opening or using any inapplicable non-block

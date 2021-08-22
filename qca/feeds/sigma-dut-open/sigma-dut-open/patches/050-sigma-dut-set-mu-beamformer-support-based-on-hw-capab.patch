@@ -1,0 +1,138 @@
+From 136d1a367a2d6fa29aca8b44818ceb070af59c61 Mon Sep 17 00:00:00 2001
+From: Venkateswara Naralasetty <vnaralas@codeaurora.org>
+Date: Wed, 7 Apr 2021 14:38:54 +0530
+Subject: [PATCH] sigma-dut-open: set mu beamformer support based on hw capab
+
+Currently mu beamformer support is set by default for HE program
+from ap_reset_default(). Due to this AP DUT fails to brinup for
+the hardwares which are not MU beamformer capable in AP mode
+like IPQ5018.
+
+Signed-off-by: Venkateswara Naralasetty <vnaralas@codeaurora.org>
+---
+ ap.c           | 44 ++++++++++++++++++++++++++++++++++++++++++++
+ nl80211_copy.h | 17 +++++++++++++++++
+ sigma_dut.h    |  2 ++
+ 3 files changed, 63 insertions(+)
+
+--- a/ap.c
++++ b/ap.c
+@@ -10299,9 +10299,42 @@ static void phy_info_vht_capa(struct dut
+ 	}
+ }
+ 
++static void phy_info_he_capa(struct dut_hw_modes *mode,
++			     struct nlattr *nl_iftype)
++{
++	struct nlattr *tb[NL80211_BAND_IFTYPE_ATTR_MAX + 1];
++	struct nlattr *tb_flags[NL80211_IFTYPE_MAX + 1];
++	int len;
++
++	nla_parse(tb, NL80211_BAND_IFTYPE_ATTR_MAX,
++		  nla_data(nl_iftype), nla_len(nl_iftype), NULL);
++
++	if (!tb[NL80211_BAND_IFTYPE_ATTR_IFTYPES])
++		return;
++
++	if (nla_parse_nested(tb_flags, NL80211_IFTYPE_MAX,
++			     tb[NL80211_BAND_IFTYPE_ATTR_IFTYPES], NULL))
++		return;
++
++	if (!nla_get_flag(tb_flags[NL80211_IFTYPE_AP]))
++		return;
++
++	if (tb[NL80211_BAND_IFTYPE_ATTR_HE_CAP_PHY]) {
++		len = nla_len(tb[NL80211_BAND_IFTYPE_ATTR_HE_CAP_PHY]);
++
++		if (len > ARRAY_SIZE(mode->ap_phy_capab) - 1)
++			len = ARRAY_SIZE(mode->ap_phy_capab) - 1;
++
++		memcpy(mode->ap_phy_capab,
++		       nla_data(tb[NL80211_BAND_IFTYPE_ATTR_HE_CAP_PHY]), len);
++	}
++}
++
+ static int phy_info_band(struct dut_hw_modes *mode, struct nlattr *nl_band)
+ {
+ 	struct nlattr *tb_band[NL80211_BAND_ATTR_MAX + 1];
++	struct nlattr *nl_iftype;
++	int rem_band;
+ 
+ 	if (!mode)
+ 		return 1;
+@@ -10317,6 +10350,13 @@ static int phy_info_band(struct dut_hw_m
+ 	phy_info_vht_capa(mode, tb_band[NL80211_BAND_ATTR_VHT_CAPA],
+ 			  tb_band[NL80211_BAND_ATTR_VHT_MCS_SET]);
+ 
++	if (tb_band[NL80211_BAND_ATTR_IFTYPE_DATA]) {
++		nla_for_each_nested(nl_iftype,
++				    tb_band[NL80211_BAND_ATTR_IFTYPE_DATA],
++				    rem_band)
++		phy_info_he_capa(mode, nl_iftype);
++	}
++
+ 	/* Other nl80211 band attributes can be parsed here, if required */
+ 
+ 	return NL_OK;
+@@ -10351,6 +10391,10 @@ static int wiphy_info_handler(struct nl_
+ 			return res;
+ 	}
+ 
++	if (dut->program == PROGRAM_HE && dut->hw_modes &&
++	    !(dut->hw_modes->ap_phy_capab[4] & HE_PHY_CAP_MU_BEAMFORMER))
++		dut->ap_mu_txBF = 0;
++
+ 	return 0;
+ }
+ 
+--- a/nl80211_copy.h
++++ b/nl80211_copy.h
+@@ -2942,6 +2942,22 @@ enum nl80211_mpath_info {
+ 	NL80211_MPATH_INFO_MAX = __NL80211_MPATH_INFO_AFTER_LAST - 1
+ };
+ 
++enum nl80211_band_iftype_attr {
++       __NL80211_BAND_IFTYPE_ATTR_INVALID,
++
++       NL80211_BAND_IFTYPE_ATTR_IFTYPES,
++       NL80211_BAND_IFTYPE_ATTR_HE_CAP_MAC,
++       NL80211_BAND_IFTYPE_ATTR_HE_CAP_PHY,
++       NL80211_BAND_IFTYPE_ATTR_HE_CAP_MCS_SET,
++       NL80211_BAND_IFTYPE_ATTR_HE_CAP_PPE,
++       NL80211_BAND_IFTYPE_ATTR_HE_6GHZ_CAPA,
++
++       /* keep last */
++       __NL80211_BAND_IFTYPE_ATTR_AFTER_LAST,
++       NL80211_BAND_IFTYPE_ATTR_MAX = __NL80211_BAND_IFTYPE_ATTR_AFTER_LAST - 1
++};
++
++
+ /**
+  * enum nl80211_band_attr - band attributes
+  * @__NL80211_BAND_ATTR_INVALID: attribute number 0 is reserved
+@@ -2972,6 +2988,7 @@ enum nl80211_band_attr {
+ 
+ 	NL80211_BAND_ATTR_VHT_MCS_SET,
+ 	NL80211_BAND_ATTR_VHT_CAPA,
++	NL80211_BAND_ATTR_IFTYPE_DATA,
+ 
+ 	/* keep last */
+ 	__NL80211_BAND_ATTR_AFTER_LAST,
+--- a/sigma_dut.h
++++ b/sigma_dut.h
+@@ -125,6 +125,7 @@ struct wfa_p2p_attribute {
+ #define VHT_CAP_MAX_A_MPDU_LENGTH_EXPONENT_MASK       \
+                 (7 << VHT_CAP_MAX_A_MPDU_LENGTH_EXPONENT_SHIFT)
+ 
++#define HE_PHY_CAP_MU_BEAMFORMER 0x2 
+ 
+ #define AMPDU_FACTOR_BITS	0x3
+ #define AMPDU_DENSITY_OFFSET	2
+@@ -135,6 +136,7 @@ struct dut_hw_modes {
+         u8 ampdu_params;
+         u32 vht_capab;
+         u8 vht_mcs_set[8];
++	u8 ap_phy_capab[11];
+ };
+ 
+ #define WPA_GET_BE32(a) ((((u32) (a)[0]) << 24) | (((u32) (a)[1]) << 16) | \

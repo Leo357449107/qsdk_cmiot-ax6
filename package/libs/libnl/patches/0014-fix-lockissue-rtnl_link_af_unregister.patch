@@ -1,0 +1,22 @@
+Index: libnl-3.2.21/lib/route/link/api.c
+===================================================================
+--- libnl-3.2.21.orig/lib/route/link/api.c	2013-01-24 18:00:34.000000000 +0530
++++ libnl-3.2.21/lib/route/link/api.c	2019-04-04 17:12:07.505023996 +0530
+@@ -326,7 +326,7 @@
+ 	int err = -NLE_INVAL;
+ 
+ 	if (!ops)
+-		goto errout;
++		return err;
+ 
+ 	nl_write_lock(&info_lock);
+ 	if (!af_ops[ops->ao_family]) {
+@@ -345,7 +345,7 @@
+ 		ops->ao_family);
+ 
+ errout:
+-	nl_write_lock(&info_lock);
++	nl_write_unlock(&info_lock);
+ 
+ 	return err;
+ }

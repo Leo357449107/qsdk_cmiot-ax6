@@ -1,0 +1,38 @@
+--- a/ap.c
++++ b/ap.c
+@@ -7900,8 +7900,15 @@ enum sigma_cmd_result cmd_ap_config_comm
+ 
+ 	switch (dut->ap_key_mgmt) {
+ 	case AP_OPEN:
+-		if (dut->ap_cipher == AP_WEP)
+-			fprintf(f, "wep_key0=%s\n", dut->ap_wepkey);
++		if (dut->ap_cipher == AP_WEP) {
++			if (drv == DRIVER_MAC80211) {
++				send_resp(dut, conn, SIGMA_ERROR,
++					  "errorCode,Not Supported");
++				return -2;
++			} else {
++				fprintf(f, "wep_key0=%s\n", dut->ap_wepkey);
++			}
++		}
+ 		break;
+ 	case AP_WPA2_PSK:
+ 	case AP_WPA2_PSK_MIXED:
+@@ -8452,8 +8459,15 @@ skip_key_mgmt:
+ 
+                 switch (dut->ap_key_mgmt) {
+                         case AP_OPEN:
+-                                if (dut->ap_cipher == AP_WEP)
+-                                        fprintf(f_1, "wep_key0=%s\n", dut->ap_wepkey);
++                                if (dut->ap_cipher == AP_WEP) {
++					if (drv == DRIVER_MAC80211) {
++						send_resp(dut, conn, SIGMA_ERROR,
++							  "errorCode,Not Supported");
++						return -2;
++					} else {
++						fprintf(f_1, "wep_key0=%s\n", dut->ap_wepkey);
++					}
++				}
+                                 break;
+                         case AP_WPA2_EAP:
+                         case AP_WPA2_EAP_MIXED:

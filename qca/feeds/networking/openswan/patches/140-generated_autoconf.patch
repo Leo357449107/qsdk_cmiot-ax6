@@ -1,0 +1,386 @@
+diff -Nur --no-dereference a/linux/include/ocf-compat.h openswan-2.6.51.3/linux/include/ocf-compat.h
+--- a/linux/include/ocf-compat.h	2019-04-04 11:36:23.762787099 -0700
++++ openswan-2.6.51.3/linux/include/ocf-compat.h	2019-04-04 11:36:46.078786438 -0700
+@@ -35,10 +35,11 @@
+ /****************************************************************************/
+ #ifdef __KERNEL__
+ #include <linux/version.h>
+-#if LINUX_VERSION_CODE < KERNEL_VERSION(2,6,38) && !defined(AUTOCONF_INCLUDED)
+-#include <linux/config.h>
++#if (LINUX_VERSION_CODE >= KERNEL_VERSION(2,6,33))
++#include <generated/autoconf.h>
++#else
++#include <linux/autoconf.h>
+ #endif
+-
+ /*
+  * fake some BSD driver interface stuff specifically for OCF use
+  */
+diff -Nur --no-dereference a/linux/include/openswan/ipsec_kversion.h openswan-2.6.51.3/linux/include/openswan/ipsec_kversion.h
+--- a/linux/include/openswan/ipsec_kversion.h	2019-04-04 11:36:23.762787099 -0700
++++ openswan-2.6.51.3/linux/include/openswan/ipsec_kversion.h	2019-04-04 11:36:46.078786438 -0700
+@@ -53,8 +53,10 @@
+  * We use a lot of config defines,  on older kernels that means we
+  * need to include config.h
+  */
+-#if LINUX_VERSION_CODE < KERNEL_VERSION(2,6,38) && !defined(AUTOCONF_INCLUDED)
+-# include <linux/config.h>
++#if (LINUX_VERSION_CODE >= KERNEL_VERSION(2,6,33))
++#include <generated/autoconf.h>
++#else
++#include <linux/autoconf.h>
+ #endif
+ 
+ #if !defined(RHEL_RELEASE_CODE)
+diff -Nur --no-dereference a/linux/net/ipsec/aes/ipsec_alg_aes.c openswan-2.6.51.3/linux/net/ipsec/aes/ipsec_alg_aes.c
+--- a/linux/net/ipsec/aes/ipsec_alg_aes.c	2019-04-04 11:36:23.758787099 -0700
++++ openswan-2.6.51.3/linux/net/ipsec/aes/ipsec_alg_aes.c	2019-04-04 11:36:46.082786438 -0700
+@@ -22,8 +22,10 @@
+  *
+  */
+ #include <linux/version.h>
+-#if LINUX_VERSION_CODE < KERNEL_VERSION(2,6,38) && !defined(AUTOCONF_INCLUDED)
+-#include <linux/config.h>
++#if (LINUX_VERSION_CODE >= KERNEL_VERSION(2,6,33))
++#include <generated/autoconf.h>
++#else
++#include <linux/autoconf.h>
+ #endif
+ #include <linux/version.h>
+ 
+diff -Nur --no-dereference a/linux/net/ipsec/des/ipsec_alg_3des.c openswan-2.6.51.3/linux/net/ipsec/des/ipsec_alg_3des.c
+--- a/linux/net/ipsec/des/ipsec_alg_3des.c	2019-04-04 11:36:23.762787099 -0700
++++ openswan-2.6.51.3/linux/net/ipsec/des/ipsec_alg_3des.c	2019-04-04 11:36:46.082786438 -0700
+@@ -19,8 +19,10 @@
+  *
+  */
+ #include <linux/version.h>
+-#if LINUX_VERSION_CODE < KERNEL_VERSION(2,6,38) && !defined(AUTOCONF_INCLUDED)
+-#include <linux/config.h>
++#if (LINUX_VERSION_CODE >= KERNEL_VERSION(2,6,33))
++#include <generated/autoconf.h>
++#else
++#include <linux/autoconf.h>
+ #endif
+ #include <linux/version.h>
+ 
+diff -Nur --no-dereference a/linux/net/ipsec/ipcomp.c openswan-2.6.51.3/linux/net/ipsec/ipcomp.c
+--- a/linux/net/ipsec/ipcomp.c	2019-04-04 11:36:23.758787099 -0700
++++ openswan-2.6.51.3/linux/net/ipsec/ipcomp.c	2019-04-04 11:36:46.082786438 -0700
+@@ -20,10 +20,11 @@
+ /* SSS */
+ 
+ #include <linux/version.h>
+-#if LINUX_VERSION_CODE < KERNEL_VERSION(2,6,38) && !defined(AUTOCONF_INCLUDED)
+-#include <linux/config.h>
++#if (LINUX_VERSION_CODE >= KERNEL_VERSION(2,6,33))
++#include <generated/autoconf.h>
++#else
++#include <linux/autoconf.h>
+ #endif
+-
+ #define __NO_VERSION__
+ #include <linux/module.h>
+ #include <linux/kernel.h> /* printk() */
+diff -Nur --no-dereference a/linux/net/ipsec/ipsec_ah.c openswan-2.6.51.3/linux/net/ipsec/ipsec_ah.c
+--- a/linux/net/ipsec/ipsec_ah.c	2019-04-04 11:36:23.758787099 -0700
++++ openswan-2.6.51.3/linux/net/ipsec/ipsec_ah.c	2019-04-04 11:36:46.082786438 -0700
+@@ -15,10 +15,11 @@
+  */
+ 
+ #include <linux/version.h>
+-#if LINUX_VERSION_CODE < KERNEL_VERSION(2,6,38) && !defined(AUTOCONF_INCLUDED)
+-#include <linux/config.h>
++#if (LINUX_VERSION_CODE >= KERNEL_VERSION(2,6,33))
++#include <generated/autoconf.h>
++#else
++#include <linux/autoconf.h>
+ #endif
+-
+ #define __NO_VERSION__
+ #include <linux/module.h>
+ #include <linux/kernel.h> /* printk() */
+diff -Nur --no-dereference a/linux/net/ipsec/ipsec_alg.c openswan-2.6.51.3/linux/net/ipsec/ipsec_alg.c
+--- a/linux/net/ipsec/ipsec_alg.c	2019-04-04 11:36:23.762787099 -0700
++++ openswan-2.6.51.3/linux/net/ipsec/ipsec_alg.c	2019-04-04 11:36:46.082786438 -0700
+@@ -20,10 +20,11 @@
+  *
+  */
+ #include <linux/version.h>
+-#if LINUX_VERSION_CODE < KERNEL_VERSION(2,6,38) && !defined(AUTOCONF_INCLUDED)
+-#include <linux/config.h>
++#if (LINUX_VERSION_CODE >= KERNEL_VERSION(2,6,33))
++#include <generated/autoconf.h>
++#else
++#include <linux/autoconf.h>
+ #endif
+-
+ #define __NO_VERSION__
+ #include <linux/module.h>
+ #include <linux/kernel.h> /* printk() */
+diff -Nur --no-dereference a/linux/net/ipsec/ipsec_alg_cryptoapi.c openswan-2.6.51.3/linux/net/ipsec/ipsec_alg_cryptoapi.c
+--- a/linux/net/ipsec/ipsec_alg_cryptoapi.c	2019-04-04 11:36:23.762787099 -0700
++++ openswan-2.6.51.3/linux/net/ipsec/ipsec_alg_cryptoapi.c	2019-04-04 11:37:41.442784799 -0700
+@@ -26,8 +26,10 @@
+  *   modprobe ipsec_cryptoapi des_ede3=0                 (everything but 3DES)
+  */
+ #include <linux/version.h>
+-#if LINUX_VERSION_CODE < KERNEL_VERSION(2,6,38) && !defined(AUTOCONF_INCLUDED)
+-#include <linux/config.h>
++#if (LINUX_VERSION_CODE >= KERNEL_VERSION(2,6,33))
++#include <generated/autoconf.h>
++#else
++#include <linux/autoconf.h>
+ #endif
+ 
+ /*
+diff -Nur --no-dereference a/linux/net/ipsec/ipsec_esp.c openswan-2.6.51.3/linux/net/ipsec/ipsec_esp.c
+--- a/linux/net/ipsec/ipsec_esp.c	2019-04-04 11:36:23.758787099 -0700
++++ openswan-2.6.51.3/linux/net/ipsec/ipsec_esp.c	2019-04-04 11:36:46.086786438 -0700
+@@ -15,10 +15,11 @@
+  */
+ 
+ #include <linux/version.h>
+-#if LINUX_VERSION_CODE < KERNEL_VERSION(2,6,38) && !defined(AUTOCONF_INCLUDED)
+-#include <linux/config.h>
++#if (LINUX_VERSION_CODE >= KERNEL_VERSION(2,6,33))
++#include <generated/autoconf.h>
++#else
++#include <linux/autoconf.h>
+ #endif
+-
+ #define __NO_VERSION__
+ #include <linux/module.h>
+ #include <linux/kernel.h> /* printk() */
+diff -Nur --no-dereference a/linux/net/ipsec/ipsec_init.c openswan-2.6.51.3/linux/net/ipsec/ipsec_init.c
+--- a/linux/net/ipsec/ipsec_init.c	2019-04-04 11:36:23.758787099 -0700
++++ openswan-2.6.51.3/linux/net/ipsec/ipsec_init.c	2019-04-04 11:36:46.086786438 -0700
+@@ -20,8 +20,10 @@
+  */
+ 
+ #include <linux/version.h>
+-#if LINUX_VERSION_CODE < KERNEL_VERSION(2,6,38) && !defined(AUTOCONF_INCLUDED)
+-#include <linux/config.h>
++#if (LINUX_VERSION_CODE >= KERNEL_VERSION(2,6,33))
++#include <generated/autoconf.h>
++#else
++#include <linux/autoconf.h>
+ #endif
+ #include <linux/module.h>
+ #include <linux/kernel.h> /* printk() */
+diff -Nur --no-dereference a/linux/net/ipsec/ipsec_ipcomp.c openswan-2.6.51.3/linux/net/ipsec/ipsec_ipcomp.c
+--- a/linux/net/ipsec/ipsec_ipcomp.c	2019-04-04 11:36:23.762787099 -0700
++++ openswan-2.6.51.3/linux/net/ipsec/ipsec_ipcomp.c	2019-04-04 11:36:46.086786438 -0700
+@@ -15,10 +15,11 @@
+  */
+ 
+ #include <linux/version.h>
+-#if LINUX_VERSION_CODE < KERNEL_VERSION(2,6,38) && !defined(AUTOCONF_INCLUDED)
+-#include <linux/config.h>
++#if (LINUX_VERSION_CODE >= KERNEL_VERSION(2,6,33))
++#include <generated/autoconf.h>
++#else
++#include <linux/autoconf.h>
+ #endif
+-
+ #define __NO_VERSION__
+ #include <linux/module.h>
+ #include <linux/kernel.h> /* printk() */
+diff -Nur --no-dereference a/linux/net/ipsec/ipsec_ipip.c openswan-2.6.51.3/linux/net/ipsec/ipsec_ipip.c
+--- a/linux/net/ipsec/ipsec_ipip.c	2019-04-04 11:36:23.758787099 -0700
++++ openswan-2.6.51.3/linux/net/ipsec/ipsec_ipip.c	2019-04-04 11:36:46.086786438 -0700
+@@ -15,10 +15,11 @@
+  */
+ 
+ #include <linux/version.h>
+-#if LINUX_VERSION_CODE < KERNEL_VERSION(2,6,38) && !defined(AUTOCONF_INCLUDED)
+-#include <linux/config.h>
++#if (LINUX_VERSION_CODE >= KERNEL_VERSION(2,6,33))
++#include <generated/autoconf.h>
++#else
++#include <linux/autoconf.h>
+ #endif
+-
+ #define __NO_VERSION__
+ #include <linux/module.h>
+ #include <linux/kernel.h> /* printk() */
+diff -Nur --no-dereference a/linux/net/ipsec/ipsec_ocf.c openswan-2.6.51.3/linux/net/ipsec/ipsec_ocf.c
+--- a/linux/net/ipsec/ipsec_ocf.c	2019-04-04 11:36:23.762787099 -0700
++++ openswan-2.6.51.3/linux/net/ipsec/ipsec_ocf.c	2019-04-04 11:36:46.086786438 -0700
+@@ -16,10 +16,11 @@
+  */
+ 
+ #include <linux/version.h>
+-#if LINUX_VERSION_CODE < KERNEL_VERSION(2,6,38) && !defined(AUTOCONF_INCLUDED)
+-#include <linux/config.h>
++#if (LINUX_VERSION_CODE >= KERNEL_VERSION(2,6,33))
++#include <generated/autoconf.h>
++#else
++#include <linux/autoconf.h>
+ #endif
+-
+ #define __NO_VERSION__
+ #include <linux/module.h>
+ #include <linux/kernel.h> /* printk() */
+diff -Nur --no-dereference a/linux/net/ipsec/ipsec_ocf.h openswan-2.6.51.3/linux/net/ipsec/ipsec_ocf.h
+--- a/linux/net/ipsec/ipsec_ocf.h	2019-04-04 11:36:23.758787099 -0700
++++ openswan-2.6.51.3/linux/net/ipsec/ipsec_ocf.h	2019-04-04 11:36:46.086786438 -0700
+@@ -19,8 +19,10 @@
+  */
+ 
+ #include <linux/version.h>
+-#if LINUX_VERSION_CODE < KERNEL_VERSION(2,6,38) && !defined(AUTOCONF_INCLUDED)
+-#include <linux/config.h>
++#if (LINUX_VERSION_CODE >= KERNEL_VERSION(2,6,33))
++#include <generated/autoconf.h>
++#else
++#include <linux/autoconf.h>
+ #endif
+ #include <linux/kernel.h>
+ 
+diff -Nur --no-dereference a/linux/net/ipsec/ipsec_radij.c openswan-2.6.51.3/linux/net/ipsec/ipsec_radij.c
+--- a/linux/net/ipsec/ipsec_radij.c	2019-04-04 11:36:23.758787099 -0700
++++ openswan-2.6.51.3/linux/net/ipsec/ipsec_radij.c	2019-04-04 11:36:46.090786438 -0700
+@@ -22,8 +22,10 @@
+  */
+ 
+ #include <linux/version.h>
+-#if LINUX_VERSION_CODE < KERNEL_VERSION(2,6,38) && !defined(AUTOCONF_INCLUDED)
+-#include <linux/config.h>
++#if (LINUX_VERSION_CODE >= KERNEL_VERSION(2,6,33))
++#include <generated/autoconf.h>
++#else
++#include <linux/autoconf.h>
+ #endif
+ #include <linux/kernel.h> /* printk() */
+ 
+diff -Nur --no-dereference a/linux/net/ipsec/ipsec_rcv.c openswan-2.6.51.3/linux/net/ipsec/ipsec_rcv.c
+--- a/linux/net/ipsec/ipsec_rcv.c	2019-04-04 11:36:23.758787099 -0700
++++ openswan-2.6.51.3/linux/net/ipsec/ipsec_rcv.c	2019-04-04 11:36:46.090786438 -0700
+@@ -22,10 +22,11 @@
+  */
+ 
+ #include <linux/version.h>
+-#if LINUX_VERSION_CODE < KERNEL_VERSION(2,6,38) && !defined(AUTOCONF_INCLUDED)
+-#include <linux/config.h>
++#if (LINUX_VERSION_CODE >= KERNEL_VERSION(2,6,33))
++#include <generated/autoconf.h>
++#else
++#include <linux/autoconf.h>
+ #endif
+-
+ #define __NO_VERSION__
+ #include <linux/module.h>
+ #if LINUX_VERSION_CODE < KERNEL_VERSION(2,6,0) && LINUX_VERSION_CODE >= KERNEL_VERSION(2,4,26)
+diff -Nur --no-dereference a/linux/net/ipsec/ipsec_sa.c openswan-2.6.51.3/linux/net/ipsec/ipsec_sa.c
+--- a/linux/net/ipsec/ipsec_sa.c	2019-04-04 11:36:23.758787099 -0700
++++ openswan-2.6.51.3/linux/net/ipsec/ipsec_sa.c	2019-04-04 11:36:46.090786438 -0700
+@@ -20,8 +20,10 @@
+  */
+ 
+ #include <linux/version.h>
+-#if LINUX_VERSION_CODE < KERNEL_VERSION(2,6,38) && !defined(AUTOCONF_INCLUDED)
+-#include <linux/config.h>
++#if (LINUX_VERSION_CODE >= KERNEL_VERSION(2,6,33))
++#include <generated/autoconf.h>
++#else
++#include <linux/autoconf.h>
+ #endif
+ #include <linux/kernel.h> /* printk() */
+ 
+diff -Nur --no-dereference a/linux/net/ipsec/ipsec_snprintf.c openswan-2.6.51.3/linux/net/ipsec/ipsec_snprintf.c
+--- a/linux/net/ipsec/ipsec_snprintf.c	2019-04-04 11:36:23.758787099 -0700
++++ openswan-2.6.51.3/linux/net/ipsec/ipsec_snprintf.c	2019-04-04 11:36:46.090786438 -0700
+@@ -19,8 +19,10 @@
+  */
+ 
+ #include <linux/version.h>
+-#if LINUX_VERSION_CODE < KERNEL_VERSION(2,6,38) && !defined(AUTOCONF_INCLUDED)
+-#include <linux/config.h>
++#if (LINUX_VERSION_CODE >= KERNEL_VERSION(2,6,33))
++#include <generated/autoconf.h>
++#else
++#include <linux/autoconf.h>
+ #endif
+ #define __NO_VERSION__
+ #include <linux/module.h>
+diff -Nur --no-dereference a/linux/net/ipsec/ipsec_tunnel.c openswan-2.6.51.3/linux/net/ipsec/ipsec_tunnel.c
+--- a/linux/net/ipsec/ipsec_tunnel.c	2019-04-04 11:36:23.758787099 -0700
++++ openswan-2.6.51.3/linux/net/ipsec/ipsec_tunnel.c	2019-04-04 11:36:46.094786438 -0700
+@@ -25,8 +25,10 @@
+ #if LINUX_VERSION_CODE < KERNEL_VERSION(2,6,0) && LINUX_VERSION_CODE >= KERNEL_VERSION(2,4,26)
+ # include <linux/moduleparam.h>
+ #endif
+-#if LINUX_VERSION_CODE < KERNEL_VERSION(2,6,38) && !defined(AUTOCONF_INCLUDED)
+-#include <linux/config.h>
++#if (LINUX_VERSION_CODE >= KERNEL_VERSION(2,6,33))
++#include <generated/autoconf.h>
++#else
++#include <linux/autoconf.h>
+ #endif
+ #include <linux/kernel.h> /* printk() */
+ 
+diff -Nur --no-dereference a/linux/net/ipsec/ipsec_xform.c openswan-2.6.51.3/linux/net/ipsec/ipsec_xform.c
+--- a/linux/net/ipsec/ipsec_xform.c	2019-04-04 11:36:23.758787099 -0700
++++ openswan-2.6.51.3/linux/net/ipsec/ipsec_xform.c	2019-04-04 11:36:46.094786438 -0700
+@@ -16,8 +16,10 @@
+  */
+ 
+ #include <linux/version.h>
+-#if LINUX_VERSION_CODE < KERNEL_VERSION(2,6,38) && !defined(AUTOCONF_INCLUDED)
+-#include <linux/config.h>
++#if (LINUX_VERSION_CODE >= KERNEL_VERSION(2,6,33))
++#include <generated/autoconf.h>
++#else
++#include <linux/autoconf.h>
+ #endif
+ #include <linux/kernel.h> /* printk() */
+ 
+diff -Nur --no-dereference a/linux/net/ipsec/pfkey_v2_ext_process.c openswan-2.6.51.3/linux/net/ipsec/pfkey_v2_ext_process.c
+--- a/linux/net/ipsec/pfkey_v2_ext_process.c	2019-04-04 11:36:23.762787099 -0700
++++ openswan-2.6.51.3/linux/net/ipsec/pfkey_v2_ext_process.c	2019-04-04 11:36:46.094786438 -0700
+@@ -21,8 +21,10 @@
+  */
+ 
+ #include <linux/version.h>
+-#if LINUX_VERSION_CODE < KERNEL_VERSION(2,6,38) && !defined(AUTOCONF_INCLUDED)
+-#include <linux/config.h>
++#if (LINUX_VERSION_CODE >= KERNEL_VERSION(2,6,33))
++#include <generated/autoconf.h>
++#else
++#include <linux/autoconf.h>
+ #endif
+ #include <linux/kernel.h> /* printk() */
+ 
+diff -Nur --no-dereference a/linux/net/ipsec/pfkey_v2_parser.c openswan-2.6.51.3/linux/net/ipsec/pfkey_v2_parser.c
+--- a/linux/net/ipsec/pfkey_v2_parser.c	2019-04-04 11:36:23.758787099 -0700
++++ openswan-2.6.51.3/linux/net/ipsec/pfkey_v2_parser.c	2019-04-04 11:36:46.094786438 -0700
+@@ -24,8 +24,10 @@
+ 
+ 
+ #include <linux/version.h>
+-#if LINUX_VERSION_CODE < KERNEL_VERSION(2,6,38) && !defined(AUTOCONF_INCLUDED)
+-#include <linux/config.h>
++#if (LINUX_VERSION_CODE >= KERNEL_VERSION(2,6,33))
++#include <generated/autoconf.h>
++#else
++#include <linux/autoconf.h>
+ #endif
+ #include <linux/kernel.h> /* printk() */
+ 
+diff -Nur --no-dereference a/linux/net/ipsec/radij.c openswan-2.6.51.3/linux/net/ipsec/radij.c
+--- a/linux/net/ipsec/radij.c	2019-04-04 11:36:23.758787099 -0700
++++ openswan-2.6.51.3/linux/net/ipsec/radij.c	2019-04-04 11:36:46.094786438 -0700
+@@ -54,8 +54,10 @@
+  */
+ 
+ #include <linux/version.h>
+-#if LINUX_VERSION_CODE < KERNEL_VERSION(2,6,38) && !defined(AUTOCONF_INCLUDED)
+-#include <linux/config.h>
++#if (LINUX_VERSION_CODE >= KERNEL_VERSION(2,6,33))
++#include <generated/autoconf.h>
++#else
++#include <linux/autoconf.h>
+ #endif
+ #include <linux/kernel.h> /* printk() */
+ 

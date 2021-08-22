@@ -1,0 +1,13 @@
+diff -Nur a/linux/net/ipsec/ipsec_tunnel.c openswan-2.6.41/linux/net/ipsec/ipsec_tunnel.c
+--- a/linux/net/ipsec/ipsec_tunnel.c	2019-04-03 16:15:42.236848820 -0700
++++ openswan-2.6.41/linux/net/ipsec/ipsec_tunnel.c	2019-04-03 16:17:57.724844808 -0700
+@@ -1731,6 +1731,9 @@
+ 	sk->sk_destruct        = ipsec_tunnel_udp_encap_destruct;
+ 	udp_sk(sk)->encap_type = encap_type;
+ 	udp_sk(sk)->encap_rcv  = klips26_udp_encap_rcv;
++#ifdef NEED_UDP_ENCAP_ENABLE
++	udp_encap_enable();
++#endif
+ 
+ 	/* add the tunnel to our list so we can check on it later */
+ 	list_add(&ctx->link, &ipsec_tunnel_udp_encap_list);

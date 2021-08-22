@@ -1,0 +1,43 @@
+# Copyright (c) 2019, The Linux Foundation. All rights reserved.
+#
+# Permission to use, copy, modify, and/or distribute this software for any
+# purpose with or without fee is hereby granted, provided that the above
+# copyright notice and this permission notice appear in all copies.
+#
+# THE SOFTWARE IS PROVIDED "AS IS" AND THE AUTHOR DISCLAIMS ALL WARRANTIES
+# WITH REGARD TO THIS SOFTWARE INCLUDING ALL IMPLIED WARRANTIES OF
+# MERCHANTABILITY AND FITNESS. IN NO EVENT SHALL THE AUTHOR BE LIABLE FOR
+# ANY SPECIAL, DIRECT, INDIRECT, OR CONSEQUENTIAL DAMAGES OR ANY DAMAGES
+# WHATSOEVER RESULTING FROM LOSS OF USE, DATA OR PROFITS, WHETHER IN AN
+# ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF
+# OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
+
+#!/bin/sh
+
+SERVER=$(fw_printenv serverip | cut -c10-24);
+
+#Local Path where breakpad dump files are stored.
+LOCAL_PATH="/tmp"
+
+#Directory Name where sent dump files are stored.
+DUMP_SENT_DIR="breakpad_sent"
+
+if [ ! -n "$SERVER" ]; then
+	printf "%s\n" "Wrong configuaration SERVER = $SERVER" > /dev/console
+	exit 0
+fi
+
+if [ -f "$LOCAL_PATH/$1" ]; then
+    $(tftp -l $LOCAL_PATH/$1 -r $1 -p $SERVER 2>&1)
+    if [ $? -eq 0 ]; then
+        printf "%s\n" "$1 collected in $SERVER" \
+                    > /dev/console
+        if [ ! -d $LOCAL_PATH/$DUMP_SENT_DIR ]; then
+             mkdir -p $LOCAL_PATH/$DUMP_SENT_DIR
+        fi
+             mv $LOCAL_PATH/$1 $LOCAL_PATH/$DUMP_SENT_DIR
+    else
+        printf "%s\n" "$1 collection failed in $SERVER" \
+             > /dev/console
+    fi
+fi

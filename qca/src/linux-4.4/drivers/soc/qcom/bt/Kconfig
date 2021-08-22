@@ -1,0 +1,5 @@
+config QTI_BT_TTY
+	tristate "TTY interface support for BT over IMEM"
+	default n
+	help
+	  Enable TTY support for BT host over IMEM.

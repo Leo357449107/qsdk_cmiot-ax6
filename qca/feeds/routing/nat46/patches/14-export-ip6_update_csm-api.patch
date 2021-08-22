@@ -1,0 +1,33 @@
+commit 0907c30387c89bbec23f426891a756ca17e421ed
+Author: Ken Zhu <guigenz@codeaurora.org>
+Date:   Thu Sep 3 16:48:57 2020 -0700
+
+    nat46: export ip6_update_csum api
+
+    export ip6_update_csum for other modules.
+
+    Change-Id: I2ea45c5421e1bf0a2e2394a1773124403197d06c
+    Signed-off-by: Ken Zhu <guigenz@codeaurora.org>
+
+diff -Nur a/nat46/modules/nat46-core.c nat46-6/nat46/modules/nat46-core.c
+--- a/nat46/modules/nat46-core.c	2020-09-03 13:22:12.523402661 -0700
++++ nat46-6/nat46/modules/nat46-core.c	2020-09-03 13:22:23.475348832 -0700
+@@ -1940,6 +1940,7 @@
+       }
+     }
+ }
++EXPORT_SYMBOL(ip6_update_csum);
+ 
+ int ip4_input_not_interested(nat46_instance_t *nat46, struct iphdr *iph, struct sk_buff *old_skb) {
+   if (old_skb->protocol != htons(ETH_P_IP)) {
+diff -Nur a/nat46/modules/nat46-core.h nat46-6/nat46/modules/nat46-core.h
+--- a/nat46/modules/nat46-core.h	2020-09-03 13:22:12.523402661 -0700
++++ nat46-6/nat46/modules/nat46-core.h	2020-09-03 13:22:23.475348832 -0700
+@@ -112,6 +112,7 @@
+ 
+ int xlate_6_to_4(struct net_device *dev, struct ipv6hdr *ip6h, uint16_t proto, __u32 *pv4saddr, __u32 *pv4daddr);
+ int xlate_4_to_6(struct net_device *dev, struct iphdr *hdr4, int sport, int dport, void *v6saddr, void *v6daddr);
++void ip6_update_csum(struct sk_buff * skb, struct ipv6hdr * ip6hdr, int do_atomic_frag);
+ bool nat46_get_rule_config(struct net_device *dev, nat46_xlate_rulepair_t **nat46_rule_pair, int *count);
+ int nat46_get_npairs(struct net_device *dev);
+ bool nat46_get_info(struct net_device *dev, nat46_xlate_rulepair_t **nat46_rule_pair,

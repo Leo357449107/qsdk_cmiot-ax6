@@ -1,0 +1,159 @@
+Author: Tian Yang <tiany@codeaurora.org>
+Date:   Mon Aug 10 13:44:15 2020 -0700
+
+    rstp:Maple configuration
+
+    Port rstp into Maple board. Added a different switch_id support in rstpd.
+    In some maple boards, the switch id is 1 rather than 0.
+
+    Signed-off-by: Tian Yang <tiany@codeaurora.org>
+    Change-Id: I4aa1092084de45b095d33b61c47680f5a9598d8c
+
+--- copy/qca_switch.c	2020-11-04 13:25:31.966307061 -0800
++++ rstp-2011-10-11/qca_switch.c	2020-11-06 09:56:41.141197708 -0800
+@@ -114,12 +114,30 @@
+ }
+ /*switch driver API end*/
+ 
++/* External switch id could be 1 (for some boards) but zero otherwise*/
++unsigned short qca_switch_get_switch_id(void)
++{
++	char cmd[128];
++	char result[128];
++	short dev_id;
++
++	snprintf(cmd, sizeof(cmd), "%s get_switch_id", RSTP_CMD_PATH);
++	if(run_cmd(cmd, result, sizeof(result))) {
++		dev_id = strtol(result, NULL, 16);
++	} else {
++		printf("Error: cannot get get_switch_id from rstp.sh\n");
++		dev_id = 0x0;
++	}
++
++	return dev_id;
++}
++
+ int qca_switch_get_port_link_status(struct switch_port *sw_port)
+ {
+ 	int ret;
+ 	a_uintptr_t status;
+ 
+-	ret = sw_uk_exec(SW_API_PT_LINK_STATUS_GET, 0, sw_port->priv.port_num, (a_uintptr_t)&status);
++	ret = sw_uk_exec(SW_API_PT_LINK_STATUS_GET, qca_switch_get_switch_id(), sw_port->priv.port_num, (a_uintptr_t)&status);
+ 	if(!ret)
+ 		return status;
+ 	else
+@@ -224,7 +242,7 @@
+ 	if(state >= (sizeof(qca_stp_state_map)/sizeof(qca_stp_state_map[0])))
+ 		return -1;
+ 
+-	if(sw_uk_exec(SW_API_STP_PT_STATE_SET, 0, 0, sw_port->priv.port_num, (a_uintptr_t)qca_stp_state_map[state]))
++	if(sw_uk_exec(SW_API_STP_PT_STATE_SET, qca_switch_get_switch_id(), 0, sw_port->priv.port_num, (a_uintptr_t)qca_stp_state_map[state]))
+ 		return -1;
+ 
+ 	if(qca_stp_state_map[state] == QCA_STP_STATE_DISABLE || qca_stp_state_map[state] == QCA_STP_STATE_BLOCK)
+@@ -240,7 +258,7 @@
+ 	if(!sw_port)
+ 		return speed;
+ 
+-	sw_uk_exec(SW_API_PT_SPEED_GET, 0, sw_port->priv.port_num, (a_uintptr_t)&speed);
++	sw_uk_exec(SW_API_PT_SPEED_GET, qca_switch_get_switch_id(), sw_port->priv.port_num, (a_uintptr_t)&speed);
+ 
+ 	return speed;
+ }
+@@ -252,7 +270,7 @@
+ 	if(!sw_port)
+ 		return duplex;
+ 
+-	sw_uk_exec(SW_API_PT_DUPLEX_GET, 0, sw_port->priv.port_num, (a_uintptr_t)&duplex);
++	sw_uk_exec(SW_API_PT_DUPLEX_GET, qca_switch_get_switch_id(), sw_port->priv.port_num, (a_uintptr_t)&duplex);
+ 
+ 	return duplex;
+ }
+@@ -272,15 +290,15 @@
+ 	if(!sw_port)
+ 		return -1;
+ 
+-	if (sw_uk_exec(SW_API_FDB_DELPORT, 0, sw_port->priv.port_num, 0))
++	if (sw_uk_exec(SW_API_FDB_DELPORT, qca_switch_get_switch_id(), sw_port->priv.port_num, 0))
+ 		return -1;
+ 
+ 	if (cpu_port.port >= 0) {
+-		sw_uk_exec(SW_API_FDB_DELPORT, 0, cpu_port.port, 0);
++		sw_uk_exec(SW_API_FDB_DELPORT, qca_switch_get_switch_id(), cpu_port.port, 0);
+ 	}
+ 
+ 	if (mirrot_port.port >= 0) {
+-		sw_uk_exec(SW_API_FDB_DELPORT, 0, mirrot_port.port, 0);
++		sw_uk_exec(SW_API_FDB_DELPORT, qca_switch_get_switch_id(), mirrot_port.port, 0);
+ 	}
+ 
+ 	qca_switch_flush_data_channel_fdb(sw_port);
+@@ -360,30 +378,30 @@
+ 		return -1;
+ 
+ 	/*set atheros header type, a raw socket will listen on this ethernet type to receive bpdu from switch*/
+-	sw_uk_exec(SW_API_HEADER_TYPE_SET, 0, 1, qca_switch_get_atheros_header_type());
++	sw_uk_exec(SW_API_HEADER_TYPE_SET, qca_switch_get_switch_id(), 1, qca_switch_get_atheros_header_type());
+ 
+ 	if(cpu_port.port >= 0) {
+ 		if (!cpu_port.sw_mk_hd) {
+ 			/*accept management packet with atheros header on cpu port(0)*/
+-			sw_uk_exec(SW_API_PT_RXHDR_SET, 0, cpu_port.port, 1);
++			sw_uk_exec(SW_API_PT_RXHDR_SET, qca_switch_get_switch_id(), cpu_port.port, 1);
+ 			/*when output management packet on cpu port(0), insert atheros header*/
+-			sw_uk_exec(SW_API_PT_TXHDR_SET, 0, cpu_port.port, 1);
++			sw_uk_exec(SW_API_PT_TXHDR_SET, qca_switch_get_switch_id(), cpu_port.port, 1);
+ 		}
+ 	}
+ 
+ 	if(mirrot_port.port >= 0) {
+ 		if (!mirrot_port.sw_mk_hd) {
+ 			/*accept management packet with atheros header on cpu port(6)*/
+-			sw_uk_exec(SW_API_PT_RXHDR_SET, 0, mirrot_port.port, 1);
++			sw_uk_exec(SW_API_PT_RXHDR_SET, qca_switch_get_switch_id(), mirrot_port.port, 1);
+ 			/*when output management packet on cpu port(6), insert atheros header*/
+-			sw_uk_exec(SW_API_PT_TXHDR_SET, 0, mirrot_port.port, 1);
++			sw_uk_exec(SW_API_PT_TXHDR_SET, qca_switch_get_switch_id(), mirrot_port.port, 1);
+ 		}
+ 		/*set mirror port to cpu port(6)*/
+-		sw_uk_exec(SW_API_MIRROR_ANALY_PT_SET, 0, mirrot_port.port);
++		sw_uk_exec(SW_API_MIRROR_ANALY_PT_SET, qca_switch_get_switch_id(), mirrot_port.port);
+ 	}
+ 
+ 	/*add a reserved fdb entry to capture bpdu on switch, then redirect it to Linux*/
+-	sw_uk_exec(SW_API_FDB_RESV_ADD, 0, (a_uintptr_t)&resv_entry);
++	sw_uk_exec(SW_API_FDB_RESV_ADD, qca_switch_get_switch_id(), (a_uintptr_t)&resv_entry);
+ 
+ 	return 0;
+ }
+@@ -391,23 +409,23 @@
+ /*remove configuration which is done in qca_switch_initialize*/
+ int qca_switch_disable_rx_tx_bpdu(void)
+ {
+-	sw_uk_exec(SW_API_HEADER_TYPE_SET, 0, 0, 0);
++	sw_uk_exec(SW_API_HEADER_TYPE_SET, qca_switch_get_switch_id(), 0, 0);
+ 
+ 	if(cpu_port.port >= 0) {
+ 		if (!cpu_port.sw_mk_hd) {
+-			sw_uk_exec(SW_API_PT_RXHDR_SET, 0, cpu_port.port, 0);
+-			sw_uk_exec(SW_API_PT_TXHDR_SET, 0, cpu_port.port, 0);
++			sw_uk_exec(SW_API_PT_RXHDR_SET, qca_switch_get_switch_id(), cpu_port.port, 0);
++			sw_uk_exec(SW_API_PT_TXHDR_SET, qca_switch_get_switch_id(), cpu_port.port, 0);
+ 		}
+ 	}
+ 
+ 	if(mirrot_port.port >= 0) {
+ 		if (!mirrot_port.sw_mk_hd) {
+-			sw_uk_exec(SW_API_PT_RXHDR_SET, 0, mirrot_port.port, 0);
+-			sw_uk_exec(SW_API_PT_TXHDR_SET, 0, mirrot_port.port, 0);
++			sw_uk_exec(SW_API_PT_RXHDR_SET, qca_switch_get_switch_id(), mirrot_port.port, 0);
++			sw_uk_exec(SW_API_PT_TXHDR_SET, qca_switch_get_switch_id(), mirrot_port.port, 0);
+ 		}
+ 	}
+ 
+-	sw_uk_exec(SW_API_FDB_RESV_DEL, 0, (a_uintptr_t)&resv_entry);
++	sw_uk_exec(SW_API_FDB_RESV_DEL, qca_switch_get_switch_id(), (a_uintptr_t)&resv_entry);
+ 
+ 	return 0;
+ }

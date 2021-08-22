@@ -1,0 +1,22 @@
+Index: alsa-lib-1.0.28/src/conf/alsa.conf
+===================================================================
+--- alsa-lib-1.0.28.orig/src/conf/alsa.conf	2018-10-26 09:41:18.845062802 +0530
++++ alsa-lib-1.0.28/src/conf/alsa.conf	2018-10-26 09:50:01.695078521 +0530
+@@ -325,6 +325,17 @@
+ 	}
+ }
+ 
++pcm_slave.wcd
++{
++    pcm "hw:0,0"
++    rate 48000
++}
++
++pcm.wcd_44k1 {
++    type rate
++    slave wcd
++}
++
+ pcm.null {
+ 	type null
+ 	hint {

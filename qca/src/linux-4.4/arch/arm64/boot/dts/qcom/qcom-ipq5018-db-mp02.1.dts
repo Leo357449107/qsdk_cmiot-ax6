@@ -1,0 +1,599 @@
+/dts-v1/;
+/* Copyright (c) 2018-2020, The Linux Foundation. All rights reserved.
+ *
+ * Permission to use, copy, modify, and/or distribute this software for any
+ * purpose with or without fee is hereby granted, provided that the above
+ * copyright notice and this permission notice appear in all copies.
+ *
+ * THE SOFTWARE IS PROVIDED "AS IS" AND THE AUTHOR DISCLAIMS ALL WARRANTIES
+ * WITH REGARD TO THIS SOFTWARE INCLUDING ALL IMPLIED WARRANTIES OF
+ * MERCHANTABILITY AND FITNESS. IN NO EVENT SHALL THE AUTHOR BE LIABLE FOR
+ * ANY SPECIAL, DIRECT, INDIRECT, OR CONSEQUENTIAL DAMAGES OR ANY DAMAGES
+ * WHATSOEVER RESULTING FROM LOSS OF USE, DATA OR PROFITS, WHETHER IN AN
+ * ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF
+ * OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
+ */
+
+#include "qcom-ipq5018.dtsi"
+
+/ {
+	#address-cells = <0x2>;
+	#size-cells = <0x2>;
+	model = "Qualcomm Technologies, Inc. IPQ5018/DB-MP02.1";
+	compatible = "qcom,ipq5018-db-mp02.1", "qcom,ipq5018";
+	interrupt-parent = <&intc>;
+
+	MP_256;
+	/delete-property/ MP_512;
+
+	aliases {
+		sdhc1 = &sdhc_1; /* SDC1 eMMC slot */
+		serial0 = &blsp1_uart1;
+		serial1 = &blsp1_uart2;
+		ethernet0 = "/soc/dp1";
+		ethernet1 = "/soc/dp2";
+	};
+
+	chosen {
+		bootargs = "console=ttyMSM0,115200,n8 rw init=/init";
+	#ifdef __IPQ_MEM_PROFILE_256_MB__
+		bootargs-append = " swiotlb=1";
+	#else
+		bootargs-append = " swiotlb=1 coherent_pool=2M";
+	#endif
+		stdout-path = "serial0";
+	};
+
+	/*            256 MB Profile
+	 * +=========+==============+========================+
+	 * |        |              |                         |
+	 * | Region | Start Offset |          Size           |
+	 * |        |              |                         |
+	 * +--------+--------------+-------------------------+
+	 * |        |              |                         |
+	 * |        |              |                         |
+	 * |  NSS   |  0x40000000  |          8MB           |
+	 * |        |              |                         |
+	 * |        |              |                         |
+	 * +--------+--------------+-------------------------+
+	 * |        |              |                         |
+	 * |        |              |                         |
+	 * |        |              |                         |
+	 * |        |              |                         |
+	 * | Linux  |  0x40800000  | Depends on total memory |
+	 * |        |              |                         |
+	 * |        |              |                         |
+	 * |        |              |                         |
+	 * +        |              |                         |
+	 * +--------+--------------+-------------------------+
+	 * |        |              |                         |
+	 * | uboot  |  0x4A600000  |           4MB           |
+	 * |        |              |                         |
+	 * +--------+--------------+-------------------------+
+	 * |  SBL   |  0x4AA00000  |           1MB           |
+	 * +--------+--------------+-------------------------+
+	 * |  smem  |  0x4AB00000  |           1MB           |
+	 * +--------+--------------+-------------------------+
+	 * |        |              |                         |
+	 * |   TZ   |  0x4AC00000  |           4MB           |
+	 * |        |              |                         |
+	 * +--------+--------------+-------------------------+
+	 * |        |              |                         |
+	 * |        |              |                         |
+	 * |   Q6   |  0x4B000000  |          20MB           |
+	 * |  code/ |              |                         |
+	 * |  data  |              |                         |
+	 * +--------+--------------+-------------------------+
+	 * |        |              |                         |
+	 * |IPQ5018 |  0x4C400000  |          13MB           |
+	 * |  data  |              |                         |
+	 * +--------+--------------+-------------------------+
+	 * | M3 Dump|  0x4D100000  |           1MB           |
+	 * +--------+--------------+-------------------------+
+	 * |  QDSS  |  0x4D200000  |           1MB           |
+	 * +--------+--------------+-------------------------+
+	 * |QCN6122 |  0x4D300000  |          15MB           |
+	 * |  data  |              |                         |
+	 * +--------+--------------+-------------------------+
+	 * | M3 Dump|  0x4E200000  |           1MB           |
+	 * +--------+--------------+-------------------------+
+	 * |  QDSS  |  0x4E300000  |           1MB           |
+	 * +--------+--------------+-------------------------+
+	 * |QCN6122 |  0x4E400000  |          15MB           |
+	 * |  data  |              |                         |
+	 * +--------+--------------+-------------------------+
+	 * | M3 Dump|  0x4F300000  |           1MB           |
+	 * +--------+--------------+-------------------------+
+	 * |  QDSS  |  0x4F400000  |           1MB           |
+	 * +--------+--------------+-------------------------+
+	 * |                                                 |
+	 * |      Rest of the memory for Linux               |
+	 * |                                                 |
+	 * +=================================================+
+	 */
+	reserved-memory {
+		/delete-node/ nss@40000000;
+
+		nss@40000000 {
+			no-map;
+			reg = <0x0 0x40000000 0x0 0x0800000>;
+		};
+
+		q6_mem_regions: q6_mem_regions@4B000000 {
+			no-map;
+			reg = <0x0 0x4B000000 0x0 0x4500000>;
+		};
+
+		q6_code_data: q6_code_data@4B000000 {
+			no-map;
+			reg = <0x0 0x4B000000 0x0 01400000>;
+		};
+
+		q6_ipq5018_data: q6_ipq5018_data@4C400000 {
+			no-map;
+			reg = <0x0 0x4C400000 0x0 0xD00000>;
+		};
+
+		m3_dump: m3_dump@4D100000 {
+			no-map;
+			reg = <0x0 0x4D100000 0x0 0x100000>;
+		};
+
+		q6_etr_region: q6_etr_dump@4D200000 {
+			no-map;
+			reg = <0x0 0x4D200000 0x0 0x100000>;
+		};
+
+		q6_qcn6122_data1: q6_qcn6122_data1@4D300000 {
+			no-map;
+			reg = <0x0 0x4D300000 0x0 0xF00000>;
+		};
+
+		m3_dump_qcn6122_1: m3_dump_qcn6122_1@4E200000 {
+			no-map;
+			reg = <0x0 0x4E200000 0x0 0x100000>;
+		};
+
+		q6_qcn6122_etr_1: q6_qcn6122_etr_1@4E300000 {
+			no-map;
+			reg = <0x0 0x4E300000 0x0 0x100000>;
+		};
+
+		q6_qcn6122_data2: q6_qcn6122_data2@4E400000 {
+			no-map;
+			reg = <0x0 0x4E400000 0x0 0xF00000>;
+		};
+
+		m3_dump_qcn6122_2: m3_dump_qcn6122_2@4F300000 {
+			no-map;
+			reg = <0x0 0x4F300000 0x0 0x100000>;
+		};
+
+		q6_qcn6122_etr_2: q6_qcn6122_etr_2@4F400000 {
+			no-map;
+			reg = <0x0 0x4F400000 0x0 0x100000>;
+		};
+	};
+
+	soc {
+		serial@78af000 {
+			status = "ok";
+			pinctrl-0 = <&blsp0_uart0_pins>;
+			pinctrl-names = "default";
+		};
+
+	spi_0: spi@78b5000 { /* BLSP1 QUP0 */
+			pinctrl-0 = <&blsp0_spi_pins>;
+			pinctrl-names = "default";
+			cs-select = <0>;
+			status = "ok";
+
+			m25p80@0 {
+				#address-cells = <1>;
+				#size-cells = <1>;
+				reg = <0>;
+				compatible = "n25q128a11";
+				linux,modalias = "m25p80", "n25q128a11";
+				spi-max-frequency = <50000000>;
+				use-default-sizes;
+			};
+		};
+
+		mdio0: mdio@88000 {
+			status = "ok";
+
+			ethernet-phy@0 {
+				reg = <7>;
+			};
+		};
+
+		mdio1: mdio@90000 {
+			status = "ok";
+			pinctrl-0 = <&mdio1_pins &phy_pins>;
+			pinctrl-names = "default";
+			phy-reset-gpio = <&tlmm 26 0>;
+
+			ethernet-phy@0 {
+				reg = <4>;
+			};
+		};
+
+		ess-instance {
+			num_devices = <0x1>;
+			ess-switch@0x39c00000 {
+				switch_mac_mode = <0xf>; /* mac mode for uniphy instance*/
+				cmnblk_clk = "internal_96MHz"; /* cmnblk clk*/
+				qcom,port_phyinfo {
+					port@0 {
+						port_id = <1>;
+						phy_address = <7>;
+						mdiobus = <&mdio0>;
+					};
+					port@1 {
+						port_id = <2>;
+						phy_address = <0x4>;
+						mdiobus = <&mdio1>;
+					};
+				};
+				led_source@0 {
+					source = <0>;
+					mode = "normal";
+					speed = "all";
+					blink_en = "enable";
+					active = "low";
+				};
+			};
+		};
+
+		qcom_q6v5_wcss@CD00000 {
+			memory-region = <&q6_mem_regions>;
+		};
+
+
+		wifi0: wifi@c000000 {
+			qcom,tgt-mem-mode = <2>;
+			status = "ok";
+		};
+
+		wifi2: wifi2@c000000 {
+			compatible = "qcom,cnss-qcn6122", "qcom,cnss-qcn9100";
+			qcom,rproc = <&qcom_q6v5_wcss>;
+			status = "disabled";
+		};
+
+                dp1 {
+			device_type = "network";
+			compatible = "qcom,nss-dp";
+			clocks = <&gcc GCC_SNOC_GMAC0_AXI_CLK>;
+			clock-names = "nss-snoc-gmac-axi-clk";
+			qcom,id = <1>;
+			reg = <0x39C00000 0x10000>;
+			interrupts = <GIC_SPI 101 IRQ_TYPE_LEVEL_HIGH>;
+			qcom,mactype = <2>;
+			qcom,link-poll = <1>;
+			qcom,phy-mdio-addr = <7>;
+			mdio-bus = <&mdio0>;
+			local-mac-address = [000000000000];
+			phy-mode = "sgmii";
+		};
+
+		dp2 {
+			device_type = "network";
+			compatible = "qcom,nss-dp";
+			clocks = <&gcc GCC_SNOC_GMAC1_AXI_CLK>;
+			clock-names = "nss-snoc-gmac-axi-clk";
+			qcom,id = <2>;
+			reg = <0x39D00000 0x10000>;
+			interrupts = <GIC_SPI 109 IRQ_TYPE_LEVEL_HIGH>;
+			qcom,mactype = <2>;
+			qcom,link-poll = <1>;
+			qcom,phy-mdio-addr = <4>;
+			mdio-bus = <&mdio1>;
+			local-mac-address = [000000000000];
+			phy-mode = "sgmii";
+                };
+
+		qcom,test@0 {
+			status = "ok";
+		};
+	};
+
+	thermal-zones {
+		status = "ok";
+	};
+};
+
+&sdhc_1 {
+	status = "disabled";
+};
+
+&tlmm {
+	pinctrl-0 = <&blsp0_uart_pins &blsp1_uart_pins &phy_led_pins>;
+	pinctrl-names = "default";
+
+	blsp0_uart_pins: blsp0_uart_pins {
+		blsp0_uart_rx {
+			pins = "gpio28";
+			function = "blsp0_uart1";
+			drive-strength = <8>;
+		};
+		blsp0_uart_tx {
+			pins = "gpio29";
+			function = "blsp0_uart1";
+			drive-strength = <8>;
+		};
+	};
+
+	blsp1_uart_pins: blsp1_uart_pins {
+		blsp1_uart_rx {
+			pins = "gpio23";
+			function = "blsp1_uart2";
+			drive-strength = <8>;
+			input-enable;
+			bias-disable;
+			bias-pull-up;
+		};
+		blsp1_uart_tx {
+			pins = "gpio25";
+			function = "blsp1_uart2";
+			drive-strength = <8>;
+			bias-disable;
+			output-high;
+			bias-pull-up;
+		};
+		blsp1_uart_rfr {
+			pins = "gpio24";
+			function = "blsp1_uart2";
+			drive-strength = <8>;
+			bias-disable;
+			output-high;
+			bias-pull-up;
+		};
+		blsp1_uart_cts {
+			pins = "gpio26";
+			function = "blsp1_uart2";
+			drive-strength = <8>;
+			bias-disable;
+			input-enable;
+			bias-pull-up;
+		};
+	};
+
+	blsp0_spi_pins: blsp0_spi_pins {
+		mux {
+			pins = "gpio10", "gpio11", "gpio12", "gpio13";
+			function = "blsp0_spi";
+			drive-strength = <2>;
+			bias-disable;
+		};
+	};
+
+	phy_pins: phy_pins {
+		phy_intr {
+			pins = "gpio25";
+			function = "gpio";
+			drive-strength = <8>;
+			bias-disable;
+		};
+		phy_reset {
+			pins = "gpio26";
+			function = "gpio";
+			drive-strength = <8>;
+			bias-pull-down;
+			output-low;
+		};
+	};
+
+	mdio1_pins: mdio_pinmux {
+		mux_0 {
+			pins = "gpio36";
+			function = "mdc";
+			drive-strength = <8>;
+			bias-pull-up;
+		};
+
+		mux_1 {
+			pins = "gpio37";
+			function = "mdio";
+			drive-strength = <8>;
+			bias-pull-up;
+		};
+	};
+
+	phy_led_pins: phy_led_pins {
+		gephy_led_pin {
+			pins = "gpio30";
+			function = "led0";
+			drive-strength = <8>;
+			bias-pull-down;
+		};
+	};
+
+	blsp0_uart0_pins: blsp0_uart0_pins {
+		gpio_21 {
+			pins = "gpio21";
+			drive-strength = <8>;
+			bias-pull-down;
+		};
+		gpio_20 {
+			pins = "gpio20";
+			drive-strength = <8>;
+			bias-pull-down;
+		};
+	};
+};
+
+&usb3 {
+	status = "ok";
+};
+
+&pcie_x1 {
+	status = "disabled";
+	perst-gpio = <&tlmm 18 1>;
+};
+
+&pcie_x2 {
+	status = "disabled";
+	perst-gpio = <&tlmm 15 1>;
+};
+
+&eud {
+	status = "ok";
+};
+
+&dwc_0 {
+	/delete-property/ #phy-cells;
+	/delete-property/ phys;
+	/delete-property/ phy-names;
+};
+
+&hs_m31phy_0 {
+	status = "ok";
+};
+
+&pcie_x1phy {
+	status = "disabled";
+};
+
+&pcie_x2phy {
+	status = "disabled";
+};
+
+&qfprom {
+	status = "ok";
+};
+
+&tsens {
+	status = "ok";
+};
+
+&qgic_msi_0 {
+	status = "ok";
+};
+
+&qgic_msi_1 {
+	status = "ok";
+};
+
+&qcom_q6v5_wcss {
+	qcom,multipd_arch;
+	qcom,share_bootargs;
+	qcom,bootargs_smem = <507>;
+	boot-args = <0x1 0x4 0x3 0x0F 0x0 0x0>,
+			<0x2 0x4 0x2 0x12 0x0 0x0>;
+
+	/* IPQ5018 */
+	q6v5_wcss_userpd1 {
+		m3_firmware = "IPQ5018/m3_fw.mdt";
+		interrupts-extended = <&wcss_smp2p_in 8 0>,
+			<&wcss_smp2p_in 9 0>,
+			<&wcss_smp2p_in 12 0>,
+			<&wcss_smp2p_in 11 0>;
+		interrupt-names ="fatal",
+			"ready",
+			"spawn_ack",
+			"stop-ack";
+		qcom,smem-states = <&wcss_smp2p_out 8>,
+			<&wcss_smp2p_out 9>,
+			<&wcss_smp2p_out 10>;
+		qcom,smem-state-names = "shutdown",
+			"stop",
+			"spawn";
+		qca,asid = <1>;
+		qca,auto-restart;
+		qca,int_radio;
+		memory-region = <&q6_ipq5018_data>, <&m3_dump>,
+				<&q6_etr_region>;
+	};
+
+	/* QCN6122 6G */
+	q6v5_wcss_userpd2 {
+		m3_firmware = "qcn6122/m3_fw.mdt";
+		interrupts-extended = <&wcss_smp2p_in 16 0>,
+			<&wcss_smp2p_in 17 0>,
+			<&wcss_smp2p_in 20 0>,
+			<&wcss_smp2p_in 19 0>;
+		interrupt-names ="fatal",
+			"ready",
+			"spawn_ack",
+			"stop-ack";
+		qcom,smem-states = <&wcss_smp2p_out 16>,
+			<&wcss_smp2p_out 17>,
+			<&wcss_smp2p_out 18>;
+		qcom,smem-state-names = "shutdown",
+			"stop",
+			"spawn";
+		qca,asid = <2>;
+		qca,auto-restart;
+		memory-region = <&q6_qcn6122_data1>, <&m3_dump_qcn6122_1>,
+				<&q6_qcn6122_etr_1>;
+	};
+
+	/* QCN6122 5G */
+	q6v5_wcss_userpd3 {
+		m3_firmware = "qcn6122/m3_fw.mdt";
+		interrupts-extended = <&wcss_smp2p_in 24 0>,
+			<&wcss_smp2p_in 25 0>,
+			<&wcss_smp2p_in 28 0>,
+			<&wcss_smp2p_in 27 0>;
+		interrupt-names ="fatal",
+			"ready",
+			"spawn_ack",
+			"stop-ack";
+		qcom,smem-states = <&wcss_smp2p_out 24>,
+			<&wcss_smp2p_out 25>,
+			<&wcss_smp2p_out 26>;
+		qcom,smem-state-names = "shutdown",
+			"stop",
+			"spawn";
+		qca,asid = <3>;
+		qca,auto-restart;
+		memory-region = <&q6_qcn6122_data2>, <&m3_dump_qcn6122_2>,
+				<&q6_qcn6122_etr_2>;
+	};
+};
+
+&wifi0 {
+	/* IPQ5018 */
+	qcom,multipd_arch;
+	qcom,board_id = <0x10>;
+	qcom,bdf-addr = <0 0 0x4C400000 0 0>;
+	qcom,caldb-addr = <0 0 0 0 0>;
+	qcom,caldb-size = <0>;
+	qcom,userpd-subsys-name = "q6v5_wcss_userpd1";
+	status = "ok";
+};
+
+&wifi1 {
+	/* QCN6122 6G */
+	qcom,multipd_arch;
+	qcom,board_id = <0x90>;
+	qcom,tgt-mem-mode = <2>;
+	/*
+	 * once wifi driver changes are in place to
+	 * qcn6122 compatible string, remove qcn9100 here
+	 */
+	compatible = "qcom,cnss-qcn6122", "qcom,cnss-qcn9100";
+	qcom,bdf-addr = <0 0 0x4D300000 0 0>;
+	qcom,caldb-addr = <0 0 0 0 0>;
+	qcom,caldb-size = <0>;
+	qcom,userpd-subsys-name = "q6v5_wcss_userpd2";
+	status = "ok";
+};
+
+&wifi2 {
+	/* QCN6122 5G */
+	qcom,multipd_arch;
+	qcom,board_id = <0x50>;
+	qcom,tgt-mem-mode = <2>;
+	/*
+	 * once wifi driver changes are in place to
+	 * qcn6122 compatible string, remove qcn9100 here
+	 */
+	compatible = "qcom,cnss-qcn6122", "qcom,cnss-qcn9100";
+	qcom,bdf-addr = <0 0 0x4E400000 0 0>;
+	qcom,caldb-addr = <0 0 0 0 0>;
+	qcom,caldb-size = <0>;
+	qcom,userpd-subsys-name = "q6v5_wcss_userpd3";
+	status = "ok";
+};

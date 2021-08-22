@@ -1,0 +1,61 @@
+diff -Nur a/programs/_confread/Makefile openswan-2.6.51.3/programs/_confread/Makefile
+--- a/programs/_confread/Makefile	2019-04-04 10:45:02.078878331 -0700
++++ openswan-2.6.51.3/programs/_confread/Makefile	2019-04-04 10:46:44.946875286 -0700
+@@ -14,7 +14,6 @@
+ OPENSWANSRCDIR?=$(shell cd ../..; pwd)
+ include ${OPENSWANSRCDIR}/Makefile.inc
+ 
+-EXTRA5MAN=ipsec.conf.5
+ CONFFILES=ipsec.conf
+ EXCONFILES=ipsec.win2k.conf
+ SOURCEDIR=_confread
+@@ -23,12 +22,3 @@
+ CONFDFILES=clear clear-or-private private-or-clear private block
+ 
+ include ${srcdir}../Makefile.program
+-
+-ipsec.conf.5: ${srcdir}ipsec.conf.5.xml
+-
+-${srcdir}ipsec.conf.5.xml: $(wildcard d.ipsec.conf/*.xml) ${srcdir}d.ipsec.conf/order.txt
+-	cd ${srcdir} && cat `cat ${srcdir}d.ipsec.conf/order.txt` >ipsec.conf.5.xml
+-
+-diff:	ipsec.conf.5.xml
+-	diff -B -w -u ipsec.conf.5.xml ipsec.conf.5.xml-ref
+-
+diff -Nur a/programs/pluto/Makefile openswan-2.6.51.3/programs/pluto/Makefile
+--- a/programs/pluto/Makefile	2019-04-04 10:45:02.082878331 -0700
++++ openswan-2.6.51.3/programs/pluto/Makefile	2019-04-04 10:49:55.974869630 -0700
+@@ -184,33 +184,9 @@
+ 	mkdir -p -m 700 $(VARDIR)/run/pluto
+ 	$(INSTALL) $(INSTBINFLAGS) $(BINNAMEPLUTO) $(LIBEXECDIR)
+ 	#$(INSTALL) $(INSTSUIDFLAGS) $(BINNAMEWHACKINIT) $(LIBEXECDIR)
+-	$(INSTALL) $(INSTMANFLAGS) ${srcdir}pluto.8 $(PMANDIR)/ipsec_pluto.8
+-	sh ${OPENSWANSRCDIR}/packaging/utils/manlink ${srcdir}pluto.8 | \
+-		while read from to ; \
+-		do \
+-			ln -s -f ipsec_$$from $(PMANDIR)/$$to; \
+-		done
+-	$(INSTALL) $(INSTMANFLAGS) ${srcdir}ipsec.secrets.5 $(FMANDIR)
+-	sh ${OPENSWANSRCDIR}/packaging/utils/manlink ${srcdir}ipsec.secrets.5 | \
+-		while read from to ; \
+-		do \
+-		 ln -s -f $$from $(FMANDIR)/$$to; \
+-		done
+ 
+ install_file_list:
+ 	@echo $(LIBEXECDIR)/$(BINNAMEPLUTO)
+-	@echo $(PMANDIR)/ipsec_pluto.8
+-	@sh ${OPENSWANSRCDIR}/packaging/utils/manlink pluto.8 | \
+-		while read from to; \
+-		do\
+-			 echo $(PMANDIR)/$$to; \
+-		done
+-	@echo $(FMANDIR)/ipsec.secrets.5
+-	@sh ${OPENSWANSRCDIR}/packaging/utils/manlink ipsec.secrets.5 | \
+-		while read from to; \
+-		do \
+-			echo $(FMANDIR)/$$to; \
+-		done
+ 
+ alg_info_test: alg_info_test.o ike_alg.o constants.o defs.o log.o db_ops.o crypto.o $(LIBDESLITE) ${LIBOPENSWAN}
+ 	$(CC) -o $@ $^ $(LDFLAGS) $(LIBSPLUTO)

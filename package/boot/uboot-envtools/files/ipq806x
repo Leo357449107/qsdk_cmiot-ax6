@@ -1,0 +1,71 @@
+#!/bin/sh
+#
+# Copyright (c) 2014 The Linux Foundation. All rights reserved.
+# Copyright (C) 2011-2012 OpenWrt.org
+#
+
+
+. /lib/ipq806x.sh
+. /lib/uboot-envtools.sh
+. /lib/functions.sh
+
+board=$(ipq806x_board_name)
+
+default_uboot_env () {
+	UBOOTENV_PART=$(cat /proc/mtd | grep APPSBLENV)
+	mtd_dev=$(echo $UBOOTENV_PART | awk '{print $1}' | sed 's/:$//')
+	mtd_size=0x$(echo $UBOOTENV_PART | awk '{print $2}')
+	mtd_erase=0x$(echo $UBOOTENV_PART | awk '{print $3}')
+	nor_flash=`find /sys/bus/spi/devices/*/mtd -name ${mtd_dev}`
+
+	if [ -z "$UBOOTENV_PART" ]; then
+		mtd_dev=$(echo $(find_mmc_part "0:APPSBLENV") | sed 's/^.\{5\}//')
+		if [ -n "$mtd_dev" ]; then
+			EMMC_UBOOTENV_PART=$(cat /proc/partitions | grep $mtd_dev)
+			#convert block to bytes
+			emmc_uboot_env_size=`expr $(echo $EMMC_UBOOTENV_PART | awk '{print $3}') \* 1024`
+			uboot_env_size=0x`printf "%x" $emmc_uboot_env_size`
+		fi
+		mtd_erase=""
+	elif [ -n "$nor_flash" ]; then
+		uboot_env_size=$mtd_size
+		sectors=$(( $uboot_env_size / $mtd_erase ))
+		sectors=0x`printf "%x" $sectors`
+	else
+		# size is hardcoded to 0x40000 in u-boot
+		uboot_env_size=0x40000
+		sectors=$(( $uboot_env_size / $mtd_erase ))
+		sectors=0x`printf "%x" $sectors`
+	fi
+
+	echo /dev/$mtd_dev 0x0 $uboot_env_size $mtd_erase $sectors
+}
+
+validate_device_node() {
+	config_get dev $1 dev
+	if [ "$dev" != "$2" ] || [ ! -e /etc/fw_env.config ]; then
+		rm /etc/config/ubootenv /etc/fw_env.config
+		return;
+	fi
+
+	exit 0
+}
+
+[ -e /etc/config/ubootenv ] && {
+	config_load ubootenv
+	config_foreach validate_device_node ubootenv $(default_uboot_env)
+}
+
+touch /etc/config/ubootenv
+
+case "$board" in
+db149 | ap148 | ap145 | ap148_1xx | db149_1xx | db149_2xx | ap145_1xx | db147 | ap160 | ap160_2xx | ap161 | ak01_1xx | ap-dk01.1-c1 | ap-dk01.1-c2 | ap-dk04.1-c1 | ap-dk04.1-c2 | ap-dk04.1-c3 | ap-dk04.1-c4 | ap-dk04.1-c5 | ap-dk04.1-c6 | ap-dk05.1-c1 | ap-dk06.1-c1 | ap-dk07.1-c1 | ap-dk07.1-c2 | ap-dk07.1-c3 | ap-dk07.1-c4 | ap-hk01-c1 | ap-hk01-c2 | ap-hk01-c3 | ap-hk01-c4 | ap-hk01-c5 | ap-hk01-c6 | ap-hk02 | ap-hk06 | ap-hk07 | ap-hk08 | ap-hk09 | ap-hk10-c1 | ap-hk10-c2 | ap-hk11-c1 | ap-hk12 | ap-hk14 | ap-ac01 | ap-ac02 | ap-ac03 | ap-ac04 | ap-oak02 | ap-oak03 | db-hk01 | db-hk02 | ap-cp01-c1 | ap-cp01-c2 | ap-cp01-c3 | ap-cp01-c4 | ap-cp01-c5 | ap-cp02-c1 | ap-cp03-c1 | db-cp01 | db-cp02 | mp-emu | ap-mp02.1 | ap-mp03.1 | ap-mp03.1-c2 | ap-mp03.1-c3 | ap-mp03.3 | ap-mp03.3-c2 | ap-mp03.3-c3 | ap-mp03.3-c4 | ap-mp03.3-c5 | ap-mp03.4-c1 | ap-mp03.4-c2 | ap-mp03.5-c1 | ap-mp03.5-c2 | ap-mp03.6-c1 | ap-mp03.6-c2 | db-mp02.1 | db-mp03.1 | db-mp03.1-c2 | db-mp03.3 | db-mp03.3-c2 | tb-mp04)
+	env=$(default_uboot_env)
+	[ -n "${env}" ] && ubootenv_add_uci_config $env
+	;;
+esac
+
+config_load ubootenv
+config_foreach ubootenv_add_app_config ubootenv
+
+exit 0

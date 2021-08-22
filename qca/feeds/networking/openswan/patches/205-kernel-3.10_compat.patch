@@ -1,0 +1,439 @@
+diff -Nur --no-dereference a/linux/include/openswan/ipsec_kversion.h openswan-2.6.51.3/linux/include/openswan/ipsec_kversion.h
+--- a/linux/include/openswan/ipsec_kversion.h	2019-04-04 13:49:32.050550607 -0700
++++ openswan-2.6.51.3/linux/include/openswan/ipsec_kversion.h	2019-04-04 13:49:58.134549835 -0700
+@@ -517,5 +517,30 @@
+ #define ALLOC_NETDEV4
+ #endif
+ 
++#if LINUX_VERSION_CODE >= KERNEL_VERSION(3, 9, 0)
++# define SK_FOR_EACH(a,c) sk_for_each(a,c)
++# define ipsec_proc_net_remove(a) remove_proc_entry(a, init_net.proc_net)
++#else
++# define SK_FOR_EACH_NEED_NODE
++# define SK_FOR_EACH(a,c) sk_for_each(a,node,c)
++# define remove_proc_subtree(a,b) remove_proc_entry(a,b)
++# if LINUX_VERSION_CODE >= KERNEL_VERSION(2, 6, 24)
++#  define ipsec_proc_net_remove(a) proc_net_remove(&init_net, a)
++# else
++#  define ipsec_proc_net_remove(a) proc_net_remove(a)
++# endif
++#endif
++
++#if LINUX_VERSION_CODE >= KERNEL_VERSION(3, 5, 0)
++# define NEED_UDP_ENCAP_ENABLE
++#endif
++
++/* CONFIG_USER_NS is now on in Fedora 20 kernels */
++#if LINUX_VERSION_CODE >= KERNEL_VERSION(3, 5, 0)
++# if defined(CONFIG_USER_NS)
++#  define HAVE_USER_NS
++# endif
++#endif
++
+ #endif /* _OPENSWAN_KVERSIONS_H */
+ 
+diff -Nur --no-dereference a/linux/include/openswan/ipsec_rcv.h openswan-2.6.51.3/linux/include/openswan/ipsec_rcv.h
+--- a/linux/include/openswan/ipsec_rcv.h	2019-04-04 13:49:32.050550607 -0700
++++ openswan-2.6.51.3/linux/include/openswan/ipsec_rcv.h	2019-04-04 13:49:58.134549835 -0700
+@@ -57,9 +57,6 @@
+   unsigned char  packet_template[IPSEC_BIRTH_TEMPLATE_MAXLEN];
+ };
+ 
+-extern struct ipsec_birth_reply ipsec_ipv4_birth_packet;
+-extern struct ipsec_birth_reply ipsec_ipv6_birth_packet;
+-
+ enum ipsec_rcv_value {
+ 	IPSEC_RCV_PENDING=2,
+ 	IPSEC_RCV_LASTPROTO=1,
+diff -Nur --no-dereference a/linux/include/openswan/pfkey.h openswan-2.6.51.3/linux/include/openswan/pfkey.h
+--- a/linux/include/openswan/pfkey.h	2019-04-04 13:49:32.050550607 -0700
++++ openswan-2.6.51.3/linux/include/openswan/pfkey.h	2019-04-04 13:49:58.134549835 -0700
+@@ -25,6 +25,10 @@
+ 
+ extern /* void */ int pfkey_init(void);
+ extern /* void */ int pfkey_cleanup(void);
++extern int pfkey_registered_show(struct seq_file *seq, void *offset);
++extern int pfkey_supported_show(struct seq_file *seq, void *offset);
++extern int pfkey_show(struct seq_file *seq, void *offset);
++extern uint32_t pfkey_kuid_to_uid(kuid_t kuid);
+ 
+ struct socket_list
+ {
+diff -Nur --no-dereference a/linux/net/ipsec/ipsec_proc.c openswan-2.6.51.3/linux/net/ipsec/ipsec_proc.c
+--- a/linux/net/ipsec/ipsec_proc.c	2019-04-04 13:49:32.050550607 -0700
++++ openswan-2.6.51.3/linux/net/ipsec/ipsec_proc.c	2019-04-04 13:50:36.242548707 -0700
+@@ -87,18 +87,15 @@
+ #define IPSEC_PROC_SHOW_SAREF_INFO
+ #endif
+ 
+-#ifdef CONFIG_PROC_FS
++#ifndef CONFIG_PROC_FS
++#error You must have PROC_FS built in to use KLIPS
++#endif
+ 
+-#ifdef IPSEC_PROC_SUBDIRS
+ static struct proc_dir_entry *proc_net_ipsec_dir = NULL;
+ static struct proc_dir_entry *proc_eroute_dir    = NULL;
+ static struct proc_dir_entry *proc_spi_dir       = NULL;
+ static struct proc_dir_entry *proc_spigrp_dir    = NULL;
+ static struct proc_dir_entry *proc_stats_dir     = NULL;
+-#endif
+-
+-struct ipsec_birth_reply ipsec_ipv4_birth_packet;
+-struct ipsec_birth_reply ipsec_ipv6_birth_packet;
+ 
+ int debug_esp = 0;
+ int debug_ah = 0;
+@@ -129,11 +126,6 @@
+ 
+ #define DECREMENT_UNSIGNED(X, amount) ((amount < (X)) ? (X)-amount : 0)
+ 
+-#ifdef CONFIG_KLIPS_ALG
+-extern int ipsec_xform_get_info(char *buffer, char **start,
+-				off_t offset, int length IPSEC_PROC_LAST_ARG);
+-#endif
+-
+ static void * proc_eroute_start(struct seq_file *m, loff_t *pos)
+ {
+         struct rj_walkstate     *rjws = kmalloc(sizeof(struct rj_walkstate), GFP_KERNEL);
+@@ -986,7 +978,6 @@
+                 .release        = single_release,
+         },
+ };
+-#endif /* CONFIG_PROC_FS */
+ 
+ struct ipsec_proc_list ipsec_proc_xforms = {
+         .name   = "xforms",
+@@ -1000,6 +991,56 @@
+         },
+ };
+ 
++static int ipsec_proc_pf_key_open(struct inode *inode, struct file *file)
++{
++	return single_open(file, pfkey_show, NULL);
++}
++
++struct ipsec_proc_list ipsec_proc_pf_key = {
++        .name   = "pf_key",
++        .parent = &PROC_NET,
++        .dir    = NULL,
++        .seq_fsop = {
++                .open           = ipsec_proc_pf_key_open,
++                .read           = seq_read,
++                .llseek         = seq_lseek,
++                .release        = seq_release,
++        },
++};
++
++static int ipsec_proc_pf_key_supported_open(struct inode *inode, struct file *file)
++{
++	return single_open(file, pfkey_supported_show, NULL);
++}
++
++struct ipsec_proc_list ipsec_proc_pf_key_supported = {
++        .name   = "pf_key_supported",
++        .parent = &PROC_NET,
++        .dir    = NULL,
++        .seq_fsop = {
++                .open           = ipsec_proc_pf_key_supported_open,
++                .read           = seq_read,
++                .llseek         = seq_lseek,
++                .release        = seq_release,
++        },
++};
++
++static int ipsec_proc_pf_key_registered_open(struct inode *inode, struct file *file)
++{
++	return single_open(file, pfkey_registered_show, NULL);
++}
++
++struct ipsec_proc_list ipsec_proc_pf_key_registered = {
++        .name   = "pf_key_registered",
++        .parent = &PROC_NET,
++        .dir    = NULL,
++        .seq_fsop = {
++                .open           = ipsec_proc_pf_key_registered_open,
++                .read           = seq_read,
++                .llseek         = seq_lseek,
++                .release        = seq_release,
++        },
++};
+ 
+ static struct ipsec_proc_list *proc_items[]={
+         &ipsec_proc_eroute,
+@@ -1018,6 +1059,9 @@
+         &ipsec_proc_spigrp,
+         &ipsec_proc_spigrp_all,
+         &ipsec_proc_xforms,
++	&ipsec_proc_pf_key,
++	&ipsec_proc_pf_key_supported,
++	&ipsec_proc_pf_key_registered,
+         NULL,
+ };
+ 
+@@ -1032,10 +1076,6 @@
+ 	/*
+ 	 * just complain because pluto won't run without /proc!
+ 	 */
+-#ifndef CONFIG_PROC_FS
+-#error You must have PROC_FS built in to use KLIPS
+-#endif
+-
+ 	/* create /proc/net/ipsec */
+ 
+ 	proc_net_ipsec_dir = proc_mkdir("ipsec", PROC_NET);
+diff -Nur --no-dereference a/linux/net/ipsec/pfkey_v2.c openswan-2.6.51.3/linux/net/ipsec/pfkey_v2.c
+--- a/linux/net/ipsec/pfkey_v2.c	2019-04-04 13:49:32.050550607 -0700
++++ openswan-2.6.51.3/linux/net/ipsec/pfkey_v2.c	2019-04-04 13:49:58.138549835 -0700
+@@ -1164,40 +1164,21 @@
+ 	return size;
+ }
+ 
+-#if 0
+-#ifdef CONFIG_PROC_FS
+-int
+-pfkey_get_info(char *buffer, char **start, off_t offset, int length
+-#ifdef  PROC_EOF_DATA
+-, int *eof
+-, void *data
+-#endif
+-)
++int pfkey_show(struct seq_file *seq, void *offset)
+ {
+-	const int max_content = length > 0? length-1 : 0;	/* limit of useful snprintf output */
+-#if LINUX_VERSION_CODE < KERNEL_VERSION(3,9,0)
+-	struct hlist_node *node;
+-#endif /* LINUX_VERSION_CODE < KERNEL_VERSION(3,9,0) */
+-	off_t begin=0;
+-	int len=0;
+ 	struct sock *sk;
++#ifdef SK_FOR_EACH_NEED_NODE
++	struct hlist_node *node;
++#endif /* #ifdef SK_FOR_EACH_NEED_NODE */
+ 
+ 	if(!sysctl_ipsec_debug_verbose) {
+-	len += ipsec_snprintf(buffer, length,
+-		      "    sock   pid   socket     next     prev e n p sndbf    Flags     Type St\n");
++		seq_printf(seq, "    sock   pid   socket     next     prev e n p sndbf    Flags     Type St\n");
+ 	} else {
+-	len += ipsec_snprintf(buffer, length,
+-		      "    sock   pid d    sleep   socket     next     prev e r z n p sndbf    stamp    Flags     Type St\n");
++		seq_printf(seq, "    sock   pid d    sleep   socket     next prev e r z n p sndbf    stamp    Flags     Type St\n");
+ 	}
+-
+-#if LINUX_VERSION_CODE >= KERNEL_VERSION(3,9,0)
+-	sk_for_each(sk, &pfkey_sock_list) {
+-#else /* LINUX_VERSION_CODE < KERNEL_VERSION(3,9,0) */
+-	sk_for_each(sk, node, &pfkey_sock_list) {
+-#endif /* LINUX_VERSION_CODE >= KERNEL_VERSION(3,9,0) */
+-
+-		if(!sysctl_ipsec_debug_verbose) {
+-		  len += ipsec_snprintf(buffer+len, length-len,
++	SK_FOR_EACH(sk, &pfkey_sock_list) {
++		if (!sysctl_ipsec_debug_verbose) {
++			seq_printf(seq,
+ 					"%8p %5d %8p %d %d %5d %08lX %8X %2X\n",
+ 					sk,
+ 					key_pid(sk),
+@@ -1209,9 +1190,9 @@
+ 					sk->sk_socket->type,
+ 					sk->sk_socket->state);
+ 		} else {
+-		  struct timeval t;
+-		  grab_socket_timeval(t, *sk);
+-		  len += ipsec_snprintf(buffer+len, length-len,
++			struct timeval t;
++			grab_socket_timeval(t, *sk);
++			seq_printf(seq,
+ 					"%8p %5d %d %8p %8p %d %d %d %d %5d %d.%06d %08lX %8X %2X\n",
+ 					sk,
+ 					key_pid(sk),
+@@ -1237,55 +1218,26 @@
+ 					sk->sk_socket->type,
+ 					sk->sk_socket->state);
+ 		}
+-
+-		if (len >= max_content) {
+-			/* we've done all that can fit -- stop loop */
+-			len = max_content;	/* truncate crap */
+-			break;
+-		} else {
+-			const off_t pos = begin + len;	/* file position of end of what we've generated */
+-
+-			if (pos <= offset) {
+-				/* all is before first interesting character:
+-				 * discard, but note where we are.
+-				 */
+-				len = 0;
+-				begin = pos;
+-			}
+-		}
+ 	}
+ 
+-	*start = buffer + (offset - begin);	/* Start of wanted data */
+-	return len - (offset - begin);
++	return 0;
+ }
+-#endif
+ 
+-int
+-pfkey_supported_get_info(char *buffer, char **start, off_t offset, int length
+-#ifdef  PROC_EOF_DATA
+-, int *eof
+-, void *data
+-#endif
+-)
++int pfkey_supported_show(struct seq_file *seq, void *offset)
+ {
+-	/* limit of useful snprintf output */
+-	const int max_content = length > 0? length-1 : 0;
+-	off_t begin=0;
+-	int len=0;
+ 	int satype;
+ 	struct supported_list *ps;
+ 
+-	len += ipsec_snprintf(buffer, length,
+-		      "satype exttype alg_id ivlen minbits maxbits name\n");
++	seq_printf(seq, "satype exttype alg_id ivlen minbits maxbits name\n");
+ 
+-	for(satype = K_SADB_SATYPE_UNSPEC; satype <= K_SADB_SATYPE_MAX; satype++) {
++	for (satype = K_SADB_SATYPE_UNSPEC; satype <= K_SADB_SATYPE_MAX; satype++) {
+ 		ps = pfkey_supported_list[satype];
+-		while(ps) {
++		while (ps) {
+ 			struct ipsec_alg_supported *alg = ps->supportedp;
+ 			const char *n = alg->ias_name;
+-			if(n == NULL) n = "unknown";
++			if (n == NULL) n = "unknown";
+ 
+-			len += ipsec_snprintf(buffer+len, length-len,
++			seq_printf(seq,
+ 					      "    %2d      %2d     %2d   %3d     %3d     %3d %20s\n",
+ 					      satype,
+ 					      alg->ias_exttype,
+@@ -1295,81 +1247,35 @@
+ 					      alg->ias_keymaxbits,
+ 					      n);
+ 
+-			if (len >= max_content) {
+-				/* we've done all that can fit -- stop loop */
+-				len = max_content;	/* truncate crap */
+-				break;
+-			} else {
+-				const off_t pos = begin + len;	/* file position of end of what we've generated */
+-
+-				if (pos <= offset) {
+-					/* all is before first interesting character:
+-					 * discard, but note where we are.
+-					 */
+-					len = 0;
+-					begin = pos;
+-				}
+-			}
+-
+ 			ps = ps->next;
+ 		}
+ 	}
+-	*start = buffer + (offset - begin);	/* Start of wanted data */
+-	return len - (offset - begin);
++	return 0;
+ }
+ 
+-int
+-pfkey_registered_get_info(char *buffer, char **start, off_t offset, int length
+-#ifdef  PROC_EOF_DATA
+-, int *eof
+-, void *data
+-#endif
+-)
++int pfkey_registered_show(struct seq_file *seq, void *offset)
+ {
+-	const int max_content = length > 0? length-1 : 0;	/* limit of useful snprintf output */
+-	off_t begin=0;
+-	int len=0;
+ 	int satype;
+ 	struct socket_list *pfkey_sockets;
+ 
+-	len += ipsec_snprintf(buffer, length,
+-		      "satype   socket   pid       sk\n");
++	seq_printf(seq, "satype   socket   pid       sk\n");
+ 
+-	for(satype = K_SADB_SATYPE_UNSPEC; satype <= K_SADB_SATYPE_MAX; satype++) {
++	for (satype = K_SADB_SATYPE_UNSPEC; satype <= K_SADB_SATYPE_MAX; satype++) {
+ 		pfkey_sockets = pfkey_registered_sockets[satype];
+-		while(pfkey_sockets) {
+-			len += ipsec_snprintf(buffer+len, length-len,
++		while (pfkey_sockets) {
++			seq_printf(seq,
+ 				     "    %2d %8p %5d %8p\n",
+ 				     satype,
+ 				     pfkey_sockets->socketp,
+ 				     key_pid(pfkey_sockets->socketp->sk),
+ 				     pfkey_sockets->socketp->sk);
+ 
+-			if (len >= max_content) {
+-				/* we've done all that can fit -- stop loop (could stop two) */
+-				len = max_content;	/* truncate crap */
+-				break;
+-			} else {
+-				const off_t pos = begin + len;	/* file position of end of what we've generated */
+-
+-				if (pos <= offset) {
+-					/* all is before first interesting character:
+-					 * discard, but note where we are.
+-					 */
+-					len = 0;
+-					begin = pos;
+-				}
+-			}
+-
+ 			pfkey_sockets = pfkey_sockets->next;
+ 		}
+ 	}
+-	*start = buffer + (offset - begin);	/* Start of wanted data */
+-	return len - (offset - begin);
++	return 0;
+ }
+ 
+-#endif /* CONFIG_PROC_FS */
+-
+ DEBUG_NO_STATIC int
+ supported_add_all(int satype, struct ipsec_alg_supported supported[], int size)
+ {
+@@ -1495,21 +1401,6 @@
+ 
+         error |= sock_register(&pfkey_family_ops);
+ 
+-#if 0
+-        /* XXX - does anyone actually use this interface at all? */
+-#ifdef CONFIG_PROC_FS
+-        {
+-                struct proc_dir_entry* entry;
+-
+-                entry = create_proc_entry ("pf_key", 0, init_net.proc_net);
+-                entry->read_proc = pfkey_get_info;
+-                entry = create_proc_entry ("pf_key_supported", 0, init_net.proc_net);
+-                entry->read_proc = pfkey_supported_get_info;
+-                entry = create_proc_entry ("pf_key_registered", 0, init_net.proc_net);
+-                entry->read_proc = pfkey_registered_get_info;
+-        }
+-#endif /* CONFIG_PROC_FS */
+-#endif
+ 	return error;
+ }
+ 
+@@ -1533,14 +1424,6 @@
+ #endif /* CONFIG_KLIPS_IPCOMP */
+ 	error |= supported_remove_all(K_SADB_X_SATYPE_IPIP);
+ 
+-#if 0
+-        /* XXX - does anyone actually use this interface at all? */
+-#ifdef CONFIG_PROC_FS
+-        remove_proc_subtree("pf_key",            init_net.proc_net);
+-        remove_proc_subtree("pf_key_supported",  init_net.proc_net);
+-        remove_proc_subtree("pf_key_registered", init_net.proc_net);
+-#endif /* CONFIG_PROC_FS */
+-#endif
+ 	/* other module unloading cleanup happens here */
+ 	return error;
+ }

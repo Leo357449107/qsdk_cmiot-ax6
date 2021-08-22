@@ -1,0 +1,137 @@
+From 729e101b5122b2bc37736c7e6b25e9e91892a21a Mon Sep 17 00:00:00 2001
+From: Pravas Kumar Panda <kumarpan@codeaurora.org>
+Date: Sat, 23 May 2020 19:54:35 +0530
+Subject: sigma-dut: add ampdu configuration by default
+
+Adding AMPDU configurations to the vht_capab field of hostapd.conf
+by default. This helps to solve Uplink Throughput Test cases for VHT
+clients in AP mode.
+
+This patch will parse the VHT capabilities from the nl80211 wiphy
+band vht capab attribute and get the correct ampdu parameters for
+that particular chipset.
+
+
+Signed-off-by: Manikanta Pubbisetty <mpubbise@codeaurora.org>
+Signed-off-by: Pravas Kumar Panda <kumarpan@codeaurora.org>
+Signed-off-by: Lavanya Suresh <lavaks@codeaurora.org>
+---
+ ap.c        | 159 ++++++++++++++++++++++++++++++++++++++++++++++++++++++++----
+ sigma_dut.h |   1 +
+ 2 files changed, 151 insertions(+), 9 deletions(-)
+
+--- a/ap.c
++++ b/ap.c
+@@ -7737,6 +7737,29 @@ static const char * hostapd_cipher_name(
+ 	}
+ }
+ 
++void sigma_find_ap_ampdu_exp_and_max_mpdu_len(struct sigma_dut *dut)
++{
++	int ampdu_exp = 0;
++	int max_mpdu_len = 0;
++	u32 vht_caps = 0;
++
++	vht_caps = dut->hw_modes->vht_capab;
++	ampdu_exp = (vht_caps & VHT_CAP_MAX_A_MPDU_LENGTH_EXPONENT_MASK) >> VHT_CAP_MAX_A_MPDU_LENGTH_EXPONENT_SHIFT;
++
++	if (ampdu_exp >= 0 && ampdu_exp <= 7)
++		dut->ap_ampdu_exp = ampdu_exp;
++
++	max_mpdu_len = vht_caps & VHT_CAP_MAX_MPDU_MASK;
++
++	if (max_mpdu_len == VHT_CAP_MAX_MPDU_LENGTH_11454)
++		dut->ap_max_mpdu_len = 11454;
++	else if (max_mpdu_len == VHT_CAP_MAX_MPDU_LENGTH_7991)
++		dut->ap_max_mpdu_len = 7991;
++	else if (max_mpdu_len == VHT_CAP_MAX_MPDU_LENGTH_3895)
++		dut->ap_max_mpdu_len = 3895;
++
++	return;
++}
+ 
+ static const char *
+ hostapd_group_mgmt_cipher_name(enum ap_group_mgmt_cipher cipher)
+@@ -9363,6 +9386,8 @@ skip_key_mgmt:
+ 	if ((dut->program == PROGRAM_VHT) ||
+ 	    (dut->program == PROGRAM_HE && dut->use_5g)) {
+ 		int vht_oper_centr_freq_idx, vht_chwidth;
++		char vht_capab[256] = "";
++		int len = 0;
+ 
+ 		if (check_channel(dut->ap_channel) < 0) {
+ 			send_resp(dut, conn, SIGMA_INVALID,
+@@ -9383,11 +9408,15 @@ skip_key_mgmt:
+ 				vht_oper_centr_freq_idx);
+ 		}
+ 
++		fflush(f);
++		sigma_find_ap_ampdu_exp_and_max_mpdu_len(dut);
++
+ 		if (dut->ap_sgi80 || dut->ap_txBF ||
+ 		    dut->ap_ldpc != VALUE_NOT_SET ||
+ 		    dut->ap_tx_stbc || dut->ap_mu_txBF ||
+-			dut->ap_chwidth) {
+-			fprintf(f, "vht_capab=%s%s%s%s%s%s\n",
++		    dut->ap_chwidth || dut->ap_ampdu_exp ||
++		    dut->ap_max_mpdu_len) {
++			len += snprintf(vht_capab + len, sizeof(vht_capab) - len, "%s%s%s%s%s%s",
+ 				dut->ap_sgi80 ? "[SHORT-GI-80]" : "",
+ 				dut->ap_txBF ?
+ 				"[SU-BEAMFORMER][SU-BEAMFORMEE][BF-ANTENNA-2][SOUNDING-DIMENSION-2]" : "",
+@@ -9396,6 +9425,20 @@ skip_key_mgmt:
+ 				dut->ap_tx_stbc ? "[TX-STBC-2BY1][RX-STBC-1]" : "",
+ 				dut->ap_mu_txBF ? "[MU-BEAMFORMER]" : "",
+ 				(dut->ap_chwidth == AP_160) ? "[VHT160-80PLUS80]" : "");
++
++			if (dut->ap_ampdu_exp)
++				len += snprintf(vht_capab + len,
++						sizeof(vht_capab) - len,
++						"[MAX-A-MPDU-LEN-EXP%d]",
++						dut->ap_ampdu_exp);
++
++			if (dut->ap_max_mpdu_len)
++				len += snprintf(vht_capab + len,
++						sizeof(vht_capab) - len,
++						"[MAX-MPDU-%d]",
++						dut->ap_max_mpdu_len);
++
++			fprintf(f, "vht_capab=%s\n", vht_capab);
+ 		}
+ 	}
+ 
+@@ -10432,6 +10475,8 @@ static enum sigma_cmd_result cmd_ap_rese
+ 	dut->ap_txBF = 0;
+ 	dut->ap_mu_txBF = 0;
+ 	dut->ap_chwidth = AP_AUTO;
++	dut->ap_ampdu_exp = 7;
++	dut->ap_max_mpdu_len = 0;
+ 
+ 	dut->ap_rsn_preauth = 0;
+ 	dut->ap_wpsnfc = 0;
+--- a/sigma_dut.h
++++ b/sigma_dut.h
+@@ -115,6 +115,15 @@ struct wfa_p2p_attribute {
+ 	uint8_t variable[0];
+ } __attribute__((packed));
+ 
++#define VHT_CAP_MAX_MPDU_LENGTH_3895			0x0
++#define VHT_CAP_MAX_MPDU_LENGTH_7991			0x1
++#define VHT_CAP_MAX_MPDU_LENGTH_11454			0x2
++#define VHT_CAP_MAX_MPDU_MASK				0x3
++#define VHT_CAP_MAX_A_MPDU_LENGTH_EXPONENT_SHIFT	23
++#define VHT_CAP_MAX_A_MPDU_LENGTH_EXPONENT_MASK       \
++                (7 << VHT_CAP_MAX_A_MPDU_LENGTH_EXPONENT_SHIFT)
++
++
+ #define AMPDU_FACTOR_BITS	0x3
+ #define AMPDU_DENSITY_OFFSET	2
+ 
+@@ -532,6 +541,7 @@ struct sigma_dut {
+ 	enum value_not_set_enabled_disabled ap_amsdu;
+ 	enum value_not_set_enabled_disabled ap_rx_amsdu;
+ 	int ap_ampdu_exp;
++	int ap_max_mpdu_len;
+ 	enum value_not_set_enabled_disabled ap_addba_reject;
+ 	int ap_fixed_rate;
+ 	int ap_mcs;

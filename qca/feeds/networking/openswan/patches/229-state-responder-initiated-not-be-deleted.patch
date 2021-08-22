@@ -1,0 +1,11 @@
+diff -Nur a/programs/pluto/ikev2.c openswan-2.6.41/programs/pluto/ikev2.c
+--- a/programs/pluto/ikev2.c	2018-12-20 14:17:02.101216309 -0800
++++ openswan-2.6.41/programs/pluto/ikev2.c	2018-12-20 14:19:20.737219800 -0800
+@@ -759,6 +759,7 @@
+ 	
+     case RESPONDER:
+ 	pst->st_msgid_lastrecv= md->msgid_received;
++    pst->st_msgid_nextuse = md->msgid_received + 1;
+ 	break;
+     }
+   /* Block 2 */

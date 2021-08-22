@@ -1,0 +1,10 @@
+Index: glib-2.46.2/gobject/glib-mkenums.in
+===================================================================
+--- glib-2.46.2.orig/gobject/glib-mkenums.in	2015-11-06 23:42:04.000000000 +0530
++++ glib-2.46.2/gobject/glib-mkenums.in	2019-07-24 18:33:30.915598375 +0530
+@@ -1,4 +1,4 @@
+-#! @PERL_PATH@
++#! /usr/bin/perl
+ 
+ use warnings;
+ use File::Basename;

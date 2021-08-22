@@ -1,0 +1,22 @@
+Index: wireless_tools.29/iwlib.c
+===================================================================
+--- wireless_tools.29.orig/iwlib.c	2019-12-18 19:07:54.661663215 +0530
++++ wireless_tools.29/iwlib.c	2019-12-18 19:10:55.788322064 +0530
+@@ -1443,7 +1443,7 @@
+ 	  if(!(qual->updated & IW_QUAL_NOISE_INVALID))
+ 	    {
+ 	      double	rcpinoise = (qual->noise / 2.0) - 110.0;
+-	      len = snprintf(buffer, buflen, "Noise level%c%g dBm",
++	      len = snprintf(buffer, buflen, "Noise level%c%g dBm (BDF averaged NF value in dBm)",
+ 			     qual->updated & IW_QUAL_NOISE_UPDATED ? '=' : ':',
+ 			     rcpinoise);
+ 	    }
+@@ -1475,7 +1475,7 @@
+ 		  /* Implement a range for dBm [-192; 63] */
+ 		  if(qual->noise >= 64)
+ 		    dbnoise -= 0x100;
+-		  len = snprintf(buffer, buflen, "Noise level%c%d dBm",
++		  len = snprintf(buffer, buflen, "Noise level%c%d dBm (BDF averaged NF value in dBm)",
+ 				 qual->updated & IW_QUAL_NOISE_UPDATED ? '=' : ':',
+ 				 dbnoise);
+ 		}

@@ -1,0 +1,27 @@
+From 7f9d02a819f2bf34e7f6da9f6da486ab74fbaee3 Mon Sep 17 00:00:00 2001
+From: Lavanya Suresh <lavaks@codeaurora.org>
+Date: Mon, 30 Nov 2020 15:14:17 +0530
+Subject: [PATCH] sigma_dut: Add configs for OMI in UL OFDMA
+
+Adding WAR commands required for UL OFDMA OMI triggertype 0.
+
+Signed-off-by: Lavanya Suresh <lavaks@codeaurora.org>
+---
+ ap.c | 8 ++++++++
+ 1 file changed, 8 insertions(+)
+
+--- a/ap.c
++++ b/ap.c
+@@ -7960,6 +7960,12 @@ static void fwtest_set_he_params(struct
+ 		/* To set TBTT PPDU duration (us) */
+ 		fwtest_cmd_wrapper(dut, "-m 0x48 -v 0 63 1908", ifname);
+ 
++		/* Below Two commands - To disable dynamic check for not using UL OFDMA
++		 * in some cases */
++		fwtest_cmd_wrapper(dut, "-m 0x47 -v 0 302 0", ifname);
++
++		fwtest_cmd_wrapper(dut, "-m 0x47 -v 0 310 0", ifname);
++
+ 		/* enable twt related commands by default, during basic trigger setting for
+ 		 * ofdma this can be reset */
+ 

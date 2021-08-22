@@ -1,0 +1,272 @@
+/dts-v1/;
+/*
+ * Copyright (c) 2019, The Linux Foundation. All rights reserved.
+ *
+ * Permission to use, copy, modify, and/or distribute this software for any
+ * purpose with or without fee is hereby granted, provided that the above
+ * copyright notice and this permission notice appear in all copies.
+ *
+ * THE SOFTWARE IS PROVIDED "AS IS" AND THE AUTHOR DISCLAIMS ALL WARRANTIES
+ * WITH REGARD TO THIS SOFTWARE INCLUDING ALL IMPLIED WARRANTIES OF
+ * MERCHANTABILITY AND FITNESS. IN NO EVENT SHALL THE AUTHOR BE LIABLE FOR
+ * ANY SPECIAL, DIRECT, INDIRECT, OR CONSEQUENTIAL DAMAGES OR ANY DAMAGES
+ * WHATSOEVER RESULTING FROM LOSS OF USE, DATA OR PROFITS, WHETHER IN AN
+ * ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF
+ * OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
+ */
+
+#include "qcom-ipq6018-cp01.dtsi"
+#include "qcom-ipq6018-rpm-regulator.dtsi"
+#include "qcom-ipq6018-cpr-regulator.dtsi"
+#include "qcom-ipq6018-cp-cpu.dtsi"
+
+/ {
+	model = "Qualcomm Technologies, Inc. IPQ6018/AP-CP01-C3";
+
+	/*
+	 * +=========+==============+========================+
+	 * |        |              |                         |
+	 * | Region | Start Offset |          Size           |
+	 * |        |              |                         |
+	 * +--------+--------------+-------------------------+
+	 * |        |              |                         |
+	 * |        |              |                         |
+	 * |        |              |                         |
+	 * |        |              |                         |
+	 * | Linux  |  0x41000000  |         139MB           |
+	 * |        |              |                         |
+	 * |        |              |                         |
+	 * |        |              |                         |
+	 * +--------+--------------+-------------------------+
+	 * | TZ App |  0x49B00000  |           6MB           |
+	 * +--------+--------------+-------------------------+
+	 *
+	 * From the available 145 MB for Linux in the first 256 MB,
+	 * we are reserving 6 MB for TZAPP.
+	 *
+	 * Refer arch/arm64/boot/dts/qcom/qcom-ipq6018-memory.dtsi
+	 * for memory layout.
+	 */
+
+	reserved-memory {
+/* TZAPP is enabled in default memory profile only */
+#if !defined(__IPQ_MEM_PROFILE_256_MB__) && !defined(__IPQ_MEM_PROFILE_512_MB__)
+		tzapp:tzapp@49B00000 {	/* TZAPPS */
+			no-map;
+			reg = <0x0 0x49B00000 0x0 0x00600000>;
+		};
+#endif
+
+/* No Pine attach in 256M profile */
+#if !defined(__IPQ_MEM_PROFILE_256_MB__)
+#ifdef __IPQ_MEM_PROFILE_512_MB__
+		/*	    512 MB Profile for cp01-c3
+		 * +========+==============+=========================+
+		 * | Region | Start Offset |          Size           |
+		 * +--------+--------------+-------------------------+
+		 * |  NSS   |  0x40000000  |          16MB           |
+		 * +--------+--------------+-------------------------+
+		 * |        |              |                         |
+		 * | Linux  |  0x41000000  |         145MB           |
+		 * |        |              |                         |
+		 * +--------+--------------+-------------------------+
+		 * | uboot  |  0x4A100000  |           4MB           |
+		 * +--------+--------------+-------------------------+
+		 * |  SBL   |  0x4A500000  |           1MB           |
+		 * +--------+--------------+-------------------------+
+		 * | TZ+HYP |  0x4A600000  |           4MB           |
+		 * +--------+--------------+-------------------------+
+		 * |  smem  |  0x4AA00000  |           1MB           |
+		 * +--------+--------------+-------------------------+
+		 * |   Q6   |  0x4AB00000  |          55MB           |
+		 * +--------+--------------+-------------------------+
+		 * |  QDSS  |  0x4E200000  |           1MB           |
+		 * +--------+--------------+-------------------------+
+		 * | M3 Dump|  0x4E300000  |           1MB           |
+		 * +--------+--------------+-------------------------+
+		 * |  Pine  |  0x4E400000  |          30MB           |
+		 * +--------+--------------+-------------------------+
+		 * |  MHI0  |  0x50200000  |          16MB           |
+		 * +=================================================+
+		 * |           Remaining memory for Linux            |
+		 * +=================================================+
+		 */
+		qcn9000_pcie0@4e400000 {
+			no-map;
+			reg = <0x0 0x4E400000 0x0 0x1E00000>;
+		};
+
+		mhi_region0: dma_pool0@50200000 {
+			compatible = "shared-dma-pool";
+			no-map;
+			reg = <0x0 0x50200000 0x0 0x01000000>;
+		};
+#else
+		/*		  Default Profile
+		 * +========+==============+=========================+
+		 * | Region | Start Offset |          Size           |
+		 * +--------+--------------+-------------------------+
+		 * |  NSS   |  0x40000000  |          16MB           |
+		 * +--------+--------------+-------------------------+
+		 * | Linux  |  0x41000000  |         145MB           |
+		 * +--------+--------------+-------------------------+
+		 * | uboot  |  0x4A100000  |           4MB           |
+		 * +--------+--------------+-------------------------+
+		 * |  SBL   |  0x4A500000  |           1MB           |
+		 * +--------+--------------+-------------------------+
+		 * | TZ+HYP |  0x4A600000  |           4MB           |
+		 * +--------+--------------+-------------------------+
+		 * |  smem  |  0x4AA00000  |           1MB           |
+		 * +--------+--------------+-------------------------+
+		 * |   Q6   |  0x4AB00000  |          85MB           |
+		 * +--------+--------------+-------------------------+
+		 * |  QDSS  |  0x50000000  |           1MB           |
+		 * +--------+--------------+-------------------------+
+		 * | M3 Dump|  0x50100000  |           1MB           |
+		 * +--------+--------------+-------------------------+
+		 * |  Pine  |  0x50200000  |          45MB           |
+		 * +--------+--------------+-------------------------+
+		 * |  MHI0  |  0x52F00000  |          24MB           |
+		 * +=================================================+
+		 * |           Remaining memory for Linux            |
+		 * +=================================================+
+		 */
+		qcn9000_pcie0@50200000 {
+			no-map;
+			reg = <0x0 0x50200000 0x0 0x02D00000>;
+		};
+
+		mhi_region0: dma_pool0@52f00000 {
+			compatible = "shared-dma-pool";
+			no-map;
+			reg = <0x0 0x52F00000 0x0 0x01800000>;
+		};
+#endif
+#endif
+	};
+};
+
+&tlmm {
+	i2c_1_pins: i2c_1_pins {
+		mux {
+			pins = "gpio42", "gpio43";
+			function = "blsp2_i2c";
+			drive-strength = <8>;
+			bias-pull-down;
+		};
+	};
+};
+
+&i2c_1 {
+	pinctrl-0 = <&i2c_1_pins>;
+	pinctrl-names = "default";
+	status = "ok";
+};
+
+&pcie0 {
+	interrupts = <0 52 0>, <0 416 0>, <0 417 0>,
+		     <0 418 0>, <0 419 0>, <0 420 0>,
+		     <0 421 0>, <0 422 0>, <0 423 0>,
+		     <0 424 0>, <0 425 0>, <0 426 0>,
+		     <0 427 0>, <0 428 0>, <0 429 0>,
+		     <0 430 0>, <0 431 0>;
+
+	interrupt-names = "msi", "msi_0", "msi_1",
+			  "msi_2", "msi_3", "msi_4",
+			  "msi_5", "msi_6", "msi_7",
+			  "msi_8", "msi_9", "msi_10",
+			  "msi_11", "msi_12", "msi_13",
+			  "msi_14", "msi_15";
+
+	qcom,msi-gicm-addr = <0x0B00A040>;
+	qcom,msi-gicm-base = <0x1c0>;
+};
+
+&pcie0_rp {
+	status = "ok";
+
+	mhi_0: qcom,mhi@0 {
+		reg = <0 0 0 0 0 >;
+		qrtr_instance_id = <0x20>;
+#if !defined(__IPQ_MEM_PROFILE_256_MB__)
+		memory-region = <&mhi_region0>;
+#endif
+	};
+};
+
+&mhi_test {
+       status = "ok";
+};
+
+&wifi0 {
+	qcom,board_id = <0x13>;
+	status = "ok";
+};
+
+/* No support for QCN9000 in 256M profile */
+#if !defined(__IPQ_MEM_PROFILE_256_MB__)
+&wifi1 {
+#ifdef __IPQ_MEM_PROFILE_512_MB__
+      /* QCN9000 tgt-mem-mode=1 layout - 30MB
+       * +=========+==============+=========+
+       * |  Region | Start Offset |   Size  |
+       * +---------+--------------+---------+
+       * | HREMOTE |  0x4E400000  |   20MB  |
+       * +---------+--------------+---------+
+       * | M3 Dump |  0x4F800000  |   1MB   |
+       * +---------+--------------+---------+
+       * |   ETR   |  0x4F900000  |   1MB   |
+       * +---------+--------------+---------+
+       * |  Caldb  |  0x4FA00000  |   8MB   |
+       * +==================================+
+       */
+	base-addr = <0x4E400000>;
+	m3-dump-addr = <0x4F800000>;
+	etr-addr = <0x4F900000>;
+	caldb-addr = <0x4FA00000>;
+	hremote-size = <0x1400000>;
+	tgt-mem-mode = <0x1>;
+#else
+      /* QCN9000 tgt-mem-mode=0 layout - 45MB
+       * +=========+==============+=========+
+       * |  Region | Start Offset |   Size  |
+       * +---------+--------------+---------+
+       * | HREMOTE |  0x50200000  |   35MB  |
+       * +---------+--------------+---------+
+       * | M3 Dump |  0x52500000  |   1MB   |
+       * +---------+--------------+---------+
+       * |   ETR   |  0x52600000  |   1MB   |
+       * +---------+--------------+---------+
+       * |  Caldb  |  0x52700000  |   8MB   |
+       * +==================================+
+       */
+	base-addr = <0x50200000>;
+	m3-dump-addr = <0x52500000>;
+	etr-addr = <0x52600000>;
+	caldb-addr = <0x52700000>;
+	hremote-size = <0x2300000>;
+	tgt-mem-mode = <0x0>;
+#endif
+	board_id = <0xa4>;
+	caldb-size = <0x800000>;
+	status = "ok";
+};
+#endif
+
+&sdhc_2 {
+	pinctrl-0 = <&sd_pins>;
+	pinctrl-names = "default";
+	cd-gpios = <&tlmm 62 1>;
+	sd-ldo-gpios = <&tlmm 66 0>;
+	vqmmc-supply = <&ipq6018_l2_corner>;
+	status = "ok";
+};
+
+/* TZAPP is enabled in default memory profile only */
+#if !defined(__IPQ_MEM_PROFILE_256_MB__) && !defined(__IPQ_MEM_PROFILE_512_MB__)
+&qseecom {
+	mem-start = <0x49B00000>;
+	mem-size = <0x600000>;
+	status = "ok";
+};
+#endif

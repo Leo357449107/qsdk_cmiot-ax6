@@ -1,0 +1,155 @@
+--- a/ap.c
++++ b/ap.c
+@@ -134,7 +134,6 @@ static int fwtest_cmd_wrapper(struct sig
+ 	return ret;
+ }
+ 
+-
+ static int ap_ft_enabled(struct sigma_dut *dut)
+ {
+ 	return dut->ap_ft_oa == 1 ||
+@@ -7704,20 +7703,56 @@ static void fwtest_set_he_params(struct
+ 	fwtest_cmd_wrapper(dut, "-m 0x47 -v 0 141 1", ifname);
+ 	/* Disable preferred AC */
+ 	fwtest_cmd_wrapper(dut, "-m 0x48 -v 0 186 0", ifname);
++	if (dut->ap_he_ulofdma == VALUE_ENABLED) {
++		/* he_dynamic_muedca 0 */
++		run_system_wrapper(dut,
++				   "ath11k-fwtest -t 2 -i %s -m 0x00 -p %d 0xBF 0x00",
++				   ifname, pdev_id);
++	}
+ 	/* enable full_band_probing */
+ 	fwtest_cmd_wrapper(dut, "-m 0x47 -v 0 194 0", ifname);
+-	/* enable the equal RU allocation */
+-	fwtest_cmd_wrapper(dut, "-m 0x4b -v 0 0 1", ifname);
+ 
+ 	if (dut->ap_he_ulofdma == VALUE_ENABLED) {
++		/* Disable DL OFDMA */
++		if (dut->ap_he_dlofdma != VALUE_ENABLED) {
++			fwtest_cmd_wrapper(dut, "-m 0x00 -v 0 32770 111", ifname);
++		}
++	}
++
++	if (dut->ap_he_ulofdma == VALUE_ENABLED) {
++		/* he_mu_edca 1 */
++		fwtest_cmd_wrapper(dut, "-m0x00 -v 0 0x8F 0x01", ifname);
+ 		/* Disable sounding for UL OFDMA */
+ 		fwtest_cmd_wrapper(dut, "-m 0x47 -v 0 7 0", ifname);
++		/* enable the equal RU allocation */
++		fwtest_cmd_wrapper(dut, "-m 0x4b -v 0 0 1", ifname);
++		/* he ul ltf */
++		fwtest_cmd_wrapper(dut,	"-m 0x00 -v 0 0x8D 0x03", ifname);
++		/*he ul gi */
++		fwtest_cmd_wrapper(dut, "-m 0x00 -v 0 0x89 0x03", ifname);
++		/* Trigger Interval */
++		run_system_wrapper(dut,
++				   "ath11k-fwtest -t 2 -i %s -m 0x00 -p %d 0xA2 0x02",
++				   ifname, pdev_id);
++		/* disable enable_ul_ofdma_efficiency_check */
++		fwtest_cmd_wrapper(dut, "-m 0x47 -v 0 131 0", ifname);
++		/* Disable ul_mumimo_efficiency_check */
++		fwtest_cmd_wrapper(dut, "-m 0x47 -v 0 204 0", ifname);
+ 		/* Set random RU allocation */
+ 		fwtest_cmd_wrapper(dut, "-m 0x47 -v 0 9 1", ifname);
+ 		/* To set TBTT PPDU duration (us) */
+ 		fwtest_cmd_wrapper(dut, "-m 0x48 -v 0 63 1908", ifname);
+-		/* disable enable_ul_ofdma_efficiency_check */
+-		fwtest_cmd_wrapper(dut, "-m 0x47 -v 0 131 0", ifname);
++
++		/* enable twt related commands by default, during basic trigger setting for
++		 * ofdma this can be reset */
++
++		/* BSR Trigger disable/enable UL trigger frame scheduling */
++		fwtest_cmd_wrapper(dut, "-m 0x47 -v 0 42 7", ifname);
++			/* Configure hw stuck ssr threshold */
++		fwtest_cmd_wrapper(dut, "-m 0x47 -v 0 43 8", ifname);
++
++		/* UL trigger duration */
++		fwtest_cmd_wrapper(dut, "-m 0x48 -v 0 63 1000", ifname);
+ 	}
+ 
+ 	if (dut->ap_he_ppdu == PPDU_MU &&
+@@ -7751,18 +7786,25 @@ static void fwtest_set_he_params(struct
+ 		fwtest_cmd_wrapper(dut, "-m 0x47 -v 0 7 0", ifname);
+ }
+ 
+-static int default_muedca_values(FILE *f)
++static int default_muedca_values(struct sigma_dut *dut, FILE *f)
+ {
++	enum driver_type drv = get_driver_type(dut);
++	uint8_t aifsn[4] = { 8, 15, 5, 5 };
++
+ 	if(!f)
+ 		return -1;
+ 
++	if(drv == DRIVER_MAC80211 && (dut->ap_he_ulofdma == VALUE_ENABLED)) {
++		memset(aifsn, 0, 4);
++	}
++
+ 	fprintf(f,"he_mu_edca_qos_info_param_count=0\n"
+ 		"he_mu_edca_qos_info_q_ack=0\n"
+ 		"he_mu_edca_qos_info_queue_request=0\n"
+ 		"he_mu_edca_qos_info_txop_request=0\n"
+ 
+ 		/* Best Effort */
+-		"he_mu_edca_ac_be_aifsn=8\n"
++		"he_mu_edca_ac_be_aifsn=%u\n"
+ 		"he_mu_edca_ac_be_acm=0\n"
+ 		"he_mu_edca_ac_be_aci=0\n"
+ 		"he_mu_edca_ac_be_ecwmin=9\n"
+@@ -7770,7 +7812,7 @@ static int default_muedca_values(FILE *f
+ 		"he_mu_edca_ac_be_timer=255\n"
+ 
+ 		/* Background */
+-		"he_mu_edca_ac_bk_aifsn=15\n"
++		"he_mu_edca_ac_bk_aifsn=%u\n"
+ 		"he_mu_edca_ac_bk_acm=0\n"
+ 		"he_mu_edca_ac_bk_aci=1\n"
+ 		"he_mu_edca_ac_bk_ecwmin=9\n"
+@@ -7778,7 +7820,7 @@ static int default_muedca_values(FILE *f
+ 		"he_mu_edca_ac_bk_timer=255\n"
+ 
+ 		/* Video */
+-		"he_mu_edca_ac_vi_aifsn=5\n"
++		"he_mu_edca_ac_vi_aifsn=%u\n"
+ 		"he_mu_edca_ac_vi_acm=0\n"
+ 		"he_mu_edca_ac_vi_aci=2\n"
+ 		"he_mu_edca_ac_vi_ecwmin=5\n"
+@@ -7786,12 +7828,13 @@ static int default_muedca_values(FILE *f
+ 		"he_mu_edca_ac_vi_timer=255\n"
+ 
+ 		/* Voice */
+-		"he_mu_edca_ac_vo_aifsn=5\n"
++		"he_mu_edca_ac_vo_aifsn=%u\n"
+ 		"he_mu_edca_ac_vo_acm=0\n"
+ 		"he_mu_edca_ac_vo_aci=3\n"
+ 		"he_mu_edca_ac_vo_ecwmin=5\n"
+ 		"he_mu_edca_ac_vo_ecwmax=7\n"
+-		"he_mu_edca_ac_vo_timer=255\n");
++		"he_mu_edca_ac_vo_timer=255\n",
++		aifsn[0], aifsn[1], aifsn[2], aifsn[3]);
+ 
+ 	return 0;
+ }
+@@ -8813,7 +8856,7 @@ skip_key_mgmt:
+ 		fprintf(f, "he_mu_beamformer=%d\n", dut->ap_mu_txBF);
+ 		/* Disable BSS Color config by default */
+ 		fprintf(f, "he_bss_color=1\n");
+-		if (default_muedca_values(f) < 0) {
++		if (default_muedca_values(dut, f) < 0) {
+ 			sigma_dut_print(dut, DUT_MSG_ERROR,
+ 					"%s: File pointer is invalid",
+ 					__func__);
+@@ -13988,6 +14031,12 @@ static void mac80211_set_assoc_disallow(
+ static void mac80211_set_trigger_type_0(struct sigma_dut *dut, const char *ifname)
+ {
+ 	/* TriggerType "0" for Basic trigger */
++	run_system_wrapper(dut,
++			   "ath11k-fwtest -i %s -m 0x47 -v 0 95 7",
++			   ifname);
++	run_system_wrapper(dut,
++			   "ath11k-fwtest -i %s -m 0x48 -v 0 63 1908",
++			   ifname);
+ 	run_system_wrapper(dut, "ath11k-fwtest -i %s -m 0x47 -v 0 42 7",
+ 			   ifname);
+ 	run_system_wrapper(dut, "ath11k-fwtest -i %s -m 0x47 -v 0 43 6",

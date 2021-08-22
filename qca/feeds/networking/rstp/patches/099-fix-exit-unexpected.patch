@@ -1,0 +1,11 @@
+diff -Nur a/brmon.c rstp-2011-10-11/brmon.c
+--- a/brmon.c	2019-05-17 11:33:57.554922414 -0700
++++ rstp-2011-10-11/brmon.c	2019-05-17 11:34:12.734922796 -0700
+@@ -164,7 +164,6 @@
+ {
+   if (rtnl_listen(&rth, dump_msg, stdout) < 0) {
+     fprintf(stderr, "Error on bridge monitoring socket\n");
+-    exit(-1);
+   }
+ }
+ 

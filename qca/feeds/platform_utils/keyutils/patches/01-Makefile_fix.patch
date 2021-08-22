@@ -1,0 +1,15 @@
+--- keyutils-1.1_orig/Makefile	2018-12-03 20:48:10.036335087 +0530
++++ keyutils-1.1/Makefile	2018-12-03 20:51:06.673234601 +0530
+@@ -73,10 +73,10 @@
+ 
+ 
+ keyctl: keyctl.c keyutils.h Makefile
+-	$(CC) $(CFLAGS) $(LDFLAGS) -o $@ $< -L. -lkeyutils -Wl,-rpath,$(LIB)
++	$(CC) $(CFLAGS) -fPIC $(LDFLAGS) -o $@ $< -L. -lkeyutils -Wl,-rpath,$(LIB)
+ 
+ request-key: request-key.c keyutils.h Makefile
+-	$(CC) $(CFLAGS) $(LDFLAGS) -o $@ $< -L. -lkeyutils -Wl,-rpath,$(LIB)
++	$(CC) $(CFLAGS) -fPIC $(LDFLAGS) -o $@ $< -L. -lkeyutils -Wl,-rpath,$(LIB)
+ 
+ 
+ MAN1	:= $(DESTDIR)/usr/share/man/man1

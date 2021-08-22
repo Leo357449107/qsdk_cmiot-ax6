@@ -1,0 +1,107 @@
+diff --git a/config.c b/config.c
+index 7914ba4..51211a5 100644
+--- a/config.c
++++ b/config.c
+@@ -265,6 +265,7 @@ struct config_item config_tab[] = {
+ 	GLOB_ITEM_INT("tx_timestamp_timeout", 1, 1, INT_MAX),
+ 	PORT_ITEM_INT("udp_ttl", 1, 1, 255),
+ 	PORT_ITEM_INT("udp6_scope", 0x0E, 0x00, 0x0F),
++	GLOB_ITEM_INT("udp6_checksum_disabled", 0, 0, 1),
+ 	GLOB_ITEM_STR("uds_address", "/var/run/ptp4l"),
+ 	PORT_ITEM_INT("unicast_listen", 0, 0, 1),
+ 	PORT_ITEM_INT("unicast_master_table", 0, 0, INT_MAX),
+diff --git a/configs/default.cfg b/configs/default.cfg
+index c5a8b57..f984096 100644
+--- a/configs/default.cfg
++++ b/configs/default.cfg
+@@ -42,6 +42,7 @@ hybrid_e2e		0
+ inhibit_multicast_service	0
+ net_sync_monitor	0
+ tc_spanning_tree	0
++udp6_checksum_disabled  0
+ tx_timestamp_timeout	1
+ unicast_listen		0
+ unicast_master_table	0
+diff --git a/ptp4l.8 b/ptp4l.8
+index 10c5c2f..66f02d4 100644
+--- a/ptp4l.8
++++ b/ptp4l.8
+@@ -442,6 +442,11 @@ field of Announce messages that pass through the switch.  Enabling
+ this option ensures that PTP message loops never form, provided the
+ switches all implement this option together with the BMCA.
+ .TP
++.B udp6_checksum_disabled
++When network_transport is UDPv6, the PTP message inserted by the
++timestamp is used with a zero UDP checksum, disabling udp6 checksum
++ensures that the PTP message can be received successfully.
++.TP
+ .B tx_timestamp_timeout
+ The number of milliseconds to poll waiting for the tx time stamp from the kernel
+ when a message has recently been sent.
+diff --git a/udp6.c b/udp6.c
+index d3c9c86..a4c09db 100644
+--- a/udp6.c
++++ b/udp6.c
+@@ -26,6 +26,7 @@
+ #include <string.h>
+ #include <sys/ioctl.h>
+ #include <sys/socket.h>
++#include <linux/udp.h>
+ #include <unistd.h>
+ 
+ #include "address.h"
+@@ -97,7 +98,7 @@ static int udp6_close(struct transport *t, struct fdarray *fda)
+ }
+ 
+ static int open_socket_ipv6(const char *name, struct in6_addr mc_addr[2], short port,
+-			    int *interface_index, int hop_limit)
++			    int *interface_index, int hop_limit, int udp_no_check6)
+ {
+ 	struct sockaddr_in6 addr;
+ 	int fd, index, on = 1;
+@@ -122,6 +123,16 @@ static int open_socket_ipv6(const char *name, struct in6_addr mc_addr[2], short
+ 		pr_err("setsockopt SO_REUSEADDR failed: %m");
+ 		goto no_option;
+ 	}
++	if (udp_no_check6 == 1) {
++		if (setsockopt(fd, IPPROTO_UDP, UDP_NO_CHECK6_RX, &on, sizeof(on))) {
++			pr_err("setsockopt UDP_NO_CHECK6_RX failed: %m");
++			goto no_option;
++		}
++		if (setsockopt(fd, IPPROTO_UDP, UDP_NO_CHECK6_TX, &on, sizeof(on))) {
++			pr_err("setsockopt UDP_NO_CHECK6_TX failed: %m");
++			goto no_option;
++		}
++	}
+ 	if (bind(fd, (struct sockaddr *) &addr, sizeof(addr))) {
+ 		pr_err("bind failed: %m");
+ 		goto no_option;
+@@ -164,9 +175,10 @@ static int udp6_open(struct transport *t, struct interface *iface,
+ {
+ 	struct udp6 *udp6 = container_of(t, struct udp6, t);
+ 	uint8_t event_dscp, general_dscp;
+-	int efd, gfd, hop_limit;
++	int efd, gfd, hop_limit, udp_no_check6;
+ 	char *name = iface->name;
+ 
++	udp_no_check6 = config_get_int(t->cfg, name, "udp6_checksum_disabled");
+ 	hop_limit = config_get_int(t->cfg, name, "udp_ttl");
+ 	udp6->mac.len = 0;
+ 	sk_interface_macaddr(name, &udp6->mac);
+@@ -182,11 +194,11 @@ static int udp6_open(struct transport *t, struct interface *iface,
+ 	if (1 != inet_pton(AF_INET6, PTP_PDELAY_MCAST_IP6ADDR, &mc6_addr[MC_PDELAY]))
+ 		return -1;
+ 
+-	efd = open_socket_ipv6(name, mc6_addr, EVENT_PORT, &udp6->index, hop_limit);
++	efd = open_socket_ipv6(name, mc6_addr, EVENT_PORT, &udp6->index, hop_limit, udp_no_check6);
+ 	if (efd < 0)
+ 		goto no_event;
+ 
+-	gfd = open_socket_ipv6(name, mc6_addr, GENERAL_PORT, &udp6->index, hop_limit);
++	gfd = open_socket_ipv6(name, mc6_addr, GENERAL_PORT, &udp6->index, hop_limit, udp_no_check6);
+ 	if (gfd < 0)
+ 		goto no_general;
+ 
+-- 
+1.9.1
+

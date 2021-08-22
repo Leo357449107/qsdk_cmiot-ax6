@@ -1,0 +1,16 @@
+--- a/src/ap/sta_info.c
++++ b/src/ap/sta_info.c
+@@ -511,6 +511,13 @@ skip_poll:
+ 			deauth = 1;
+ 		}
+ 
++		if (!deauth && !(sta->flags & WLAN_STA_ASSOC)) {
++			/* Cannot disassociate not-associated STA, so move
++			 * directly to deauthentication. */
++			sta->timeout_next = STA_DEAUTH;
++			deauth = 1;
++		}
++
+ 		wpa_dbg(hapd->msg_ctx, MSG_DEBUG,
+ 			"Timeout, sending %s info to STA " MACSTR,
+ 			deauth ? "deauthentication" : "disassociation",

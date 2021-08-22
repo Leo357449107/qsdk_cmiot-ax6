@@ -1,0 +1,25 @@
+diff -Nur a/nat46/modules/nat46-core.c nat46-6/nat46/modules/nat46-core.c
+--- a/nat46/modules/nat46-core.c	2019-06-17 13:07:43.868006425 -0700
++++ nat46-6/nat46/modules/nat46-core.c	2019-06-17 13:12:25.259998095 -0700
+@@ -2080,7 +2080,9 @@
+ 
+   if(skb_tailroom(old_skb) >= IPV6V4HDRDELTA){
+     skb_put(old_skb, IPV6V4HDRDELTA);
+-    memmove(((char *)iiph + IPV6HDRSIZE), (iiph + 1), ntohs(iiph->tot_len) - IPV4HDRSIZE);
++    /* ErrorICMP size is less than 576, the inner ipv4 packet will be trimmed */
++    memmove(((char *)iiph + IPV6HDRSIZE), (iiph + 1),
++      ntohs(iph->tot_len) - 2 * IPV4HDRSIZE - sizeof(struct icmphdr));
+     memcpy(iiph, &ip6h, IPV6HDRSIZE);
+   }
+   else{
+@@ -2092,7 +2094,9 @@
+     }
+     skb_put(old_skb, IPV6V4HDRDELTA);
+     iiph = (struct iphdr *)(icmp_hdr(old_skb) + 1);
+-    memmove(((char *)iiph + IPV6HDRSIZE), (iiph + 1), ntohs(iiph->tot_len) - IPV4HDRSIZE);
++    /* ErrorICMP size is less than 576, the inner ipv4 packet will be trimmed */
++    memmove(((char *)iiph + IPV6HDRSIZE), (iiph + 1),
++      ntohs(iph->tot_len) - 2 * IPV4HDRSIZE - sizeof(struct icmphdr));
+     memcpy(iiph, &ip6h, IPV6HDRSIZE);
+     nat46 = get_nat46_instance(old_skb);
+     iph = ip_hdr(old_skb);

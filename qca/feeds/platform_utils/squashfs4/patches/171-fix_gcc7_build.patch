@@ -1,0 +1,65 @@
+From a89f8af77bd60412a21cc7c7d736925db471f31e Mon Sep 17 00:00:00 2001
+From: Ram Chandra Jangir <rjangir@codeaurora.org>
+Date: Wed, 30 Sep 2020 21:05:45 +0530
+Subject: [PATCH] squashfs4: Fix build with gcc7
+
+We have squashfs4 package available at platform_utils feed,
+hence remove it from here.
+
+Signed-off-by: Ram Chandra Jangir <rjangir@codeaurora.org>
+---
+
+--- a/squashfs-tools/mksquashfs.c
++++ b/squashfs-tools/mksquashfs.c
+@@ -49,6 +49,7 @@
+ #include <regex.h>
+ #include <fnmatch.h>
+ #include <sys/wait.h>
++#include <sys/sysmacros.h>
+ 
+ #ifndef linux
+ #define __BYTE_ORDER BYTE_ORDER
+@@ -725,13 +726,13 @@ void cache_block_put(struct file_buffer
+ 			+ (((char *)A) - data_cache)))
+ 
+ 
+-inline void inc_progress_bar()
++static inline void inc_progress_bar()
+ {
+ 	cur_uncompressed ++;
+ }
+ 
+ 
+-inline void update_progress_bar()
++static inline void update_progress_bar()
+ {
+ 	pthread_mutex_lock(&progress_mutex);
+ 	pthread_cond_signal(&progress_wait);
+@@ -739,7 +740,7 @@ inline void update_progress_bar()
+ }
+ 
+ 
+-inline void waitforthread(int i)
++static inline void waitforthread(int i)
+ {
+ 	TRACE("Waiting for thread %d\n", i);
+ 	while(thread[i] != 0)
+@@ -3344,7 +3345,7 @@ struct inode_info *lookup_inode(struct s
+ }
+ 
+ 
+-inline void add_dir_entry(char *name, char *pathname, struct dir_info *sub_dir,
++static inline void add_dir_entry(char *name, char *pathname, struct dir_info *sub_dir,
+ 	struct inode_info *inode_info, struct dir_info *dir)
+ {
+ 	if((dir->count % DIR_ENTRIES) == 0) {
+--- a/squashfs-tools/unsquashfs.c
++++ b/squashfs-tools/unsquashfs.c
+@@ -29,6 +29,7 @@
+ #include "compressor.h"
+ #include "xattr.h"
+ 
++#include <sys/sysmacros.h>
+ #include <sys/types.h>
+ 
+ struct cache *fragment_cache, *data_cache;

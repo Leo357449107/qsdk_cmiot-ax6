@@ -1,0 +1,34 @@
+--- a/ap.c
++++ b/ap.c
+@@ -9570,9 +9570,9 @@ static enum sigma_cmd_result cmd_ap_get_
+ 		else
+ 			version = "Unknown";
+ 
+-		if (if_nametoindex("wlan1") > 0)
+-			snprintf(resp, sizeof(resp), "interface,wlan0_24G "
+-				 "wlan1_5G,agent,1.0,version,%s", version);
++		if (if_nametoindex("wlan0") > 0)
++			snprintf(resp, sizeof(resp), "interface,wlan0_5G "
++				 "wlan1_24G,agent,1.0,version,%s", version);
+ 		else
+ 			snprintf(resp, sizeof(resp), "interface,wlan0_any,"
+ 				 "agent,1.0,version,%s", version);
+@@ -9686,16 +9686,11 @@ static int ap_inject_frame(struct sigma_
+ 	unsigned char buf[1000], *pos;
+ 	int s, res;
+ 	unsigned char addr_sta[6], addr_own[6];
+-	char *ifname;
++	const char *ifname;
+ 	char cbuf[100];
+ 	struct ifreq ifr;
+ 
+-	if ((dut->ap_mode == AP_11a || dut->ap_mode == AP_11na ||
+-	     dut->ap_mode == AP_11ac) &&
+-	    if_nametoindex("wlan1") > 0)
+-		ifname = "wlan1";
+-	else
+-		ifname = "wlan0";
++	ifname = get_main_ifname(dut);
+ 
+ 	if (hwaddr_aton(sta_addr, addr_sta) < 0)
+ 		return -1;

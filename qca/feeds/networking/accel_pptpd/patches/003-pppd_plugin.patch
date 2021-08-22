@@ -1,0 +1,21 @@
+--- accel-pptp-0.8.5/pppd_plugin/configure	2010-10-06 18:57:46.000000000 +0530
++++ accel-pptp-0.8.5/pppd_plugin/configure	2018-07-23 16:52:16.739128616 +0530
+@@ -19461,7 +19461,7 @@
+ 
+ 
+ CFLAGS="${CFLAGS} -I. -I${header}"
+-
++if test $cross_compiling != "yes"; then
+ { echo "$as_me:$LINENO: checking for pppd" >&5
+ echo $ECHO_N "checking for pppd... $ECHO_C" >&6; }
+ pppd=`which pppd 2>&1`
+@@ -19485,6 +19485,9 @@
+ pppd_ver=`${pppd} --version 2>&1 | grep version | sed 's/pppd version //'`
+ { echo "$as_me:$LINENO: result: $pppd ($pppd_ver)" >&5
+ echo "${ECHO_T}$pppd ($pppd_ver)" >&6; }
++else
++pppd_ver=${pppdver}
++fi
+ cat >>confdefs.h <<_ACEOF
+ #define PPPD_VERSION "${pppd_ver}"
+ _ACEOF

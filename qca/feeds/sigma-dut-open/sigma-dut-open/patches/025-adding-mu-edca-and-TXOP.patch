@@ -1,0 +1,106 @@
+--- a/ap.c
++++ b/ap.c
+@@ -2525,6 +2525,32 @@ static enum sigma_cmd_result cmd_ap_set_
+ 		}
+ 	}
+ 
++	val = get_param(cmd, "MU_EDCA");
++	if (val) {
++		if (strcasecmp(val, "override") == 0) {
++			dut->ap_mu_edca = VALUE_ENABLED;
++		} else if (strcasecmp(val, "disable") == 0) {
++			dut->ap_mu_edca = VALUE_DISABLED;
++		} else {
++			send_resp(dut, conn, SIGMA_ERROR,
++				  "errorCode,Unsupported mu_edca param value");
++			return STATUS_SENT_ERROR;
++		}
++	}
++
++	val = get_param(cmd, "HE_TXOPDurRTSThr");
++	if (val) {
++		if (strcasecmp(val, "enable") == 0) {
++			dut->ap_he_rtsthrshld = VALUE_ENABLED;
++		} else if (strcasecmp(val, "disable") == 0) {
++			dut->ap_he_rtsthrshld = VALUE_DISABLED;
++		} else {
++			send_resp(dut, conn, SIGMA_ERROR,
++				  "errorCode,Unsupported HE_TXOPDurRTSThr value");
++			return STATUS_SENT_ERROR;
++		}
++	}
++
+ 	return 1;
+ }
+ 
+@@ -7447,6 +7473,50 @@ static int ap_set_force_mcs(struct sigma
+ 	}
+ }
+ 
++static int default_muedca_values(FILE *f)
++{
++	if(!f)
++		return -1;
++
++	fprintf(f,"he_mu_edca_qos_info_param_count=0\n"
++		"he_mu_edca_qos_info_q_ack=0\n"
++		"he_mu_edca_qos_info_queue_request=0\n"
++		"he_mu_edca_qos_info_txop_request=0\n"
++
++		/* Best Effort */
++		"he_mu_edca_ac_be_aifsn=8\n"
++		"he_mu_edca_ac_be_acm=0\n"
++		"he_mu_edca_ac_be_aci=0\n"
++		"he_mu_edca_ac_be_ecwmin=9\n"
++		"he_mu_edca_ac_be_ecwmax=10\n"
++		"he_mu_edca_ac_be_timer=255\n"
++
++		/* Background */
++		"he_mu_edca_ac_bk_aifsn=15\n"
++		"he_mu_edca_ac_bk_acm=0\n"
++		"he_mu_edca_ac_bk_aci=1\n"
++		"he_mu_edca_ac_bk_ecwmin=9\n"
++		"he_mu_edca_ac_bk_ecwmax=10\n"
++		"he_mu_edca_ac_bk_timer=255\n"
++
++		/* Video */
++		"he_mu_edca_ac_vi_aifsn=5\n"
++		"he_mu_edca_ac_vi_acm=0\n"
++		"he_mu_edca_ac_vi_aci=2\n"
++		"he_mu_edca_ac_vi_ecwmin=5\n"
++		"he_mu_edca_ac_vi_ecwmax=7\n"
++		"he_mu_edca_ac_vi_timer=255\n"
++
++		/* Voice */
++		"he_mu_edca_ac_vo_aifsn=5\n"
++		"he_mu_edca_ac_vo_acm=0\n"
++		"he_mu_edca_ac_vo_aci=3\n"
++		"he_mu_edca_ac_vo_ecwmin=5\n"
++		"he_mu_edca_ac_vo_ecwmax=7\n"
++		"he_mu_edca_ac_vo_timer=255\n");
++
++	return 0;
++}
+ 
+ enum sigma_cmd_result cmd_ap_config_commit(struct sigma_dut *dut,
+ 					   struct sigma_conn *conn,
+@@ -8464,6 +8534,19 @@ skip_key_mgmt:
+ 		fprintf(f, "he_mu_beamformer=%d\n", dut->ap_mu_txBF);
+ 		/* Disable BSS Color config by default */
+ 		fprintf(f, "he_bss_color=1\n");
++		if (default_muedca_values(f) < 0) {
++			sigma_dut_print(dut, DUT_MSG_ERROR,
++					"%s: File pointer is invalid",
++					__func__);
++                	return -2;
++		}
++
++		if (dut->ap_he_rtsthrshld == VALUE_ENABLED)
++			fprintf(f, "he_rts_threshold=512");
++		else if (dut->ap_he_rtsthrshld == VALUE_DISABLED)
++			fprintf(f, "he_rts_threshold=1023");
++		else
++			fprintf(f, "he_rts_threshold=0");
+ 	}
+ 
+ 	if (dut->ap_key_mgmt == AP_WPA2_OWE && dut->ap_tag_ssid[0][0] &&

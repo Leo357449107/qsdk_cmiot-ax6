@@ -1,0 +1,11 @@
+--- a/libssp/config.h.in
++++ b/libssp/config.h.in
+@@ -67,7 +67,7 @@
+ #undef HAVE_UNISTD_H
+ 
+ /* vsnprintf is present and works */
+-#undef HAVE_USABLE_VSNPRINTF
++#define HAVE_USABLE_VSNPRINTF 1
+ 
+ /* Define to the sub-directory in which libtool stores uninstalled libraries.
+    */

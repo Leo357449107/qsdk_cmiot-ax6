@@ -1,0 +1,88 @@
+diff -Naur a/linux/include/openswan/ipsec_esp.h openswan-2.6.51.3/linux/include/openswan/ipsec_esp.h
+--- a/linux/include/openswan/ipsec_esp.h	2019-07-29 13:04:48.896028994 +0530
++++ openswan-2.6.51.3/linux/include/openswan/ipsec_esp.h	2019-07-29 13:12:29.689846372 +0530
+@@ -47,6 +47,7 @@
+ #define DB_ES_REPLAY	0x0800
+ #define SKB_CB_FLAG_NATT		0x00000001
+ #define SKB_CB_FLAG_TRANSPORT_MODE	0x00000002
++#define SKB_CB_MAGIC 			0xAAAB
+ 
+ #ifdef __KERNEL__
+ struct des_eks {
+@@ -70,6 +71,8 @@
+ struct ipsec_skb_cb {
+ 	struct net_device *tunnel_dev;
+ 	uint32_t flags;
++	uint16_t replay_win;
++	uint16_t magic;
+ };
+ 
+ extern struct xform_functions esp_xform_funcs[];
+diff -Naur a/linux/include/openswan/ipsec_xmit.h openswan-2.6.51.3/linux/include/openswan/ipsec_xmit.h
+--- a/linux/include/openswan/ipsec_xmit.h	2019-07-29 13:04:48.896028994 +0530
++++ openswan-2.6.51.3/linux/include/openswan/ipsec_xmit.h	2019-07-29 13:13:18.958040370 +0530
+@@ -156,6 +156,7 @@
+ 	unsigned char *dat;
+ 	__u8 frag_off, tos;
+ 	__u16 ttl, check;
++	int error;
+ };
+ 
+ extern enum ipsec_xmit_value
+diff -Naur a/linux/net/ipsec/ipsec_ocf.c openswan-2.6.51.3/linux/net/ipsec/ipsec_ocf.c
+--- a/linux/net/ipsec/ipsec_ocf.c	2019-07-29 13:04:48.896028994 +0530
++++ openswan-2.6.51.3/linux/net/ipsec/ipsec_ocf.c	2019-07-29 13:17:10.862952698 +0530
+@@ -753,7 +753,9 @@
+ 		iter = iter->ips_next;
+ 	}
+ 
++	skb_cb->magic = SKB_CB_MAGIC;
+ 	skb_cb->tunnel_dev = irs->skb->dev;
++	skb_cb->replay_win = irs->ipsp->ips_replaywin;
+ 	skb_cb->flags |= irs->ipsp->ips_natt_type ? SKB_CB_FLAG_NATT : 0;
+ 	skb_cb->flags |= transport_mode ? SKB_CB_FLAG_TRANSPORT_MODE : 0;
+ 
+@@ -829,6 +831,13 @@
+ 			/* resubmit failed */
+ 		}
+ 
++		ixs->error = crp->crp_etype;
++		if (crp->crp_etype == EINPROGRESS) {
++			KLIPS_PRINT(debug_tunnel & DB_TN_XMIT, "klips_debug:ipsec_ocf_xmit_cb: "
++					"Packet has been processed or consumed by ocf\n");
++			goto bail;
++		}
++
+ 		KLIPS_PRINT(debug_tunnel & DB_TN_XMIT, "klips_debug:ipsec_ocf_xmit_cb: "
+ 				"error in processing 0x%x\n", crp->crp_etype);
+ 
+diff -Naur a/linux/net/ipsec/ipsec_tunnel.c openswan-2.6.51.3/linux/net/ipsec/ipsec_tunnel.c
+--- a/linux/net/ipsec/ipsec_tunnel.c	2019-07-29 13:04:48.896028994 +0530
++++ openswan-2.6.51.3/linux/net/ipsec/ipsec_tunnel.c	2019-07-29 13:19:53.875701287 +0530
+@@ -923,9 +923,12 @@
+ 			goto bypass;
+ 		}
+ 
+-		KLIPS_PRINT(debug_tunnel & DB_TN_XMIT,
+-				"klips_debug:ipsec_tunnel_start_xmit: encap_bundle failed: %d\n",
+-				stat);
++		if (ixs->error != EINPROGRESS) {
++			KLIPS_PRINT(debug_tunnel & DB_TN_XMIT,
++					"klips_debug:ipsec_tunnel_start_xmit: encap_bundle failed: %d\n",
++					stat);
++		}
++
+ 		goto cleanup;
+ 	}
+ 
+diff -Naur a/linux/net/ipsec/ipsec_xmit.c openswan-2.6.51.3/linux/net/ipsec/ipsec_xmit.c
+--- a/linux/net/ipsec/ipsec_xmit.c	2019-07-29 13:04:48.896028994 +0530
++++ openswan-2.6.51.3/linux/net/ipsec/ipsec_xmit.c	2019-07-29 13:20:41.883921916 +0530
+@@ -891,6 +891,7 @@
+ 	 * Update information required in NSS.
+ 	 */
+ 	memset(skb_cb, 0, sizeof(struct ipsec_skb_cb));
++	skb_cb->magic = SKB_CB_MAGIC;
+ 	skb_cb->tunnel_dev = ixs->dev;
+ 	skb_cb->flags |= ixs->ipsp->ips_natt_type ? SKB_CB_FLAG_NATT : 0;
+ 	skb_cb->flags |= (ixs->outgoing_said.proto == IPPROTO_IPIP) ? 0 : SKB_CB_FLAG_TRANSPORT_MODE;

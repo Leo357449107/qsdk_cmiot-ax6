@@ -1,0 +1,13 @@
+Index: binutils-2.24/Makefile.in
+===================================================================
+--- binutils-2.24.orig/Makefile.in	2013-12-02 15:01:21.000000000 +0530
++++ binutils-2.24/Makefile.in	2017-04-13 17:38:20.897376298 +0530
+@@ -727,7 +727,7 @@
+ 	"BOOT_LDFLAGS=$(BOOT_LDFLAGS)" \
+ 	"CFLAGS=$(CFLAGS)" \
+ 	"CXXFLAGS=$(CXXFLAGS)" \
+-	"LDFLAGS=$(LDFLAGS)" \
++	"LDFLAGS=$(LDFLAGS) -lgcc_s" \
+ 	"LIBCFLAGS=$(LIBCFLAGS)" \
+ 	"LIBCXXFLAGS=$(LIBCXXFLAGS)" \
+ 	"STAGE1_CHECKING=$(STAGE1_CHECKING)" \

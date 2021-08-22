@@ -1,0 +1,303 @@
+/dts-v1/;
+/* Copyright (c) 2018-2020, The Linux Foundation. All rights reserved.
+ *
+ * Permission to use, copy, modify, and/or distribute this software for any
+ * purpose with or without fee is hereby granted, provided that the above
+ * copyright notice and this permission notice appear in all copies.
+ *
+ * THE SOFTWARE IS PROVIDED "AS IS" AND THE AUTHOR DISCLAIMS ALL WARRANTIES
+ * WITH REGARD TO THIS SOFTWARE INCLUDING ALL IMPLIED WARRANTIES OF
+ * MERCHANTABILITY AND FITNESS. IN NO EVENT SHALL THE AUTHOR BE LIABLE FOR
+ * ANY SPECIAL, DIRECT, INDIRECT, OR CONSEQUENTIAL DAMAGES OR ANY DAMAGES
+ * WHATSOEVER RESULTING FROM LOSS OF USE, DATA OR PROFITS, WHETHER IN AN
+ * ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF
+ * OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
+ */
+
+#include "qcom-ipq5018.dtsi"
+
+/ {
+	#address-cells = <0x2>;
+	#size-cells = <0x2>;
+	model = "Qualcomm Technologies, Inc. IPQ5018/MP-EMU";
+	compatible = "qcom,ipq5018-emulation-c1", "qcom,ipq5018";
+	interrupt-parent = <&intc>;
+
+	reserved-memory {
+		/delete-node/ wcnss@4b000000;
+		/delete-node/ q6_etr_dump@4e700000;
+
+		q6_code_data: q6_code_data@4b000000 {
+			no-map;
+			reg = <0x0 0x4b000000 0x0 0x1000000>;
+		};
+
+		q6_ipq5018_data: q6_ipq5018_data@4c000000 {
+			no-map;
+			reg = <0x0 0x4c000000 0x0 0x1200000>;
+		};
+
+		q6_qcn6122_data1: q6_qcn6122_data1@4d200000 {
+			no-map;
+			reg = <0x0 0x4d200000 0x0 0x1400000>;
+		};
+	};
+
+	aliases {
+		sdhc1 = &sdhc_1; /* SDC1 eMMC slot */
+		serial0 = &blsp1_uart1;
+	};
+
+	chosen {
+		linux,initrd-end = <0x56000000>;
+		linux,initrd-start = <0x54000000>;
+		bootargs = "root=/dev/ram0 rw init=/init";
+		stdout-path = "serial0";
+	};
+
+	soc {
+		gcc: gcc@1800000 {
+			gcc-use-dummy;
+		};
+
+		serial@78af000 {
+			status = "ok";
+		};
+
+		timer {
+			clock-frequency = <240000>;
+		};
+
+		qpic_bam: dma@7984000{
+			status = "disabled";
+		};
+
+		nand: qpic-nand@79b0000 {
+			status = "disabled";
+		};
+
+		spi_0: spi@78b5000 { /* BLSP1 QUP0 */
+			status = "disabled";
+
+			m25p80@0 {
+				#address-cells = <1>;
+				#size-cells = <1>;
+				reg = <0>;
+				compatible = "n25q128a11";
+				linux,modalias = "m25p80", "n25q128a11";
+				spi-max-frequency = <50000000>;
+				use-default-sizes;
+			};
+		};
+
+		ess-instance {
+			num_devices = <0x1>;
+			ess-switch@0x39c00000 {
+				qcom,emulation;
+				switch_mac_mode = <0xf>; /* mac mode for uniphy instance*/
+				qcom,port_phyinfo {
+					port@0 {
+						port_id = <1>;
+						phy_address = <7>;
+		                                forced-speed = <1000>;
+                                                forced-duplex = <1>;
+					};
+					port@1 {
+						port_id = <2>;
+						phy_address = <1>;
+						forced-speed = <1000>;
+                                                forced-duplex = <1>;
+					};
+				};
+			};
+		};
+
+		qca,scm_restart_reason {
+			status = "ok";
+		};
+
+		tzlog: qca,tzlog {
+			status = "disabled";
+		};
+
+		nss0: nss@40000000 {
+			qcom,low-frequency = <10000000>;
+			qcom,mid-frequency = <10000000>;
+			qcom,max-frequency = <10000000>;
+		};
+
+		dp1 {
+			device_type = "network";
+			compatible = "qcom,nss-dp";
+			qcom,id = <1>;
+			reg = <0x39C00000 0x10000>;
+			interrupts = <GIC_SPI 101 IRQ_TYPE_LEVEL_HIGH>;
+			qcom,mactype = <2>;
+			local-mac-address = [000000000000];
+			phy-mode = "sgmii";
+		};
+
+		dp2 {
+			device_type = "network";
+			compatible = "qcom,nss-dp";
+			qcom,id = <2>;
+			reg = <0x39D00000 0x10000>;
+			interrupts = <GIC_SPI 109 IRQ_TYPE_LEVEL_HIGH>;
+			qcom,mactype = <2>;
+			local-mac-address = [000000000000];
+			phy-mode = "sgmii";
+		};
+	};
+
+	psci {
+		status = "disabled";
+	};
+
+	cpus {
+		CPU0: cpu@0 {
+			enable-method = "qcom,arm-cortex-acc";
+		};
+
+		CPU1: cpu@1 {
+			enable-method = "qcom,arm-cortex-acc";
+		};
+	};
+
+	firmware {
+		scm {
+			status = "disabled";
+		};
+	};
+
+};
+
+&sdhc_1 {
+	qcom,clk-rates = <400000 25000000 50000000 100000000 \
+			 192000000 384000000>;
+	qcom,bus-speed-mode = "DDR_1p8v";
+	qcom,nonremovable;
+	qcom,emulation = <1>;
+	status = "disabled";
+};
+
+&q6v5_wcss {
+	memory-region = <&q6_code_data>, <&q6_ipq5018_data>,
+			<&q6_qcn6122_data1>;
+};
+
+&qcom_q6v5_wcss {
+	qcom,nosecure;
+	qcom,emulation;
+	memory-region = <&q6_code_data>, <&q6_ipq5018_data>,
+			<&q6_qcn6122_data1>;
+	/* ipq5018 radio */
+	q6v5_wcss_userpd1 {
+		interrupts-extended = <&wcss_smp2p_in 8 0>,
+			<&wcss_smp2p_in 9 0>,
+			<&wcss_smp2p_in 12 0>,
+			<&wcss_smp2p_in 11 0>;
+		interrupt-names ="fatal",
+			"ready",
+			"spawn-ack",
+			"stop-ack";
+		qcom,smem-states = <&wcss_smp2p_out 8>,
+			<&wcss_smp2p_out 9>,
+			<&wcss_smp2p_out 10>;
+		qcom,smem-state-names = "shutdown",
+			"stop",
+			"spawn";
+		qca,asid = <1>;
+		qca,auto-restart;
+	};
+
+	/*1st qcn6122 radio*/
+	q6v5_wcss_userpd2 {
+		interrupts-extended = <&wcss_smp2p_in 16 0>,
+			<&wcss_smp2p_in 17 0>,
+			<&wcss_smp2p_in 20 0>,
+			<&wcss_smp2p_in 19 0>;
+		interrupt-names ="fatal",
+			"ready",
+			"spawn-ack",
+			"stop-ack";
+		qcom,smem-states = <&wcss_smp2p_out 16>,
+			<&wcss_smp2p_out 17>,
+			<&wcss_smp2p_out 18>;
+		qcom,smem-state-names = "shutdown",
+			"stop",
+			"spawn";
+		qca,asid = <2>;
+		qca,auto-restart;
+	};
+
+	/*2nd qcn6122 radio*/
+	q6v5_wcss_userpd3 {
+		interrupts-extended = <&wcss_smp2p_in 24 0>,
+			<&wcss_smp2p_in 25 0>,
+			<&wcss_smp2p_in 28 0>,
+			<&wcss_smp2p_in 27 0>;
+		interrupt-names ="fatal",
+			"ready",
+			"spawn-ack",
+			"stop-ack";
+		qcom,smem-states = <&wcss_smp2p_out 24>,
+			<&wcss_smp2p_out 25>,
+			<&wcss_smp2p_out 26>;
+		qcom,smem-state-names = "shutdown",
+			"stop",
+			"spawn";
+		qca,asid = <3>;
+		qca,auto-restart;
+	};
+};
+
+&tmc_etr {
+	memory_region = <>;
+	status = "disabled";
+};
+
+&tlmm {
+	pinctrl-0 = <&uart_pins>;
+	pinctrl-names = "default";
+
+	uart_pins: uart_pins {
+		mux_0 {
+			pins = "gpio20", "gpio21";
+			function = "blsp0_uart0";
+			bias-pull-down;
+		};
+		mux_1 {
+			pins = "gpio10";
+			function = "blsp1_uart0";
+			bias-pull-down;
+		};
+		mux_2 {
+			pins = "gpio11", "gpio12";
+			function = "blsp1_uart0";
+			bias-pull-down;
+		};
+		mux_3 {
+			pins = "gpio13";
+			function = "blsp1_uart0";
+			bias-pull-down;
+		};
+	};
+};
+
+&wifi0 {
+	/* IPQ5018 */
+	qcom,bdf-addr = <0x4C000000 0x4C000000 0x4C000000>;
+	qcom,caldb-addr = <0x4D000000 0x4D000000 0x4D000000>;
+	qcom,caldb-size = <0x200000>;
+	qcom,userpd-subsys-name = "q6v5_wcss_userpd1";
+	status = "ok";
+};
+
+&wifi1 {
+	/* qcn6122_1 */
+	qcom,bdf-addr = <0x4D200000 0x4D200000 0x4D200000>;
+	qcom,caldb-addr = <0x4E400000 0x4E400000 0x4E400000>;
+	qcom,caldb-size = <0x200000>;
+	qcom,userpd-subsys-name = "q6v5_wcss_userpd2";
+	status = "disabled";
+};
