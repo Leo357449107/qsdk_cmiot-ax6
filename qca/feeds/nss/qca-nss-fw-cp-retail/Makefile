@@ -11,8 +11,8 @@ NSS_VER:=11.5.r1
 NSS_SOC:=CP
 NSS_PROFILE:=R
 
-PKG_SOURCE:=BIN-NSS.FW.$(NSS_VER)-$(PKG_VERSION)-$(NSS_SOC).$(NSS_PROFILE).tar.bz2
-PKG_SOURCE_URL:=http://qcawebsrvr.qualcomm.com/NSS/NSS.FW/$(NSS_VER)/$(NSS_SOC)/$(PKG_VERSION)/
+#PKG_SOURCE:=BIN-NSS.FW.$(NSS_VER)-$(PKG_VERSION)-$(NSS_SOC).$(NSS_PROFILE).tar.bz2
+#PKG_SOURCE_URL:=http://qcawebsrvr.qualcomm.com/NSS/NSS.FW/$(NSS_VER)/$(NSS_SOC)/$(PKG_VERSION)/
 PKG_BUILD_DIR:=$(BUILD_DIR)/BIN-NSS.FW.$(NSS_VER)-$(PKG_VERSION)-$(NSS_SOC).$(NSS_PROFILE)
 
 include $(INCLUDE_DIR)/package.mk
@@ -35,7 +35,8 @@ define NssFirmware
 
   define Package/$(PKG_NAME)-$(1)/install
 	$(INSTALL_DIR) $$(1)/lib/firmware/qca
-	$(INSTALL_DATA) $(PKG_BUILD_DIR)/$(2)0.bin $$(1)/lib/firmware/qca-nss0-$(1).bin
+#	$(INSTALL_DATA) $(PKG_BUILD_DIR)/$(2)0.bin $$(1)/lib/firmware/qca-nss0-$(1).bin
+	$(INSTALL_DATA) ./files/qca-nss0-retail.bin_netgare $$(1)/lib/firmware/qca-nss0-$(1).bin
   endef
   $$(eval $$(call BuildPackage,$(PKG_NAME)-$(1)))
 endef

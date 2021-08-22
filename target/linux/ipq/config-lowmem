@@ -4,7 +4,7 @@
 # CONFIG_LBDAF is not set
 # CONFIG_EFI_PARTITION is not set
 # CONFIG_ASN1 is not set
-# CONFIG_BONDING is not set
+CONFIG_BONDING=m
 # CONFIG_AIO is not set
 # CONFIG_SAMPLES is not set
 # CONFIG_CRYPTO_PCOMP2 is not set
