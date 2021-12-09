@@ -1,0 +1,155 @@
+Index: avs-device-sdk-1.13.0/MediaPlayer/GStreamerMediaPlayer/src/MediaPlayer.cpp
+===================================================================
+--- avs-device-sdk-1.13.0.orig/MediaPlayer/GStreamerMediaPlayer/src/MediaPlayer.cpp	2019-08-07 00:53:03.503692306 +0530
++++ avs-device-sdk-1.13.0/MediaPlayer/GStreamerMediaPlayer/src/MediaPlayer.cpp	2019-08-07 00:54:13.967878728 +0530
+@@ -240,7 +240,7 @@
+     }
+     if (m_pipeline.decodedQueue) {
+         guint bytesInQueue = 0;
+-        g_object_get(m_pipeline.decodedQueue, "current-level-bytes", &bytesInQueue, NULL);
++        g_object_get(m_pipeline.decodedQueue, "current-level-bytes", &bytesInQueue,(void*) NULL);
+         bytesBuffered += bytesInQueue;
+     }
+     return bytesBuffered;
+@@ -355,9 +355,9 @@
+ 
+ void MediaPlayer::handleSetVolumeInternal(gdouble gstVolume) {
+     if (gstVolume == 0) {
+-        g_object_set(m_pipeline.volume, "volume", VOLUME_ZERO, NULL);
++        g_object_set(m_pipeline.volume, "volume", VOLUME_ZERO, (void*)NULL);
+     } else {
+-        g_object_set(m_pipeline.volume, "volume", gstVolume, NULL);
++        g_object_set(m_pipeline.volume, "volume", gstVolume, (void*)NULL);
+     }
+     m_lastVolume = gstVolume;
+ }
+@@ -424,7 +424,7 @@
+     }
+ 
+     gdouble gstVolume;
+-    g_object_get(m_pipeline.volume, "volume", &gstVolume, NULL);
++    g_object_get(m_pipeline.volume, "volume", &gstVolume,  (void*)NULL);
+ 
+     gdouble gstDelta;
+     if (!toGstDeltaVolume->normalize(delta, &gstDelta)) {
+@@ -466,7 +466,7 @@
+     }
+ 
+     // A fix for GStreamer crashing for zero volume on PCM data
+-    g_object_set(m_pipeline.volume, "volume", mute || m_lastVolume == 0 ? VOLUME_ZERO : m_lastVolume, NULL);
++    g_object_set(m_pipeline.volume, "volume", mute || m_lastVolume == 0 ? VOLUME_ZERO : m_lastVolume,  (void*)NULL);
+     m_isMuted = mute;
+     promise->set_value(true);
+ }
+@@ -513,7 +513,7 @@
+     gdouble avsVolume;
+     gdouble gstVolume;
+     gboolean mute;
+-    g_object_get(m_pipeline.volume, "volume", &gstVolume, "mute", &mute, NULL);
++    g_object_get(m_pipeline.volume, "volume", &gstVolume, "mute", &mute,  (void*)NULL);
+ 
+     /// A part of GStreamer crash fix for zero volume on PCM data
+     mute = m_isMuted;
+@@ -530,7 +530,7 @@
+     }
+ 
+     // AVS Volume will be between 0 and 100.
+-    settings->volume = static_cast<int8_t>(std::round(avsVolume));
++    settings->volume = static_cast<int8_t>(round(avsVolume));
+     settings->mute = mute;
+ 
+     promise->set_value(true);
+@@ -633,7 +633,7 @@
+             LX("setupPipelineFailed").d("name", RequiresShutdown::name()).d("reason", "createQueueElementFailed"));
+         return false;
+     }
+-    g_object_set(m_pipeline.decodedQueue, "use-buffering", m_isLiveMode ? FALSE : TRUE, NULL);
++    g_object_set(m_pipeline.decodedQueue, "use-buffering", m_isLiveMode ? FALSE : TRUE, (void*)NULL);
+     m_pipeline.converter = gst_element_factory_make("audioconvert", "converter");
+     if (!m_pipeline.converter) {
+         ACSDK_ERROR(
+@@ -695,10 +695,10 @@
+             // Found key, add it to capability struct
+             switch (it.second) {
+                 case G_TYPE_INT:
+-                    gst_caps_set_simple(caps, it.first.c_str(), it.second, std::stoi(value), NULL);
++                    gst_caps_set_simple(caps, it.first.c_str(), it.second, std::stoi(value),  (void*)NULL);
+                     break;
+                 case G_TYPE_STRING:
+-                    gst_caps_set_simple(caps, it.first.c_str(), it.second, value.c_str(), NULL);
++                    gst_caps_set_simple(caps, it.first.c_str(), it.second, value.c_str(),  (void*)NULL);
+                     break;
+             }
+         }
+@@ -724,7 +724,7 @@
+                 return false;
+             }
+ 
+-            g_object_set(G_OBJECT(m_pipeline.caps), "caps", caps, NULL);
++            g_object_set(G_OBJECT(m_pipeline.caps), "caps", caps,  (void*)NULL);
+         } else {
+             ACSDK_INFO(LX("invalidOutputConversion")
+                            .d("name", RequiresShutdown::name())
+@@ -809,7 +809,7 @@
+     m_isBufferUnderrun = false;
+     if (m_pipeline.audioSink) {
+         // Set audioSink's sink option back to TRUE
+-        g_object_set(m_pipeline.audioSink, "sync", TRUE, NULL);
++        g_object_set(m_pipeline.audioSink, "sync", TRUE,  (void*)NULL);
+     }
+ }
+ 
+@@ -1110,11 +1110,11 @@
+                      * play choppily
+                      */
+                     ACSDK_DEBUG5(LX("audioSink").d("name", RequiresShutdown::name()).m("Sync option set to false."));
+-                    g_object_set(m_pipeline.audioSink, "sync", FALSE, NULL);
++                    g_object_set(m_pipeline.audioSink, "sync", FALSE, (void*)NULL);
+                 } else if (GST_STATE_NULL == newState) {
+                     // Reset sync state back to true if tsdemux changes to NULL state
+                     ACSDK_DEBUG5(LX("audioSink").d("name", RequiresShutdown::name()).m("Sync option set to true."));
+-                    g_object_set(m_pipeline.audioSink, "sync", TRUE, NULL);
++                    g_object_set(m_pipeline.audioSink, "sync", TRUE, (void*)NULL);
+                 }
+             }
+             break;
+@@ -1772,7 +1772,7 @@
+                 G_OBJECT(m_pipeline.equalizer),
+                 GSTREAMER_BASS_BAND_NAME,
+                 static_cast<gdouble>(clampEqualizerLevel(it->second)),
+-                NULL);
++                 (void*)NULL);
+         }
+         it = bandLevelMap.find(audio::EqualizerBand::MIDRANGE);
+         if (bandLevelMap.end() != it) {
+@@ -1780,7 +1780,7 @@
+                 G_OBJECT(m_pipeline.equalizer),
+                 GSTREAMER_MIDRANGE_BAND_NAME,
+                 static_cast<gdouble>(clampEqualizerLevel(it->second)),
+-                NULL);
++                 (void*)NULL);
+         }
+         it = bandLevelMap.find(audio::EqualizerBand::TREBLE);
+         if (bandLevelMap.end() != it) {
+@@ -1788,7 +1788,7 @@
+                 G_OBJECT(m_pipeline.equalizer),
+                 GSTREAMER_TREBLE_BAND_NAME,
+                 static_cast<gdouble>(clampEqualizerLevel(it->second)),
+-                NULL);
++                 (void*)NULL);
+         }
+         promise.set_value();
+         return false;
+Index: avs-device-sdk-1.13.0/MediaPlayer/GStreamerMediaPlayer/src/BaseStreamSource.cpp
+===================================================================
+--- avs-device-sdk-1.13.0.orig/MediaPlayer/GStreamerMediaPlayer/src/BaseStreamSource.cpp	2019-08-07 00:53:03.503692306 +0530
++++ avs-device-sdk-1.13.0/MediaPlayer/GStreamerMediaPlayer/src/BaseStreamSource.cpp	2019-08-07 00:53:03.495692351 +0530
+@@ -148,7 +148,7 @@
+             return false;
+         }
+         gst_app_src_set_caps(GST_APP_SRC(appsrc), audioCaps);
+-        g_object_set(G_OBJECT(appsrc), "format", GST_FORMAT_TIME, NULL);
++        g_object_set(G_OBJECT(appsrc), "format", GST_FORMAT_TIME, (void*)NULL);
+     } else {
+         ACSDK_DEBUG9(LX("initNoAudioFormat"));
+     }

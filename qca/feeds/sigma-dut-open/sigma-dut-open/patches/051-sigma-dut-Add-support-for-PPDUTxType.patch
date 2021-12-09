@@ -1,0 +1,78 @@
+From a6628dd9db46027ef40c2152bc9f6bd4c7a4ba26 Mon Sep 17 00:00:00 2001
+From: Hari Chandrakanthan <quic_haric@quicinc.com>
+Date: Fri, 29 Oct 2021 21:57:59 +0530
+Subject: [PATCH] sigma dut : Add support for PPDUTxType
+
+support for sigma config PPDUTxType is added.
+
+support for TriggerType is updated.
+
+Signed-off-by: Hari Chandrakanthan <quic_haric@quicinc.com>
+---
+ ap.c | 33 ++++++++++++++++++++++++++++-----
+ 1 file changed, 28 insertions(+), 5 deletions(-)
+
+diff --git a/ap.c b/ap.c
+index 55f7f08..43ecc5d 100644
+--- a/ap.c
++++ b/ap.c
+@@ -14906,8 +14906,16 @@ static void mac80211_set_trigger_type_0(struct sigma_dut *dut, const char *ifnam
+ 			   ifname);
+ 	run_system_wrapper(dut, "ath11k-fwtest -i %s -m 0x47 -v 0 42 7",
+ 			   ifname);
+-	run_system_wrapper(dut, "ath11k-fwtest -i %s -m 0x47 -v 0 43 6",
+-			   ifname);
++	if (dut->ap_he_mimo == MIMO_UL) {
++		/* Forcing UL MUMIMO trigger */
++		fwtest_cmd_wrapper(dut, "-m 0x47 -v 0 43 5", ifname);
++		/* Faking uplink qdepth */
++		fwtest_cmd_wrapper(dut, "-m 0x48 -v 0 220 1131520", ifname);
++		/* Setting to enable UL MUMIMO for 2.4G - harmless if sent for 5G */
++		fwtest_cmd_wrapper(dut, "-m 0x47 -v 0 332 0", ifname);
++	} else {
++		fwtest_cmd_wrapper(dut, "-m 0x47 -v 0 43 6", ifname);
++	}
+ }
+ 
+ static void mac80211_set_mu_brp_commands(struct sigma_dut *dut, const char *ifname)
+@@ -14977,12 +14985,12 @@ static void mac80211_set_trigger_type_4(struct sigma_dut *dut, const char *ifnam
+ 	run_system_wrapper(dut, "ath11k-fwtest -t 2 -i %s -m 0x00 -p 1 0xA2 0xC8", ifname);
+ 
+ 	/* TriggerType "4" for BSRP */
+-	run_system_wrapper(dut, "ath11k-fwtest -i %s -m 0x48 -v 0 63 1000",
+-			   ifname);
++	fwtest_cmd_wrapper(dut, "-m 0x48 -v 0 63 0", ifname);
+ 
+ 	run_system_wrapper(dut, "ath11k-fwtest -i %s -m 0x47 -v 0 42 7",
+ 			   ifname);
+-
++	/* Enable BSRP triggers */
++	fwtest_cmd_wrapper(dut, "-m 0x47 -v 0 345 0", ifname);
+ 	/* Send BSRP command */
+ 	run_system_wrapper(dut, "ath11k-fwtest -i %s -m 0x47 -v 0 43 7",
+ 			   ifname);
+@@ -15327,6 +15335,21 @@ static enum sigma_cmd_result mac80211_ap_set_rfeature(struct sigma_dut *dut,
+ 		}
+ 	}
+ 
++	val = get_param(cmd, "PPDUTxType");
++	if (val) {
++		if (strcasecmp(val, "HE-SU") == 0) {
++			/* Change PPDU format type to HE-SU MCS 1 */
++			fwtest_cmd_wrapper(dut, "-m 0x48 -v 0 89 0x401", ifname);
++		} else if (strcasecmp(val, "legacy") == 0) {
++			/* Change PPDU format type to non-HT */
++			fwtest_cmd_wrapper(dut, "-m 0x48 -v 0 89 3",ifname);
++		} else {
++			send_resp(dut, conn, SIGMA_ERROR,
++				  "errorCode,Unsupported PPDUTxType");
++			return STATUS_SENT_ERROR;
++		}
++	}
++
+ 	return SUCCESS_SEND_STATUS;
+ }
+ 
+-- 
+2.7.4
+

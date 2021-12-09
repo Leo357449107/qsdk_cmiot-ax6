@@ -1,0 +1,77 @@
+diff -Nur a/ctl_main.c rstp-2011-10-11/ctl_main.c
+--- a/ctl_main.c	2019-07-01 16:02:44.229907281 -0700
++++ rstp-2011-10-11/ctl_main.c	2019-07-01 16:07:32.657909651 -0700
+@@ -20,6 +20,7 @@
+ 
+ #include "ctl_socket_client.h"
+ #include "ctl_functions.h"
++#include "switch_api.h"
+ 
+ #ifndef False
+ # define False 0
+@@ -81,9 +82,9 @@
+ {
+ 	static char ifname[IFNAMSIZ];
+ 	if (CTL_if_indextoname(port, ifname))
+-		printf("%s", ifname);
+-	else
+ 		printf("Ifindex %02d", port);
++	else
++		printf("%s", ifname);
+ 	if (cr)
+ 		printf("\n");
+ }
+@@ -453,14 +454,47 @@
+ 
+ 	for (i = 0; i < count; i++) {
+ 		const char *name;
+-		if (argc > 2)
++		int err;
++		if (argc > 2) {
+ 			name = argv[i + 2];
+-		else
+-			name = namelist[i]->d_name;
++			err = do_showport(br_index, name, &uid_state);
++			if (err)
++				r = err;
++
++		} else {
++			char cmd[128];
++			char sw_port_name[24];
++			char result[120];
++			char switch_type[SW_NAME_SIZE], control_channel[SW_NAME_SIZE], data_channel[SW_NAME_SIZE], port_name[SW_NAME_SIZE];
++			char *index = NULL;
++			int port_num, match;
++			FILE *fp = NULL;
+ 
+-		int err = do_showport(br_index, name, &uid_state);
+-		if (err)
+-			r = err;
++			name = namelist[i]->d_name;
++			snprintf(cmd, sizeof(cmd), "%s get_switch_ports|grep \"%s\"", RSTP_CMD_PATH, name);
++			fp = popen(cmd, "r");
++			if (!fp)
++				return 0;
++			while (fgets(result, 120-1, fp)) {
++				index = result;
++				while((*index) && (*index != '='))++index;
++				if(!(*index))
++					continue;
++				++index;
++				match = sscanf(index, "%64s %64s %64s %d %64s", switch_type, control_channel, data_channel, &port_num, port_name);
++				if(match == 5) {
++					snprintf(sw_port_name, 23, "%s.%s", control_channel, port_name);
++					err = do_showport(br_index, sw_port_name, &uid_state);
++					if (err)
++						r = err;
++				}
++			}
++			if (!index) {
++				err = do_showport(br_index, name, &uid_state);
++				if (err)
++					r = err;
++			}
++		}
+ 	}
+ 
+ 	if (argc <= 2) {

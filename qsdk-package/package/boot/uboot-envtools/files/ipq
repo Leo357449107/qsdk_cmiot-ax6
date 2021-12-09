@@ -1,0 +1,142 @@
+#!/bin/sh
+#
+# Copyright (c) 2014, 2020, The Linux Foundation. All rights reserved.
+#
+# Permission to use, copy, modify, and/or distribute this software for any
+# purpose with or without fee is hereby granted, provided that the above
+# copyright notice and this permission notice appear in all copies.
+#
+# THE SOFTWARE IS PROVIDED "AS IS" AND THE AUTHOR DISCLAIMS ALL WARRANTIES
+# WITH REGARD TO THIS SOFTWARE INCLUDING ALL IMPLIED WARRANTIES OF
+# MERCHANTABILITY AND FITNESS. IN NO EVENT SHALL THE AUTHOR BE LIABLE FOR
+# ANY SPECIAL, DIRECT, INDIRECT, OR CONSEQUENTIAL DAMAGES OR ANY DAMAGES
+# WHATSOEVER RESULTING FROM LOSS OF USE, DATA OR PROFITS, WHETHER IN AN
+# ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF
+# OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
+#
+
+
+. /lib/uboot-envtools.sh
+. /lib/functions.sh
+
+board=$(board_name)
+
+ubootenv_mtdinfo () {
+	UBOOTENV_PART=$(cat /proc/mtd | grep APPSBLENV)
+	mtd_dev=$(echo $UBOOTENV_PART | awk '{print $1}' | sed 's/:$//')
+	mtd_size=$(echo $UBOOTENV_PART | awk '{print "0x"$2}')
+	mtd_erase=$(echo $UBOOTENV_PART | awk '{print "0x"$3}')
+	nor_flash=$(find /sys/bus/spi/devices/*/mtd -name ${mtd_dev})
+
+	if [ -z "$UBOOTENV_PART" ]; then
+		mtd_dev=$(echo $(find_mmc_part "0:APPSBLENV") | sed 's/^.\{5\}//')
+		if [ -n "$mtd_dev" ]; then
+			EMMC_UBOOTENV_PART=$(cat /proc/partitions | grep $mtd_dev)
+			#convert block to bytes
+			emmc_ubootenv_size=`expr $(echo $EMMC_UBOOTENV_PART | awk '{print $3}') \* 1024`
+			ubootenv_size=0x`printf "%x" $emmc_ubootenv_size`
+		fi
+		mtd_erase=""
+	elif [ -n "$nor_flash" ]; then
+		ubootenv_size=$mtd_size
+		sectors=$(( $ubootenv_size / $mtd_erase ))
+		sectors=0x`printf "%x" $sectors`
+	else
+		# size is fixed to 0x40000 in u-boot
+		ubootenv_size=0x40000
+		sectors=$(( $ubootenv_size / $mtd_erase ))
+		sectors=0x`printf "%x" $sectors`
+	fi
+
+	echo /dev/$mtd_dev 0x0 $ubootenv_size $mtd_erase $sectors
+}
+
+validate_device_node() {
+	config_get dev $1 dev
+	if [ "$dev" != "$2" ] || [ ! -e /etc/fw_env.config ]; then
+		rm /etc/config/ubootenv /etc/fw_env.config
+		return;
+	fi
+
+	exit 0
+}
+
+[ -e /etc/config/ubootenv ] && {
+	config_load ubootenv
+	config_foreach validate_device_node ubootenv $(default_uboot_env)
+}
+
+touch /etc/config/ubootenv
+
+case "$board" in
+	qcom,ipq8074-ap-hk01-c1 |\
+	qcom,ipq8074-ap-hk01-c2 |\
+	qcom,ipq8074-ap-hk01-c3 |\
+	qcom,ipq8074-ap-hk01-c4 |\
+	qcom,ipq8074-ap-hk01-c5 |\
+	qcom,ipq8074-ap-hk01-c6 |\
+	qcom,ipq8074-ap-hk02 |\
+	qcom,ipq8074-ap-hk06 |\
+	qcom,ipq8074-ap-hk07 |\
+	qcom,ipq8074-ap-hk08 |\
+	qcom,ipq8074-ap-hk09 |\
+	qcom,ipq8074-ap-hk10-c1 |\
+	qcom,ipq8074-ap-hk10-c2 |\
+	qcom,ipq8074-ap-hk11-c1 |\
+	qcom,ipq8074-ap-hk12 |\
+	qcom,ipq8074-ap-hk14 |\
+	qcom,ipq8074-db-hk01 |\
+	qcom,ipq8074-db-hk02 |\
+	qcom,ipq8074-ap-ac01 |\
+	qcom,ipq8074-ap-ac02 |\
+	qcom,ipq8074-ap-ac03 |\
+	qcom,ipq8074-ap-ac04 |\
+	qcom,ipq8074-ap-oak02 |\
+	qcom,ipq8074-ap-oak03 |\
+	qcom,ipq5018-ap-mp02.1 |\
+	qcom,ipq5018-ap-mp03.1 |\
+	qcom,ipq5018-ap-mp03.1-c2 |\
+	qcom,ipq5018-ap-mp03.1-c3 |\
+	qcom,ipq5018-ap-mp03.3 |\
+	qcom,ipq5018-ap-mp03.3-c2 |\
+	qcom,ipq5018-ap-mp03.4-c1 |\
+	qcom,ipq5018-ap-mp03.4-c2 |\
+	qcom,ipq5018-ap-mp03.5-c1 |\
+	qcom,ipq5018-ap-mp03.5-c2 |\
+	qcom,ipq5018-ap-mp03.6-c1 |\
+	qcom,ipq5018-ap-mp03.6-c2 |\
+	qcom,ipq5018-db-mp02.1 |\
+	qcom,ipq5018-db-mp03.1 |\
+	qcom,ipq5018-db-mp03.1-c2 |\
+	qcom,ipq5018-db-mp03.3 |\
+	qcom,ipq5018-db-mp03.3-c2 |\
+	qcom,ipq5018-mp-emu |\
+	qcom,ipq5018-tb-mp04 |\
+	qcom,ipq6018-ap-cp01-c1 |\
+	qcom,ipq6018-ap-cp01-c2 |\
+	qcom,ipq6018-ap-cp01-c3 |\
+	qcom,ipq6018-ap-cp01-c4 |\
+	qcom,ipq6018-ap-cp01-c5 |\
+	qcom,ipq6018-ap-cp02-c1 |\
+	qcom,ipq6018-ap-cp03-c1 |\
+	qcom,ipq6018-db-cp01 |\
+	qcom,ipq6018-db-cp02 |\
+	qcom,ipq9574-ap-al01-c1 |\
+	qcom,ipq9574-ap-al02-c1 |\
+	qcom,ipq9574-ap-al02-c2 |\
+	qcom,ipq9574-ap-al02-c3 |\
+	qcom,ipq9574-ap-al02-c4 |\
+	qcom,ipq9574-db-al01-c1 |\
+	qcom,ipq9574-db-al01-c2 |\
+	qcom,ipq9574-db-al01-c3 |\
+	qcom,ipq9574-db-al02-c1 |\
+	qcom,ipq9574-db-al02-c2 |\
+	qcom,ipq9574-db-al02-c3)
+		ubootenv_add_uci_config $(ubootenv_mtdinfo)
+		;;
+esac
+
+config_load ubootenv
+config_foreach ubootenv_add_app_config ubootenv
+
+exit 0

@@ -1,0 +1,33 @@
+From 00afeb697b64010b4e7412637ce6f3df23cd8c2b Mon Sep 17 00:00:00 2001
+From: Sandhya KS <sandhyks@codeaurora.org>
+Date: Mon, 16 Nov 2020 18:41:56 +0530
+Subject: [PATCH] lvm2 : Filter out "rpmb" partion for eMMC devices
+
+This change will filter out "rpmb" partition of eMMC.
+While install lvm2 package, lvm2 will scan all the block
+devices.So while scaning remove the "/dev/mmcblk.*rmpb"
+partition.
+
+Signed-off-by: Md Sadre Alam <mdalam@codeaurora.org>
+Signed-off-by: Sandhya KS <sandhyks@codeaurora.org>
+---
+ conf/example.conf.in | 3 +++
+ 1 file changed, 3 insertions(+)
+
+diff --git a/conf/example.conf.in b/conf/example.conf.in
+index 6b8e0d4..d5ef029 100644
+--- a/conf/example.conf.in
++++ b/conf/example.conf.in
+@@ -59,6 +59,9 @@ devices {
+ 	# This configuration option is advanced.
+ 	scan = [ "/dev" ]
+ 
++	# Remove rpmb partition scaning for eMMC device
++	global_filter = [ "r|/dev/mmcblk.*rpmb|" ]
++
+ 	# Configuration option devices/obtain_device_list_from_udev.
+ 	# Obtain the list of available devices from udev.
+ 	# This avoids opening or using any inapplicable non-block devices or
+-- 
+2.17.1
+

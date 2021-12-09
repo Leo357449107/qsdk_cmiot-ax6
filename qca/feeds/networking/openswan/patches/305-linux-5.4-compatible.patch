@@ -1,0 +1,533 @@
+diff -Nur a/linux/include/des/des_locl.h openswan-2.6.51.3/linux/include/des/des_locl.h
+--- a/linux/include/des/des_locl.h	2020-07-24 13:51:39.448023887 -0700
++++ openswan-2.6.51.3/linux/include/des/des_locl.h	2020-07-24 13:53:42.387414966 -0700
+@@ -188,7 +188,11 @@
+ 
+ #define ITERATIONS 16
+ #define HALF_ITERATIONS 8
+-
++#if __has_attribute(__fallthrough__)
++#define FALLTHROUGH __attribute__((__fallthrough__))
++#else
++#define FALLTHROUGH
++#endif
+ /* used in des_read and des_write */
+ #define MAXWRITE	(1024*16)
+ #define BSIZE		(MAXWRITE+4)
+@@ -203,14 +207,14 @@
+ 			c+=n; \
+ 			l1=l2=0; \
+ 			switch (n) { \
+-			case 8: l2 =((DES_LONG)(*(--(c))))<<24L; \
+-			case 7: l2|=((DES_LONG)(*(--(c))))<<16L; \
+-			case 6: l2|=((DES_LONG)(*(--(c))))<< 8L; \
+-			case 5: l2|=((DES_LONG)(*(--(c))));     \
+-			case 4: l1 =((DES_LONG)(*(--(c))))<<24L; \
+-			case 3: l1|=((DES_LONG)(*(--(c))))<<16L; \
+-			case 2: l1|=((DES_LONG)(*(--(c))))<< 8L; \
+-			case 1: l1|=((DES_LONG)(*(--(c))));     \
++			case 8: l2 =((DES_LONG)(*(--(c))))<<24L; FALLTHROUGH; \
++			case 7: l2|=((DES_LONG)(*(--(c))))<<16L; FALLTHROUGH; \
++			case 6: l2|=((DES_LONG)(*(--(c))))<< 8L; FALLTHROUGH; \
++			case 5: l2|=((DES_LONG)(*(--(c))));      FALLTHROUGH; \
++			case 4: l1 =((DES_LONG)(*(--(c))))<<24L; FALLTHROUGH; \
++			case 3: l1|=((DES_LONG)(*(--(c))))<<16L; FALLTHROUGH; \
++			case 2: l1|=((DES_LONG)(*(--(c))))<< 8L; FALLTHROUGH; \
++			case 1: l1|=((DES_LONG)(*(--(c))));      FALLTHROUGH; \
+ 				} \
+ 			}
+ 
+@@ -237,14 +241,14 @@
+ #define l2cn(l1,l2,c,n)	{ \
+ 			c+=n; \
+ 			switch (n) { \
+-			case 8: *(--(c))=(unsigned char)(((l2)>>24L)&0xff); \
+-			case 7: *(--(c))=(unsigned char)(((l2)>>16L)&0xff); \
+-			case 6: *(--(c))=(unsigned char)(((l2)>> 8L)&0xff); \
+-			case 5: *(--(c))=(unsigned char)(((l2)     )&0xff); \
+-			case 4: *(--(c))=(unsigned char)(((l1)>>24L)&0xff); \
+-			case 3: *(--(c))=(unsigned char)(((l1)>>16L)&0xff); \
+-			case 2: *(--(c))=(unsigned char)(((l1)>> 8L)&0xff); \
+-			case 1: *(--(c))=(unsigned char)(((l1)     )&0xff); \
++			case 8: *(--(c))=(unsigned char)(((l2)>>24L)&0xff); FALLTHROUGH;\
++			case 7: *(--(c))=(unsigned char)(((l2)>>16L)&0xff); FALLTHROUGH;\
++			case 6: *(--(c))=(unsigned char)(((l2)>> 8L)&0xff); FALLTHROUGH;\
++			case 5: *(--(c))=(unsigned char)(((l2)     )&0xff); FALLTHROUGH;\
++			case 4: *(--(c))=(unsigned char)(((l1)>>24L)&0xff); FALLTHROUGH;\
++			case 3: *(--(c))=(unsigned char)(((l1)>>16L)&0xff); FALLTHROUGH;\
++			case 2: *(--(c))=(unsigned char)(((l1)>> 8L)&0xff); FALLTHROUGH;\
++			case 1: *(--(c))=(unsigned char)(((l1)     )&0xff); FALLTHROUGH;\
+ 				} \
+ 			}
+ 
+diff -Nur a/linux/include/openswan/ipsec_kversion.h openswan-2.6.51.3/linux/include/openswan/ipsec_kversion.h
+--- a/linux/include/openswan/ipsec_kversion.h	2020-07-24 13:51:39.448023887 -0700
++++ openswan-2.6.51.3/linux/include/openswan/ipsec_kversion.h	2020-07-24 13:52:17.599835508 -0700
+@@ -161,7 +161,9 @@
+ #endif
+ 
+ /* how to reset an skb we are reusing after encrpytion/decryption etc */
+-#if LINUX_VERSION_CODE >= KERNEL_VERSION(2,6,17)
++#if LINUX_VERSION_CODE >= KERNEL_VERSION(5,4,0)
++# define ipsec_nf_reset(skb)    nf_reset_ct((skb))
++#elif LINUX_VERSION_CODE >= KERNEL_VERSION(2,6,17)
+ # define ipsec_nf_reset(skb)	nf_reset((skb))
+ #elif LINUX_VERSION_CODE >= KERNEL_VERSION(2,3,50) && defined(CONFIG_NETFILTER)
+ # define ipsec_nf_reset(skb)	do { \
+diff -Nur a/linux/net/ipsec/aes/aes.c openswan-2.6.51.3/linux/net/ipsec/aes/aes.c
+--- a/linux/net/ipsec/aes/aes.c	2020-07-24 13:51:39.452023868 -0700
++++ openswan-2.6.51.3/linux/net/ipsec/aes/aes.c	2020-07-24 13:53:25.227500275 -0700
+@@ -1314,8 +1314,14 @@
+     {
+     case 14:    round(fwd_rnd,  b1, b0, kp         );
+                 round(fwd_rnd,  b0, b1, kp + nc    ); kp += 2 * nc;
++#if __has_attribute(__fallthrough__)
++		__attribute__((__fallthrough__));
++#endif
+     case 12:    round(fwd_rnd,  b1, b0, kp         );
+                 round(fwd_rnd,  b0, b1, kp + nc    ); kp += 2 * nc;
++#if __has_attribute(__fallthrough__)
++		__attribute__((__fallthrough__));
++#endif
+     case 10:    round(fwd_rnd,  b1, b0, kp         );
+                 round(fwd_rnd,  b0, b1, kp +     nc);
+                 round(fwd_rnd,  b1, b0, kp + 2 * nc);
+@@ -1326,6 +1332,9 @@
+                 round(fwd_rnd,  b0, b1, kp + 7 * nc);
+                 round(fwd_rnd,  b1, b0, kp + 8 * nc);
+                 round(fwd_lrnd, b0, b1, kp + 9 * nc);
++#if __has_attribute(__fallthrough__)
++		__attribute__((__fallthrough__));
++#endif
+     }
+ 
+ #elif defined(PARTIAL_UNROLL)
+@@ -1372,8 +1381,14 @@
+     {
+     case 14:    round(inv_rnd,  b1, b0, kp         );
+                 round(inv_rnd,  b0, b1, kp + nc    ); kp += 2 * nc;
++#if __has_attribute(__fallthrough__)
++		__attribute__((__fallthrough__));
++#endif
+     case 12:    round(inv_rnd,  b1, b0, kp         );
+                 round(inv_rnd,  b0, b1, kp + nc    ); kp += 2 * nc;
++#if __has_attribute(__fallthrough__)
++		__attribute__((__fallthrough__));
++#endif
+     case 10:    round(inv_rnd,  b1, b0, kp         );
+                 round(inv_rnd,  b0, b1, kp +     nc);
+                 round(inv_rnd,  b1, b0, kp + 2 * nc);
+@@ -1384,6 +1399,9 @@
+                 round(inv_rnd,  b0, b1, kp + 7 * nc);
+                 round(inv_rnd,  b1, b0, kp + 8 * nc);
+                 round(inv_lrnd, b0, b1, kp + 9 * nc);
++#if __has_attribute(__fallthrough__)
++		__attribute__((__fallthrough__));
++#endif
+     }
+ 
+ #elif defined(PARTIAL_UNROLL)
+diff -Nur a/linux/net/ipsec/infblock.c openswan-2.6.51.3/linux/net/ipsec/infblock.c
+--- a/linux/net/ipsec/infblock.c	2020-07-24 13:51:39.452023868 -0700
++++ openswan-2.6.51.3/linux/net/ipsec/infblock.c	2020-07-24 13:53:07.363588980 -0700
+@@ -235,6 +235,9 @@
+       s->sub.trees.index = 0;
+       Tracev((stderr, "inflate:       table sizes ok\n"));
+       s->mode = BTREE;
++#if __has_attribute(__fallthrough__)
++      __attribute__((__fallthrough__));
++#endif
+     case BTREE:
+       while (s->sub.trees.index < 4 + (s->sub.trees.table >> 10))
+       {
+@@ -260,6 +263,10 @@
+       s->sub.trees.index = 0;
+       Tracev((stderr, "inflate:       bits tree ok\n"));
+       s->mode = DTREE;
++#if __has_attribute(__fallthrough__)
++      __attribute__((__fallthrough__));
++#endif
++
+     case DTREE:
+       while (t = s->sub.trees.table,
+              s->sub.trees.index < 258 + (t & 0x1f) + ((t >> 5) & 0x1f))
+@@ -335,6 +342,10 @@
+       }
+       ZFREE(z, s->sub.trees.blens);
+       s->mode = CODES;
++#if __has_attribute(__fallthrough__)
++      __attribute__((__fallthrough__));
++#endif
++
+     case CODES:
+       UPDATE
+       if ((r = inflate_codes(s, z, r)) != Z_STREAM_END)
+@@ -351,11 +362,19 @@
+         break;
+       }
+       s->mode = DRY;
++#if __has_attribute(__fallthrough__)
++      __attribute__((__fallthrough__));
++#endif
++
+     case DRY:
+       FLUSH
+       if (s->read != s->write)
+         LEAVE
+       s->mode = DONE;
++#if __has_attribute(__fallthrough__)
++      __attribute__((__fallthrough__));
++#endif
++
+     case DONE:
+       r = Z_STREAM_END;
+       LEAVE
+diff -Nur a/linux/net/ipsec/infcodes.c openswan-2.6.51.3/linux/net/ipsec/infcodes.c
+--- a/linux/net/ipsec/infcodes.c	2020-07-24 13:51:39.452023868 -0700
++++ openswan-2.6.51.3/linux/net/ipsec/infcodes.c	2020-07-24 13:53:07.363588980 -0700
+@@ -118,6 +118,9 @@
+       c->sub.code.need = c->lbits;
+       c->sub.code.tree = c->ltree;
+       c->mode = LEN;
++#if __has_attribute(__fallthrough__)
++      __attribute__((__fallthrough__));
++#endif
+     case LEN:           /* i: get length/literal/eob next */
+       j = c->sub.code.need;
+       NEEDBITS(j)
+@@ -165,6 +168,9 @@
+       c->sub.code.tree = c->dtree;
+       Tracevv((stderr, "inflate:         length %u\n", c->len));
+       c->mode = DIST;
++#if __has_attribute(__fallthrough__)
++      __attribute__((__fallthrough__));
++#endif
+     case DIST:          /* i: get distance next */
+       j = c->sub.code.need;
+       NEEDBITS(j)
+@@ -195,6 +201,9 @@
+       DUMPBITS(j)
+       Tracevv((stderr, "inflate:         distance %u\n", c->sub.copy.dist));
+       c->mode = COPY;
++#if __has_attribute(__fallthrough__)
++      __attribute__((__fallthrough__));
++#endif
+     case COPY:          /* o: copying bytes in window, waiting for space */
+       f = q - c->sub.copy.dist;
+       while (f < s->window)             /* modulo window size-"while" instead */
+@@ -226,6 +235,9 @@
+       if (s->read != s->write)
+         LEAVE
+       c->mode = END;
++#if __has_attribute(__fallthrough__)
++      __attribute__((__fallthrough__));
++#endif
+     case END:
+       r = Z_STREAM_END;
+       LEAVE
+diff -Nur a/linux/net/ipsec/inflate.c openswan-2.6.51.3/linux/net/ipsec/inflate.c
+--- a/linux/net/ipsec/inflate.c	2020-07-24 13:51:39.452023868 -0700
++++ openswan-2.6.51.3/linux/net/ipsec/inflate.c	2020-07-24 13:53:07.363588980 -0700
+@@ -179,6 +179,9 @@
+         break;
+       }
+       z->state->mode = FLAG;
++#if __has_attribute(__fallthrough__)
++      __attribute__((__fallthrough__));
++#endif
+     case FLAG:
+       NEEDBYTE
+       b = NEXTBYTE;
+@@ -196,18 +199,30 @@
+         break;
+       }
+       z->state->mode = DICT4;
++#if __has_attribute(__fallthrough__)
++      __attribute__((__fallthrough__));
++#endif
+     case DICT4:
+       NEEDBYTE
+       z->state->sub.check.need = (uLong)NEXTBYTE << 24;
+       z->state->mode = DICT3;
++#if __has_attribute(__fallthrough__)
++      __attribute__((__fallthrough__));
++#endif
+     case DICT3:
+       NEEDBYTE
+       z->state->sub.check.need += (uLong)NEXTBYTE << 16;
+       z->state->mode = DICT2;
++#if __has_attribute(__fallthrough__)
++      __attribute__((__fallthrough__));
++#endif
+     case DICT2:
+       NEEDBYTE
+       z->state->sub.check.need += (uLong)NEXTBYTE << 8;
+       z->state->mode = DICT1;
++#if __has_attribute(__fallthrough__)
++      __attribute__((__fallthrough__));
++#endif
+     case DICT1:
+       NEEDBYTE
+       z->state->sub.check.need += (uLong)NEXTBYTE;
+@@ -239,18 +254,30 @@
+         break;
+       }
+       z->state->mode = CHECK4;
++#if __has_attribute(__fallthrough__)
++      __attribute__((__fallthrough__));
++#endif
+     case CHECK4:
+       NEEDBYTE
+       z->state->sub.check.need = (uLong)NEXTBYTE << 24;
+       z->state->mode = CHECK3;
++#if __has_attribute(__fallthrough__)
++      __attribute__((__fallthrough__));
++#endif
+     case CHECK3:
+       NEEDBYTE
+       z->state->sub.check.need += (uLong)NEXTBYTE << 16;
+       z->state->mode = CHECK2;
++#if __has_attribute(__fallthrough__)
++      __attribute__((__fallthrough__));
++#endif
+     case CHECK2:
+       NEEDBYTE
+       z->state->sub.check.need += (uLong)NEXTBYTE << 8;
+       z->state->mode = CHECK1;
++#if __has_attribute(__fallthrough__)
++      __attribute__((__fallthrough__));
++#endif
+     case CHECK1:
+       NEEDBYTE
+       z->state->sub.check.need += (uLong)NEXTBYTE;
+@@ -264,6 +291,9 @@
+       }
+       Tracev((stderr, "inflate: zlib check ok\n"));
+       z->state->mode = DONE;
++#if __has_attribute(__fallthrough__)
++      __attribute__((__fallthrough__));
++#endif
+     case DONE:
+       return Z_STREAM_END;
+     case BAD:
+diff -Nur a/linux/net/ipsec/ipsec_alg_cryptoapi.c openswan-2.6.51.3/linux/net/ipsec/ipsec_alg_cryptoapi.c
+--- a/linux/net/ipsec/ipsec_alg_cryptoapi.c	2020-07-24 13:51:39.452023868 -0700
++++ openswan-2.6.51.3/linux/net/ipsec/ipsec_alg_cryptoapi.c	2020-07-24 13:53:07.363588980 -0700
+@@ -36,6 +36,9 @@
+  *	special case: ipsec core modular with this static algo inside:
+  *	must avoid MODULE magic for this file
+  */
++#ifndef CONFIG_KLIPS_MODULE
++#define CONFIG_KLIPS_MODULE 0
++#endif
+ #if CONFIG_KLIPS_MODULE && CONFIG_KLIPS_ENC_CRYPTOAPI
+ #undef MODULE
+ #endif
+@@ -416,9 +419,10 @@
+ 	struct crypto_tfm *tfm=(struct crypto_tfm *)key_e;
+ 	struct scatterlist sg;
+ 	struct blkcipher_desc desc;
++	char *ivp;
+ 	int ivsize = crypto_blkcipher_ivsize(crypto_blkcipher_cast(tfm));
+-	char ivp[ivsize];
+ 
++	ivp =  kmalloc(ivsize, GFP_ATOMIC);
+ 	/* we do not want them copying back the IV in place so copy it */
+ 	memcpy(ivp, iv, ivsize);
+ 
+@@ -444,6 +448,7 @@
+ 		printk(KERN_DEBUG "klips_debug:_capi_cbc_encrypt:"
+ 				"error=%d\n"
+ 				, error);
++	kfree(ivp);
+ 	return (error<0)? error : ilen;
+ }
+ /*
+diff -Nur a/linux/net/ipsec/ipsec_mast.c openswan-2.6.51.3/linux/net/ipsec/ipsec_mast.c
+--- a/linux/net/ipsec/ipsec_mast.c	2020-07-24 13:51:39.452023868 -0700
++++ openswan-2.6.51.3/linux/net/ipsec/ipsec_mast.c	2020-07-24 13:52:17.603835487 -0700
+@@ -874,8 +874,12 @@
+ 	dev->neigh_setup        = ipsec_mast_neigh_setup_dev;
+ #endif
+ #ifdef alloc_netdev
++#if LINUX_VERSION_CODE > KERNEL_VERSION(4, 11, 9)
++	dev->priv_destructor         = free_netdev;
++#else
+ 	dev->destructor         = free_netdev;
+ #endif
++#endif
+ 
+ #ifndef alloc_netdev
+ 	dev->priv = kmalloc(sizeof(struct mastpriv), GFP_KERNEL);
+diff -Nur a/linux/net/ipsec/ipsec_ocf.c openswan-2.6.51.3/linux/net/ipsec/ipsec_ocf.c
+--- a/linux/net/ipsec/ipsec_ocf.c	2020-07-24 13:51:39.452023868 -0700
++++ openswan-2.6.51.3/linux/net/ipsec/ipsec_ocf.c	2020-07-24 13:53:07.363588980 -0700
+@@ -540,6 +540,8 @@
+ 	struct ipsec_sa *ipsp;
+ 	int req_count = 0;
+ 	int rc, err;
++	struct ipsec_sa *iter;
++	struct ipsec_skb_cb *skb_cb;
+ 
+ 	KLIPS_PRINT(debug_rcv, "klips_debug:ipsec_ocf_rcv\n");
+ 
+@@ -734,8 +736,7 @@
+ 	/*
+ 	 * Update information required in NSS.
+ 	 */
+-	struct ipsec_sa *iter;
+-	struct ipsec_skb_cb *skb_cb = (struct ipsec_skb_cb *)irs->skb->cb;
++	skb_cb = (struct ipsec_skb_cb *)irs->skb->cb;
+ 
+ 	skb_cb->magic = SKB_CB_MAGIC;
+ 	skb_cb->tunnel_dev = irs->skb->dev;
+diff -Nur a/linux/net/ipsec/ipsec_tunnel.c openswan-2.6.51.3/linux/net/ipsec/ipsec_tunnel.c
+--- a/linux/net/ipsec/ipsec_tunnel.c	2020-07-24 13:51:39.452023868 -0700
++++ openswan-2.6.51.3/linux/net/ipsec/ipsec_tunnel.c	2020-07-24 13:52:17.603835487 -0700
+@@ -2007,8 +2007,12 @@
+ 		    dev->name ? dev->name : "NULL");
+ 
+ #ifdef alloc_netdev
++#if LINUX_VERSION_CODE > KERNEL_VERSION(4, 11, 9)
++	dev->priv_destructor         = free_netdev;
++#else
+ 	dev->destructor         = free_netdev;
+ #endif
++#endif
+ 
+ #ifndef HAVE_NETDEV_PRIV
+ 	{
+diff -Nur a/linux/net/ipsec/pfkey_v2.c openswan-2.6.51.3/linux/net/ipsec/pfkey_v2.c
+--- a/linux/net/ipsec/pfkey_v2.c	2020-07-24 13:51:39.452023868 -0700
++++ openswan-2.6.51.3/linux/net/ipsec/pfkey_v2.c	2020-07-24 13:52:17.603835487 -0700
+@@ -788,7 +788,11 @@
+ 	KLIPS_PRINT(debug_pfkey,
+ 		    "klips_debug:pfkey_create: "
+ 		    "sock->wq->fasync_list=0p%p sk_sleep(sk)=0p%p.\n",
++#if LINUX_VERSION_CODE >= KERNEL_VERSION(5,4,0)
++		    sock->wq.fasync_list,
++#else
+ 		    sock->wq->fasync_list,
++#endif
+ 		    sk_sleep(sk));
+ #else
+ 	KLIPS_PRINT(debug_pfkey,
+diff -Nur a/linux/net/ipsec/pfkey_v2_ext_process.c openswan-2.6.51.3/linux/net/ipsec/pfkey_v2_ext_process.c
+--- a/linux/net/ipsec/pfkey_v2_ext_process.c	2020-07-24 13:51:39.452023868 -0700
++++ openswan-2.6.51.3/linux/net/ipsec/pfkey_v2_ext_process.c	2020-07-24 13:53:07.363588980 -0700
+@@ -489,6 +489,9 @@
+ 	switch(pfkey_address->sadb_address_exttype) {
+ 	case K_SADB_X_EXT_ADDRESS_DST2:
+ 		ipsp = extr->ips2;
++#if __has_attribute(__fallthrough__)
++		__attribute__((__fallthrough__));
++#endif
+ 	case K_SADB_EXT_ADDRESS_DST:
+ 		if(s->sa_family == AF_INET) {
+ 			ipsp->ips_said.dst.u.v4.sin_addr.s_addr = ((struct sockaddr_in*)(ipsp->ips_addr_d))->sin_addr.s_addr;
+diff -Nur a/linux/net/ipsec/pfkey_v2_parse.c openswan-2.6.51.3/linux/net/ipsec/pfkey_v2_parse.c
+--- a/linux/net/ipsec/pfkey_v2_parse.c	2020-07-24 13:51:39.452023868 -0700
++++ openswan-2.6.51.3/linux/net/ipsec/pfkey_v2_parse.c	2020-07-24 13:53:07.363588980 -0700
+@@ -1318,6 +1318,9 @@
+ 				  pfkey_msg->sadb_msg_type,
+ 				  pfkey_v2_sadb_type_string(pfkey_msg->sadb_msg_type));
+ 		}
++#if __has_attribute(__fallthrough__)
++		__attribute__((__fallthrough__));
++#endif
+ 	case K_SADB_ACQUIRE:
+ 	case K_SADB_REGISTER:
+ 	case K_SADB_EXPIRE:
+@@ -1329,6 +1332,10 @@
+ 				  pfkey_v2_sadb_type_string(pfkey_msg->sadb_msg_type));
+ 			SENDERR(EINVAL);
+ 		}
++#if __has_attribute(__fallthrough__)
++		__attribute__((__fallthrough__));
++#endif
++
+ 	default:
+ 		break;
+ 	}
+diff -Nur a/linux/net/ipsec/sysctl_net_ipsec.c openswan-2.6.51.3/linux/net/ipsec/sysctl_net_ipsec.c
+--- a/linux/net/ipsec/sysctl_net_ipsec.c	2020-07-24 13:51:39.452023868 -0700
++++ openswan-2.6.51.3/linux/net/ipsec/sysctl_net_ipsec.c	2020-07-24 13:52:17.603835487 -0700
+@@ -304,7 +304,11 @@
+           .child    = NULL,
+           .proc_handler = &proc_dointvec,
+        },
++#if LINUX_VERSION_CODE > KERNEL_VERSION(4,11,9)
++       {}
++#else
+        {0}
++#endif
+ #else
+ 	{ NET_IPSEC_ICMP, "icmp", &sysctl_ipsec_icmp,
+ 	  sizeof(int), 0644, NULL, .proc_handler = &proc_dointvec},
+@@ -312,8 +316,12 @@
+ 	  sizeof(int), 0644, NULL, .proc_handler = &proc_dointvec},
+ 	{ NET_IPSEC_TOS, "tos", &sysctl_ipsec_tos,
+ 	  sizeof(int), 0644, NULL, .proc_handler = &proc_dointvec},
++#if LINUX_VERSION_CODE > KERNEL_VERSION(4,11,9)
++        {}
++#else
+ 	{0}
+ #endif
++#endif
+ };
+ 
+ static struct ctl_table ipsec_net_table[] = {
+@@ -326,10 +334,18 @@
+           .child    = ipsec_table,
+           .proc_handler = NULL,
+         },
+-       { 0 }
++#if LINUX_VERSION_CODE > KERNEL_VERSION(4,11,9)
++        {}
++#else
++	{0}
++#endif
+ #else
+         { NET_IPSEC, "ipsec", NULL, 0, 0555, ipsec_table },
+-        { 0 }
++#if LINUX_VERSION_CODE > KERNEL_VERSION(4,11,9)
++        {}
++#else
++	{0}
++#endif
+ #endif
+ };
+ 
+@@ -343,10 +359,18 @@
+           .child    = ipsec_net_table,
+           .proc_handler = NULL,
+         },
+-       { 0 }
++#if LINUX_VERSION_CODE > KERNEL_VERSION(4,11,9)
++        {}
++#else
++	{0}
++#endif
+ #else
+         { CTL_NET, "net", NULL, 0, 0555, ipsec_net_table },
+-        { 0 }
++#if LINUX_VERSION_CODE > KERNEL_VERSION(4,11,9)
++        {}
++#else
++	{0}
++#endif
+ #endif
+ };
+ 
+diff -Nur a/Makefile openswan-2.6.51.3/Makefile
+--- a/Makefile	2020-07-24 13:51:39.428023986 -0700
++++ openswan-2.6.51.3/Makefile	2020-07-24 13:52:17.603835487 -0700
+@@ -380,7 +380,7 @@
+ 	@if [ -f ${KERNELSRC}/Rules.make ] ; then \                 echo "Warning: Building for a 2.6 kernel in what looks like a 2.4 tree"; \
+         fi ; \
+         ${MAKE}  ${MOD26BUILDDIR}/Makefile
+-	${MAKE} -C ${KERNELSRC} ${KERNELBUILDMFLAGS} BUILDDIR=${MOD26BUILDDIR} SUBDIRS=${MOD26BUILDDIR} MODULE_DEF_INCLUDE=${MODULE_DEF_INCLUDE} MODULE_DEFCONFIG=${MODULE_DEFCONFIG}  MODULE_EXTRA_INCLUDE=${MODULE_EXTRA_INCLUDE} ARCH=${ARCH} V=${V} modules
++	${MAKE} -C ${KERNELSRC} ${KERNELBUILDMFLAGS} BUILDDIR=${MOD26BUILDDIR} M=${MOD26BUILDDIR} MODULE_DEF_INCLUDE=${MODULE_DEF_INCLUDE} MODULE_DEFCONFIG=${MODULE_DEFCONFIG}  MODULE_EXTRA_INCLUDE=${MODULE_EXTRA_INCLUDE} ARCH=${ARCH} V=${V} modules
+ 	@echo
+ 	@echo '========================================================='
+ 	@echo

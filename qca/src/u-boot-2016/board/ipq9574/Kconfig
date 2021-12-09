@@ -1,0 +1,21 @@
+if ARCH_IPQ9574
+
+config SYS_CPU
+       default "ipq9574"
+
+config SYS_BOARD
+       default "ipq9574"
+
+config SYS_VENDOR
+       default "qca/arm"
+
+config SYS_CONFIG_NAME
+       default "ipq9574"
+
+config IPQ9574_QCA_AQUANTIA_PHY
+	bool "Enable Aquantia PHY support for ipq9574"
+
+config IPQ9574_QCA8075_PHY
+	bool "Enable Malibu PHY support for ipq9574"
+
+endif

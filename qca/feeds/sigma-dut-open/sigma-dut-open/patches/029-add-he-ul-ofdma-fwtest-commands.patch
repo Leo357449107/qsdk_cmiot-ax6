@@ -1,0 +1,48 @@
+--- a/ap.c
++++ b/ap.c
+@@ -6837,6 +6837,7 @@ static void ath_ap_set_params(struct sig
+ 			run_system_wrapper(dut,
+ 					   "wifitool %s setUnitTestCmd 0x47 2 11 0",
+ 					   ifname);
++
+ 		}
+ 	}
+ 
+@@ -7666,6 +7667,27 @@ static int write_hostapd_conf_password(s
+ 
+ static void fwtest_set_he_params(struct sigma_dut *dut, const char *ifname)
+ {
++	int pdev_id;
++
++	if (strcmp(ifname, "wlan0") == 0) {
++		pdev_id = 1;
++	} else if (strcmp(ifname, "wlan1") == 0) {
++		pdev_id = 2;
++	} else {
++		pdev_id = 3;
++	}
++
++	/* he_dynamic_muedca 0 */
++	run_system_wrapper(dut, "ath11k-fwtest -t 2 -i %s -m 0x00 -p %d 0xBF 0x00", ifname, pdev_id);
++
++	/* Trigger Interval */
++	run_system_wrapper(dut, "ath11k-fwtest -t 2 -i %s -m 0x00 -p %d 0xA2 0x02", ifname, pdev_id);
++	/* he_mu_edca 1 */
++	fwtest_cmd_wrapper(dut, "-m 0x00 -v 0 0x8F 0x01", ifname);
++	/* he ul ltf */
++	fwtest_cmd_wrapper(dut, "-m 0x00 -v 0 0x8D 0x03", ifname);
++	/*he ul gi */
++	fwtest_cmd_wrapper(dut, "-m 0x00 -v 0 0x89 0x03", ifname);
+ 	/* disable sending basic triggers */
+ 	fwtest_cmd_wrapper(dut, "-m 0x47 -v 0 42 0", ifname);
+ 	/* disable MU BAR */
+@@ -14007,6 +14029,9 @@ static void mac80211_set_trigger_type_3(
+ 
+ static void mac80211_set_trigger_type_4(struct sigma_dut *dut, const char *ifname)
+ {
++	/* Trigger interval */
++	run_system_wrapper(dut, "ath11k-fwtest -t 2 -i %s -m 0x00 -p 1 0xA2 0xC8", ifname);
++
+ 	/* TriggerType "4" for BSRP */
+ 	run_system_wrapper(dut, "ath11k-fwtest -i %s -m 0x48 -v 0 63 1000",
+ 			   ifname);

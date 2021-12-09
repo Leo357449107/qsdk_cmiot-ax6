@@ -1,0 +1,111 @@
+config BUSYBOX_DEFAULT_FEATURE_EDITING_MAX_LEN
+	int
+	default 1024
+config BUSYBOX_DEFAULT_FEATURE_EDITING_SAVEHISTORY
+	bool
+	default y
+config BUSYBOX_DEFAULT_FEATURE_REVERSE_SEARCH
+	bool
+	default y
+config BUSYBOX_DEFAULT_FEATURE_DD_THIRD_STATUS_LINE
+	bool
+	default y
+config BUSYBOX_DEFAULT_STAT
+	bool
+	default y
+config BUSYBOX_DEFAULT_FEATURE_STAT_FORMAT
+	bool
+	default y
+config BUSYBOX_DEFAULT_USLEEP
+	bool
+	default y
+config BUSYBOX_DEFAULT_RUN_PARTS
+	bool
+	default y
+config BUSYBOX_DEFAULT_IPCS
+	bool
+	default y
+config BUSYBOX_DEFAULT_TASKSET
+	bool
+	default y
+config BUSYBOX_DEFAULT_FTPD
+	bool
+	default y
+config BUSYBOX_DEFAULT_FEATURE_FTPD_WRITE
+	bool
+	default y
+config BUSYBOX_DEFAULT_FEATURE_FTPD_AUTHENTICATION
+	bool
+	default y
+config BUSYBOX_DEFAULT_FTPGET
+	bool
+	default y
+config BUSYBOX_DEFAULT_FTPPUT
+	bool
+	default y
+config BUSYBOX_DEFAULT_FEATURE_FTPGETPUT_LONG_OPTIONS
+	bool
+	default y
+config BUSYBOX_DEFAULT_TFTP
+	bool
+	default y
+config BUSYBOX_DEFAULT_TFTPD
+	bool
+	default y
+config BUSYBOX_DEFAULT_FEATURE_TFTP_GET
+	bool
+	default y
+config BUSYBOX_DEFAULT_FEATURE_TFTP_PUT
+	bool
+	default y
+config BUSYBOX_DEFAULT_BUSYBOX
+	bool
+	default y
+config BUSYBOX_DEFAULT_HOSTID
+	bool
+	default y
+config BUSYBOX_DEFAULT_DEVMEM
+	bool
+	default y
+config BUSYBOX_DEFAULT_ARPING
+	bool
+	default y
+config BUSYBOX_DEFAULT_INETD
+	bool
+	default y
+config BUSYBOX_DEFAULT_FEATURE_INETD_SUPPORT_BUILTIN_ECHO
+	bool
+	default y
+config BUSYBOX_DEFAULT_FEATURE_INETD_SUPPORT_BUILTIN_DISCARD
+	bool
+	default y
+config BUSYBOX_DEFAULT_FEATURE_INETD_SUPPORT_BUILTIN_TIME
+	bool
+	default y
+config BUSYBOX_DEFAULT_FEATURE_INETD_SUPPORT_BUILTIN_DAYTIME
+	bool
+	default y
+config BUSYBOX_DEFAULT_FEATURE_INETD_SUPPORT_BUILTIN_CHARGEN
+	bool
+	default y
+config BUSYBOX_DEFAULT_VCONFIG
+	bool
+	default y
+config BUSYBOX_DEFAULT_WGET
+	bool
+	default y
+config BUSYBOX_DEFAULT_FEATURE_WGET_LONG_OPTIONS
+	bool
+	default y
+config BUSYBOX_DEFAULT_FEATURE_WGET_STATUSBAR
+	bool
+	default y
+config BUSYBOX_DEFAULT_FEATURE_WGET_AUTHENTICATION
+	bool
+	default y
+config BUSYBOX_DEFAULT_BASE64
+	bool
+	default y
+config BUSYBOX_DEFAULT_TELNET
+	bool
+	default y

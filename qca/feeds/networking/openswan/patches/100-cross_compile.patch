@@ -1,0 +1,28 @@
+diff -Nur a/programs/Makefile.program openswan-2.6.51.3/programs/Makefile.program
+--- a/programs/Makefile.program	2019-04-04 10:35:43.374894871 -0700
++++ openswan-2.6.51.3/programs/Makefile.program	2019-04-04 10:37:06.030892424 -0700
+@@ -62,10 +62,6 @@
+ 
+ CFLAGS+= ${WERROR}
+ 
+-ifneq ($(LD_LIBRARY_PATH),)
+-LDFLAGS=-L$(LD_LIBRARY_PATH)
+-endif
+-
+ ifeq ($(USE_DMALLOC),true)
+ CFLAGS+=-DDMALLOC
+ LIBS+= -ldmalloc
+diff -Nur a/programs/pluto/Makefile openswan-2.6.51.3/programs/pluto/Makefile
+--- a/programs/pluto/Makefile	2019-04-04 10:35:43.378894871 -0700
++++ openswan-2.6.51.3/programs/pluto/Makefile	2019-04-04 10:36:40.838893170 -0700
+@@ -62,10 +62,6 @@
+ 
+ ALLFLAGS = $(CPPFLAGS) $(CFLAGS) ${CROSSFLAGS}
+ 
+-ifneq ($(LD_LIBRARY_PATH),)
+-LDFLAGS+=-L$(LD_LIBRARY_PATH)
+-endif
+-
+ RM = /bin/rm
+ RMFLAGS = -f
+ 

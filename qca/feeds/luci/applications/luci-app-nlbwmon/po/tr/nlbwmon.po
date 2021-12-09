@@ -1,0 +1,563 @@
+msgid ""
+msgstr ""
+"PO-Revision-Date: 2021-07-05 20:29+0000\n"
+"Last-Translator: ToldYouThat <itoldyouthat@protonmail.com>\n"
+"Language-Team: Turkish <https://hosted.weblate.org/projects/openwrt/"
+"luciapplicationsnlbwmon/tr/>\n"
+"Language: tr\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Plural-Forms: nplurals=2; plural=n != 1;\n"
+"X-Generator: Weblate 4.8-dev\n"
+
+#: applications/luci-app-nlbwmon/htdocs/luci-static/resources/view/nlbw.js:661
+msgid "%d IPv4-only hosts"
+msgstr "%d sadece IPv4 cihazlar"
+
+#: applications/luci-app-nlbwmon/htdocs/luci-static/resources/view/nlbw.js:668
+msgid "%d IPv6-only hosts"
+msgstr "%d sadece IPv6 cihazlar"
+
+#: applications/luci-app-nlbwmon/htdocs/luci-static/resources/view/nlbw.js:675
+msgid "%d dual-stack hosts"
+msgstr "%d ikili-küme destekli cihazlar"
+
+#: applications/luci-app-nlbwmon/htdocs/luci-static/resources/view/nlbw.js:71
+msgid "%s and %s"
+msgstr "%s ve %s"
+
+#: applications/luci-app-nlbwmon/htdocs/luci-static/resources/view/nlbw.js:69
+msgid "%s, %s and %s"
+msgstr "%s, %s ve %s"
+
+#: applications/luci-app-nlbwmon/luasrc/model/cbi/nlbw/config.lua:68
+msgid "-1 - Restart every last day of month"
+msgstr "-1 - Her ayın son günü yeniden başlat"
+
+#: applications/luci-app-nlbwmon/luasrc/model/cbi/nlbw/config.lua:69
+msgid "-7 - Restart a week before end of month"
+msgstr "-7 - Ay bitiminden bir hafta önce yeniden başlat"
+
+#: applications/luci-app-nlbwmon/luasrc/model/cbi/nlbw/config.lua:67
+msgid "1 - Restart every 1st of month"
+msgstr "1 - Her ayın 1'inde yeniden başlat"
+
+#: applications/luci-app-nlbwmon/luasrc/model/cbi/nlbw/config.lua:183
+msgid "10m - frequent commits at the expense of flash wear"
+msgstr "10dk - Bellek ömrü pahasına sık yedekleme"
+
+#: applications/luci-app-nlbwmon/luasrc/model/cbi/nlbw/config.lua:182
+msgid "12h - compromise between risk of data loss and flash wear"
+msgstr "12sa - Bellek ömrü ve veri kaybı arasında denge"
+
+#: applications/luci-app-nlbwmon/luasrc/model/cbi/nlbw/config.lua:181
+msgid "24h - least flash wear at the expense of data loss risk"
+msgstr "24sa - Veri kaybı pahasına uzun bellek ömrü"
+
+#: applications/luci-app-nlbwmon/luasrc/model/cbi/nlbw/config.lua:191
+msgid "30s - refresh twice per minute for reasonably current stats"
+msgstr "30sn - oldukça güncel istatistikler için dakikada iki kez yenileme"
+
+#: applications/luci-app-nlbwmon/luasrc/model/cbi/nlbw/config.lua:192
+msgid "5m - rarely refresh to avoid frequently clearing conntrack counters"
+msgstr ""
+"5dk - bağlantı takip sayaçlarının sık sıfırlanmasını önlemek için seyrek "
+"yenileme"
+
+#: applications/luci-app-nlbwmon/luasrc/model/cbi/nlbw/config.lua:184
+msgid "60s - commit minutely, useful for non-flash storage"
+msgstr ""
+"60sn - dakika başı yedekleme, flash tabanlı olmayan depolama için kullanışlı"
+
+#: applications/luci-app-nlbwmon/luasrc/view/nlbw/display.htm:40
+msgid "<big id=\"conn-total\">0</big> connections"
+msgstr "<big id=\"conn-total\">0</big> bağlantı(lar)"
+
+#: applications/luci-app-nlbwmon/luasrc/view/nlbw/display.htm:37
+msgid "<big id=\"host-total\">0</big> hosts"
+msgstr "<big id=\"host-total\">0</big> cihaz(lar)"
+
+#: applications/luci-app-nlbwmon/luasrc/view/nlbw/display.htm:114
+msgid "<big id=\"ipv6-hosts\">0%</big> IPv6 support rate among hosts"
+msgstr ""
+"<big id=\"ipv6-hosts\">0%</big> cihazlar arasında IPv6 destekleme oranı"
+
+#: applications/luci-app-nlbwmon/luasrc/view/nlbw/display.htm:116
+msgid "<big id=\"ipv6-rx\">0B</big> total IPv6 download"
+msgstr "<big id=\"ipv6-rx\">0B</big> toplam IPv6 indirme"
+
+#: applications/luci-app-nlbwmon/luasrc/view/nlbw/display.htm:115
+msgid "<big id=\"ipv6-share\">0%</big> of the total traffic is IPv6"
+msgstr "<big id=\"ipv6-share\">0%</big> IPv6'nın toplam trafikteki oranı"
+
+#: applications/luci-app-nlbwmon/luasrc/view/nlbw/display.htm:117
+msgid "<big id=\"ipv6-tx\">0B</big> total IPv6 upload"
+msgstr "<big id=\"ipv6-tx\">0B</big> toplam IPv6 yükleme"
+
+#: applications/luci-app-nlbwmon/luasrc/view/nlbw/display.htm:79
+msgid "<big id=\"layer7-most-conn\">0</big> cause the most connections"
+msgstr "<big id=\"layer7-most-conn\">0</big> en çok bağlantı yapan"
+
+#: applications/luci-app-nlbwmon/luasrc/view/nlbw/display.htm:77
+msgid "<big id=\"layer7-most-rx\">0</big> cause the most download"
+msgstr "<big id=\"layer7-most-rx\">0</big> en çok indirme yapan"
+
+#: applications/luci-app-nlbwmon/luasrc/view/nlbw/display.htm:78
+msgid "<big id=\"layer7-most-tx\">0</big> cause the most upload"
+msgstr "<big id=\"layer7-most-tx\">0</big> en çok yükleme yapan"
+
+#: applications/luci-app-nlbwmon/luasrc/view/nlbw/display.htm:76
+msgid "<big id=\"layer7-total\">0</big> different application protocols"
+msgstr "<big id=\"layer7-total\">0</big> farklı uygulama protokolü"
+
+#: applications/luci-app-nlbwmon/luasrc/view/nlbw/display.htm:38
+msgid "<big id=\"rx-total\">0</big> download"
+msgstr "<big id=\"rx-total\">0</big> indirme"
+
+#: applications/luci-app-nlbwmon/luasrc/view/nlbw/display.htm:39
+msgid "<big id=\"tx-total\">0</big> upload"
+msgstr "<big id=\"tx-total\">0</big> yükleme"
+
+#: applications/luci-app-nlbwmon/luasrc/model/cbi/nlbw/config.lua:25
+msgid "Accounting period"
+msgstr "Hesaplama dönemi"
+
+#: applications/luci-app-nlbwmon/luasrc/model/cbi/nlbw/config.lua:21
+msgid "Advanced Settings"
+msgstr "Gelişmiş Ayarlar"
+
+#: applications/luci-app-nlbwmon/luasrc/view/nlbw/display.htm:85
+msgid "Application"
+msgstr "Uygulama"
+
+#: applications/luci-app-nlbwmon/luasrc/view/nlbw/display.htm:62
+msgid "Application Protocols"
+msgstr "Bağlantı Protokolleri"
+
+#: applications/luci-app-nlbwmon/luasrc/controller/nlbw.lua:10
+msgid "Backup"
+msgstr "Yedekleme"
+
+#: applications/luci-app-nlbwmon/luasrc/controller/nlbw.lua:7
+msgid "Bandwidth Monitor"
+msgstr "Bant Genişliği İzleme"
+
+#: applications/luci-app-nlbwmon/luasrc/view/nlbw/display.htm:142
+msgid "CSV, grouped by IP"
+msgstr "CSV, IP'ye göre gruplandırılmış"
+
+#: applications/luci-app-nlbwmon/luasrc/view/nlbw/display.htm:141
+msgid "CSV, grouped by MAC"
+msgstr "CSV, MAC adresine göre gruplandırılmış"
+
+#: applications/luci-app-nlbwmon/luasrc/view/nlbw/display.htm:143
+msgid "CSV, grouped by protocol"
+msgstr "CSV, protokole göre gruplandırılmış"
+
+#: applications/luci-app-nlbwmon/luasrc/model/cbi/nlbw/config.lua:52
+msgid ""
+"Changing the accounting interval type will invalidate existing databases!"
+"<br /><strong><a href=\"%s\">Download backup</a></strong>."
+msgstr ""
+"Hesaplama aralığı türünü değiştirmek, mevcut veritabanlarını geçersiz "
+"kılacaktır!<br /><strong><a href=\"%s\">Yedeği indir</a></strong>."
+
+#: applications/luci-app-nlbwmon/luasrc/model/cbi/nlbw/config.lua:26
+msgid ""
+"Choose \"Day of month\" to restart the accounting period monthly on a "
+"specific date, e.g. every 3rd. Choose \"Fixed interval\" to restart the "
+"accounting period exactly every N days, beginning at a given date."
+msgstr ""
+"Hesaplama dönemini aylık olarak belirli bir günde yenilemek için bir \"Ay "
+"Gününü\" seçin, örn. her ayın 3'ü. Hesaplama dönemini belirli bir tarihten "
+"başlayarak, her X günde bir yenilemek için ise \"Sabit aralık\" ı seçin."
+
+#: applications/luci-app-nlbwmon/luasrc/view/nlbw/display.htm:56
+#: applications/luci-app-nlbwmon/luasrc/view/nlbw/display.htm:94
+#: applications/luci-app-nlbwmon/luasrc/view/nlbw/display.htm:133
+msgid "Collecting data..."
+msgstr "Veriler toplanıyor..."
+
+#: applications/luci-app-nlbwmon/luasrc/model/cbi/nlbw/config.lua:177
+msgid "Commit interval"
+msgstr "Yedekleme aralığı"
+
+#: applications/luci-app-nlbwmon/luasrc/model/cbi/nlbw/config.lua:164
+msgid "Compress database"
+msgstr "Veritabanını sıkıştır"
+
+#: applications/luci-app-nlbwmon/luasrc/controller/nlbw.lua:9
+msgid "Configuration"
+msgstr "Yapılandırma"
+
+#: applications/luci-app-nlbwmon/htdocs/luci-static/resources/view/nlbw.js:302
+msgid "Conn."
+msgstr "Bğlnt."
+
+#: applications/luci-app-nlbwmon/luasrc/view/nlbw/display.htm:48
+#: applications/luci-app-nlbwmon/luasrc/view/nlbw/display.htm:86
+msgid "Connections"
+msgstr "Bağlantılar"
+
+#: applications/luci-app-nlbwmon/luasrc/view/nlbw/display.htm:31
+msgid "Connections / Host"
+msgstr "Bağlantılar / Cihaz"
+
+#: applications/luci-app-nlbwmon/luasrc/model/cbi/nlbw/config.lua:195
+msgid "Database directory"
+msgstr "Veritabanı dizini"
+
+#: applications/luci-app-nlbwmon/luasrc/model/cbi/nlbw/config.lua:196
+msgid ""
+"Database storage directory. One file per accounting period will be placed "
+"into this directory."
+msgstr ""
+"Veritabanı saklama dizini. Her hesap dönemi için bir dosya bu dizine "
+"yerleştirilecektir."
+
+#: applications/luci-app-nlbwmon/luasrc/model/cbi/nlbw/config.lua:28
+msgid "Day of month"
+msgstr "Ayın günü"
+
+#: applications/luci-app-nlbwmon/luasrc/model/cbi/nlbw/config.lua:63
+msgid ""
+"Day of month to restart the accounting period. Use negative values to count "
+"towards the end of month, e.g. \"-5\" to specify the 27th of July or the "
+"24th of February."
+msgstr ""
+"Hesap dönemini yenilemek için ayın günü. Ayın sonundan doğru saymak için "
+"negatif değerler kullanın, örn. 27 Temmuz veya 24 Şubat'ı belirtmek için "
+"\"-5\"."
+
+#: applications/luci-app-nlbwmon/luasrc/controller/nlbw.lua:8
+msgid "Display"
+msgstr "Görüntüle"
+
+#: applications/luci-app-nlbwmon/htdocs/luci-static/resources/view/nlbw.js:303
+msgid "Down. (Bytes)"
+msgstr "İndr. (Bayt)"
+
+#: applications/luci-app-nlbwmon/htdocs/luci-static/resources/view/nlbw.js:304
+msgid "Down. (Pkts.)"
+msgstr "İndr. (Pktlr.)"
+
+#: applications/luci-app-nlbwmon/htdocs/luci-static/resources/view/nlbw.js:285
+msgid "Download"
+msgstr "İndir"
+
+#: applications/luci-app-nlbwmon/luasrc/view/nlbw/display.htm:49
+#: applications/luci-app-nlbwmon/luasrc/view/nlbw/display.htm:87
+#: applications/luci-app-nlbwmon/luasrc/view/nlbw/display.htm:126
+msgid "Download (Bytes)"
+msgstr "İndirme (Bayt)"
+
+#: applications/luci-app-nlbwmon/luasrc/view/nlbw/display.htm:50
+#: applications/luci-app-nlbwmon/luasrc/view/nlbw/display.htm:88
+#: applications/luci-app-nlbwmon/luasrc/view/nlbw/display.htm:127
+msgid "Download (Packets)"
+msgstr "İndirme (Paketler)"
+
+#: applications/luci-app-nlbwmon/luasrc/view/nlbw/display.htm:65
+msgid "Download / Application"
+msgstr "İndirme / Uygulama"
+
+#: applications/luci-app-nlbwmon/luasrc/view/nlbw/backup.htm:25
+msgid "Download Database Backup"
+msgstr "Veritabanı Yedeği İndirme"
+
+#: applications/luci-app-nlbwmon/luasrc/view/nlbw/display.htm:108
+msgid "Dualstack enabled hosts"
+msgstr "İkili-küme destekli cihazlar"
+
+#: applications/luci-app-nlbwmon/luasrc/model/cbi/nlbw/config.lua:62
+msgid "Due date"
+msgstr "Bitiş tarihi"
+
+#: applications/luci-app-nlbwmon/luasrc/view/nlbw/display.htm:139
+msgid "Export"
+msgstr "Dışa aktar"
+
+#: applications/luci-app-nlbwmon/luasrc/view/nlbw/display.htm:125
+msgid "Family"
+msgstr "Aile"
+
+#: applications/luci-app-nlbwmon/luasrc/model/cbi/nlbw/config.lua:29
+msgid "Fixed interval"
+msgstr "Sabit aralık"
+
+#: applications/luci-app-nlbwmon/htdocs/luci-static/resources/view/nlbw.js:476
+#: applications/luci-app-nlbwmon/htdocs/luci-static/resources/view/nlbw.js:534
+#: applications/luci-app-nlbwmon/htdocs/luci-static/resources/view/nlbw.js:639
+msgid "Force reload…"
+msgstr "Yeniden yüklemeye zorla…"
+
+#: applications/luci-app-nlbwmon/luasrc/model/cbi/nlbw/config.lua:20
+msgid "General Settings"
+msgstr "Genel Ayarlar"
+
+#: applications/luci-app-nlbwmon/luasrc/view/nlbw/backup.htm:28
+msgid "Generate Backup"
+msgstr "Yedek Oluştur"
+
+#: applications/luci-app-nlbwmon/luasrc/view/nlbw/display.htm:46
+#: applications/luci-app-nlbwmon/luasrc/view/nlbw/display.htm:123
+msgid "Host"
+msgstr "Ana bilgisayar"
+
+#: applications/luci-app-nlbwmon/htdocs/luci-static/resources/view/nlbw.js:294
+msgid "Hostname: <big id=\"bubble-hostname\">example.org</big>"
+msgstr "Ana bilgisayar adı: <big id=\"bubble-hostname\">example.org</big>"
+
+#: applications/luci-app-nlbwmon/htdocs/luci-static/resources/view/nlbw.js:624
+msgid "IPv4"
+msgstr "IPv4"
+
+#: applications/luci-app-nlbwmon/luasrc/view/nlbw/display.htm:103
+msgid "IPv4 vs. IPv6"
+msgstr "IPv4 vs. IPv6"
+
+#: applications/luci-app-nlbwmon/htdocs/luci-static/resources/view/nlbw.js:625
+#: applications/luci-app-nlbwmon/luasrc/view/nlbw/display.htm:100
+msgid "IPv6"
+msgstr "IPv6"
+
+#: applications/luci-app-nlbwmon/luasrc/model/cbi/nlbw/config.lua:95
+msgid "Interval"
+msgstr "Aralık"
+
+#: applications/luci-app-nlbwmon/luasrc/model/cbi/nlbw/config.lua:178
+msgid ""
+"Interval at which the temporary in-memory database is committed to the "
+"persistent database directory."
+msgstr ""
+"Geçici bellekteki veritabanının kalıcı veritabanı dizinine kaydedildiği "
+"aralık."
+
+#: applications/luci-app-nlbwmon/luasrc/model/cbi/nlbw/config.lua:188
+msgid ""
+"Interval at which traffic counters of still established connections are "
+"refreshed from netlink information."
+msgstr ""
+"Kurulu olan bağlantıların sayaçlarının netlink bilgilerinden sıfırlanma "
+"aralığı."
+
+#: applications/luci-app-nlbwmon/luasrc/controller/nlbw.lua:197
+msgid "Invalid or empty backup archive"
+msgstr ""
+
+#: applications/luci-app-nlbwmon/luasrc/view/nlbw/display.htm:144
+msgid "JSON dump"
+msgstr "JSON dökümü"
+
+#: applications/luci-app-nlbwmon/luasrc/model/cbi/nlbw/config.lua:96
+msgid "Length of accounting interval in days."
+msgstr "Gün olarak hesaplama aralığı uzunluğu."
+
+#: applications/luci-app-nlbwmon/luasrc/model/cbi/nlbw/config.lua:110
+msgid "Local interfaces"
+msgstr "Yerel arayüzler"
+
+#: applications/luci-app-nlbwmon/luasrc/model/cbi/nlbw/config.lua:134
+msgid "Local subnets"
+msgstr "Yerel alt ağlar"
+
+#: applications/luci-app-nlbwmon/luasrc/view/nlbw/display.htm:47
+#: applications/luci-app-nlbwmon/luasrc/view/nlbw/display.htm:124
+msgid "MAC"
+msgstr "MAC"
+
+#: applications/luci-app-nlbwmon/luasrc/model/cbi/nlbw/config.lua:152
+msgid "Maximum entries"
+msgstr "Azami giriş"
+
+#: applications/luci-app-nlbwmon/luasrc/model/cbi/nlbw/config.lua:171
+msgid ""
+"Maximum number of accounting periods to keep, use zero to keep databases "
+"forever."
+msgstr ""
+"Tutulacak maksimum hesaplama dönemi sayısı, veritabanlarını sonsuza kadar "
+"saklamak için sıfırı kullanın."
+
+#: applications/luci-app-nlbwmon/luasrc/view/nlbw/display.htm:13
+msgid "Netlink Bandwidth Monitor"
+msgstr "Netlink Bant Genişliği İzleyici"
+
+#: applications/luci-app-nlbwmon/luasrc/view/nlbw/backup.htm:9
+msgid "Netlink Bandwidth Monitor - Backup / Restore"
+msgstr "Netlink Bant Genişliğ İzleyici - Yedekle / Geri Yükle"
+
+#: applications/luci-app-nlbwmon/luasrc/model/cbi/nlbw/config.lua:12
+msgid "Netlink Bandwidth Monitor - Configuration"
+msgstr "Netlink Bant Genişliği İzleyici - Yapılandırma"
+
+#: applications/luci-app-nlbwmon/htdocs/luci-static/resources/view/nlbw.js:475
+#: applications/luci-app-nlbwmon/htdocs/luci-static/resources/view/nlbw.js:533
+#: applications/luci-app-nlbwmon/htdocs/luci-static/resources/view/nlbw.js:638
+msgid "No data recorded yet."
+msgstr "Henüz veri kaydedilmedi."
+
+#: applications/luci-app-nlbwmon/luasrc/model/cbi/nlbw/config.lua:111
+msgid "Only conntrack streams from or to any of these networks are counted."
+msgstr ""
+"Yalnızca bu ağlardan gelen veya bu ağlardan herhangi birine giden bağlantı "
+"akışları sayılır."
+
+#: applications/luci-app-nlbwmon/luasrc/model/cbi/nlbw/config.lua:135
+msgid "Only conntrack streams from or to any of these subnets are counted."
+msgstr ""
+"Yalnızca bu alt ağlardan gelen veya bu alt ağlardan herhangi birine giden "
+"bağlantı akışları sayılır."
+
+#: applications/luci-app-nlbwmon/luasrc/model/cbi/nlbw/config.lua:158
+msgid "Preallocate database"
+msgstr "Önceden tahsis veritabanı"
+
+#: applications/luci-app-nlbwmon/htdocs/luci-static/resources/view/nlbw.js:451
+msgid "Protocol"
+msgstr "Protokol"
+
+#: applications/luci-app-nlbwmon/luasrc/model/cbi/nlbw/config.lua:22
+msgid "Protocol Mapping"
+msgstr "Protokol Eşleme"
+
+#: applications/luci-app-nlbwmon/luasrc/model/cbi/nlbw/config.lua:23
+msgid ""
+"Protocol mappings to distinguish traffic types per host, one mapping per "
+"line. The first value specifies the IP protocol, the second value the port "
+"number and the third column is the name of the mapped protocol."
+msgstr ""
+"Her hat için bir eşleme olmak üzere, cihaz başına trafik türlerini ayırt "
+"etmek için protokol eşlemeleri. İlk değer IP protokolünü belirtir, ikinci "
+"değer bağlantı noktası numarasını ve üçüncü sütun eşlenen protokolün adıdır."
+
+#: applications/luci-app-nlbwmon/luasrc/model/cbi/nlbw/config.lua:187
+msgid "Refresh interval"
+msgstr "Yenileme aralığı"
+
+#: applications/luci-app-nlbwmon/luasrc/view/nlbw/backup.htm:17
+msgid "Restore"
+msgstr "Geri yükle"
+
+#: applications/luci-app-nlbwmon/luasrc/view/nlbw/backup.htm:12
+msgid "Restore Database Backup"
+msgstr "Veritabanı Yedeğini Geri Yükle"
+
+#: applications/luci-app-nlbwmon/luasrc/view/nlbw/display.htm:16
+msgid "Select accounting period:"
+msgstr "Hesaplama dönemini seç:"
+
+#: applications/luci-app-nlbwmon/htdocs/luci-static/resources/view/nlbw.js:446
+msgid "Source IP"
+msgstr "Kaynak IP"
+
+#: applications/luci-app-nlbwmon/luasrc/model/cbi/nlbw/config.lua:80
+msgid "Start date"
+msgstr "Başlangıç tarihi"
+
+#: applications/luci-app-nlbwmon/luasrc/model/cbi/nlbw/config.lua:81
+msgid "Start date of the first accounting period, e.g. begin of ISP contract."
+msgstr ""
+"İlk hesap döneminin başlangıç tarihi, örn. ISP sözleşmesinin başlangıcı."
+
+#: applications/luci-app-nlbwmon/luasrc/model/cbi/nlbw/config.lua:170
+msgid "Stored periods"
+msgstr "Saklanan dönemler"
+
+#: applications/luci-app-nlbwmon/luasrc/model/cbi/nlbw/config.lua:13
+msgid ""
+"The Netlink Bandwidth Monitor (nlbwmon) is a lightweight, efficient traffic "
+"accounting program keeping track of bandwidth usage per host and protocol."
+msgstr ""
+"Netlink Bant Genişliği İzleyici (nlbwmon), cihaz ve protokol başına bant "
+"genişliği kullanımını takip eden hafif, verimli bir trafik hesaplama "
+"programıdır."
+
+#: applications/luci-app-nlbwmon/luasrc/controller/nlbw.lua:216
+msgid "The following database files have been restored: %s"
+msgstr ""
+
+#: applications/luci-app-nlbwmon/luasrc/model/cbi/nlbw/config.lua:153
+msgid ""
+"The maximum amount of entries that should be put into the database, setting "
+"the limit to 0 will allow databases to grow indefinitely."
+msgstr ""
+"Veritabanına girilmesi gereken maksimum girdi miktarı, sınırın 0 olarak "
+"ayarlanması veritabanlarının süresiz olarak büyümesine izin verecektir."
+
+#: applications/luci-app-nlbwmon/luasrc/view/nlbw/display.htm:26
+msgid "Traffic / Host"
+msgstr "Trafik / Cihaz"
+
+#: applications/luci-app-nlbwmon/luasrc/view/nlbw/display.htm:23
+msgid "Traffic Distribution"
+msgstr "Trafik Dağılımı"
+
+#: applications/luci-app-nlbwmon/htdocs/luci-static/resources/view/nlbw.js:305
+msgid "Up. (Bytes)"
+msgstr "Yükl. (Bayt)"
+
+#: applications/luci-app-nlbwmon/htdocs/luci-static/resources/view/nlbw.js:306
+msgid "Up. (Pkts.)"
+msgstr "Yükl. (Pktlr.)"
+
+#: applications/luci-app-nlbwmon/htdocs/luci-static/resources/view/nlbw.js:289
+msgid "Upload"
+msgstr "Yükleme"
+
+#: applications/luci-app-nlbwmon/luasrc/view/nlbw/display.htm:51
+#: applications/luci-app-nlbwmon/luasrc/view/nlbw/display.htm:89
+#: applications/luci-app-nlbwmon/luasrc/view/nlbw/display.htm:128
+msgid "Upload (Bytes)"
+msgstr "Yükl. (Bayt)"
+
+#: applications/luci-app-nlbwmon/luasrc/view/nlbw/display.htm:52
+#: applications/luci-app-nlbwmon/luasrc/view/nlbw/display.htm:90
+#: applications/luci-app-nlbwmon/luasrc/view/nlbw/display.htm:129
+msgid "Upload (Packets)"
+msgstr "Yükleme (Paketler)"
+
+#: applications/luci-app-nlbwmon/luasrc/view/nlbw/display.htm:70
+msgid "Upload / Application"
+msgstr "Yükleme / Uygulama"
+
+#: applications/luci-app-nlbwmon/htdocs/luci-static/resources/view/nlbw.js:295
+msgid "Vendor: <big id=\"bubble-vendor\">Example Corp.</big>"
+msgstr "Üretici: <big id=\"bubble-vendor\">Example Corp.</big>"
+
+#: applications/luci-app-nlbwmon/luasrc/model/cbi/nlbw/config.lua:51
+msgid "Warning"
+msgstr "Uyarı"
+
+#: applications/luci-app-nlbwmon/luasrc/model/cbi/nlbw/config.lua:165
+msgid ""
+"Whether to gzip compress archive databases. Compressing the database files "
+"makes accessing old data slightly slower but helps to reduce storage "
+"requirements."
+msgstr ""
+"Veritabanı arşivini gzip formatında sıkıştır. Veritabanı dosyalarının "
+"sıkıştırılması, eski verilere erişimi biraz yavaşlatır, ancak depolama "
+"gereksinimlerini azaltmaya yardımcı olur."
+
+#: applications/luci-app-nlbwmon/luasrc/model/cbi/nlbw/config.lua:159
+msgid ""
+"Whether to preallocate the maximum possible database size in memory. This is "
+"mainly useful for memory constrained systems which might not be able to "
+"satisfy memory allocation after longer uptime periods."
+msgstr ""
+"Bellekte mümkün olan maksimum veritabanı boyutunu önceden tahsis edin. Bu, "
+"daha uzun çalışma sürelerinden sonra bellek tahsisini karşılayamayabilecek "
+"kısıtlı belleğe sahip sistemler için yararlıdır."
+
+#: applications/luci-app-nlbwmon/htdocs/luci-static/resources/view/nlbw.js:88
+msgid "no traffic"
+msgstr "trafik yok"
+
+#: applications/luci-app-nlbwmon/htdocs/luci-static/resources/view/nlbw.js:315
+#: applications/luci-app-nlbwmon/htdocs/luci-static/resources/view/nlbw.js:327
+#: applications/luci-app-nlbwmon/htdocs/luci-static/resources/view/nlbw.js:332
+#: applications/luci-app-nlbwmon/htdocs/luci-static/resources/view/nlbw.js:447
+#: applications/luci-app-nlbwmon/htdocs/luci-static/resources/view/nlbw.js:504
+#: applications/luci-app-nlbwmon/htdocs/luci-static/resources/view/nlbw.js:517
+#: applications/luci-app-nlbwmon/htdocs/luci-static/resources/view/nlbw.js:522
+msgid "other"
+msgstr "diğer"

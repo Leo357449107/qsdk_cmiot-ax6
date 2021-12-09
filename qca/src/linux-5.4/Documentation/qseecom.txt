@@ -1,0 +1,199 @@
+Available APIs used in Sample App:
+
+QSClient - Client Application in Linux
+
+qseecom.ko is a loadable kernel module which acts as the QTI secure client
+in the non-secure world. It provides a sample interface for communication with
+the secure world(QSEE).
+
+Multiplication and Crypto functionalities are currently available in the sample
+app. Similarly an app can be written to support any required functionalities.
+
+For each platform, memory has been reserved in the QTI default device tree and
+the reference of that reserved memory node should be given in qseecom node
+for using the TZ App functionalities. If in case, the reserved memory node
+reference is not given, Notify region will fail -> TZApp cannot be used.
+
+Available APIs in kernel which can be reused/extended:
+
+(1) qti_scm_qseecom_notify	 -> to notify the load region of application
+(2) qti_scm_qseecom_load	 -> to load the libraries and application
+(3) qti_scm_qseecom_send_data	 -> to send data to perform operation
+(4) qti_scm_qseecom_unload	 -> to unload the application and libraries
+(5) qti_scm_tz_register_log_buf -> to register a log buf for sample app logs
+
+Refer to source code in drivers/misc/qseecom.c for re-using the above APIs. This
+can be modified or extended to support vendor applications.
+
+Sampleapp Usage Instructions:
+
+Note: We support only 64 bit sampleapp in ipq platforms.
+
+Across any platforms, apps can be loaded and functionalities can be performed
+securely from the non-secure world via the scm interface. Below are the steps
+to load a sample app and perform some basic operations:
+
+Before loading the sample app, the library required by sample app needs to be
+loaded.
+
+(1) To load sample app libraries
+
+Concatenate all the seg files into 1 segment file and feed it as
+input to sys/firmware/seg_file and feed the mdt file as input to
+sys/firmware/mdt_file as below:
+
+cat cmnlib.b00 > cmnlib.b0x
+cat cmnlib.b01 >> cmnlib.b0x
+cat cmnlib.b02 >> cmnlib.b0x
+cat cmnlib.b03 >> cmnlib.b0x
+cat cmnlib.b04 >> cmnlib.b0x
+cat cmnlib.b05 >> cmnlib.b0x
+
+Now cat the mdt and combined binary files to sysfs entries as below:
+
+cat cmnlib.mdt > /sys/firmware/mdt_file
+cat cmnlib.b0x > /sys/firmware/seg_file
+
+echo 0 > /sys/firmware/tzapp/load_start
+
+You will get a print saying you have successfully loaded app libraries.
+
+(2) To load sample app
+
+Concatenate all the seg files into 1 segment file and feed it as
+input to sys/firmware/seg_file and feed the mdt file as input to
+sys/firmware/mdt_file as below:
+
+cat sampleapp.b00 > sampleapp.b0x
+cat sampleapp.b01 >> sampleapp.b0x
+cat sampleapp.b02 >> sampleapp.b0x
+cat sampleapp.b03 >> sampleapp.b0x
+cat sampleapp.b04 >> sampleapp.b0x
+cat sampleapp.b05 >> sampleapp.b0x
+cat sampleapp.b06 >> sampleapp.b0x
+cat sampleapp.b07 >> sampleapp.b0x
+
+Now cat the mdt and combined binary files to sysfs entries as below:
+
+cat sampleapp.mdt > /sys/firmware/mdt_file
+cat sampleapp.b0x > /sys/firmware/seg_file
+
+echo 1 > /sys/firmware/tzapp/load_start
+
+Note that number of segment files in lib/app can change between
+platforms and all the segment files as avail in app should be
+concatenated using above/similar commands accordingly.
+
+(3) Perform operations required in the application
+
+The following mult. operations can be tested in all the platforms:
+
+To give input to Multiplication op:
+echo 100 > /sys/firmware/tzapp/basic_data
+
+To view Secure Multiplication output:
+cat /sys/firmware/tzapp/basic_data
+
+The "crypto" sysfs entry triggers the sample test encryption and decryption
+inside secure app and displays the result if the test has passed or failed.
+
+To test Crypto functionality:
+echo 1 > /sys/firmware/tzapp/crypto
+
+(4) To unload the sampleapp
+
+echo 2 > /sys/firmware/tzapp/load_start
+
+The libraries used by sample app are automatically unloaded when the device
+driver is removed (i.e. during rmmod to remove the qseecom module).
+
+If the user doesn't unload the app, then the app is unloaded when the
+device driver is removed.
+
+Note: sampleapp logging has been enabled for QSEE sample app. To view the log at
+any point after loading the sample app from kernel, please use below command:
+
+cat /sys/firmware/tzapp/log_buf > log.txt
+
+Other QSEE APIs supported in ipq platforms:
+
+There are RSA and AES APIs available to perform crypto operations.
+The steps to use AES and RSA APIs are as below:
+
+RSA API:
+
+RSA Generate Key blob:
+(1) cat /sys/rsa_sec_key/rsa_generate > key_blob.txt
+
+RSA Import Key blob:
+(1) cat hex.dat > /sys/rsa_sec_key/rsa_import
+(2) cat /sys/rsa_sec_key/rsa_import > import_key_blob.txt
+
+Note:
+hex.dat contents must be a properly generated RSA vector.
+
+spec of the hex.dat file used in RSA Import Key blob:
+hex.dat size is 1066 bytes.
+
+1066 bytes split up:
+	528 bytes -> import modulus
+	2 bytes -> import modulus length in hexadecimal
+	5 bytes -> public exponent
+	1 byte -> public exponent length in hexadecimal
+	528 bytes -> private exponent
+	2 bytes -> private exponent length in hexadecimal
+
+public, private exponent can be any value other than 3
+modulus can be any value lesser than 4096
+
+RSA Sign data:
+(1) cat key_blob.txt > /sys/rsa_sec_key/rsa_key_blob
+    or
+    cat import_key_blob.txt > /sys/rsa_sec_key/rsa_key_blob
+(2) cat data.txt > /sys/rsa_sec_key/rsa_sign
+(3) cat /sys/rsa_sec_key/rsa_sign > signed_data.txt
+
+RSA Verification of Signature:
+(1) cat key_blob.txt > /sys/rsa_sec_key/rsa_key_blob
+    or
+    cat import_key_blob.txt > /sys/rsa_sec_key/rsa_key_blob
+(2) cat data.txt > /sys/rsa_sec_key/rsa_sign
+(3) cat signed_data.txt > /sys/rsa_sec_key/rsa_verify
+(4) cat /sys/rsa_sec_key/rsa_verify > verification_result.txt
+(5) cat verification_result.txt
+
+AES API:
+
+AES Generate Key blob:
+(1) cat /sys/sec_key/generate > key_blob.txt
+
+AES Import Key blob:
+(1) cat key.txt > /sys/sec_key/import
+(2) cat /sys/sec_key/import > imported_key_blob.txt
+
+AES Encrypt data:
+(1) cat key_blob.txt > /sys/sec_key/key_blob
+    or
+    cat imported_key_blob.txt > /sys/sec_key/key_blob
+(2) cat data.txt > /sys/sec_key/seal
+(3) cat /sys/sec_key/seal > encrypted_data.txt
+
+AES Decrypt data:
+(1) cat key_blob.txt > /sys/sec_key/key_blob
+    or
+    cat imported_key_blob.txt > /sys/sec_key/key_blob
+(2) cat encrypted_data.txt > /sys/sec_key/unseal
+
+Note:
+RSA generate functionality can take random amount of time to execute. This is
+because in this RSA algorithm we have to generate 2 random numbers with certain
+properties and then proceed. We can use the RSA import functionality if in case
+time is a concern.
+
+shk value is 0 by default in non-secure ipq targets.
+
+To make the keyblobs target dependent, shk values must be changed from default
+value in non-secure target systems.
+
+Without doing this, we will be able to encrypt in one board and decrypt in
+another board using the same keyblob.

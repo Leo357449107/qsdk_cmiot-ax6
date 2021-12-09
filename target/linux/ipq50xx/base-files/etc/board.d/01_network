@@ -1,0 +1,55 @@
+#!/bin/sh
+#
+# Copyright (c) 2015, 2020 The Linux Foundation. All rights reserved.
+# Copyright (C) 2011 OpenWrt.org
+#
+
+[ -e /etc/config/network ] && exit 0
+
+touch /etc/config/network
+
+CFG=/etc/board.json
+
+. /lib/functions/uci-defaults.sh
+
+ipq50xx_setup_interfaces()
+{
+	local board="$1"
+
+	case "$board" in
+	qcom,ipq5018-ap-mp02.1 |\
+	qcom,ipq5018-db-mp02.1 |\
+	qcom,ipq5018-ap-mp03.3 |\
+	qcom,ipq5018-ap-mp03.3-c2 |\
+	qcom,ipq5018-ap-mp03.4-c1 |\
+	qcom,ipq5018-ap-mp03.4-c2 |\
+	qcom,ipq5018-ap-mp03.5-c1 |\
+	qcom,ipq5018-ap-mp03.5-c2 |\
+	qcom,ipq5018-ap-mp03.6-c1 |\
+	qcom,ipq5018-ap-mp03.6-c2 |\
+	qcom,ipq5018-db-mp03.3 |\
+	qcom,ipq5018-db-mp03.3-c2 |\
+	qcom,ipq5018-tb-mp04)
+		ucidef_set_interfaces_lan_wan "eth1" "eth0"
+		;;
+	qcom,ipq5018-ap-mp03.1 |\
+	qcom,ipq5018-ap-mp03.1-c2 |\
+	qcom,ipq5018-ap-mp03.1-c3 |\
+	qcom,ipq5018-db-mp03.1 |\
+	qcom,ipq5018-db-mp03.1-c2)
+		ucidef_set_interfaces_lan_wan "eth1" "eth0"
+		ucidef_add_switch "switch1"
+		ucidef_add_switch_attr "switch1" "enable" false
+		;;
+	*)
+		echo "Unsupported hardware. Network interfaces not intialized"
+		;;
+	esac
+}
+
+board_config_update
+board=$(board_name)
+ipq50xx_setup_interfaces $board
+board_config_flush
+
+exit 0

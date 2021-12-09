@@ -1,0 +1,12 @@
+diff -Nur a/programs/pluto/plutomain.c openswan-2.6.41/programs/pluto/plutomain.c
+--- a/programs/pluto/plutomain.c	2018-04-10 17:14:21.260519703 -0700
++++ openswan-2.6.41/programs/pluto/plutomain.c	2018-04-12 14:33:31.976628397 -0700
+@@ -861,6 +861,8 @@
+ 	    osw_abort();
+ 	if (!log_to_stderr && dup2(0, 2) != 2)
+ 	    osw_abort();
++	/*To reset the syslog*/
++	closelog();
+     }
+ 
+     init_constants();

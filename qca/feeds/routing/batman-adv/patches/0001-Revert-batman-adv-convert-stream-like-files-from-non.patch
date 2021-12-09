@@ -1,0 +1,49 @@
+From: Sven Eckelmann <sven@narfation.org>
+Date: Thu, 23 May 2019 19:26:27 +0200
+Subject: Revert "batman-adv: convert stream-like files from nonseekable_open -> stream_open"
+
+OpenWrt's mac80211 package is not yet ready to support the generic netlink
+API of Linux 5.2.
+
+This reverts commit 337ae19a00d4455cf84afa58abfb432f78c882b9.
+
+--- a/compat-include/linux/fs.h
++++ b/compat-include/linux/fs.h
+@@ -31,15 +31,4 @@ static inline struct dentry *batadv_file
+ 
+ #endif /* < KERNEL_VERSION(4, 6, 0) */
+ 
+-#if LINUX_VERSION_CODE < KERNEL_VERSION(5, 2, 0)
+-
+-static inline int batadv_stream_open(struct inode *inode, struct file *filp)
+-{
+-	return nonseekable_open(inode, filp);
+-}
+-
+-#define stream_open batadv_stream_open
+-
+-#endif /* < KERNEL_VERSION(5, 2, 0) */
+-
+ #endif	/* _NET_BATMAN_ADV_COMPAT_LINUX_FS_H_ */
+--- a/net/batman-adv/icmp_socket.c
++++ b/net/batman-adv/icmp_socket.c
+@@ -65,7 +65,7 @@ static int batadv_socket_open(struct ino
+ 
+ 	batadv_debugfs_deprecated(file, "");
+ 
+-	stream_open(inode, file);
++	nonseekable_open(inode, file);
+ 
+ 	socket_client = kmalloc(sizeof(*socket_client), GFP_KERNEL);
+ 	if (!socket_client) {
+--- a/net/batman-adv/log.c
++++ b/net/batman-adv/log.c
+@@ -90,7 +90,7 @@ static int batadv_log_open(struct inode
+ 	batadv_debugfs_deprecated(file,
+ 				  "Use tracepoint batadv:batadv_dbg instead\n");
+ 
+-	stream_open(inode, file);
++	nonseekable_open(inode, file);
+ 	file->private_data = inode->i_private;
+ 	return 0;
+ }

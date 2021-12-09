@@ -1,0 +1,1 @@
+MAKE_OPTS+= M="$(PKG_BUILD_DIR)"

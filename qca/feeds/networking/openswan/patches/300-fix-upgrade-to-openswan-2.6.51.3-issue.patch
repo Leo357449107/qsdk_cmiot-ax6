@@ -1,0 +1,83 @@
+diff -Nur a/programs/pluto/ikev2.c openswan-2.6.51.3/programs/pluto/ikev2.c
+--- a/programs/pluto/ikev2.c	2019-07-22 11:21:11.561298403 -0700
++++ openswan-2.6.51.3/programs/pluto/ikev2.c	2019-07-22 11:22:24.208800612 -0700
+@@ -1063,6 +1063,7 @@
+     case INITIATOR:
+ 	/* update lastuse values */
+ 	pst->st_msgid_lastack = md->msgid_received;
++    pst->st_msgid_nextuse = pst->st_msgid_lastack+1;
+ 	break;
+ 
+     case RESPONDER:
+diff -Nur a/programs/pluto/kernel.c openswan-2.6.51.3/programs/pluto/kernel.c
+--- a/programs/pluto/kernel.c	2019-07-22 11:21:11.557298431 -0700
++++ openswan-2.6.51.3/programs/pluto/kernel.c	2019-07-22 11:21:36.633126792 -0700
+@@ -1185,10 +1185,16 @@
+ 		       , char *policy_label
+ 		       )
+ {
+-    const ip_address *null_host = aftoinfo(addrtypeof(&st->st_remoteaddr))->any;
++    const ip_address *null_host;
+     const ip_address *this, *that;
+     char buf2[256];
+ 
++    if (st == NULL) {
++	    null_host = aftoinfo(addrtypeof(&sr->that.host_addr))->any;
++    } else {
++	    null_host = aftoinfo(addrtypeof(&st->st_remoteaddr))->any;
++    }
++
+     snprintf(buf2, sizeof(buf2)
+              , "eroute_connection %s", opname);
+ 
+diff -Nur a/programs/pluto/nat_traversal.c openswan-2.6.51.3/programs/pluto/nat_traversal.c
+--- a/programs/pluto/nat_traversal.c	2019-07-22 11:21:11.561298403 -0700
++++ openswan-2.6.51.3/programs/pluto/nat_traversal.c	2019-07-22 11:21:36.633126792 -0700
+@@ -680,7 +680,7 @@
+ 	}
+ 	fdp[0] = sk;
+ 	fdp[1] = type;
+-	r = setsockopt(sk, SOL_UDP, UDP_ESPINUDP, &type, sizeof(type));
++	r = ioctl(sk, IPSEC_UDP_ENCAP_CONVERT, &ifr);
+ 	if (r == -1) {
+ 		DBG(DBG_NATT, DBG_log("NAT-Traversal: ESPINUDP(%d) setup failed for "
+ 			   "new style NAT-T family %s (errno=%d)"
+@@ -693,7 +693,7 @@
+ 
+ #if defined(KLIPS)
+ 	DBG(DBG_NATT, DBG_log("NAT-Traversal: Trying old style NAT-T"));
+-	r = ioctl(sk, IPSEC_UDP_ENCAP_CONVERT, &ifr);
++	r = setsockopt(sk, SOL_UDP, UDP_ESPINUDP, &type, sizeof(type));
+ 	if (r == -1) {
+ 		DBG(DBG_NATT, DBG_log("NAT-Traversal: ESPINUDP(%d) setup failed for "
+ 			   "old style NAT-T family %s (errno=%d)"
+diff -Nur a/programs/pluto/state.c openswan-2.6.51.3/programs/pluto/state.c
+--- a/programs/pluto/state.c	2019-07-22 11:21:11.561298403 -0700
++++ openswan-2.6.51.3/programs/pluto/state.c	2019-07-22 11:23:15.224450131 -0700
+@@ -473,7 +473,7 @@
+     openswan_log("deleting state #%lu (%s)",
+                  st->st_serialno,
+                  enum_show(&state_names, st->st_state));
+-
++#if 0
+     /*
+      * for most IKEv2 things, we may have further things to do after marking the state deleted,
+      * so we do not actually free it here at all, but back in the main loop when all the work is done.
+@@ -523,7 +523,7 @@
+             }
+         }
+     }
+-
++#endif
+     /* If DPD is enabled on this state object, clear any pending events */
+     if(st->st_dpd_event != NULL)
+             delete_dpd_event(st);
+@@ -943,7 +943,7 @@
+ 	/* walk the whole list deleting children first */
+ 	for (st = first, next = st->st_hashchain_next; st;
+                         st = next, next = st ? st->st_hashchain_next : NULL) {
+-		if (st->st_clonedfrom == pst->st_serialno) {
++		if (st->st_clonedfrom != 0) {
+ 			if (v2_responder_state)
+ 				change_state(st, STATE_CHILDSA_DEL);
+ 			delete_state(st);

@@ -1,0 +1,95 @@
+msgid ""
+msgstr ""
+"PO-Revision-Date: 2021-05-13 01:24+0000\n"
+"Last-Translator: semih <semiht@gmail.com>\n"
+"Language-Team: Turkish <https://hosted.weblate.org/projects/openwrt/"
+"luciapplicationsnextdns/tr/>\n"
+"Language: tr\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Plural-Forms: nplurals=2; plural=n != 1;\n"
+"X-Generator: Weblate 4.7-dev\n"
+
+#: applications/luci-app-nextdns/luasrc/model/cbi/overview.lua:34
+msgid ""
+"Available locations are: Switzerland, Iceland, Finland, Panama and Hong Kong."
+msgstr ""
+
+#: applications/luci-app-nextdns/luasrc/model/cbi/overview.lua:21
+msgid "Configuration ID"
+msgstr "Yapılandırma kimliği"
+
+#: applications/luci-app-nextdns/luasrc/model/cbi/overview.lua:18
+msgid "Enable NextDNS."
+msgstr "NextDNS'yi etkinleştirin."
+
+#: applications/luci-app-nextdns/luasrc/model/cbi/overview.lua:17
+msgid "Enabled"
+msgstr "Etkin"
+
+#: applications/luci-app-nextdns/luasrc/model/cbi/overview.lua:28
+msgid "Expose LAN clients information in NextDNS analytics."
+msgstr "NextDNS analizinde LAN istemcilerinin bilgilerini gösterin."
+
+#: applications/luci-app-nextdns/luasrc/model/cbi/overview.lua:6
+msgid ""
+"For further information, go to <a href=\"https://nextdns.io\" target=\"_blank"
+"\">nextdns.io</a>"
+msgstr ""
+
+#: applications/luci-app-nextdns/luasrc/model/cbi/overview.lua:14
+msgid "General"
+msgstr "Genel"
+
+#: applications/luci-app-nextdns/luasrc/model/cbi/overview.lua:24
+msgid "Go to nextdns.io to create a configuration."
+msgstr "Bir yapılandırma oluşturmak için nextdns.io'ya gidin."
+
+#: applications/luci-app-nextdns/luasrc/model/cbi/overview.lua:31
+msgid "Hardened Privacy"
+msgstr ""
+
+#: applications/luci-app-nextdns/luasrc/model/cbi/overview.lua:37
+msgid "Log Queries"
+msgstr "Günlük Sorguları"
+
+#: applications/luci-app-nextdns/luasrc/model/cbi/overview.lua:38
+msgid "Log individual queries to system log."
+msgstr "Bireysel sorguları sistem günlüğüne kaydedin."
+
+#: applications/luci-app-nextdns/luasrc/controller/nextdns.lua:18
+msgid "Logs"
+msgstr ""
+
+#: applications/luci-app-nextdns/luasrc/controller/nextdns.lua:16
+#: applications/luci-app-nextdns/luasrc/model/cbi/overview.lua:3
+msgid "NextDNS"
+msgstr "NextDNS"
+
+#: applications/luci-app-nextdns/luasrc/model/cbi/overview.lua:4
+msgid "NextDNS Configuration."
+msgstr "NextDNS Yapılandırması."
+
+#: applications/luci-app-nextdns/luasrc/controller/nextdns.lua:17
+msgid "Overview"
+msgstr "Genel bakış"
+
+#: applications/luci-app-nextdns/luasrc/model/cbi/overview.lua:27
+msgid "Report Client Info"
+msgstr "Müşteri Bilgilerini Bildir"
+
+#: applications/luci-app-nextdns/luasrc/model/cbi/overview.lua:22
+msgid "The ID of your NextDNS configuration."
+msgstr "NextDNS yapılandırmanızın kimliği."
+
+#: applications/luci-app-nextdns/luasrc/view/nextdns/logread.htm:41
+msgid "The syslog output, pre-filtered for nextdns related messages only."
+msgstr ""
+"Syslog çıktısı, yalnızca nextdns ile ilgili mesajlar için önceden "
+"filtrelenmiştir."
+
+#: applications/luci-app-nextdns/luasrc/model/cbi/overview.lua:32
+msgid ""
+"When enabled, use DNS servers located in jurisdictions with strong privacy "
+"laws."
+msgstr ""

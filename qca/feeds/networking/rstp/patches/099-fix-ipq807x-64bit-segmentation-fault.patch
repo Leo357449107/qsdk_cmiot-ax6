@@ -1,0 +1,39 @@
+--- a/qca_switch.c
++++ b/qca_switch.c
+@@ -116,7 +116,8 @@ static sw_error_t sw_uk_exec(a_uint32_t
+ 
+ int qca_switch_get_port_link_status(struct switch_port *sw_port)
+ {
+-	int ret, status;
++	int ret;
++	a_uintptr_t status;
+ 
+ 	ret = sw_uk_exec(SW_API_PT_LINK_STATUS_GET, 0, sw_port->priv.port_num, (a_uintptr_t)&status);
+ 	if(!ret)
+@@ -212,7 +213,7 @@ unsigned char *qca_switch_send_bpdu(stru
+ 	return new_data;
+ }
+ 
+-static int qca_stp_state_map[5] = {QCA_STP_STATE_DISABLE, QCA_STP_STATE_LISTEN, QCA_STP_STATE_LEARN, QCA_STP_STATE_FORWARD, QCA_STP_STATE_BLOCK};
++static a_uintptr_t qca_stp_state_map[5] = {QCA_STP_STATE_DISABLE, QCA_STP_STATE_LISTEN, QCA_STP_STATE_LEARN, QCA_STP_STATE_FORWARD, QCA_STP_STATE_BLOCK};
+ 
+ /*return value : 0 successful, other failed*/
+ int qca_switch_set_stp_state(struct switch_port *sw_port, int state)
+@@ -234,7 +235,7 @@ int qca_switch_set_stp_state(struct swit
+ 
+ int qca_switch_get_speed(struct switch_port *sw_port)
+ {
+-	int speed = 10;
++	a_uintptr_t speed = 10;
+ 
+ 	if(!sw_port)
+ 		return speed;
+@@ -246,7 +247,7 @@ int qca_switch_get_speed(struct switch_p
+ 
+ int qca_switch_get_duplex(struct switch_port *sw_port)
+ {
+-	int duplex = 0;
++	a_uintptr_t duplex = 0;
+ 
+ 	if(!sw_port)
+ 		return duplex;

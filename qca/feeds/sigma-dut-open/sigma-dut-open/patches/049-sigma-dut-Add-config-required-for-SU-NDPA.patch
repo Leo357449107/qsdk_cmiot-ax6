@@ -1,0 +1,30 @@
+From 1ce9d4ad5dbe1a39713ee2e8b16eb6dd73bcaca2 Mon Sep 17 00:00:00 2001
+From: Lavanya Suresh <lavaks@codeaurora.org>
+Date: Wed, 2 Dec 2020 23:28:49 +0530
+Subject: [PATCH] sigma-dut: Add configs required for SU NDPA
+
+Added commands required for SU NDPA.
+
+Signed-off-by: Lavanya Suresh <lavaks@codeaurora.org>
+---
+ ap.c | 8 ++++++++
+ 1 file changed, 8 insertions(+)
+
+--- a/ap.c
++++ b/ap.c
+@@ -7927,6 +7927,15 @@ static void fwtest_set_he_params(struct
+ 		}
+ 	}
+ 
++	if (dut->he_set_sta_1x1 == VALUE_ENABLED) {
++		/* sets g_force_1x1_peer to 1 */
++		run_system_wrapper(dut, "ath11k-fwtest -i %s -m 0x48 -v 0 118 1",
++				   ifname);
++		/* enables BF/NDPA for smaller SU pkt (pkt tx time less than 200us) */
++		run_system_wrapper(dut, "ath11k-fwtest -i %s -m 0x47 -v 0 255 0",
++				   ifname);
++	}
++
+ 	if (dut->ap_he_ulofdma == VALUE_ENABLED) {
+ 		/* he_mu_edca 1 */
+ 		fwtest_cmd_wrapper(dut, "-m0x00 -v 0 0x8F 0x01", ifname);

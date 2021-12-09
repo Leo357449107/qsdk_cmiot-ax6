@@ -1,0 +1,66 @@
+From 935d49562ce2f63d56a4a3ef040e577c6ccaca8c Mon Sep 17 00:00:00 2001
+From: Sriram R <srirrama@codeaurora.org>
+Date: Tue, 16 Jun 2020 12:58:44 +0530
+Subject: [PATCH] ath11k: use dl mimo command
+
+apply DL MIMO command from capi and use it
+for apply he sounding mode and disabling DL ofdma.
+
+Signed-off-by: Sriram R <srirrama@codeaurora.org>
+---
+--- a/ap.c
++++ b/ap.c
+@@ -109,6 +109,7 @@ static int ath_ap_start_hostapd(struct s
+ static void ath_ap_set_params(struct sigma_dut *dut);
+ static int kill_process(struct sigma_dut *dut, char *proc_name,
+ 			unsigned char is_proc_instance_one, int sig);
++static void mac80211_set_mu_brp_commands(struct sigma_dut *dut, const char *ifname);
+ 
+ static int ap_ft_enabled(struct sigma_dut *dut)
+ {
+@@ -9086,6 +9087,13 @@ skip_key_mgmt:
+ 					   "ath11k-fwtest -i %s -m 0x47 -v 0 47 1",
+ 					   ifname);
+ 		}
++		 if (dut->ap_he_mimo == MIMO_DL) {
++			mac80211_set_mu_brp_commands(dut, ifname);
++			/* Increase MU traffic */
++			run_system_wrapper(dut,
++					   "ath11k-fwtest -i %s -m 0x48 -v 0 100 2",
++					   ifname);
++		}
+ 
+ 		if (dut->ap_he_ulofdma == VALUE_ENABLED) {
+ 			/* he_mu_edca 1 */
+@@ -13929,11 +13937,13 @@ static void mac80211_set_trigger_type_0(
+ 			   ifname);
+ }
+ 
+-static void mac80211_set_trigger_type_1(struct sigma_dut *dut, const char *ifname)
++static void mac80211_set_mu_brp_commands(struct sigma_dut *dut, const char *ifname)
+ {
+-	/* TriggerType "1" for MU BRP */
+-	run_system_wrapper(dut, "ath11k-fwtest -i %s -m 0x47 -v 0 7 1",
++	/* To enable MU_AX with MU_BRP trigger */
++	run_system_wrapper(dut,
++			   "ath11k-fwtest -t 1 -i %s -m 0x00 -v 0 0x87 13",
+ 			   ifname);
++
+ 	/* sets force_1x1_peer to 1 which should be reset to zero for
+ 	 * non MU test cases
+ 	 */
+@@ -13944,6 +13954,14 @@ static void mac80211_set_trigger_type_1(
+ 			   ifname);
+ }
+ 
++static void mac80211_set_trigger_type_1(struct sigma_dut *dut, const char *ifname)
++{
++	/* TriggerType "1" for MU BRP */
++	run_system_wrapper(dut, "ath11k-fwtest -i %s -m 0x47 -v 0 7 1",
++			   ifname);
++	mac80211_set_mu_brp_commands(dut, ifname);
++}
++
+ static void mac80211_set_trigger_type_2(struct sigma_dut *dut, const char *ifname)
+ {
+ 	/* TriggerType "2" for MU BAR */

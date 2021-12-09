@@ -1,0 +1,118 @@
+Index: u-boot-2018.03/tools/env/fw_env.c
+===================================================================
+--- u-boot-2018.03.orig/tools/env/fw_env.c
++++ u-boot-2018.03/tools/env/fw_env.c
+@@ -883,6 +883,19 @@ static int flash_bad_block(int fd, uint8
+ 	return 0;
+ }
+ 
++int find_mtd_size(int fd)
++{
++	struct mtd_info_user mtdinfo;
++	int size = 0;
++
++	if (ioctl(fd, MEMGETINFO, &mtdinfo) == -1) {
++		return size;
++	}
++	size = mtdinfo.size;
++
++	return size;
++}
++
+ /*
+  * Read data from flash at an offset into a provided buffer. On NAND it skips
+  * bad blocks but makes sure it stays within ENVSECTORS (dev) starting from
+@@ -895,11 +908,13 @@ static int flash_read_buf (int dev, int
+ 				   0 on NOR */
+ 	size_t processed = 0;	/* progress counter */
+ 	size_t readlen = count;	/* current read length */
++	off_t top_of_range;     /* end of the last block we may use */
+ 	off_t block_seek;	/* offset inside the current block to the start
+ 				   of the data */
+ 	loff_t blockstart;	/* running start of the current block -
+ 				   MEMGETBADBLOCK needs 64 bits */
+ 	int rc;
++	int size;
+ 
+ 	blockstart = (offset / DEVESIZE (dev)) * DEVESIZE (dev);
+ 
+@@ -913,11 +928,19 @@ static int flash_read_buf (int dev, int
+ 		 */
+ 		blocklen = DEVESIZE (dev);
+ 
++		/*
++		* To calculate the top of the range, we have to use the
++		* global DEVOFFSET (dev), which can be different from offset
++		*/
++		top_of_range = ((DEVOFFSET(dev) / blocklen) +
++				ENVSECTORS (dev)) * blocklen;
++
+ 		/* Limit to one block for the first read */
+ 		if (readlen > blocklen - block_seek)
+ 			readlen = blocklen - block_seek;
+ 	} else {
+ 		blocklen = 0;
++		top_of_range = offset + count;
+ 	}
+ 
+ 	/* This only runs once on NOR flash */
+@@ -926,7 +949,11 @@ static int flash_read_buf (int dev, int
+ 		if (rc < 0)		/* block test failed */
+ 			return -1;
+ 
+-		if (blockstart + block_seek + readlen > environment_end(dev)) {
++		if (rc)
++			top_of_range += readlen;
++
++		size = find_mtd_size(fd);
++		if ((blockstart + block_seek + readlen > top_of_range) || (size > 0 &&  top_of_range > size)) {
+ 			/* End of range is reached */
+ 			fprintf (stderr,
+ 				 "Too few good blocks within range\n");
+@@ -986,15 +1013,18 @@ static int flash_write_buf(int dev, int
+ 				   below offset */
+ 	off_t block_seek;	/* offset inside the erase block to the start
+ 				   of the data */
++	off_t top_of_range;     /* end of the last block we may use */
+ 	loff_t blockstart;	/* running start of the current block -
+ 				   MEMGETBADBLOCK needs 64 bits */
+ 	int rc;
++	int size;
+ 
+ 	/*
+ 	 * For mtd devices only offset and size of the environment do matter
+ 	 */
+ 	if (DEVTYPE(dev) == MTD_ABSENT) {
+ 		blocklen = count;
++		top_of_range = DEVOFFSET(dev) + count;
+ 		erase_len = blocklen;
+ 		blockstart = DEVOFFSET(dev);
+ 		block_seek = 0;
+@@ -1002,10 +1032,13 @@ static int flash_write_buf(int dev, int
+ 	} else {
+ 		blocklen = DEVESIZE(dev);
+ 
++		top_of_range = ((DEVOFFSET(dev) / blocklen) +
++				ENVSECTORS(dev)) * blocklen;
++
+ 		erase_offset = DEVOFFSET(dev);
+ 
+ 		/* Maximum area we may use */
+-		erase_len = environment_end(dev) - erase_offset;
++		erase_len = top_of_range - erase_offset;
+ 
+ 		blockstart = erase_offset;
+ 
+@@ -1080,7 +1113,11 @@ static int flash_write_buf(int dev, int
+ 		if (rc < 0)		/* block test failed */
+ 			return rc;
+ 
+-		if (blockstart + erasesize > environment_end(dev)) {
++		if(rc)
++			top_of_range += blocklen;
++
++		size = find_mtd_size(fd);
++		if ((blockstart + erasesize > top_of_range) || (size > 0 && top_of_range > size)) {
+ 			fprintf (stderr, "End of range reached, aborting\n");
+ 			return -1;
+ 		}

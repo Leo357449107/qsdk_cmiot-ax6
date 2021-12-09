@@ -1,0 +1,40 @@
+#!/bin/sh
+# Copyright (c) 2013 The Linux Foundation. All rights reserved.
+# Permission to use, copy, modify, and/or distribute this software for any
+# purpose with or without fee is hereby granted, provided that the above
+# copyright notice and this permission notice appear in all copies.
+#
+# THE SOFTWARE IS PROVIDED "AS IS" AND THE AUTHOR DISCLAIMS ALL WARRANTIES
+# WITH REGARD TO THIS SOFTWARE INCLUDING ALL IMPLIED WARRANTIES OF
+# MERCHANTABILITY AND FITNESS. IN NO EVENT SHALL THE AUTHOR BE LIABLE FOR
+# ANY SPECIAL, DIRECT, INDIRECT, OR CONSEQUENTIAL DAMAGES OR ANY DAMAGES
+# WHATSOEVER RESULTING FROM LOSS OF USE, DATA OR PROFITS, WHETHER IN AN
+# ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF
+# OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
+
+
+. /lib/functions.sh
+. /lib/functions/network.sh
+
+NEED_ACTION=0
+
+pppoe_relay_check () {
+	local cfg="$1"
+	local server_interfaces
+	config_get server_interfaces "$cfg" server_interface
+	[ -n "${server_interfaces}" -a  ${INTERFACE} = ${server_interfaces} ] && NEED_ACTION=1 
+}
+
+config_load pppoe
+config_foreach pppoe_relay_check pppoe_relay
+
+[ "$NEED_ACTION" -gt 0 ] || return 0
+
+case "$ACTION" in
+	ifup)
+		/etc/init.d/pppoe-relay restart
+	;;
+	ifdown)
+		/etc/init.d/pppoe-relay stop
+	;;
+esac

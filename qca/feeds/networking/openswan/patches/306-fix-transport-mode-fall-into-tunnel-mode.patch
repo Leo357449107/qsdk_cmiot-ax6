@@ -1,0 +1,37 @@
+Author: Ken Zhu <quic_guigenz@quicinc.com>
+Date:   Wed Oct 13 09:20:08 2021 -0700
+
+    openswan: fix transport mode fall into tunnel mode
+
+    When parsing sa body message, it assume using tunnel mode, it
+    expect this could be overwritten in the notify part,we should
+    put notify message preceeding after parsing sa body message.
+
+    Change-Id: Idf39c9ff7c36fcc3cd14e17360fcb7489eb6fcf7
+    Signed-off-by: Ken Zhu <quic_guigenz@quicinc.com>
+
+diff -Nur a/programs/pluto/ikev2_child.c openswan-2.6.51.3/programs/pluto/ikev2_child.c
+--- a/programs/pluto/ikev2_child.c	2021-10-25 10:10:33.314050147 -0700
++++ openswan-2.6.51.3/programs/pluto/ikev2_child.c	2021-10-25 10:13:10.245548988 -0700
+@@ -2054,10 +2054,6 @@
+         return e;
+     }
+ 
+-    if ((e = ikev2_child_notify_process(md, st)) != STF_OK) {
+-        return e;
+-    }
+-
+     {
+         v2_notification_t rn;
+         struct payload_digest *const sa_pd = md->chain[ISAKMP_NEXT_v2SA];
+@@ -2072,6 +2068,10 @@
+             return STF_FAIL + rn;
+     }
+ 
++    if ((e = ikev2_child_notify_process(md, st)) != STF_OK) {
++        return e;
++    }
++
+     e = ikev2_derive_child_keys(st, INITIATOR);
+     if (e != STF_OK)
+ 	return e;

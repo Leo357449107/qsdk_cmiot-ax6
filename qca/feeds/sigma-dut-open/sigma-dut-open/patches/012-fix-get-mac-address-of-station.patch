@@ -1,0 +1,20 @@
+--- a/sta.c
++++ b/sta.c
+@@ -1616,15 +1616,14 @@ static enum sigma_cmd_result cmd_sta_get
+ 						     struct sigma_conn *conn,
+ 						     struct sigma_cmd *cmd)
+ {
+-	/* const char *intf = get_param(cmd, "Interface"); */
++	const char *intf = get_param(cmd, "Interface");
+ 	char addr[20], resp[50];
+ 
+ 	if (dut->dev_role == DEVROLE_STA_CFON)
+ 		return sta_cfon_get_mac_address(dut, conn, cmd);
+ 
+ 	start_sta_mode(dut);
+-	if (get_wpa_status(get_station_ifname(dut), "address",
+-			   addr, sizeof(addr)) < 0)
++	if (get_wpa_status(intf, "address", addr, sizeof(addr)) < 0)
+ 		return -2;
+ 
+ 	snprintf(resp, sizeof(resp), "mac,%s", addr);

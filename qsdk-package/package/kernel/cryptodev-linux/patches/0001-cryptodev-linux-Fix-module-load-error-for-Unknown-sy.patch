@@ -1,0 +1,48 @@
+From 9c982d339ffc619d688784cb046d05a1c0c7cebf Mon Sep 17 00:00:00 2001
+From: Ram Chandra Jangir <rjangir@codeaurora.org>
+Date: Fri, 6 Nov 2020 17:51:34 +0530
+Subject: [PATCH] cryptodev-linux: Fix module load error for Unknown symbol
+
+cryptodev-linux fails to load with below error, and this
+change fixes it.
+
+Error:
+cryptodev: Unknown symbol crypto_givcipher_type (err -2)
+
+Signed-off-by: Ram Chandra Jangir <rjangir@codeaurora.org>
+Signed-off-by: Sandhya KS <sandhyks@codeaurora.org>
+---
+ cryptlib.c | 9 +++++++--
+ 1 file changed, 7 insertions(+), 2 deletions(-)
+
+diff --git a/cryptlib.c b/cryptlib.c
+index 6e66698..539b0e1 100644
+--- a/cryptlib.c
++++ b/cryptlib.c
+@@ -38,7 +38,9 @@
+ #include "cryptodev_int.h"
+ #include "cipherapi.h"
+ 
++#if (LINUX_VERSION_CODE < KERNEL_VERSION(5, 0, 0))
+ extern const struct crypto_type crypto_givcipher_type;
++#endif
+ 
+ static void cryptodev_complete(struct crypto_async_request *req, int err)
+ {
+@@ -157,8 +159,11 @@ int cryptodev_cipher_init(struct cipher_data *out, const char *alg_name,
+ 
+ #if (LINUX_VERSION_CODE >= KERNEL_VERSION(4, 8, 0))
+ 		tfm = crypto_skcipher_tfm(out->async.s);
+-		if ((tfm->__crt_alg->cra_type == &crypto_ablkcipher_type) ||
+-		    (tfm->__crt_alg->cra_type == &crypto_givcipher_type)) {
++		if ((tfm->__crt_alg->cra_type == &crypto_ablkcipher_type) 
++#if (LINUX_VERSION_CODE < KERNEL_VERSION(5, 0, 0))
++		|| (tfm->__crt_alg->cra_type == &crypto_givcipher_type)
++#endif
++							) {
+ 			struct ablkcipher_alg *alg;
+ 
+ 			alg = &tfm->__crt_alg->cra_ablkcipher;
+-- 
+2.17.1
+

@@ -1,0 +1,19 @@
+From a200d6e21295818d1dfd477328911c92ab8dc18d Mon Sep 17 00:00:00 2001
+From: Naresh Parati <cnparat@codeaurora.org>
+Date: Wed, 7 Oct 2020 08:44:14 +0530
+Subject: [PATCH] wireless-tools: Copy patches from cc/date branch to fig
+
+Change-Id: If101953d1226208fcd5f4545976c622961c8e816
+Signed-off-by: Naresh Parati <cnparat@codeaurora.org>
+
+--- a/iwlist.c
++++ b/iwlist.c
+@@ -617,7 +617,7 @@
+   struct iw_range	range;
+   int			has_range;
+   struct timeval	tv;				/* Select timeout */
+-  int			timeout = 15000000;		/* 15s */
++  int			timeout = 45000000;		/* 45s */
+ 
+   /* Avoid "Unused parameter" warning */
+   args = args; count = count;

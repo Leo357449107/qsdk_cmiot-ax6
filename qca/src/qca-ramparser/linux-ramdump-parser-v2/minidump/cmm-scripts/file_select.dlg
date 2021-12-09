@@ -1,0 +1,31 @@
+NAME "File selection"
+HEADER "Dump & ELF Files selection"
+	POS 2. 0. 35. 1.
+	TEXT "Select EBICS0 FILE"
+EBICS0File:  EDIT "" ""
+	POS 38. 1. 10. 1.
+	BUTTON "Browse"
+	(
+		DIALOG.SetFile EBICS0File .\*
+	)
+
+	POS 2. 2. 35. 1.
+	TEXT "Select IMEM FILE"
+IMEMFile:  EDIT "" ""
+	POS 38. 3. 10. 1.
+	BUTTON "Browse"
+	(
+		DIALOG.SetFile IMEMFile .\*
+	)
+
+	POS 2. 4. 35. 1.
+	TEXT "Select ELF FILE"
+ELFFile:  EDIT "" ""
+	POS 38. 5. 10. 1.
+	BUTTON "Browse"
+	(
+		DIALOG.SetFile ELFFile .\*
+	)
+
+	POS 38. 7. 10. 1.
+	DEFBUTTON "OK" "CONTinue"

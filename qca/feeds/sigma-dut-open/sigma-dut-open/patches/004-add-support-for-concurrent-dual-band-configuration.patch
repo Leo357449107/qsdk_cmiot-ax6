@@ -1,0 +1,154 @@
+--- a/ap.c
++++ b/ap.c
+@@ -7604,8 +7604,10 @@ enum sigma_cmd_result cmd_ap_config_comm
+ {
+ 	/* const char *name = get_param(cmd, "NAME"); */
+ 	FILE *f;
++	FILE *f_1;
+ 	const char *ifname;
+ 	char buf[500];
++	char buf_dual[500];
+ 	char path[100];
+ 	char ap_conf_path[100];
+ 	enum driver_type drv;
+@@ -8318,6 +8320,118 @@ skip_key_mgmt:
+ 		}
+ 	}
+ 
++	if(dut->ap_is_dual) {
++                f_1 = fopen(SIGMA_TMPDIR "/sigma_dut_dual-ap.conf", "w");
++                if (f_1 == NULL) {
++			sigma_dut_print(dut, DUT_MSG_ERROR,
++					"%s: Failed to open sigma_dut_1-ap.conf",
++                                        __func__);
++                        return -2;
++                }
++
++                switch (dut->ap_mode_1) {
++                        case AP_11g:
++                        case AP_11b:
++                        case AP_11ng:
++                                ifname = drv == DRIVER_MAC80211 ? "wlan1" : "ath1";
++                                if (drv == DRIVER_QNXNTO && \
++			           (strcmp(get_main_ifname(dut),"unknown") != 0))
++                                        ifname = get_main_ifname(dut);
++                                fprintf(f_1, "hw_mode=g\n");
++                                break;
++                        case AP_11a:
++                        case AP_11na:
++                        case AP_11ac:
++                                if (drv == DRIVER_QNXNTO) {
++                                        if (strcmp(get_main_ifname(dut),"unknown") != 0)
++                                                ifname = get_main_ifname(dut);
++                                        else
++                                                ifname = "wlan0";
++                                } else if (drv == DRIVER_MAC80211) {
++                                        if (if_nametoindex("wlan1") > 0)
++                                                ifname = "wlan1";
++                                        else
++                                                ifname = "wlan0";
++                                } else {
++                                        if (if_nametoindex("ath1") > 0)
++                                                ifname = "ath1";
++                                        else
++                                                ifname = "ath0";
++                                }
++                                fprintf(f_1, "hw_mode=a\n");
++                                break;
++                        default:
++                                 fclose(f_1);
++                                 return -1;
++                }
++
++                if (drv == DRIVER_MAC80211)
++                        fprintf(f_1, "driver=nl80211\n");
++
++                if ((drv == DRIVER_MAC80211 || drv == DRIVER_QNXNTO) &&
++		    (dut->ap_mode_1 == AP_11ng || dut->ap_mode_1 == AP_11na)) {
++			fprintf(f_1, "ieee80211n=1\n");
++                        if (dut->ap_mode == AP_11ng && dut->ap_chwidth == AP_40) {
++                                if (dut->ap_channel_1 >= 1 && dut->ap_channel_1 <= 7)
++                                        fprintf(f_1, "ht_capab=[HT40+]\n");
++                                else if (dut->ap_channel_1 >= 8 && dut->ap_channel_1 <= 11)
++                                        fprintf(f_1, "ht_capab=[HT40-]\n");
++                        }
++                        fprintf(f_1, "ht_capab=[HT20]\n");
++                }
++
++                fprintf(f_1, "interface=%s\n", ifname);
++                fprintf(f_1, "bridge=%s\n", dut->bridge);
++                fprintf(f_1, "channel=%d\n", dut->ap_channel_1);
++                fprintf(f_1, "ctrl_interface=/var/run/hostapd\n");
++                fprintf(f_1, "ssid=%s\n", dut->ap_ssid);
++
++                switch (dut->ap_key_mgmt) {
++                        case AP_OPEN:
++                                if (dut->ap_cipher == AP_WEP)
++                                        fprintf(f_1, "wep_key0=%s\n", dut->ap_wepkey);
++                                break;
++                        case AP_WPA2_EAP:
++                        case AP_WPA2_EAP_MIXED:
++                        case AP_WPA_EAP:
++                                fprintf(f_1, "ieee8021x=1\n");
++                                if (dut->ap_key_mgmt == AP_WPA2_EAP)
++                                        fprintf(f_1, "wpa=2\n");
++                                else if (dut->ap_key_mgmt == AP_WPA2_EAP_MIXED)
++                                        fprintf(f_1, "wpa=3\n");
++                                else
++                                        fprintf(f_1, "wpa=1\n");
++                                switch (dut->ap_pmf) {
++                                        case AP_PMF_DISABLED:
++                                                fprintf(f_1, "wpa_key_mgmt=WPA-EAP%s\n",
++                                                     dut->ap_add_sha256 ? " WPA-EAP-SHA256" : "");
++                                                break;
++                                        case AP_PMF_OPTIONAL:
++                                                fprintf(f_1, "wpa_key_mgmt=WPA-EAP%s\n",
++                                                     dut->ap_add_sha256 ? " WPA-EAP-SHA256" : "");
++                                                break;
++                                        case AP_PMF_REQUIRED:
++                                                fprintf(f_1, "wpa_key_mgmt=WPA-EAP-SHA256\n");
++                                                break;
++                                }
++                                if (dut->ap_cipher == AP_CCMP_TKIP)
++                                        fprintf(f_1, "wpa_pairwise=CCMP TKIP\n");
++                                else if (dut->ap_cipher == AP_TKIP)
++                                        fprintf(f_1, "wpa_pairwise=TKIP\n");
++                                else
++                                        fprintf(f_1, "wpa_pairwise=CCMP\n");
++                                fprintf(f_1, "auth_server_addr=%s\n", dut->ap_radius_ipaddr);
++                                if (dut->ap_radius_port)
++                                        fprintf(f_1, "auth_server_port=%d\n",
++                                                        dut->ap_radius_port);
++                                fprintf(f_1, "auth_server_shared_secret=%s\n",
++                                                dut->ap_radius_password);
++                                break;
++                }
++                fclose(f_1);
++        }
++
++
+ 	if (dut->program == PROGRAM_WPS) {
+ 		/* 60G WPS tests requires wps_state of 2 (configured) */
+ 		int wps_state = is_60g_sigma_dut(dut) ? 2 : 1;
+@@ -8623,6 +8737,21 @@ skip_key_mgmt:
+ 			 dut->use_hostapd_pid_file ?
+ 			 " -P " SIGMA_DUT_HOSTAPD_PID_FILE : "",
+ 			 dut->sigma_tmpdir);
++		if (dut->ap_is_dual) {
++			snprintf(buf_dual, sizeof(buf_dual), "%shostapd -B%s%s%s%s " SIGMA_TMPDIR
++				"/sigma_dut_dual-ap.conf",
++				file_exists("hostapd") ? "./" : "",
++				dut->hostapd_debug_log ? " -ddKt -f" : "",
++				dut->hostapd_debug_log ? dut->hostapd_debug_log : "",
++				dut->hostapd_entropy_log ? " -e" : "",
++				dut->hostapd_entropy_log ? dut->hostapd_entropy_log :
++				"");
++			if (system(buf_dual) != 0) {
++				send_resp(dut, conn, SIGMA_ERROR,
++					  "errorCode,Failed to start hostapd");
++				return 0;
++			}
++		}
+ 	}
+ 
+ 	sigma_dut_print(dut, DUT_MSG_DEBUG, "hostapd command: %s", buf);

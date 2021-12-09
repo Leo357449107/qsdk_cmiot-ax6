@@ -1,0 +1,44 @@
+From 8a4e9efbc1e837af9d0ab2b7a47332adf76a9c0e Mon Sep 17 00:00:00 2001
+From: leiwei <leiwei@codeaurora.org>
+Date: Tue, 29 Sep 2020 23:28:36 +0800
+Subject: [PATCH] hostapd: Add new secyid and interface mapping
+
+Signed-off-by: leiwei <leiwei@codeaurora.org>
+---
+ src/drivers/driver_macsec_qca.c | 12 ++++++++++--
+ 1 file changed, 10 insertions(+), 2 deletions(-)
+
+diff --git a/src/drivers/driver_macsec_qca.c b/src/drivers/driver_macsec_qca.c
+index 928f024..0d2c699 100644
+--- a/src/drivers/driver_macsec_qca.c
++++ b/src/drivers/driver_macsec_qca.c
+@@ -270,6 +270,12 @@ static void * macsec_qca_init(void *ctx, const char *ifname)
+ 		drv->secy_id = 1;
+ 	else if (os_memcmp("eth3", ifname, 4) == 0)
+ 		drv->secy_id = 2;
++	else if ((os_memcmp("eth4", ifname, 4) == 0) ||
++			(os_memcmp("eth0", ifname, 4) == 0))
++		drv->secy_id = 0;
++	else if ((os_memcmp("eth5", ifname, 4) == 0) ||
++			(os_memcmp("eth1", ifname, 4) == 0))
++		drv->secy_id = 1;
+ 	else
+ 		drv->secy_id = -1;
+ 
+@@ -308,9 +314,11 @@ static void * macsec_qca_hapd_init(struct hostapd_data *hapd,
+ 		drv->secy_id = 1;
+ 	else if (os_memcmp("eth3", params->ifname, 4) == 0)
+ 		drv->secy_id = 2;
+-	else if (os_memcmp("eth4", params->ifname, 4) == 0)
++	else if ((os_memcmp("eth4", params->ifname, 4) == 0) ||
++			(os_memcmp("eth0", params->ifname, 4) == 0))
+ 		drv->secy_id = 0;
+-	else if (os_memcmp("eth5", params->ifname, 4) == 0)
++	else if ((os_memcmp("eth5", params->ifname, 4) == 0) ||
++			(os_memcmp("eth1", params->ifname, 4) == 0))
+ 		drv->secy_id = 1;
+ 	else
+ 		drv->secy_id = -1;
+-- 
+2.7.4
+

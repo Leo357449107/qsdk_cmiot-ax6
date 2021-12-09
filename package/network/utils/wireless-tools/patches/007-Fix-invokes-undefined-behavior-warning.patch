@@ -1,0 +1,21 @@
+From 472670cef1321c026d02a0205fc62dbc6da5cc59 Mon Sep 17 00:00:00 2001
+From: Naresh Parati <cnparat@codeaurora.org>
+Date: Wed, 7 Oct 2020 08:36:53 +0530
+Subject: [PATCH] wireless-tools: Copy patches from cc/date branch to fig
+
+Change-Id: If101953d1226208fcd5f4545976c622961c8e816
+Signed-off-by: Naresh Parati <cnparat@codeaurora.org>
+
+Index: wireless_tools.29/iwlist.c
+===================================================================
+--- wireless_tools.29.orig/iwlist.c	2017-03-13 15:05:17.268598970 +0530
++++ wireless_tools.29/iwlist.c	2017-03-13 15:08:07.652767683 +0530
+@@ -561,7 +561,7 @@
+ 	int		i;
+ 	int		n = 0;
+ 	printf("                    Modulations :");
+-	for(i = 0; i < IW_SIZE_MODUL_LIST; i++)
++	for(i = 0; i < sizeof(iw_modul_list)/sizeof(iw_modul_list[0]); i++)
+ 	  {
+ 	    if((modul & iw_modul_list[i].mask) == iw_modul_list[i].mask)
+ 	      {

@@ -1,0 +1,26 @@
+From 66a4b2ddc4a0aec1e3707e2b0fe0ca3dd0e1cc0b Mon Sep 17 00:00:00 2001
+From: Ram Chandra Jangir <rjangir@codeaurora.org>
+Date: Fri, 17 Jul 2020 00:09:38 -0700
+Subject: [PATCH] Fix LIBSUP_VAR to use relative path as filename
+
+Signed-off-by: Ram Chandra Jangir <rjangir@codeaurora.org>
+---
+ src/abi/libsupc/Makefile.in | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/src/abi/libsupc/Makefile.in b/src/abi/libsupc/Makefile.in
+index 89e0e8a..24a9ac0 100644
+--- a/src/abi/libsupc/Makefile.in
++++ b/src/abi/libsupc/Makefile.in
+@@ -4,7 +4,7 @@ OBJS = $(call list-archive-members,$(LIBSUP))
+ OBJS-OMIT = $(filter new_op%.o del_op%.o pure.o new_handler.o eh_alloc.o eh_globals.o,$(OBJS))
+ libsupc-$(IMPORT_LIBSUP) := $(filter-out $(OBJS-OMIT),$(OBJS))
+ 
+-LIBSUP_VAR := $(call variablify,$(LIBSUP))
++LIBSUP_VAR := $(call variablify,libsupc++.a)
+ LIBSUP_DEP :=$(LIBSUPC_OUT).$(LIBSUP_VAR).dep
+ 
+ ifeq ($(filter $(noconfig_targets),$(MAKECMDGOALS)),)
+-- 
+2.7.4
+

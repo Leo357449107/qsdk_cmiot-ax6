@@ -1,0 +1,84 @@
+Author: Ken Zhu <guigenz@codeaurora.org>
+Date:   Fri Feb 5 13:11:42 2021 -0800
+
+    xtables-addons: fix rtsp teardown command not working
+
+    After rtsp teardown command, the established conntrack is not destroyed
+    destroy all of the related conntracks when handle teardown command.
+
+    Change-Id: Ie944b523f5cd99a9fcd810f99d5f2fdbac8617c2
+    Signed-off-by: Ken Zhu <guigenz@codeaurora.org>
+
+diff -Nur a/extensions/rtsp/nf_conntrack_rtsp.c xtables-addons-2.14/extensions/rtsp/nf_conntrack_rtsp.c
+--- a/extensions/rtsp/nf_conntrack_rtsp.c	2021-02-05 12:17:42.231341670 -0800
++++ xtables-addons-2.14/extensions/rtsp/nf_conntrack_rtsp.c	2021-02-05 12:25:03.876869600 -0800
+@@ -53,6 +53,7 @@
+ #include <net/netfilter/nf_conntrack_expect.h>
+ #include <net/netfilter/nf_conntrack_helper.h>
+ #include <net/netfilter/nf_conntrack_zones.h>
++#include <net/netfilter/nf_conntrack_core.h>
+ #include "nf_conntrack_rtsp.h"
+ 
+ #define NF_NEED_STRNCASECMP
+@@ -307,6 +308,52 @@
+ 	return rc;
+ }
+ 
++/*
++ * Destroy all conntract related to the master ct
++ * In:
++ *   master_ct
++ */
++void destroy_rtsp_exp(struct nf_conn *master_ct)
++{
++	struct nf_conntrack_tuple_hash *h;
++	struct hlist_nulls_node *n;
++	struct nf_conn *ct = NULL;
++	int i;
++#if LINUX_VERSION_CODE >= KERNEL_VERSION(3,18,0)
++	spinlock_t *lockp;
++#endif
++
++#if LINUX_VERSION_CODE < KERNEL_VERSION(3,18,0)
++	spin_lock_bh(&nf_conntrack_lock);
++#endif
++
++	for (i = 0; i < nf_conntrack_htable_size; i++)
++	{
++#if LINUX_VERSION_CODE >= KERNEL_VERSION(3,18,0)
++		lockp = &nf_conntrack_locks[i % CONNTRACK_LOCKS];
++		spin_lock_bh(lockp);
++#endif
++
++		hlist_nulls_for_each_entry(h, n, &nf_conntrack_hash[i], hnnode)
++		{
++			ct = nf_ct_tuplehash_to_ctrack(h);
++			if(ct->master == master_ct)
++			{
++				ct->timeout = (u32)jiffies;
++			}
++		}
++#if LINUX_VERSION_CODE >= KERNEL_VERSION(3,18,0)
++		spin_unlock_bh(lockp);
++#endif
++
++	}
++#if LINUX_VERSION_CODE < KERNEL_VERSION(3,18,0)
++	spin_unlock_bh(&nf_conntrack_lock);
++#endif
++
++	/*remove all unestablished expect*/
++	nf_ct_remove_expectations(master_ct);
++}
+ 
+ /*** conntrack functions ***/
+ 
+@@ -360,7 +407,7 @@
+ 
+ 		if (strncmp(pdata+cmdoff, "TEARDOWN ", 9) == 0) {
+ 			pr_debug("teardown handled\n");
+-			nf_ct_remove_expectations(ct); /* FIXME must be session id aware */
++			destroy_rtsp_exp(ct);
+ 			break;
+ 		}
+ 

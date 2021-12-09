@@ -1,0 +1,31 @@
+Index: rstp-2011-10-11/bridge_track.c
+===================================================================
+--- rstp-2011-10-11.orig/bridge_track.c
++++ rstp-2011-10-11/bridge_track.c
+@@ -399,16 +399,21 @@ int get_bridge_port_num(struct ifdata *i
+ 	unsigned int bitmap = 1;
+ 	int index = 0;
+ 
+-	if(ifc->is_bridge)
++	if (ifc->is_bridge)
+ 		return -1;
+ 
+-	if(ifc->port_index > 0)
++	if (ifc->port_index > 0)
+ 		return ifc->port_index;
+ 
+-	for(p = if_head; p && (p->master == ifc->master); p = p->next)
+-		bitmap = bitmap | (1 << p->port_index);
++	p = if_head;
++	while (p) {
++		if (p->master == ifc->master)
++			bitmap = bitmap | (1 << p->port_index);
++		p = p->next;
++	}
+ 
+-	while(bitmap & (1 << index)) ++index;
++	while (bitmap & (1 << index))
++		++index;
+ 
+ 	return index;
+ }

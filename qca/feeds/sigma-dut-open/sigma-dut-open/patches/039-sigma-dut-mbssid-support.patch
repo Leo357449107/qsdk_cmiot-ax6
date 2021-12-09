@@ -1,0 +1,438 @@
+From 8afc4f10522b4f1b11901bc07bd70284f3c309d6 Mon Sep 17 00:00:00 2001
+From: Sriram R <srirrama@codeaurora.org>
+Date: Mon, 16 Nov 2020 10:32:39 -0800
+Subject: [PATCH] sigma-dut: Add MBSSID support
+
+Add HE MBSSID commands support in sigma-dut and fill corresponding
+hostapd conf.
+
+NonTxBSSIndex
+NumNonTxBSS
+in set_wireless, get_mac_address and set_security commands
+
+Currently the max no of mbss vaps is set to 2. This
+can be extended by changing the macro value in future
+based on test case requirements.
+
+Support is available for SAE (Hash-to-Element) in 6GHz and WPA2-PSK in
+5GHz/2.45GHz.
+
+Signed-off-by: Sriram R <srirrama@codeaurora.org>
+Signed-off-by: Aloka Dixit <alokad@codeaurora.org>
+---
+ ap.c        | 556 ++++++++++++++++++++++++++++++++++++----------------
+ sigma_dut.h |  71 ++++---
+ 2 files changed, 434 insertions(+), 193 deletions(-)
+
+--- a/ap.c
++++ b/ap.c
+@@ -677,6 +677,36 @@ static enum sigma_cmd_result cmd_ap_set_
+ 	if (val)
+ 		dut->program = sigma_program_to_enum(val);
+ 
++	val = get_param(cmd, "NonTxBSSIndex");
++	if (val) {
++		int non_tx_bss_idx;
++
++		if (dut->ap_mbssid != VALUE_ENABLED) {
++			send_resp(dut, conn, SIGMA_ERROR,
++				  "errorCode,MBSSID Not enabled");
++			return STATUS_SENT_ERROR;
++		}
++
++		non_tx_bss_idx = atoi(val);
++
++		if (non_tx_bss_idx > dut->mbss.num_non_tx_bss) {
++			send_resp(dut, conn, SIGMA_ERROR,
++				  "errorCode,Invalid NonTxBSSIndex");
++			return STATUS_SENT_ERROR;
++		}
++
++		val = get_param(cmd, "SSID");
++		if (val) {
++			if (strlen(val) > MAX_SSID_LEN)
++				return INVALID_SEND_STATUS;
++
++			snprintf(dut->mbss.conf[non_tx_bss_idx - 1].ssid,
++				 MAX_SSID_LEN, "%s", val);
++		}
++
++		return SUCCESS_SEND_STATUS;
++	}
++
+ 	val = get_param(cmd, "WLAN_TAG");
+ 	if (val) {
+ 		wlan_tag = atoi(val);
+@@ -1984,6 +2014,27 @@ static enum sigma_cmd_result cmd_ap_set_
+ 		}
+ 	}
+ 
++	val = get_param(cmd, "NumNonTxBSS");
++	if (val) {
++		int num_non_tx_bss;
++
++		if (dut->ap_mbssid != VALUE_ENABLED) {
++			send_resp(dut, conn, SIGMA_ERROR,
++				  "errorCode,MBSSID Not enabled");
++			return STATUS_SENT_ERROR;
++		}
++
++		num_non_tx_bss = atoi(val);
++
++		if (num_non_tx_bss > MAX_NON_TX_VAP_COUNT) {
++			send_resp(dut, conn, SIGMA_ERROR,
++				  "errorCode,MBSS Vap Count Support Exceeded");
++			return STATUS_SENT_ERROR;
++		}
++
++		dut->mbss.num_non_tx_bss = num_non_tx_bss;
++	}
++
+ 	val = get_param(cmd, "TWT_RespSupport");
+ 	if (val) {
+ 		if (strcasecmp(val, "enable") == 0) {
+@@ -2299,6 +2350,56 @@ static enum sigma_cmd_result cmd_ap_set_
+ 		}
+ 	}
+ 
++	val = get_param(cmd, "NonTxBSSIndex");
++	if (val) {
++		int non_tx_bss_idx;
++
++		if (dut->ap_mbssid != VALUE_ENABLED) {
++			send_resp(dut, conn, SIGMA_ERROR,
++				  "errorCode,MBSSID Not enabled");
++			return STATUS_SENT_ERROR;
++		}
++
++		non_tx_bss_idx = atoi(val);
++
++		if (non_tx_bss_idx > dut->mbss.num_non_tx_bss) {
++			send_resp(dut, conn, SIGMA_ERROR,
++				  "errorCode,Invalid NonTxBSSIndex");
++			return STATUS_SENT_ERROR;
++		}
++
++		val = get_param(cmd, "KEYMGNT");
++		if (!val)
++			val = get_param(cmd,"KeyMgmtType");
++		if (val) {
++			if (strcasecmp(val, "SAE") == 0) {
++				dut->mbss.conf[non_tx_bss_idx - 1].key_mgmt = AP_WPA2_SAE;
++			} else {
++				if (dut->use_6g) {
++					send_resp(dut, conn, SIGMA_INVALID,
++						  "errorCode,Unsupported 6GHz KeyMgmtType");
++					return 0;
++				}
++				else if (strcasecmp(val, "WPA2-PSK") == 0 ||
++					 (security && strcasecmp(security, "PSK") == 0 &&
++					  strcasecmp(val, "WPA2") == 0)) {
++					dut->mbss.conf[non_tx_bss_idx - 1].key_mgmt = AP_WPA2_PSK;
++				}
++			}
++		}
++
++		val = get_param(cmd, "PSK");
++		if (val) {
++			if (strlen(val) > MAX_PSK_LEN - 1)
++				return INVALID_SEND_STATUS;
++
++			snprintf(dut->mbss.conf[non_tx_bss_idx - 1].psk, MAX_PSK_LEN,
++				 "%s", val);
++		}
++
++		return SUCCESS_SEND_STATUS;
++	}
++
+ 	val = get_param(cmd, "KEYMGNT");
+ 	if (!val)
+ 		val = get_param(cmd,"KeyMgmtType");
+@@ -9357,6 +9458,91 @@ skip_key_mgmt:
+ 		fprintf(f, "oce=%d\n",
+ 			dut->dev_role == DEVROLE_STA_CFON ? 2 : 1);
+ 	}
++
++	if (dut->program == PROGRAM_HE && dut->ap_mbssid == VALUE_ENABLED) {
++		uint8_t num_bss, bssid_mask, max_bss_count;
++		uint8_t init_val, base_val;
++		uint8_t max_bssid_ind = 0;
++		unsigned char bssid[6];
++		char ifname2[50];
++		int i;
++
++
++		if (get_hwaddr(ifname, bssid)) {
++			fclose(f);
++			return -2;
++		}
++
++		if (!dut->mbss.num_non_tx_bss)
++			return -2;
++
++		/* Sanity check to indicate below logic holds good
++		 * for upto 256 bss(including tx,non-tx bss) support in sigma-dut
++		 * Can be extended if really required
++		 */
++		if (dut->mbss.num_non_tx_bss > 255)
++			return -2;
++
++		num_bss = dut->mbss.num_non_tx_bss;
++
++		do {
++			max_bssid_ind++;
++			num_bss = num_bss >> 1;
++		} while (num_bss);
++
++		max_bss_count = 1 << max_bssid_ind;
++		bssid_mask = max_bss_count - 1;
++
++		base_val = bssid[5] & ~bssid_mask;
++		init_val = bssid[5] & bssid_mask;
++
++		fprintf(f, "\nmultiple_bssid=1\n");
++
++		for (i = 0; i < dut->mbss.num_non_tx_bss; i++) {
++			fprintf(f, "\n");
++
++			/* start from 1 for non tx bssid */
++			bssid[5] = base_val + ((init_val + i + 1) % max_bss_count);
++
++			snprintf(ifname2, sizeof(ifname2), "%s-%d", ifname, i+1);
++			fprintf(f, "bss=%s\n", ifname2);
++			if (sigma_hapd_ctrl)
++				fprintf(f, "ctrl_interface=%s\n", sigma_hapd_ctrl);
++			else
++				fprintf(f, "ctrl_interface=/var/run/hostapd\n");
++			fprintf(f, "ssid=%s\n", dut->mbss.conf[i].ssid);
++			if (dut->bridge)
++				fprintf(f, "bridge=%s\n", dut->bridge);
++
++			if (dut->ap_wme)
++				fprintf(f, "wmm_enabled=1\n");
++
++			if (dut->ap_wmmps == AP_WMMPS_ON)
++				fprintf(f, "uapsd_advertisement_enabled=1\n");
++
++			fprintf(f, "bssid=%02x:%02x:%02x:%02x:%02x:%02x\n",
++				bssid[0], bssid[1], bssid[2], bssid[3],
++				bssid[4], bssid[5]);
++
++			if (dut->mbss.conf[i].key_mgmt == AP_WPA2_SAE) {
++				fprintf(f, "wpa=2\n");
++				fprintf(f, "wpa_key_mgmt=SAE\n");
++				fprintf(f, "wpa_pairwise=CCMP\n");
++				fprintf(f, "ieee80211w=2\n");
++				fprintf(f, "sae_password=%s\n", dut->mbss.conf[i].psk);
++				if (dut->use_6g)
++					fprintf(f, "sae_pwe=1\n");
++			}
++
++			if (dut->mbss.conf[i].key_mgmt == AP_WPA2_PSK) {
++				fprintf(f, "wpa=2\n");
++				fprintf(f, "wpa_key_mgmt=WPA-PSK\n");
++				fprintf(f, "wpa_pairwise=CCMP\n");
++				fprintf(f, "wpa_passphrase=%s\n", dut->mbss.conf[i].psk);
++			}
++		}
++	}
++
+ 	fclose(f);
+ 	if (dut->use_hostapd_pid_file)
+ 		kill_hostapd_process_pid(dut);
+@@ -9711,8 +9897,16 @@ skip_key_mgmt:
+ 
+ 	}
+ 
+-	if (drv == DRIVER_MAC80211 && dut->program == PROGRAM_HE)
++	if (drv == DRIVER_MAC80211 && dut->program == PROGRAM_HE) {
++		int i;
++
+ 		fwtest_set_he_params(dut, ifname);
++		for (i = 0; i < dut->mbss.num_non_tx_bss; i++) {
++			char ifname2[50];
++			snprintf(ifname2, sizeof(ifname2), "%s-%d", ifname, i+1);
++			fwtest_set_he_params(dut, ifname2);
++		}
++	}
+ 
+ 	dut->hostapd_running = 1;
+ 	return 1;
+@@ -10370,6 +10564,8 @@ static enum sigma_cmd_result cmd_ap_rese
+ 		}
+ 		if (get_openwrt_driver_type() == OPENWRT_DRIVER_ATHEROS)
+ 			dut->ap_dfs_mode = AP_DFS_MODE_ENABLED;
++
++		memset(&dut->mbss, 0, sizeof(struct mbss_support));
+ 	}
+ 
+ #ifdef NL80211_SUPPORT
+@@ -11910,6 +12106,28 @@ static enum sigma_cmd_result cmd_ap_get_
+ 
+ 	get_if_name(dut, ifname, sizeof(ifname), wlan_tag);
+ 
++	val = get_param(cmd, "NonTxBSSIndex");
++	if (val) {
++		int non_tx_bss_idx;
++		char idx[4];
++
++		if (dut->ap_mbssid != VALUE_ENABLED) {
++			send_resp(dut, conn, SIGMA_ERROR,
++				  "errorCode,MBSSID Not enabled");
++			return STATUS_SENT_ERROR;
++		}
++
++		non_tx_bss_idx = atoi(val);
++
++		if (non_tx_bss_idx > dut->mbss.num_non_tx_bss) {
++			send_resp(dut, conn, SIGMA_ERROR,
++				  "errorCode,Invalid NonTxBSSIndex");
++			return STATUS_SENT_ERROR;
++		}
++		snprintf(idx, sizeof(idx), "-%d", non_tx_bss_idx);
++		strlcat(ifname, idx, sizeof(ifname));
++	}
++
+ 	s = socket(AF_INET, SOCK_DGRAM, 0);
+ 	if (s < 0)
+ 		return -1;
+--- a/sigma_dut.h
++++ b/sigma_dut.h
+@@ -93,6 +93,8 @@ struct sigma_dut;
+ 
+ #define NAN_AWARE_IFACE "wifi-aware0"
+ 
++#define MAX_SSID_LEN		33
++
+ /* Set default operating channel width 80 MHz */
+ #define VHT_DEFAULT_OPER_CHWIDTH AP_80_VHT_OPER_CHWIDTH
+ 
+@@ -173,7 +175,7 @@ struct wfa_cs_p2p_group {
+ 	char ifname[IFNAMSIZ];
+ 	int go;
+ 	char grpid[P2P_GRP_ID_LEN];
+-	char ssid[33];
++	char ssid[MAX_SSID_LEN];
+ };
+ 
+ #ifdef CONFIG_TRAFFIC_AGENT
+@@ -354,6 +356,43 @@ enum akm_suite_values {
+ 
+ };
+ 
++enum ap_key_mgmt {
++	AP_OPEN,
++	AP_WPA2_PSK,
++	AP_WPA_PSK,
++	AP_WPA2_EAP,
++	AP_WPA_EAP,
++	AP_WPA2_EAP_MIXED,
++	AP_WPA2_PSK_MIXED,
++	AP_WPA2_SAE,
++	AP_WPA2_PSK_SAE,
++	AP_SUITEB,
++	AP_WPA2_OWE,
++	AP_WPA2_EAP_OSEN,
++	AP_WPA2_FT_EAP,
++	AP_WPA2_FT_PSK,
++	AP_WPA2_EAP_SHA256,
++	AP_WPA2_PSK_SHA256,
++	AP_WPA2_ENT_FT_EAP,
++	AP_OSEN,
++};
++
++/* Update this macro for supporting multiple mbss vaps */
++#define MAX_NON_TX_VAP_COUNT	2
++#define MAX_PSK_LEN		20
++
++struct mbss_config {
++	int non_tx_bss_idx;
++	char ssid[MAX_SSID_LEN];
++	enum ap_key_mgmt key_mgmt;
++	char psk[MAX_PSK_LEN];
++};
++
++struct mbss_support {
++	int num_non_tx_bss;
++	struct mbss_config conf[MAX_NON_TX_VAP_COUNT];
++};
++
+ struct sigma_dut {
+ 	const char *main_ifname;
+ 	char *main_ifname_2g;
+@@ -410,7 +449,7 @@ struct sigma_dut {
+ 
+ 	struct wfa_cs_p2p_group *groups;
+ 
+-	char infra_ssid[33];
++	char infra_ssid[MAX_SSID_LEN];
+ 	int infra_network_id;
+ 
+ 	enum p2p_mode {
+@@ -448,12 +487,12 @@ struct sigma_dut {
+ 	unsigned int akm_values;
+ 
+ 	/* AP configuration */
+-	char ap_ssid[33];
++	char ap_ssid[MAX_SSID_LEN];
+ 	/*
+ 	 * WLAN-TAG of 1 will use 'ap_' variables;
+ 	 * tag higher than 1 will use 'ap_tag_' variables.
+ 	 */
+-	char ap_tag_ssid[MAX_WLAN_TAGS - 1][33];
++	char ap_tag_ssid[MAX_WLAN_TAGS - 1][MAX_SSID_LEN];
+ 	enum ap_mode {
+ 		AP_11a,
+ 		AP_11g,
+@@ -505,26 +544,7 @@ struct sigma_dut {
+ 	enum value_not_set_enabled_disabled ap_dyn_bw_sig;
+ 	int ap_sgi80;
+ 	int ap_p2p_mgmt;
+-	enum ap_key_mgmt {
+-		AP_OPEN,
+-		AP_WPA2_PSK,
+-		AP_WPA_PSK,
+-		AP_WPA2_EAP,
+-		AP_WPA_EAP,
+-		AP_WPA2_EAP_MIXED,
+-		AP_WPA2_PSK_MIXED,
+-		AP_WPA2_SAE,
+-		AP_WPA2_PSK_SAE,
+-		AP_SUITEB,
+-		AP_WPA2_OWE,
+-		AP_WPA2_EAP_OSEN,
+-		AP_WPA2_FT_EAP,
+-		AP_WPA2_FT_PSK,
+-		AP_WPA2_EAP_SHA256,
+-		AP_WPA2_PSK_SHA256,
+-		AP_WPA2_ENT_FT_EAP,
+-		AP_OSEN,
+-	} ap_key_mgmt;
++	enum ap_key_mgmt ap_key_mgmt;
+ 	enum ap_tag_key_mgmt {
+ 		AP2_OPEN,
+ 		AP2_OSEN,
+@@ -615,7 +635,7 @@ struct sigma_dut {
+ 	int ap_qos_map_set;
+ 	int ap_bss_load;
+ 	char ap_osu_server_uri[10][256];
+-	char ap_osu_ssid[33];
++	char ap_osu_ssid[MAX_SSID_LEN];
+ 	int ap_osu_method[10];
+ 	int ap_osu_icon_tag;
+ 	int ap_venue_url;
+@@ -979,12 +999,14 @@ struct sigma_dut {
+ 	int ap_6g_only;
+ 	int ap_6g_unsol_prb_resp;
+ 	enum if_band ap_dual_band;
++	struct mbss_support mbss;
+ 	int ocvc;
+ 	int beacon_prot;
+ 	int client_privacy;
+ 	int client_privacy_default;
+ 	int saquery_oci_freq;
+ 	char device_driver[32];
++	int hapd_global_ctrl;
+ };
+ 
+ 

@@ -1,0 +1,33 @@
+diff -Nur a/linux/include/openswan/ipsec_esp.h openswan-2.6.51.3/linux/include/openswan/ipsec_esp.h
+--- a/linux/include/openswan/ipsec_esp.h	2019-04-04 15:33:53.430365241 -0700
++++ openswan-2.6.51.3/linux/include/openswan/ipsec_esp.h	2019-04-04 15:34:19.142364479 -0700
+@@ -67,6 +67,7 @@
+ 
+ struct ipsec_skb_cb {
+ 	struct net_device *tunnel_dev;
++	bool flag;
+ };
+ 
+ extern struct xform_functions esp_xform_funcs[];
+diff -Nur a/linux/net/ipsec/ipsec_esp.c openswan-2.6.51.3/linux/net/ipsec/ipsec_esp.c
+--- a/linux/net/ipsec/ipsec_esp.c	2019-04-04 15:33:53.426365241 -0700
++++ openswan-2.6.51.3/linux/net/ipsec/ipsec_esp.c	2019-04-04 15:34:19.142364479 -0700
+@@ -157,6 +157,7 @@
+ 	} tctx;
+ 
+ 	((struct ipsec_skb_cb *)skb->cb)->tunnel_dev = skb->dev;
++	((struct ipsec_skb_cb *)skb->cb)->flag = irs->ipsp->ips_natt_type ? true : false;
+ 
+ #ifdef CONFIG_KLIPS_OCF
+ 	if (irs->ipsp->ocf_in_use)
+diff -Nur a/linux/net/ipsec/ipsec_xmit.c openswan-2.6.51.3/linux/net/ipsec/ipsec_xmit.c
+--- a/linux/net/ipsec/ipsec_xmit.c	2019-04-04 15:33:53.426365241 -0700
++++ openswan-2.6.51.3/linux/net/ipsec/ipsec_xmit.c	2019-04-04 15:34:19.146364479 -0700
+@@ -887,6 +887,7 @@
+ 		osw_ip4_hdr(ixs)->protocol = IPPROTO_ESP;
+ 
+ 	((struct ipsec_skb_cb *)ixs->skb->cb)->tunnel_dev = ixs->dev;
++	((struct ipsec_skb_cb *)ixs->skb->cb)->flag = ixs->ipsp->ips_natt_type ? true : false;
+ 
+ #ifdef CONFIG_KLIPS_OCF
+ 	if (ixs->ipsp->ocf_in_use) {

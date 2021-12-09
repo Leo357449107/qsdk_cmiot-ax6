@@ -1,0 +1,75 @@
+From de6b4c946dbd08ef4e0fbfa77ab84fd2edb8ea70 Mon Sep 17 00:00:00 2001
+From: Sandhya KS <sandhyks@codeaurora.org>
+Date: Tue, 13 Oct 2020 12:39:04 +0530
+Subject: [PATCH] procd: Ensure watchdog timeout is set properly with ubus
+
+Currently, setting the timeout value for the watchdog using
+ubus with a value greater that the maximum watchdog timeout,
+returns the watchdog settings with the user input timeout,
+whereas the user specified timeout is actually ignored by the ioctl
+if it is greater than max-timeout-sec which is 32 as set in the
+dtsi file.
+
+This needs to be corrected- if the ioctl returns a negative value
+indicating failure to set the new timeout, then procd watchdog module
+should only display the old timeout value instead of the new one.
+
+Currently observed behaviour:
+User input for timeout > 32; output shows new value, though
+ioctl has rejected it.
+root@OpenWrt:/# ubus call system watchdog '{ "timeout": 33 }'
+{
+        "status": "running",
+        "timeout": 33,
+        "frequency": 5,
+        "magicclose": false
+}
+root@OpenWrt:/#
+
+Expected behaviour:
+User input for timeout > 32; ioctl rejects the new value,
+output also shows the previous value which is retained
+root@OpenWrt:/# ubus call system watchdog '{ "timeout": 33 }'
+{
+        "status": "running",
+        "timeout": 30,
+        "frequency": 5,
+	"magicclose": false
+}
+root@OpenWrt:/#
+
+Signed-off-by: Sandhya KS <sandhyks@codeaurora.org>
+---
+ watchdog.c | 9 ++++++++-
+ 1 file changed, 8 insertions(+), 1 deletion(-)
+
+diff --git a/watchdog.c b/watchdog.c
+index 9d770b4..704ce3e 100644
+--- a/watchdog.c
++++ b/watchdog.c
+@@ -125,14 +125,21 @@ bool watchdog_get_stopped(void)
+ 
+ int watchdog_timeout(int timeout)
+ {
++	static int ioctl_ret, current_wdt_drv_timeout;
+ 	if (timeout) {
+ 		DEBUG(4, "Set watchdog timeout: %ds\n", timeout);
++		current_wdt_drv_timeout = wdt_drv_timeout;
+ 		wdt_drv_timeout = timeout;
+ 
+ 		if (wdt_fd >= 0)
+-			watchdog_set_drv_timeout();
++			ioctl_ret = watchdog_set_drv_timeout();
+ 	}
+ 
++	// ioctl in watchdog_set_drv_timeout() returns 0 on success
++	// If ioctl fails, return the old timeout value
++	if (ioctl_ret)
++		wdt_drv_timeout = current_wdt_drv_timeout;
++
+ 	return wdt_drv_timeout;
+ }
+ 
+-- 
+2.17.1
+

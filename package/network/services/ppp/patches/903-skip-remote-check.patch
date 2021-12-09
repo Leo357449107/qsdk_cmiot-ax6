@@ -1,0 +1,22 @@
+Author: Murat Sezgin <msezgin@codeaurora.org>
+Date:   Thu Feb 11 08:47:32 2021 -0800
+
+    [ppp] skip to check remote id option when generate local id
+
+    Change-Id: I4a93bd8203c3528c0f9c6e8f884329e76727b037
+    Signed-off-by: Xiaoping Fan <xfan@codeaurora.org>
+    Signed-off-by: Murat Sezgin <msezgin@codeaurora.org>
+
+diff --git a/pppd/ipv6cp.c b/pppd/ipv6cp.c
+index ecdc397..d18ff0e 100644
+--- a/pppd/ipv6cp.c
++++ b/pppd/ipv6cp.c
+@@ -1085,7 +1085,7 @@ ipv6_check_options()
+      * Persistent link-local id is only used when user has not explicitly
+      * configure/hard-code the id
+      */
+-    if ((wo->use_persistent) && (!wo->opt_local) && (!wo->opt_remote)) {
++    if ((wo->use_persistent) && (!wo->opt_local)) {
+ 
+	/*
+	 * On systems where there are no Ethernet interfaces used, there

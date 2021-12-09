@@ -1,0 +1,19 @@
+From 4f30ebe66fb360bf849fc694955b7b6e0d9c36c4 Mon Sep 17 00:00:00 2001
+From: Naresh Parati <cnparat@codeaurora.org>
+Date: Wed, 7 Oct 2020 08:40:29 +0530
+Subject: [PATCH] wireless-tools: Copy patches from cc/date branch to fig
+
+Change-Id: If101953d1226208fcd5f4545976c622961c8e816
+Signed-off-by: Naresh Parati <cnparat@codeaurora.org>
+
+--- a/iwlib.c
++++ b/iwlib.c
+@@ -650,7 +650,7 @@ iw_get_priv_info(int		skfd,
+       else
+ 	maxpriv *= 2;
+     }
+-  while(maxpriv < 1000);
++  while(maxpriv <= 1024);
+ 
+   /* Cleanup */
+   if(priv)

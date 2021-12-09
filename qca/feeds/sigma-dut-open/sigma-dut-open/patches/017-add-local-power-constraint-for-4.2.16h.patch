@@ -1,0 +1,35 @@
+--- a/ap.c
++++ b/ap.c
+@@ -7777,16 +7777,14 @@ enum sigma_cmd_result cmd_ap_config_comm
+ 	if ((drv == DRIVER_MAC80211 || drv == DRIVER_QNXNTO ||
+ 	     drv == DRIVER_LINUX_WCN) &&
+ 	    (dut->ap_mode == AP_11ac || dut->ap_mode == AP_11na)) {
+-		if (dut->ap_countrycode[0]) {
++		if (dut->ap_countrycode[0])
+ 			fprintf(f, "country_code=%s\n", dut->ap_countrycode);
+-			fprintf(f, "ieee80211d=1\n");
+-			fprintf(f, "ieee80211h=1\n");
+-		}
+-		else if(dut->ap_channel >= 52 && dut->ap_channel <=144) {
+-				fprintf(f, "country_code=US\n"
+-					"ieee80211d=1\n"
+-					"ieee80211h=1\n");
+-		}
++                else
++                        fprintf(f, "country_code=US\n");
++
++                fprintf(f, "ieee80211d=1\n");
++                fprintf(f, "ieee80211h=1\n");
++                fprintf(f, "local_pwr_constraint=3\n");
+ 	}
+ 
+ 	if (drv == DRIVER_LINUX_WCN && dut->ap_mode == AP_11ax) {
+@@ -13045,7 +13043,7 @@ static int mac80211_vht_chnum_band(struc
+ 	char *token, *result;
+ 	int channel = 36, chwidth = 80, center_freq_idx, center_freq,
+ 		channel_freq;
+-	char buf[100];
++	char buf[256];
+ 	char *saveptr;
+ 	int res;
+ 

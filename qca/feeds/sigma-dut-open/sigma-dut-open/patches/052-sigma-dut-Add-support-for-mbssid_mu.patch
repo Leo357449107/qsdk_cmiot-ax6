@@ -1,0 +1,94 @@
+From 5e61c560f0e7d48deb9c29937701b2f689e43d2b Mon Sep 17 00:00:00 2001
+From: Hari Chandrakanthan <quic_haric@quicinc.com>
+Date: Fri, 29 Oct 2021 22:16:20 +0530
+Subject: [PATCH] sigma dut : Add support for mbssid_mu
+
+support for mbssid_mu is added.
+
+Signed-off-by: Hari Chandrakanthan <quic_haric@quicinc.com>
+---
+ ap.c        | 34 ++++++++++++++++++++++++++++++++++
+ sigma_dut.h |  1 +
+ 2 files changed, 35 insertions(+)
+
+diff --git a/ap.c b/ap.c
+index 43ecc5d..cca7417 100644
+--- a/ap.c
++++ b/ap.c
+@@ -2057,6 +2057,19 @@ static enum sigma_cmd_result cmd_ap_set_wireless(struct sigma_dut *dut,
+ 	if (val)
+ 		dut->ap_ocvc = atoi(val);
+ 
++	val = get_param(cmd, "MBSSID_MU");
++	if (val) {
++		if (strcasecmp(val, "enable") == 0) {
++			dut->ap_mbssid_mu = VALUE_ENABLED;
++		} else if (strcasecmp(val, "disable") == 0) {
++			dut->ap_mbssid_mu = VALUE_DISABLED;
++		} else {
++			send_resp(dut, conn, SIGMA_ERROR,
++				  "errorCode,Unsupported MBSSID_MU Value");
++			return STATUS_SENT_ERROR;
++		}
++	}
++
+ 	return SUCCESS_SEND_STATUS;
+ }
+ 
+@@ -8016,6 +8029,13 @@ static void fwtest_set_he_params(struct sigma_dut *dut, const char *ifname)
+ 				   ifname);
+ 		fwtest_cmd_wrapper(dut, "-t 1 -m 0x0 -v 0 0x1D 0", ifname);
+ 	}
++
++	if (dut->ap_mbssid_mu == VALUE_ENABLED) {
++		/* To bias the scheduler to MU instead of SU, to ensure larger number
++		 * of broadcast triggers instead of unicast */
++		fwtest_cmd_wrapper(dut, "-m 0x4b -v 0 21 0", ifname);
++	}
++
+ }
+ 
+ static int default_muedca_values(struct sigma_dut *dut, FILE *f)
+@@ -10750,6 +10770,7 @@ static enum sigma_cmd_result cmd_ap_reset_default(struct sigma_dut *dut,
+ 	dut->he_mmss = 0;
+ 	dut->he_set_sta_1x1 = VALUE_DISABLED;
+ 	dut->he_srctrl_allow = -1;
++	dut->ap_mbssid_mu = VALUE_NOT_SET;
+ 	if (dut->device_type == AP_testbed) {
+ 		dut->ap_he_dlofdma = VALUE_DISABLED;
+ 		dut->ap_he_frag = VALUE_DISABLED;
+@@ -14916,6 +14937,19 @@ static void mac80211_set_trigger_type_0(struct sigma_dut *dut, const char *ifnam
+ 	} else {
+ 		fwtest_cmd_wrapper(dut, "-m 0x47 -v 0 43 6", ifname);
+ 	}
++
++	if (dut->ap_mbssid_mu == VALUE_ENABLED) {
++		/* below 3 cmds - To force HE80, 2 user static RU484 allocation:
++		   (also to ensure higher count of basic triggers) */
++		fwtest_cmd_wrapper(dut, "-m 0x4b -v 0 3 0 4 1 4", ifname);
++		fwtest_cmd_wrapper(dut, "-m 0x4b -v 0 6 0 4 1 4", ifname);
++		fwtest_cmd_wrapper(dut, "-m 0x4b -v 0 1 0 4 1 4", ifname);
++		/* To fake qdepth, and continue transmitting broadcast triggers
++		 * even if we receive no data TB PPDU */
++		fwtest_cmd_wrapper(dut, "-m 0x48 -v 0 220 640000", ifname);
++		fwtest_cmd_wrapper(dut, "-m 0x47 -v 0 302 0", ifname);
++	}
++
+ }
+ 
+ static void mac80211_set_mu_brp_commands(struct sigma_dut *dut, const char *ifname)
+diff --git a/sigma_dut.h b/sigma_dut.h
+index a767f9e..314a07d 100644
+--- a/sigma_dut.h
++++ b/sigma_dut.h
+@@ -782,6 +782,7 @@ struct sigma_dut {
+ 	enum value_not_set_enabled_disabled ap_twtresp;
+ 	enum value_not_set_enabled_disabled he_sounding;
+ 	enum value_not_set_enabled_disabled he_set_sta_1x1;
++	enum value_not_set_enabled_disabled ap_mbssid_mu;
+ 
+ 	enum ppdu {
+ 		PPDU_NOT_SET,
+-- 
+2.7.4
+

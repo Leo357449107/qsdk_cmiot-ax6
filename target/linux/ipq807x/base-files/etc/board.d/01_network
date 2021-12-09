@@ -1,0 +1,61 @@
+#!/bin/sh
+#
+# Copyright (c) 2015, 2020 The Linux Foundation. All rights reserved.
+# Copyright (C) 2011 OpenWrt.org
+#
+
+[ -e /etc/config/network ] && exit 0
+
+touch /etc/config/network
+
+CFG=/etc/board.json
+
+. /lib/functions/uci-defaults.sh
+
+ipq807x_setup_interfaces()
+{
+	local board="$1"
+
+	case "$board" in
+	qcom,ipq8074-ap-hk01-c1|\
+	qcom,ipq8074-ap-hk01-c2|\
+	qcom,ipq8074-ap-hk01-c3|\
+	qcom,ipq8074-ap-hk01-c4|\
+	qcom,ipq8074-ap-hk01-c5|\
+	qcom,ipq8074-ap-hk01-c6|\
+	qcom,ipq8074-ap-hk06|\
+	qcom,ipq8074-ap-hk07|\
+	qcom,ipq8074-ap-hk09|\
+	qcom,ipq8074-ap-hk10-c1|\
+	qcom,ipq8074-ap-hk10-c2|\
+	qcom,ipq8074-ap-hk11-c1|\
+	qcom,ipq8074-ap-hk12|\
+	qcom,ipq8074-db-hk01|\
+	qcom,ipq8074-db-hk02|\
+	qcom,ipq8074-ap-ac01|\
+	qcom,ipq8074-ap-ac02|\
+	qcom,ipq8074-ap-oak02|\
+	qcom,ipq8074-ap-oak03)
+		ucidef_set_interfaces_lan_wan "eth1 eth2 eth3 eth4 eth5" "eth0"
+		;;
+	qcom,ipq8074-ap-hk14|\
+	qcom,ipq8074-ap-ac03|\
+	qcom,ipq8074-ap-ac04)
+		ucidef_set_interfaces_lan_wan "eth1 eth2 eth3 eth4" "eth0"
+		;;
+	qcom,ipq8074-ap-hk08|\
+	qcom,ipq8074-ap-hk02)
+		ucidef_set_interfaces_lan_wan "eth1 eth2" "eth0"
+		;;
+	*)
+		echo "Unsupported hardware. Network interfaces not intialized"
+		;;
+	esac
+}
+
+board_config_update
+board=$(board_name)
+ipq807x_setup_interfaces $board
+board_config_flush
+
+exit 0

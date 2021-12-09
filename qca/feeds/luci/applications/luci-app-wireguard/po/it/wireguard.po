@@ -1,0 +1,123 @@
+msgid ""
+msgstr ""
+"PO-Revision-Date: 2021-10-03 09:47+0000\n"
+"Last-Translator: pisquan8 <cimurro@outlook.de>\n"
+"Language-Team: Italian <https://hosted.weblate.org/projects/openwrt/"
+"luciapplicationswireguard/it/>\n"
+"Language: it\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Plural-Forms: nplurals=2; plural=n != 1;\n"
+"X-Generator: Weblate 4.9-dev\n"
+
+#: applications/luci-app-wireguard/luasrc/view/wireguard.htm:149
+msgid "Allowed IPs"
+msgstr "IP permessi"
+
+#: applications/luci-app-wireguard/luasrc/view/wireguard.htm:225
+#: applications/luci-app-wireguard/luasrc/view/wireguard.htm:259
+msgid "Collecting data..."
+msgstr "Raccolta dati..."
+
+#: applications/luci-app-wireguard/luasrc/view/wireguard.htm:220
+msgid "Configuration"
+msgstr "Configurazione"
+
+#: applications/luci-app-wireguard/luasrc/view/wireguard.htm:170
+msgid "Data Received"
+msgstr "Dati ricevuti"
+
+#: applications/luci-app-wireguard/luasrc/view/wireguard.htm:171
+msgid "Data Transmitted"
+msgstr "Dati trasmessi"
+
+#: applications/luci-app-wireguard/luasrc/view/wireguard.htm:144
+msgid "Endpoint"
+msgstr "Punto finale"
+
+#: applications/luci-app-wireguard/luasrc/view/wireguard.htm:131
+msgid "Firewall Mark"
+msgstr "Marcatore firewall"
+
+#: applications/luci-app-wireguard/luasrc/view/wireguard.htm:189
+msgid "Interface"
+msgstr "Interfaccia"
+
+#: applications/luci-app-wireguard/luasrc/view/wireguard.htm:116
+msgid "Interface does not have a public key!"
+msgstr "L'interfaccia non ha una chiave pubblica!"
+
+#: applications/luci-app-wireguard/luasrc/view/wireguard.htm:166
+msgid "Latest Handshake"
+msgstr "Ultimo handshake"
+
+#: applications/luci-app-wireguard/luasrc/view/wireguard.htm:125
+msgid "Listen Port"
+msgstr "Porta in ascolto"
+
+#: applications/luci-app-wireguard/luasrc/view/wireguard.htm:81
+msgid "Never"
+msgstr "Mai"
+
+#: applications/luci-app-wireguard/luasrc/view/wireguard.htm:251
+msgid "Peer"
+msgstr "Peer"
+
+#: applications/luci-app-wireguard/luasrc/view/wireguard.htm:156
+msgid "Persistent Keepalive"
+msgstr "KeepAlive persistente"
+
+#: applications/luci-app-wireguard/luasrc/view/wireguard.htm:119
+#: applications/luci-app-wireguard/luasrc/view/wireguard.htm:139
+msgid "Public Key"
+msgstr "Chiave pubblica"
+
+#: applications/luci-app-wireguard/luasrc/view/wireguard.htm:191
+msgid "Show/Hide QR-Code"
+msgstr "Visualizza/nascondi codice QR"
+
+#: applications/luci-app-wireguard/luasrc/view/wireguard.htm:211
+msgid ""
+"The QR-Code works per wg interface, it will be refreshed with every manual "
+"page reload and transfers the following information:"
+msgstr ""
+"Il codice QR funziona per l'interfaccia wg, verrà aggiornato ad ogni "
+"ricarica manuale della pagina e trasferirà le seguenti informazioni:"
+
+#: applications/luci-app-wireguard/luasrc/controller/wireguard.lua:7
+msgid "WireGuard Status"
+msgstr "Stato WireGuard"
+
+#: applications/luci-app-wireguard/luasrc/view/wireguard.htm:212
+msgid ""
+"[Interface] A random, on the fly generated 'PrivateKey', the key will not be "
+"saved on the router"
+msgstr ""
+"[Interfaccia] Una 'ChiavePrivata' generata in modo casuale e al volo, la "
+"chiave non verrà salvata sul router"
+
+#: applications/luci-app-wireguard/luasrc/view/wireguard.htm:213
+msgid ""
+"[Peer] The 'PublicKey' of that wg interface and the 'AllowedIPs' with the "
+"default of '0.0.0.0/0, ::/0' to allow sending traffic to any IPv4 and IPv6 "
+"address"
+msgstr ""
+"[Peer] La \"ChiavePubblica\" di tale interfaccia wg e \"IP permessi\" con il "
+"valore predefinito \"0.0.0.0/0, :: / 0\" per consentire l'invio di traffico "
+"a qualsiasi indirizzo IPv4 e IPv6"
+
+#: applications/luci-app-wireguard/luasrc/view/wireguard.htm:91
+msgid "h ago"
+msgstr "ore fa"
+
+#: applications/luci-app-wireguard/luasrc/view/wireguard.htm:89
+msgid "m ago"
+msgstr "min fa"
+
+#: applications/luci-app-wireguard/luasrc/view/wireguard.htm:93
+msgid "over a day ago"
+msgstr "più di un giorno fa"
+
+#: applications/luci-app-wireguard/luasrc/view/wireguard.htm:87
+msgid "s ago"
+msgstr "sec fa"

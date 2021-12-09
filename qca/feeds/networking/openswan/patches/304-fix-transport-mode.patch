@@ -1,0 +1,408 @@
+diff -Naur a/include/linux/pfkeyv2.h b/include/linux/pfkeyv2.h
+--- a/include/linux/pfkeyv2.h	2020-02-10 11:48:45.000000000 +0530
++++ b/include/linux/pfkeyv2.h	2020-02-10 15:11:31.798500175 +0530
+@@ -39,6 +39,7 @@
+ 	uint8_t		sadb_sa_auth;
+ 	uint8_t		sadb_sa_encrypt;
+ 	uint32_t	sadb_sa_flags;
++	uint32_t	sadb_sa_encap_mode;
+ } __attribute__((packed));
+ /* sizeof(struct sadb_sa) == 16 */
+ 
+diff -Naur a/linux/include/openswan/ipsec_sa.h b/linux/include/openswan/ipsec_sa.h
+--- a/linux/include/openswan/ipsec_sa.h	2020-02-10 11:48:45.000000000 +0530
++++ b/linux/include/openswan/ipsec_sa.h	2020-02-10 15:11:31.786500101 +0530
+@@ -162,6 +162,7 @@
+ 	__u32		ips_replaywin_maxdiff;	/* max pkt sequence difference */
+ 
+ 	__u32		ips_flags;		/* generic xform flags */
++	__u32		ips_encap_mode;		/* 1- Tunnel mode, 2 -transport mode */
+ 
+ 
+ 	struct ipsec_lifetimes ips_life;	/* lifetime records */
+diff -Naur a/linux/include/openswan/pfkey.h b/linux/include/openswan/pfkey.h
+--- a/linux/include/openswan/pfkey.h	2020-02-10 11:48:45.000000000 +0530
++++ b/linux/include/openswan/pfkey.h	2020-02-10 15:11:31.786500101 +0530
+@@ -262,7 +262,8 @@
+ 	       uint8_t			sa_state,
+ 	       uint8_t			auth,
+ 	       uint8_t			encrypt,
+-	       uint32_t			flags);
++	       uint32_t			flags,
++	       uint32_t			encap_mode);
+ 
+ extern int
+ pfkey_saref_build(struct sadb_ext **pfkey_ext,
+diff -Naur a/linux/include/openswan/pfkeyv2.h b/linux/include/openswan/pfkeyv2.h
+--- a/linux/include/openswan/pfkeyv2.h	2020-02-10 11:48:45.000000000 +0530
++++ b/linux/include/openswan/pfkeyv2.h	2020-02-10 15:11:31.786500101 +0530
+@@ -58,6 +58,7 @@
+ 	uint8_t sadb_sa_auth;
+ 	uint8_t sadb_sa_encrypt;
+ 	uint32_t sadb_sa_flags;
++	uint32_t sadb_sa_encap_mode;
+ 	uint32_t /*IPsecSAref_t*/ sadb_x_sa_ref; /* 32 bits */
+ 	uint8_t sadb_x_reserved[4];
+ } __attribute__((packed));
+diff -Naur a/linux/net/ipsec/ipsec_ocf.c b/linux/net/ipsec/ipsec_ocf.c
+--- a/linux/net/ipsec/ipsec_ocf.c	2020-02-10 11:48:45.000000000 +0530
++++ b/linux/net/ipsec/ipsec_ocf.c	2020-02-10 15:11:31.786500101 +0530
+@@ -737,26 +737,15 @@
+ 	struct ipsec_sa *iter;
+ 	struct ipsec_skb_cb *skb_cb = (struct ipsec_skb_cb *)irs->skb->cb;
+ 
+-	/*
+-	 * Set transport mode as default. Update if it is tunnel mode.
+-	 */
+-	bool transport_mode = true;
+-
+-	iter = irs->ipsp;
+-	while (iter) {
+-		if (iter->ips_said.proto == IPPROTO_IPIP) {
+-			transport_mode = false;
+-			break;
+-		}
+-
+-		iter = iter->ips_next;
+-	}
+-
+ 	skb_cb->magic = SKB_CB_MAGIC;
+ 	skb_cb->tunnel_dev = irs->skb->dev;
+ 	skb_cb->replay_win = irs->ipsp->ips_replaywin;
+ 	skb_cb->flags |= irs->ipsp->ips_natt_type ? SKB_CB_FLAG_NATT : 0;
+-	skb_cb->flags |= transport_mode ? SKB_CB_FLAG_TRANSPORT_MODE : 0;
++
++	iter = irs->ipsp;
++	if (iter->ips_encap_mode == 2) {
++		skb_cb->flags |= SKB_CB_FLAG_TRANSPORT_MODE;
++	}
+ 
+ 	crp->crp_ilen = irs->skb->len; /* Total input length */
+ 	crp->crp_olen = irs->skb->len; /* Total output length */
+diff -Naur a/linux/net/ipsec/ipsec_xmit.c b/linux/net/ipsec/ipsec_xmit.c
+--- a/linux/net/ipsec/ipsec_xmit.c	2020-02-10 11:48:45.000000000 +0530
++++ b/linux/net/ipsec/ipsec_xmit.c	2020-02-10 15:11:31.786500101 +0530
+@@ -894,7 +894,11 @@
+ 	skb_cb->magic = SKB_CB_MAGIC;
+ 	skb_cb->tunnel_dev = ixs->dev;
+ 	skb_cb->flags |= ixs->ipsp->ips_natt_type ? SKB_CB_FLAG_NATT : 0;
+-	skb_cb->flags |= (ixs->outgoing_said.proto == IPPROTO_IPIP) ? 0 : SKB_CB_FLAG_TRANSPORT_MODE;
++
++	if (ixs->ipsp->ips_encap_mode == 2) {
++		skb_cb->flags |= SKB_CB_FLAG_TRANSPORT_MODE;
++	}
++
+ 
+ #ifdef CONFIG_KLIPS_OCF
+ 	if (ixs->ipsp->ocf_in_use) {
+diff -Naur a/linux/net/ipsec/pfkey_v2_build.c b/linux/net/ipsec/pfkey_v2_build.c
+--- a/linux/net/ipsec/pfkey_v2_build.c	2020-02-10 11:48:45.000000000 +0530
++++ b/linux/net/ipsec/pfkey_v2_build.c	2020-02-10 15:11:31.786500101 +0530
+@@ -312,7 +312,8 @@
+ 	       uint8_t			sa_state,
+ 	       uint8_t			auth,
+ 	       uint8_t			encrypt,
+-	       uint32_t			flags)
++	       uint32_t			flags,
++	       uint32_t			encap_mode)
+ {
+ 	struct sadb_builds sab;
+ 
+@@ -324,6 +325,7 @@
+ 	sab.sa_base.sadb_sa_auth    = auth;
+ 	sab.sa_base.sadb_sa_encrypt = encrypt;
+ 	sab.sa_base.sadb_sa_flags   = flags;
++	sab.sa_base.sadb_sa_encap_mode   = encap_mode;
+ 	sab.sa_base.sadb_x_sa_ref   = IPSEC_SAREF_NULL;
+ 
+ 	return pfkey_sa_builds(pfkey_ext, sab);
+diff -Naur a/linux/net/ipsec/pfkey_v2_ext_process.c b/linux/net/ipsec/pfkey_v2_ext_process.c
+--- a/linux/net/ipsec/pfkey_v2_ext_process.c	2020-02-10 11:48:45.000000000 +0530
++++ b/linux/net/ipsec/pfkey_v2_ext_process.c	2020-02-10 15:11:31.786500101 +0530
+@@ -121,6 +121,7 @@
+ 	ipsp->ips_replaywin = pfkey_sa->sadb_sa_replay;
+ 	ipsp->ips_state = pfkey_sa->sadb_sa_state;
+ 	ipsp->ips_flags = pfkey_sa->sadb_sa_flags;
++	ipsp->ips_encap_mode = pfkey_sa->sadb_sa_encap_mode;
+ 	ipsp->ips_replaywin_lastseq = ipsp->ips_replaywin_bitmap = 0;
+ 
+ 	if(k_pfkey_sa->sadb_sa_len > sizeof(struct sadb_sa)/IPSEC_PFKEYv2_ALIGN) {
+diff -Naur a/linux/net/ipsec/pfkey_v2_parser.c b/linux/net/ipsec/pfkey_v2_parser.c
+--- a/linux/net/ipsec/pfkey_v2_parser.c	2020-02-10 11:48:45.000000000 +0530
++++ b/linux/net/ipsec/pfkey_v2_parser.c	2020-02-10 15:11:31.786500101 +0530
+@@ -326,7 +326,7 @@
+ 							K_SADB_SASTATE_LARVAL,
+ 							0,
+ 							0,
+-							0),
++							0, 0),
+ 				 extensions_reply)
+ 
+ 	     && pfkey_safe_build(error = pfkey_address_build(&extensions_reply[K_SADB_EXT_ADDRESS_SRC],
+@@ -520,7 +520,8 @@
+ 							extr->ips->ips_state,
+ 							extr->ips->ips_authalg,
+ 							extr->ips->ips_encalg,
+-							extr->ips->ips_flags),
++							extr->ips->ips_flags,
++							extr->ips->ips_encap_mode),
+ 				 extensions_reply)
+ 	     /* The 3 lifetime extentions should only be sent if non-zero. */
+ 	     && (extensions[K_SADB_EXT_LIFETIME_HARD]
+@@ -787,7 +788,8 @@
+ 							extr->ips->ips_state,
+ 							extr->ips->ips_authalg,
+ 							extr->ips->ips_encalg,
+-							    extr->ips->ips_flags),
++							extr->ips->ips_flags,
++							extr->ips->ips_encap_mode),
+ 				 extensions_reply)
+ 	     && pfkey_safe_build(error = pfkey_saref_build(&extensions_reply[K_SADB_X_EXT_SAREF],
+ 							   extr->ips->ips_ref,
+@@ -1113,7 +1115,8 @@
+ 							extr->ips->ips_state,
+ 							extr->ips->ips_authalg,
+ 							extr->ips->ips_encalg,
+-							extr->ips->ips_flags),
++							extr->ips->ips_flags,
++							extr->ips->ips_encap_mode),
+ 				 extensions_reply)
+ 	     /* The 3 lifetime extentions should only be sent if non-zero. */
+ 	     && (ipsp->ips_life.ipl_allocations.ipl_count
+@@ -1814,7 +1817,8 @@
+ 							extr->ips->ips_state,
+ 							extr->ips->ips_authalg,
+ 							extr->ips->ips_encalg,
+-							extr->ips->ips_flags),
++							extr->ips->ips_flags,
++							extr->ips->ips_encap_mode),
+ 				 extensions_reply)
+ 	     && pfkey_safe_build(error = pfkey_address_build(&extensions_reply[K_SADB_EXT_ADDRESS_DST],
+ 							     K_SADB_EXT_ADDRESS_DST,
+@@ -1834,7 +1838,8 @@
+ 							       extr->ips2->ips_state,
+ 							       extr->ips2->ips_authalg,
+ 							       extr->ips2->ips_encalg,
+-							       extr->ips2->ips_flags),
++							       extr->ips2->ips_flags,
++							       extr->ips2->ips_encap_mode),
+ 					extensions_reply)
+ 		    && pfkey_safe_build(error = pfkey_address_build(&extensions_reply[K_SADB_X_EXT_ADDRESS_DST2],
+ 								    K_SADB_X_EXT_ADDRESS_DST2,
+@@ -2078,7 +2083,8 @@
+ 							extr->ips->ips_state,
+ 							extr->ips->ips_authalg,
+ 							extr->ips->ips_encalg,
+-							extr->ips->ips_flags),
++							extr->ips->ips_flags,
++							extr->ips->ips_encap_mode),
+ 				 extensions_reply)
+ 	     && (extensions[K_SADB_EXT_ADDRESS_SRC]
+ 		 ? pfkey_safe_build(error = pfkey_address_build(&extensions_reply[K_SADB_EXT_ADDRESS_SRC],
+@@ -2292,7 +2298,8 @@
+ 							extr->ips->ips_state,
+ 							extr->ips->ips_authalg,
+ 							extr->ips->ips_encalg,
+-							extr->ips->ips_flags);
++							extr->ips->ips_flags,
++							extr->ips->ips_encap_mode);
+ 	}
+ 
+ 	if(!(extr->ips->ips_flags & (SADB_X_SAFLAGS_CLEARFLOW | SADB_X_SAFLAGS_POLICYONLY))) {
+@@ -2424,7 +2431,8 @@
+ 							 ipsp->ips_state,
+ 							 ipsp->ips_authalg,
+ 							 ipsp->ips_encalg,
+-							 ipsp->ips_flags),
++							 ipsp->ips_flags,
++							 ipsp->ips_encap_mode),
+ 				  extensions)
+ 	      && pfkey_safe_build(error = pfkey_lifetime_build(&extensions[K_SADB_EXT_LIFETIME_CURRENT],
+ 							       K_SADB_EXT_LIFETIME_CURRENT,
+@@ -2694,7 +2702,7 @@
+ 		/* SA */
+ 		&& pfkey_safe_build
+ 		(error = pfkey_sa_build(&extensions[K_SADB_EXT_SA],
+-			K_SADB_EXT_SA, ipsp->ips_said.spi, 0, 0, 0, 0, 0), extensions)
++			K_SADB_EXT_SA, ipsp->ips_said.spi, 0, 0, 0, 0, 0, 0), extensions)
+ 		/* ADDRESS_SRC = old addr */
+ 		&& pfkey_safe_build
+ 		(error = pfkey_address_build(&extensions[K_SADB_EXT_ADDRESS_SRC],
+@@ -2974,7 +2982,7 @@
+ 				       extr->ips->ips_state,
+ 				       extr->ips->ips_authalg,
+ 				       extr->ips->ips_encalg,
+-				       extr->ips->ips_flags);
++				       extr->ips->ips_flags, extr->ips->ips_encap_mode);
+ 		pfkey_safe_build(error, extensions);
+ 	}
+ 
+diff -Naur a/programs/eroute/eroute.c b/programs/eroute/eroute.c
+--- a/programs/eroute/eroute.c	2020-02-10 11:48:44.000000000 +0530
++++ b/programs/eroute/eroute.c	2020-02-10 15:11:31.778500051 +0530
+@@ -661,7 +661,7 @@
+ 					   0,
+ 					   0,
+ 					   0,
+-					   sa_flags))) {
++					   sa_flags, 0))) {
+ 			fprintf(stderr, "%s: Trouble building sa extension, error=%d.\n",
+ 				progname, error);
+ 			pfkey_extensions_free(extensions);
+diff -Naur a/programs/pluto/kernel_bsdkame.c b/programs/pluto/kernel_bsdkame.c
+--- a/programs/pluto/kernel_bsdkame.c	2020-02-10 11:48:44.000000000 +0530
++++ b/programs/pluto/kernel_bsdkame.c	2020-02-10 15:11:31.782500076 +0530
+@@ -908,7 +908,7 @@
+ }
+ 
+ static bool
+-bsdkame_add_sa(const struct kernel_sa *sa, bool replace)
++bsdkame_add_sa(const struct kernel_sa *sa, bool replace, uint32_t encap_mode)
+ {
+     const struct sockaddr *saddr = (const struct sockaddr *)sa->src;
+     const struct sockaddr *daddr = (const struct sockaddr *)sa->dst;
+diff -Naur a/programs/pluto/kernel.c b/programs/pluto/kernel.c
+--- a/programs/pluto/kernel.c	2020-02-10 11:48:44.000000000 +0530
++++ b/programs/pluto/kernel.c	2020-02-10 15:11:31.782500076 +0530
+@@ -1621,7 +1621,7 @@
+     }
+ 
+     {
+-      bool add_success = kernel_ops->add_sa(said_next, replace);
++      bool add_success = kernel_ops->add_sa(said_next, replace, st->st_esp.attrs.encapsulation);
+ 
+       /* good crypto hygiene, (not just LIBNSS) */
+       memset(said_next->enckey, 0, said_next->enckeylen);
+@@ -1814,7 +1814,7 @@
+ 	    outgoing_ref_set  = TRUE;
+ 	}
+ 
+-        if (!kernel_ops->add_sa(said_next, FALSE)) {
++        if (!kernel_ops->add_sa(said_next, FALSE, encapsulation)) {
+ 	    DBG(DBG_KLIPS, DBG_log("add_sa tunnel failed"));
+             goto fail;
+ 	}
+@@ -1902,7 +1902,7 @@
+ 	    outgoing_ref_set  = TRUE;
+ 	}
+ 
+-        if (!kernel_ops->add_sa(said_next, replace)) {
++        if (!kernel_ops->add_sa(said_next, replace, encapsulation)) {
+ 	    DBG_log("add_sa ipcomp failed");
+             goto fail;
+ 	}
+@@ -2025,10 +2025,10 @@
+ 	}
+ 
+ #ifdef HAVE_LIBNSS
+-       if (!kernel_ops->add_sa(said_next, replace)) {
++       if (!kernel_ops->add_sa(said_next, replace, encapsulation)) {
+             memset(said_next->authkey, 0, said_next->authkeylen);
+ #else
+-        if (!kernel_ops->add_sa(said_next, replace))
++        if (!kernel_ops->add_sa(said_next, replace, encapsulation))
+ #endif
+             goto fail;
+ #ifdef HAVE_LIBNSS
+diff -Naur a/programs/pluto/kernel.h b/programs/pluto/kernel.h
+--- a/programs/pluto/kernel.h	2020-02-10 11:48:44.000000000 +0530
++++ b/programs/pluto/kernel.h	2020-02-10 15:11:31.782500076 +0530
+@@ -172,7 +172,7 @@
+     void (*remove_orphaned_holds)(int transportproto
+ 				  , const ip_subnet *ours
+ 				  , const ip_subnet *his);
+-    bool (*add_sa)(struct kernel_sa *sa, bool replace);
++    bool (*add_sa)(struct kernel_sa *sa, bool replace, uint32_t encap_mode);
+     bool (*grp_sa)(const struct kernel_sa *sa_outer,
+ 		   const struct kernel_sa *sa_inner);
+     bool (*del_sa)(const struct kernel_sa *sa);
+diff -Naur a/programs/pluto/kernel_pfkey.c b/programs/pluto/kernel_pfkey.c
+--- a/programs/pluto/kernel_pfkey.c	2020-02-10 11:48:44.000000000 +0530
++++ b/programs/pluto/kernel_pfkey.c	2020-02-10 15:11:31.782500076 +0530
+@@ -917,7 +917,7 @@
+ 	if (!(pfkey_build(pfkey_sa_build(&extensions[K_SADB_EXT_SA]
+ 					 , K_SADB_EXT_SA
+ 					 , spi	/* in network order */
+-					 , 0, 0, 0, 0, klips_op >> KLIPS_OP_FLAG_SHIFT)
++					 , 0, 0, 0, 0, klips_op >> KLIPS_OP_FLAG_SHIFT, 0)
+ 			  , "pfkey_sa add flow", text_said, extensions)
+ 
+ 	    && pfkeyext_address(K_SADB_EXT_ADDRESS_SRC, this_host
+@@ -936,7 +936,7 @@
+ 	if (!(pfkey_build(pfkey_sa_build(&extensions[K_SADB_EXT_SA]
+ 					 , K_SADB_EXT_SA
+ 					 , spi	/* in network order */
+-					 , 0, 0, 0, 0, klips_op >> KLIPS_OP_FLAG_SHIFT)
++					 , 0, 0, 0, 0, klips_op >> KLIPS_OP_FLAG_SHIFT, 0)
+ 			  , "pfkey_sa del flow", text_said, extensions)))
+ 	{
+ 	    return FALSE;
+@@ -977,7 +977,7 @@
+     return finish_pfkey_msg(extensions, "flow", text_said, NULL);
+ }
+ 
+-bool pfkey_add_sa(struct kernel_sa *sa, bool replace)
++bool pfkey_add_sa(struct kernel_sa *sa, bool replace, uint32_t encap_mode)
+ {
+     unsigned klips_satype;
+     struct sadb_ext *extensions[K_SADB_EXT_MAX + 1];
+@@ -1000,7 +1000,7 @@
+ 					 , K_SADB_EXT_SA
+ 					 , sa->spi	/* in network order */
+ 					 , sa->replay_window, K_SADB_SASTATE_MATURE
+-					 , sa->authalg, sa->encalg, 0)
++					 , sa->authalg, sa->encalg, 0, encap_mode)
+ 			  , "pfkey_sa Add SA", sa->text_said, extensions);
+     if(!success) return FALSE;
+ 
+@@ -1147,7 +1147,7 @@
+     && pfkey_build(pfkey_sa_build(&extensions[K_SADB_EXT_SA]
+ 	    , K_SADB_EXT_SA
+ 	    , sa1->spi	/* in network order */
+-	    , 0, 0, 0, 0, 0)
++	    , 0, 0, 0, 0, 0, 0)
+ 	, "pfkey_sa group", sa1->text_said, extensions)
+ 
+     && pfkeyext_address(K_SADB_EXT_ADDRESS_DST, sa1->dst
+@@ -1160,7 +1160,7 @@
+     && pfkey_build(pfkey_sa_build(&extensions[K_SADB_X_EXT_SA2]
+ 	    , K_SADB_X_EXT_SA2
+ 	    , sa0->spi	/* in network order */
+-	    , 0, 0, 0, 0, 0)
++	    , 0, 0, 0, 0, 0, 0)
+ 	, "pfkey_sa2 group", sa0->text_said, extensions)
+ 
+     && pfkeyext_address(K_SADB_X_EXT_ADDRESS_DST2, sa0->dst
+@@ -1179,7 +1179,7 @@
+     && pfkey_build(pfkey_sa_build(&extensions[K_SADB_EXT_SA]
+ 	    , K_SADB_EXT_SA
+ 	    , sa->spi	/* in host order */
+-	    , 0, K_SADB_SASTATE_MATURE, 0, 0, 0)
++	    , 0, K_SADB_SASTATE_MATURE, 0, 0, 0, 0)
+ 	, "pfkey_sa delete SA", sa->text_said, extensions)
+ 
+     && pfkeyext_address(K_SADB_EXT_ADDRESS_SRC, sa->src
+diff -Naur a/programs/pluto/kernel_pfkey.h b/programs/pluto/kernel_pfkey.h
+--- a/programs/pluto/kernel_pfkey.h	2020-02-10 11:48:44.000000000 +0530
++++ b/programs/pluto/kernel_pfkey.h	2020-02-10 15:11:31.782500076 +0530
+@@ -27,7 +27,7 @@
+ #ifdef KLIPS
+ extern void klips_pfkey_register(void);
+ #endif
+-extern bool pfkey_add_sa(struct kernel_sa *sa, bool replace);
++extern bool pfkey_add_sa(struct kernel_sa *sa, bool replace, uint32_t encap_mode);
+ extern bool pfkey_grp_sa(const struct kernel_sa *sa0, const struct kernel_sa *sa1);
+ extern bool pfkey_del_sa(const struct kernel_sa *sa);
+ extern bool pfkey_sag_eroute(struct state *st, const struct spd_route *sr
+diff -Naur a/programs/spigrp/spigrp.c b/programs/spigrp/spigrp.c
+--- a/programs/spigrp/spigrp.c	2020-02-10 11:48:44.000000000 +0530
++++ b/programs/spigrp/spigrp.c	2020-02-10 15:11:31.778500051 +0530
+@@ -349,7 +349,7 @@
+ 						   0,
+ 						   0,
+ 						   0,
+-						   0))) {
++						   0, 0))) {
+ 				fprintf(stderr, "%s: Trouble building sa extension, error=%d.\n",
+ 					progname, error);
+ 				pfkey_extensions_free(extensions);

@@ -1,0 +1,5 @@
+uci set system.@rngd[0].enabled=1
+if [ -e /dev/hwrng ]; then
+	uci set system.@rngd[0].device=/dev/hwrng
+fi
+uci commit

@@ -1,0 +1,23 @@
+--- a/squashfs-tools/lzma_xz_options.h
++++ b/squashfs-tools/lzma_xz_options.h
+@@ -36,7 +36,9 @@
+ #endif
+ 
+ struct lzma_opts {
+-	uint32_t dict_size;
++#ifndef OLD_SQUASHFS_VERSION
++	uint32_t dict_size;
++#endif
+ 	uint32_t flags;
+ #define LZMA_OPT_FLT_MASK	0xffff
+ #define LZMA_OPT_PRE_OFF	16
+@@ -50,6 +52,9 @@ struct lzma_opts {
+ #define LZMA_OPT_PB_OFF		6
+ #define LZMA_OPT_PB_MASK	(0x7 << LZMA_OPT_PB_OFF)
+ 	uint16_t fb;
++#ifdef OLD_SQUASHFS_VERSION
++	uint32_t dict_size;
++#endif
+ };
+ 
+ #if __BYTE_ORDER == __BIG_ENDIAN

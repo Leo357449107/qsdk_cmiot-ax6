@@ -1,0 +1,45 @@
+#!/bin/bash
+create_symbols() {
+    if [ $(file $1 | awk '{print $2}') = "ELF" ]; then
+    local result=$(file $1 2> /dev/null | grep "not stripped")
+        #Generate Symbols on not stripped ELF Files
+        if [ -n "$result" ]; then
+            local BIN_FILE=$1
+            local SYM_FILE_NAME="$(basename -- $BIN_FILE)"
+            local EXT=""${SYM_FILE_NAME##*.}""
+            #Executable which does not have Breakpad Linked.
+            if [ "$SYM_FILE_NAME" = "$EXT" ]; then
+                local result_breakpad=$(strings $BIN_FILE 2> /dev/null | grep "breakpad_ExceptionHandler")
+                if [ -z "$result_breakpad" ]; then
+                    return
+                fi
+            fi
+            #Ignore .o Object Files from Symbol Generation
+            if [ "$EXT" = "o" ]; then
+                return
+            fi
+            `$DIR_PATH/dump_syms $BIN_FILE > $DIR_PATH/"${SYM_FILE_NAME}".sym`
+            local app_name="$(head -n1 $DIR_PATH/"${SYM_FILE_NAME}".sym | awk '{print $5}')"
+            local sym_folder="$(head -n1 $DIR_PATH/"${SYM_FILE_NAME}".sym | awk '{print $4}')"
+            mkdir -p $DIR_PATH/symbols/$app_name/$sym_folder
+            mv $DIR_PATH/"${SYM_FILE_NAME}".sym $DIR_PATH/symbols/$app_name/$sym_folder
+        fi
+    fi
+}
+#----------------------------------------------------------------------
+# main entry
+#----------------------------------------------------------------------
+if [ "$#" -eq 0  ]; then
+    echo 'Usage: make_syms "binaryfile", e.g. make_syms {path}/testApp'
+    echo 'Usage: make_syms "directoryfile", e.g. make_syms {path}/testApp/'
+    exit 1
+fi
+DIR_PATH="$(dirname $0)"
+if [ -d "$1" ] ; then
+    for file in "$1"/*
+    do
+        create_symbols "$file"
+    done
+else
+    create_symbols $1
+fi

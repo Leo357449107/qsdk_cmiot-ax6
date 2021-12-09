@@ -1,0 +1,115 @@
+Index: openswan-2.6.41/linux/include/openswan/ipsec_esp.h
+===================================================================
+--- openswan-2.6.41.orig/linux/include/openswan/ipsec_esp.h	2019-07-18 09:50:42.454017081 +0530
++++ openswan-2.6.41/linux/include/openswan/ipsec_esp.h	2019-07-18 09:53:30.288807669 +0530
+@@ -45,6 +45,8 @@
+ #define DB_ES_OINFO2	0x0200
+ #define DB_ES_OH	0x0400
+ #define DB_ES_REPLAY	0x0800
++#define SKB_CB_FLAG_NATT		0x00000001
++#define SKB_CB_FLAG_TRANSPORT_MODE	0x00000002
+ 
+ #ifdef __KERNEL__
+ struct des_eks {
+@@ -67,7 +69,7 @@
+ 
+ struct ipsec_skb_cb {
+ 	struct net_device *tunnel_dev;
+-	bool flag;
++	uint32_t flags;
+ };
+ 
+ extern struct xform_functions esp_xform_funcs[];
+Index: openswan-2.6.41/linux/net/ipsec/ipsec_esp.c
+===================================================================
+--- openswan-2.6.41.orig/linux/net/ipsec/ipsec_esp.c	2019-07-18 09:50:42.454017081 +0530
++++ openswan-2.6.41/linux/net/ipsec/ipsec_esp.c	2019-07-18 09:54:24.704415708 +0530
+@@ -156,9 +156,6 @@
+ 		SHA1_CTX	sha1;
+ 	} tctx;
+ 
+-	((struct ipsec_skb_cb *)skb->cb)->tunnel_dev = skb->dev;
+-	((struct ipsec_skb_cb *)skb->cb)->flag = irs->ipsp->ips_natt_type ? true : false;
+-
+ #ifdef CONFIG_KLIPS_OCF
+ 	if (irs->ipsp->ocf_in_use)
+ 		return(ipsec_ocf_rcv(irs));
+Index: openswan-2.6.41/linux/net/ipsec/ipsec_ocf.c
+===================================================================
+--- openswan-2.6.41.orig/linux/net/ipsec/ipsec_ocf.c	2019-07-18 09:50:42.038020080 +0530
++++ openswan-2.6.41/linux/net/ipsec/ipsec_ocf.c	2019-07-18 10:01:57.641156192 +0530
+@@ -731,6 +731,31 @@
+ 		crdc->crd_inject = crdc->crd_skip;
+ 	}
+ 
++	/*
++	 * Update information required in NSS.
++	 */
++	struct ipsec_sa *iter;
++	struct ipsec_skb_cb *skb_cb = (struct ipsec_skb_cb *)irs->skb->cb;
++	memset(skb_cb, 0, sizeof(struct ipsec_skb_cb));
++
++	/*
++	 * Set transport mode as default. Update if it is tunnel mode.
++	 */
++	bool transport_mode = true;
++
++	iter = irs->ipsp;
++	while (iter) {
++		if (iter->ips_said.proto == IPPROTO_IPIP) {
++			transport_mode = false;
++			break;
++		}
++
++		iter = iter->ips_next;
++	}
++
++	skb_cb->tunnel_dev = irs->skb->dev;
++	skb_cb->flags |= irs->ipsp->ips_natt_type ? SKB_CB_FLAG_NATT : 0;
++	skb_cb->flags |= transport_mode ? SKB_CB_FLAG_TRANSPORT_MODE : 0;
+ 
+ 	crp->crp_ilen = irs->skb->len; /* Total input length */
+ 	crp->crp_olen = irs->skb->len; /* Total output length */
+@@ -767,6 +792,14 @@
+ 	unsigned orig_len, comp_len;
+ 	struct cryptodesc *crdc=NULL;
+ 
++	/*
++	 * During crypto operation if the skb does not have sufficient head/
++	 * tail room, skb is expanded. In such cases, pointer to IP header
++	 * needs to be updated.
++	 */
++	skb_reset_network_header(ixs->skb);
++	ixs->iph = (void *)ip_hdr(ixs->skb);
++
+ 	KLIPS_PRINT(debug_tunnel & DB_TN_XMIT, "klips_debug:ipsec_ocf_xmit_cb\n");
+ 
+ 	if (ixs == NULL) {
+Index: openswan-2.6.41/linux/net/ipsec/ipsec_xmit.c
+===================================================================
+--- openswan-2.6.41.orig/linux/net/ipsec/ipsec_xmit.c	2019-07-18 09:50:42.454017081 +0530
++++ openswan-2.6.41/linux/net/ipsec/ipsec_xmit.c	2019-07-18 10:04:57.079866284 +0530
+@@ -850,6 +850,7 @@
+ 	unsigned char *pad;
+ 	int padlen = 0;
+ 	unsigned char nexthdr;
++	struct ipsec_skb_cb *skb_cb = (struct ipsec_skb_cb *)ixs->skb->cb;
+ 
+ 	ixs->espp = (struct esphdr *)(ixs->dat + ixs->iphlen);
+ 	skb_set_transport_header(ixs->skb, ipsec_skb_offset(ixs->skb, ixs->espp));
+@@ -886,8 +887,13 @@
+ 	else
+ 		osw_ip4_hdr(ixs)->protocol = IPPROTO_ESP;
+ 
+-	((struct ipsec_skb_cb *)ixs->skb->cb)->tunnel_dev = ixs->dev;
+-	((struct ipsec_skb_cb *)ixs->skb->cb)->flag = ixs->ipsp->ips_natt_type ? true : false;
++	/*
++	 * Update information required in NSS.
++	 */
++	memset(skb_cb, 0, sizeof(struct ipsec_skb_cb));
++	skb_cb->tunnel_dev = ixs->dev;
++	skb_cb->flags |= ixs->ipsp->ips_natt_type ? SKB_CB_FLAG_NATT : 0;
++	skb_cb->flags |= (ixs->outgoing_said.proto == IPPROTO_IPIP) ? 0 : SKB_CB_FLAG_TRANSPORT_MODE;
+ 
+ #ifdef CONFIG_KLIPS_OCF
+ 	if (ixs->ipsp->ocf_in_use) {

@@ -1,0 +1,30 @@
+From 398e86c8fd4e42e102d52a31f852076f40727566 Mon Sep 17 00:00:00 2001
+From: Naresh Parati <cnparat@codeaurora.org>
+Date: Wed, 7 Oct 2020 08:49:49 +0530
+Subject: [PATCH] wireless-tools: Copy patches from cc/date branch to fig
+
+Change-Id: If101953d1226208fcd5f4545976c622961c8e816
+Signed-off-by: Naresh Parati <cnparat@codeaurora.org>
+
+Index: wireless_tools.29/iwlib.c
+===================================================================
+--- wireless_tools.29.orig/iwlib.c	2019-12-18 19:07:54.661663215 +0530
++++ wireless_tools.29/iwlib.c	2019-12-18 19:10:55.788322064 +0530
+@@ -1443,7 +1443,7 @@
+ 	  if(!(qual->updated & IW_QUAL_NOISE_INVALID))
+ 	    {
+ 	      double	rcpinoise = (qual->noise / 2.0) - 110.0;
+-	      len = snprintf(buffer, buflen, "Noise level%c%g dBm",
++	      len = snprintf(buffer, buflen, "Noise level%c%g dBm (BDF averaged NF value in dBm)",
+ 			     qual->updated & IW_QUAL_NOISE_UPDATED ? '=' : ':',
+ 			     rcpinoise);
+ 	    }
+@@ -1475,7 +1475,7 @@
+ 		  /* Implement a range for dBm [-192; 63] */
+ 		  if(qual->noise >= 64)
+ 		    dbnoise -= 0x100;
+-		  len = snprintf(buffer, buflen, "Noise level%c%d dBm",
++		  len = snprintf(buffer, buflen, "Noise level%c%d dBm (BDF averaged NF value in dBm)",
+ 				 qual->updated & IW_QUAL_NOISE_UPDATED ? '=' : ':',
+ 				 dbnoise);
+ 		}

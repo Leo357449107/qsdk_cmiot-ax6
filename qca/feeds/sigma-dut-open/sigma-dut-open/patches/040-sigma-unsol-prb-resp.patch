@@ -1,0 +1,69 @@
+From afbee49c1369bcc97cb73350cba669a731774cfd Mon Sep 17 00:00:00 2001
+From: Sriram R <srirrama@codeaurora.org>
+Date: Fri, 18 Sep 2020 13:10:28 +0530
+Subject: [PATCH] sigma-dut: Add support for 6GHz unsolicited probe response command
+
+Add support for parsing and enable/disable of unsolicited
+probe response command. The reconfiguration is done using
+hostapd_cli
+
+Signed-off-by: Sriram R <srirrama@codeaurora.org>
+---
+ ap.c | 39 +++++++++++++++++++++++++++++++++++++++
+ 1 file changed, 39 insertions(+)
+
+--- a/ap.c
++++ b/ap.c
+@@ -14802,6 +14802,32 @@ static int mac80211_he_ltf_mapping(struc
+ 	return -1;
+ }
+ 
++static void mac80211_update_unsol_prb_resp(struct sigma_dut *dut,
++					   const char *ifname)
++{
++	char buf[100];
++	int prb_resp_tu, fils_tu;
++
++	if (dut->ap_6g_unsol_prb_resp) {
++		prb_resp_tu = 20;
++		fils_tu = 0;
++	} else {
++		prb_resp_tu = 0;
++		fils_tu = 20;
++	}
++
++	snprintf(buf, sizeof(buf), "-i %s set fils_discovery_max_interval %d", ifname, fils_tu);
++	run_hostapd_cli(dut, buf);
++	snprintf(buf, sizeof(buf), "-i %s set unsol_bcast_probe_resp_interval %d", ifname, prb_resp_tu);
++	run_hostapd_cli(dut, buf);
++
++	snprintf(buf, sizeof(buf), "-i %s disable", ifname);
++	run_hostapd_cli(dut, buf);
++
++	snprintf(buf, sizeof(buf), "-i %s enable", ifname);
++	run_hostapd_cli(dut, buf);
++
++}
+ 
+ static enum sigma_cmd_result mac80211_he_ltf(struct sigma_dut *dut,
+ 					     struct sigma_conn *conn,
+@@ -14970,6 +14996,19 @@ static enum sigma_cmd_result mac80211_ap
+ 			return res;
+ 	}
+ 
++	val = get_param(cmd, "UnsolicitedProbeResp");
++	if (val) {
++		int unsol_prb_resp;
++		if (strcasecmp(val, "enable") == 0)
++			unsol_prb_resp = 1;
++		else
++			unsol_prb_resp = 0;
++		if (unsol_prb_resp != dut->ap_6g_unsol_prb_resp) {
++			dut->ap_6g_unsol_prb_resp = unsol_prb_resp;
++			mac80211_update_unsol_prb_resp(dut, ifname);
++		}
++	}
++
+ 	return SUCCESS_SEND_STATUS;
+ }
+ 

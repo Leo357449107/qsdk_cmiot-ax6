@@ -1,0 +1,35 @@
+From 0930ed19292480fab7e6ec8abaceced7f1e1160f Mon Sep 17 00:00:00 2001
+From: Ram Chandra Jangir <quic_rjangir@quicinc.com>
+Date: Thu, 28 Oct 2021 13:22:18 +0530
+Subject: [PATCH] samba4: Fix build error 'unknown type name 'OM_uint32''
+
+samba4 compilation results in following error, this change fixes it.
+Error snippet:
+[1694/3578] Compiling source3/lib/util_cluster.c
+In file included from ../../lib/replace/system/passwd.h:68:0,
+from ../../source3/lib/substitute.c:23:
+../../source4/heimdal/lib/gssapi/mech/compat.h:33:9: error: unknown type name 'OM_uint32'
+typedef OM_uint32 GSSAPI_CALLCONV _gss_inquire_saslname_for_mech_t (
+^~~~~~~~~
+
+Signed-off-by: Ram Chandra Jangir <quic_rjangir@quicinc.com>
+---
+ source4/heimdal/lib/gssapi/mech/compat.h | 2 ++
+ 1 file changed, 2 insertions(+)
+
+diff --git a/source4/heimdal/lib/gssapi/mech/compat.h b/source4/heimdal/lib/gssapi/mech/compat.h
+index e63f1e5..143fb27 100644
+--- a/source4/heimdal/lib/gssapi/mech/compat.h
++++ b/source4/heimdal/lib/gssapi/mech/compat.h
+@@ -30,6 +30,8 @@
+  * SUCH DAMAGE.
+  */
+ 
++#include "../gssapi/gssapi.h"
++
+ typedef OM_uint32 GSSAPI_CALLCONV _gss_inquire_saslname_for_mech_t (
+ 	       OM_uint32 *,           /* minor_status */
+ 	       const gss_OID,         /* desired_mech */
+-- 
+2.7.4
+

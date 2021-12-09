@@ -1,0 +1,11 @@
+diff -Nur a/programs/whack/whack.c openswan-2.6.51.3/programs/whack/whack.c
+--- a/programs/whack/whack.c	2019-04-04 15:09:56.070407793 -0700
++++ openswan-2.6.51.3/programs/whack/whack.c	2019-04-04 15:11:26.854405106 -0700
+@@ -2102,6 +2102,7 @@
+ 		}
+ 	    }
+ 	}
++	close(sock);
+ 	return exit_status;
+     }
+ }

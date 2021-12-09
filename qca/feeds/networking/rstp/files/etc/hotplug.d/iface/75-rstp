@@ -1,0 +1,56 @@
+#!/bin/sh
+# Copyright (c) 2013, 2018, 2020 The Linux Foundation. All rights reserved.
+BRIFNAME=
+
+rstpctl_bridge_list() {
+        local bridge_name=$1
+        local enable=0
+        local bridge_ifname
+
+        config_get enable $bridge_name enable
+        [ "$enable" = "0" ] && return
+
+        config_get bridge_ifname $bridge_name ifname
+        [ -z "$bridge_ifname" ] && return
+
+	BRIFNAME="$BRIFNAME $bridge_ifname"
+
+}
+
+rstpctl_bridge_device_enable() {
+	local ifname
+	local enabled
+	local autoMode
+	config_load rstp
+	config_get_bool enabled global enable
+	config_get_bool autoMode global autoMode
+	[ "$enabled" = "1" ] && {
+		network_get_device ifname ${INTERFACE}
+		[ -d "/sys/class/net/$ifname/bridge" ] && {
+			if [ "$autoMode" = "1" ] ; then
+				network_get_device lanifname lan
+				if [ "$lanifname" = "$ifname" ]; then
+					sleep 1
+					/etc/init.d/rstp restart
+				fi
+			else
+				config_foreach rstpctl_bridge_list bridge
+				for brname in $BRIFNAME
+				do
+					if [ $ifname = $brname ]; then
+						/etc/init.d/rstp restart
+					fi
+				done
+			fi
+		}
+	}
+
+}
+
+[ "$ACTION" = "ifup" ] && {
+	. /lib/functions.sh
+	. /lib/functions/network.sh
+
+	rstpctl_bridge_device_enable
+
+}

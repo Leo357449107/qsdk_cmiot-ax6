@@ -1,0 +1,37 @@
+From 8ff5e5cc650ebdd11958709601760aaa8bb0a219 Mon Sep 17 00:00:00 2001
+From: Sandhya KS <sandhyks@codeaurora.org>
+Date: Mon, 16 Nov 2020 18:13:48 +0530
+Subject: [PATCH] sysstat : Enable PIE implementation
+
+Adding TARGET_CFLAGS and TARGET_LDFLAGS in the Makefile.
+Including a patch to enforce LDFLAGS during compilation.
+
+Signed-off-by: Sandhya KS <sandhyks@codeaurora.org>
+---
+ Makefile.in | 3 ++-
+ 1 file changed, 2 insertions(+), 1 deletion(-)
+
+diff --git a/Makefile.in b/Makefile.in
+index 333f6e2..b505b1f 100644
+--- a/Makefile.in
++++ b/Makefile.in
+@@ -74,6 +74,7 @@ DFLAGS = @DFLAGS@
+ LFLAGS = @STRIP@
+ DFLAGS += -DSA_DIR=\"$(SA_DIR)\" -DSADC_PATH=\"$(SADC_PATH)\"
+ DFLAGS += $(DFSENSORS)
++LDFLAGS += @LDFLAGS@
+ 
+ # Commands
+ ifndef MSGFMT
+@@ -168,7 +169,7 @@ NLSPOT= $(NLSPO:.po=.pot)
+ 	$(CC) -o $@ -c $(CFLAGS) $(DFLAGS) $<
+ 
+ % : %.o
+-	$(CC) -o $@ $(CFLAGS) $^ $(LFLAGS)
++	$(CC) -o $@ $(LDFLAGS) $(CFLAGS) $^ $(LFLAGS)
+ 
+ all: sadc sar sadf iostat tapestat mpstat pidstat cifsiostat locales
+ 
+-- 
+2.17.1
+

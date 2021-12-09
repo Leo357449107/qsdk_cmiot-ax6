@@ -1,0 +1,771 @@
+msgid ""
+msgstr ""
+"Project-Id-Version: \n"
+"POT-Creation-Date: \n"
+"PO-Revision-Date: 2021-10-09 20:31+0000\n"
+"Last-Translator: Gerardo <gerardo.zinno@aol.com>\n"
+"Language-Team: Italian <https://hosted.weblate.org/projects/openwrt/"
+"luciapplicationsadblock/it/>\n"
+"Language: it\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Plural-Forms: nplurals=2; plural=n != 1;\n"
+"X-Generator: Weblate 4.9-dev\n"
+
+#: applications/luci-app-adblock/htdocs/luci-static/resources/view/adblock/overview.js:369
+#: applications/luci-app-adblock/htdocs/luci-static/resources/view/adblock/overview.js:384
+msgid "- unspecified -"
+msgstr ""
+
+#: applications/luci-app-adblock/htdocs/luci-static/resources/view/adblock/dnsreport.js:261
+msgid "Action"
+msgstr "Azione"
+
+#: applications/luci-app-adblock/htdocs/luci-static/resources/view/adblock/overview.js:214
+msgid "Active Sources"
+msgstr "Sorgenti attive"
+
+#: applications/luci-app-adblock/luasrc/controller/adblock.lua:6
+#: applications/luci-app-adblock/root/usr/share/luci/menu.d/luci-app-adblock.json:3
+msgid "Adblock"
+msgstr "Blocco pubblicità"
+
+#: applications/luci-app-adblock/htdocs/luci-static/resources/view/adblock/overview.js:34
+msgid "Adblock action"
+msgstr "Adblock azione"
+
+#: applications/luci-app-adblock/htdocs/luci-static/resources/view/adblock/dnsreport.js:10
+msgid "Add Blacklist Domain"
+msgstr "Aggiungi dominio alla lista nera"
+
+#: applications/luci-app-adblock/htdocs/luci-static/resources/view/adblock/dnsreport.js:45
+msgid "Add Whitelist Domain"
+msgstr "Aggiungi dominio alla whitelist"
+
+#: applications/luci-app-adblock/htdocs/luci-static/resources/view/adblock/dnsreport.js:11
+msgid "Add this (sub-)domain to your local blacklist."
+msgstr "Aggiungi questo (sotto)dominio alla tua lista nera locale."
+
+#: applications/luci-app-adblock/htdocs/luci-static/resources/view/adblock/dnsreport.js:46
+msgid "Add this (sub-)domain to your local whitelist."
+msgstr "Aggiungi questo (sotto)dominio alla tua lista bianca locale."
+
+#: applications/luci-app-adblock/htdocs/luci-static/resources/view/adblock/overview.js:416
+msgid "Additional Jail Blocklist"
+msgstr "Jail Blocklist aggiuntivo"
+
+#: applications/luci-app-adblock/htdocs/luci-static/resources/view/adblock/overview.js:267
+msgid "Additional Settings"
+msgstr "Impostazioni aggiuntive"
+
+#: applications/luci-app-adblock/htdocs/luci-static/resources/view/adblock/overview.js:339
+msgid "Additional trigger delay in seconds before adblock processing begins."
+msgstr "Tempo addizionale in secondi di attesa prima che adblock si avvii."
+
+#: applications/luci-app-adblock/htdocs/luci-static/resources/view/adblock/overview.js:268
+msgid "Advanced DNS Settings"
+msgstr "Impostazioni DNS avanzate"
+
+#: applications/luci-app-adblock/htdocs/luci-static/resources/view/adblock/overview.js:270
+msgid "Advanced E-Mail Settings"
+msgstr "Impostazioni E-Mail avanzate"
+
+#: applications/luci-app-adblock/htdocs/luci-static/resources/view/adblock/overview.js:269
+msgid "Advanced Report Settings"
+msgstr "Impostazioni avanzate dei report"
+
+#: applications/luci-app-adblock/htdocs/luci-static/resources/view/adblock/dnsreport.js:260
+msgid "Answer"
+msgstr "Risposta"
+
+#: applications/luci-app-adblock/htdocs/luci-static/resources/view/adblock/overview.js:362
+msgid "Backup Directory"
+msgstr "Directory del Backup"
+
+#: applications/luci-app-adblock/htdocs/luci-static/resources/view/adblock/overview.js:353
+msgid "Base Temp Directory"
+msgstr "Base directory Temporanea"
+
+#: applications/luci-app-adblock/htdocs/luci-static/resources/view/adblock/overview.js:353
+msgid ""
+"Base Temp Directory for all adblock related runtime operations, e.g. "
+"downloading, sorting, merging etc."
+msgstr ""
+"Directory base Temporanea per tutte le operazioni di adblock, esempio "
+"download, ordinamento, unione, ecc."
+
+#: applications/luci-app-adblock/htdocs/luci-static/resources/view/adblock/blacklist.js:14
+#: applications/luci-app-adblock/htdocs/luci-static/resources/view/adblock/dnsreport.js:33
+msgid ""
+"Blacklist changes have been saved. Refresh your adblock lists that changes "
+"take effect."
+msgstr ""
+"Cambiamenti alla blacklist salvati. Ricaricare le liste di adblock per "
+"renderli effettivi."
+
+#: applications/luci-app-adblock/htdocs/luci-static/resources/view/adblock/dnsreport.js:285
+msgid "Blacklist..."
+msgstr "Lista nera..."
+
+#: applications/luci-app-adblock/htdocs/luci-static/resources/view/adblock/dnsreport.js:315
+msgid "Blocked DNS Requests"
+msgstr "Richieste DNS bloccate"
+
+#: applications/luci-app-adblock/htdocs/luci-static/resources/view/adblock/dnsreport.js:210
+msgid "Blocked Domain"
+msgstr "Domini bloccati"
+
+#: applications/luci-app-adblock/htdocs/luci-static/resources/view/adblock/overview.js:211
+msgid "Blocked Domains"
+msgstr "Domini bloccati"
+
+#: applications/luci-app-adblock/htdocs/luci-static/resources/view/adblock/overview.js:358
+msgid "Blocklist Backup"
+msgstr "Backup lista di blocco"
+
+#: applications/luci-app-adblock/htdocs/luci-static/resources/view/adblock/dnsreport.js:80
+msgid "Blocklist Query"
+msgstr "Consulta lista di blocco"
+
+#: applications/luci-app-adblock/htdocs/luci-static/resources/view/adblock/dnsreport.js:323
+msgid "Blocklist Query..."
+msgstr "Cerca lista di blocco..."
+
+#: applications/luci-app-adblock/htdocs/luci-static/resources/view/adblock/overview.js:271
+msgid "Blocklist Sources"
+msgstr "Fonti lista di Blocco"
+
+#: applications/luci-app-adblock/htdocs/luci-static/resources/view/adblock/overview.js:416
+msgid ""
+"Builds an additional DNS blocklist to block access to all domains except "
+"those listed in the whitelist. Please note: You can use this restrictive "
+"blocklist e.g. for guest wifi or kidsafe configurations."
+msgstr ""
+"Crea una lista di blocco (blacklist) DNS aggiuntiva per bloccare l'accesso a "
+"tutti i domini ad eccezzione di quelli presenti nella whitelist. NB: Puoi "
+"usare questa lista di blocco (Blocklist) p.e per wifi ospite oppure "
+"configurazioni per la protezione dei bambini."
+
+#: applications/luci-app-adblock/htdocs/luci-static/resources/view/adblock/dnsreport.js:21
+#: applications/luci-app-adblock/htdocs/luci-static/resources/view/adblock/dnsreport.js:56
+#: applications/luci-app-adblock/htdocs/luci-static/resources/view/adblock/dnsreport.js:108
+#: applications/luci-app-adblock/htdocs/luci-static/resources/view/adblock/dnsreport.js:162
+#: applications/luci-app-adblock/htdocs/luci-static/resources/view/adblock/overview.js:57
+msgid "Cancel"
+msgstr "Annulla"
+
+#: applications/luci-app-adblock/htdocs/luci-static/resources/view/adblock/overview.js:269
+msgid ""
+"Changes on this tab needs a full adblock service restart to take effect.<br /"
+"><p>&#xa0;</p>"
+msgstr ""
+"I cambiamenti effetuati in questa pagina richiedono un riavvio completo del "
+"servizio adblock per essere applicati.<br /><p>&#xa0;</p>"
+
+#: applications/luci-app-adblock/htdocs/luci-static/resources/view/adblock/dnsreport.js:258
+msgid "Client"
+msgstr "Client"
+
+#: applications/luci-app-adblock/htdocs/luci-static/resources/view/adblock/overview.js:126
+msgid ""
+"Configuration of the adblock package to block ad/abuse domains by using DNS. "
+"For further information <a href=\"https://github.com/openwrt/packages/blob/"
+"master/net/adblock/files/README.md\" target=\"_blank\" rel=\"noreferrer "
+"noopener\" >check the online documentation</a>"
+msgstr ""
+"Configurazione del pacchetto adblock per bloccare pubblicità/domini "
+"fraudolenti usando il DNS. Per informazioni aggiuntive <a href=\"https://"
+"github.com/openwrt/packages/blob/master/net/adblock/files/README.md\" target="
+"\"_blank\" rel=\"noreferrer noopener\" >consulta la documentazione</a>"
+
+#: applications/luci-app-adblock/htdocs/luci-static/resources/view/adblock/dnsreport.js:205
+#: applications/luci-app-adblock/htdocs/luci-static/resources/view/adblock/dnsreport.js:207
+#: applications/luci-app-adblock/htdocs/luci-static/resources/view/adblock/dnsreport.js:209
+msgid "Count"
+msgstr "Numero"
+
+#: applications/luci-app-adblock/htdocs/luci-static/resources/view/adblock/overview.js:358
+msgid ""
+"Create compressed blocklist backups, they will be used in case of download "
+"errors or during startup."
+msgstr ""
+"Crea dei backup delle liste di blocco comrpessi, saranno usati "
+"nell'evenienza di errori nello scaricamento o all'avvio."
+
+#: applications/luci-app-adblock/htdocs/luci-static/resources/view/adblock/overview.js:217
+#: applications/luci-app-adblock/htdocs/luci-static/resources/view/adblock/overview.js:382
+msgid "DNS Backend"
+msgstr "Backend DNS"
+
+#: applications/luci-app-adblock/htdocs/luci-static/resources/view/adblock/overview.js:392
+msgid "DNS Directory"
+msgstr "Directory DNS"
+
+#: applications/luci-app-adblock/htdocs/luci-static/resources/view/adblock/overview.js:406
+msgid "DNS File Reset"
+msgstr "Reset File DNS"
+
+#: applications/luci-app-adblock/htdocs/luci-static/resources/view/adblock/overview.js:315
+#: applications/luci-app-adblock/luasrc/controller/adblock.lua:8
+#: applications/luci-app-adblock/root/usr/share/luci/menu.d/luci-app-adblock.json:26
+msgid "DNS Report"
+msgstr "Report del DNS"
+
+#: applications/luci-app-adblock/htdocs/luci-static/resources/view/adblock/overview.js:396
+msgid "DNS Restart Timeout"
+msgstr "Tempo di riavvio del DNS"
+
+#: applications/luci-app-adblock/htdocs/luci-static/resources/view/adblock/dnsreport.js:256
+msgid "Date"
+msgstr "Data"
+
+#: applications/luci-app-adblock/htdocs/luci-static/resources/view/adblock/overview.js:413
+msgid "Disable DNS Allow"
+msgstr "Disabilita Consenti DNS"
+
+#: applications/luci-app-adblock/htdocs/luci-static/resources/view/adblock/overview.js:425
+msgid "Disable DNS Restarts"
+msgstr "Disabilita riavvio DNS"
+
+#: applications/luci-app-adblock/htdocs/luci-static/resources/view/adblock/overview.js:425
+msgid ""
+"Disable adblock triggered restarts for dns backends with autoload/inotify "
+"functions."
+msgstr ""
+"Disattiva il riavvio innescato dal blocco pubblicità per i backend DNS con "
+"funzionalità di autoload/inotify."
+
+#: applications/luci-app-adblock/htdocs/luci-static/resources/view/adblock/overview.js:413
+msgid "Disable selective DNS whitelisting (RPZ pass through)."
+msgstr ""
+
+#: applications/luci-app-adblock/htdocs/luci-static/resources/view/adblock/dnsreport.js:208
+#: applications/luci-app-adblock/htdocs/luci-static/resources/view/adblock/dnsreport.js:259
+msgid "Domain"
+msgstr "Dominio"
+
+#: applications/luci-app-adblock/htdocs/luci-static/resources/view/adblock/overview.js:376
+msgid "Download Parameters"
+msgstr "Parametri di download"
+
+#: applications/luci-app-adblock/htdocs/luci-static/resources/view/adblock/overview.js:344
+msgid "Download Queue"
+msgstr "Coda download"
+
+#: applications/luci-app-adblock/htdocs/luci-static/resources/view/adblock/overview.js:368
+msgid "Download Utility"
+msgstr "Utilità di download"
+
+#: applications/luci-app-adblock/htdocs/luci-static/resources/view/adblock/overview.js:319
+msgid "E-Mail Notification"
+msgstr "Notifica e-mail"
+
+#: applications/luci-app-adblock/htdocs/luci-static/resources/view/adblock/overview.js:471
+msgid "E-Mail Notification Count"
+msgstr "Conteggio notifiche e-mail"
+
+#: applications/luci-app-adblock/htdocs/luci-static/resources/view/adblock/overview.js:467
+msgid "E-Mail Profile"
+msgstr "Profilo e-mail"
+
+#: applications/luci-app-adblock/htdocs/luci-static/resources/view/adblock/overview.js:323
+msgid "E-Mail Receiver Address"
+msgstr "Indirizzo e-mail destinatario"
+
+#: applications/luci-app-adblock/htdocs/luci-static/resources/view/adblock/overview.js:459
+msgid "E-Mail Sender Address"
+msgstr "Indirizzo e-mail mittente"
+
+#: applications/luci-app-adblock/htdocs/luci-static/resources/view/adblock/overview.js:463
+msgid "E-Mail Topic"
+msgstr "Oggetto e-mail"
+
+#: applications/luci-app-adblock/luasrc/controller/adblock.lua:9
+#: applications/luci-app-adblock/root/usr/share/luci/menu.d/luci-app-adblock.json:34
+msgid "Edit Blacklist"
+msgstr "Modifica blacklist"
+
+#: applications/luci-app-adblock/luasrc/controller/adblock.lua:10
+#: applications/luci-app-adblock/root/usr/share/luci/menu.d/luci-app-adblock.json:42
+msgid "Edit Whitelist"
+msgstr "Modifica whitelist"
+
+#: applications/luci-app-adblock/htdocs/luci-static/resources/view/adblock/overview.js:299
+msgid "Enable SafeSearch"
+msgstr "Abilita SafeSearch"
+
+#: applications/luci-app-adblock/htdocs/luci-static/resources/view/adblock/overview.js:311
+msgid "Enable moderate SafeSearch filters for youtube."
+msgstr "Abilita moderazione filtri SafeSearch per Youtube."
+
+#: applications/luci-app-adblock/htdocs/luci-static/resources/view/adblock/overview.js:282
+msgid "Enable the adblock service."
+msgstr "Abilita il servizio adblock."
+
+#: applications/luci-app-adblock/htdocs/luci-static/resources/view/adblock/overview.js:331
+msgid "Enable verbose debug logging in case of any processing errors."
+msgstr ""
+"Abilita log di debug verboso in caso di qualsiasi errore di elaborazione."
+
+#: applications/luci-app-adblock/htdocs/luci-static/resources/view/adblock/overview.js:282
+msgid "Enabled"
+msgstr "Abilitato"
+
+#: applications/luci-app-adblock/htdocs/luci-static/resources/view/adblock/dnsreport.js:309
+msgid "End Timestamp"
+msgstr "Fine timestamp"
+
+#: applications/luci-app-adblock/htdocs/luci-static/resources/view/adblock/overview.js:299
+msgid ""
+"Enforcing SafeSearch for google, bing, duckduckgo, yandex, youtube and "
+"pixabay."
+msgstr ""
+"Forza SafeSearch per google, bing, duckduckgo, yandex, youtube e pixabay."
+
+#: applications/luci-app-adblock/htdocs/luci-static/resources/view/adblock/overview.js:16
+msgid "Existing job(s)"
+msgstr "Processi esistenti"
+
+#: applications/luci-app-adblock/htdocs/luci-static/resources/view/adblock/overview.js:401
+msgid "External DNS Lookup Domain"
+msgstr "Dominio DNS di lookup esterno"
+
+#: applications/luci-app-adblock/htdocs/luci-static/resources/view/adblock/overview.js:401
+msgid ""
+"External domain to check for a successful DNS backend restart. Please note: "
+"To disable this check set this option to 'false'."
+msgstr ""
+
+#: applications/luci-app-adblock/htdocs/luci-static/resources/view/adblock/dnsreport.js:156
+msgid "Filter criteria like date, domain or client (optional)"
+msgstr "Criteri del  filtro, come date, domini o client (opzionale)"
+
+#: applications/luci-app-adblock/htdocs/luci-static/resources/view/adblock/overview.js:410
+msgid "Flush DNS Cache"
+msgstr "Pulisci Cache DNS"
+
+#: applications/luci-app-adblock/htdocs/luci-static/resources/view/adblock/overview.js:410
+msgid "Flush the DNS Cache before adblock processing as well."
+msgstr ""
+
+#: applications/luci-app-adblock/htdocs/luci-static/resources/view/adblock/overview.js:291
+msgid "Force Local DNS"
+msgstr "Forza DNS Locale"
+
+#: applications/luci-app-adblock/htdocs/luci-static/resources/view/adblock/overview.js:315
+msgid ""
+"Gather DNS related network traffic via tcpdump and provide a DNS Report on "
+"demand. Please note: this needs additional 'tcpdump-mini' package "
+"installation and a full adblock service restart to take effect."
+msgstr ""
+
+#: applications/luci-app-adblock/htdocs/luci-static/resources/view/adblock/overview.js:266
+msgid "General Settings"
+msgstr "Impostazioni Generali"
+
+#: applications/luci-app-adblock/htdocs/luci-static/resources/view/adblock/overview.js:206
+msgid "Information"
+msgstr "Informazioni"
+
+#: applications/luci-app-adblock/htdocs/luci-static/resources/view/adblock/overview.js:420
+msgid "Jail Directory"
+msgstr ""
+
+#: applications/luci-app-adblock/htdocs/luci-static/resources/view/adblock/overview.js:232
+msgid "Last Run"
+msgstr "Ultimo Avvio"
+
+#: applications/luci-app-adblock/htdocs/luci-static/resources/view/adblock/dnsreport.js:342
+msgid "Latest DNS Requests"
+msgstr ""
+
+#: applications/luci-app-adblock/htdocs/luci-static/resources/view/adblock/overview.js:302
+msgid "Limit SafeSearch"
+msgstr ""
+
+#: applications/luci-app-adblock/htdocs/luci-static/resources/view/adblock/overview.js:302
+msgid "Limit SafeSearch to certain providers."
+msgstr ""
+
+#: applications/luci-app-adblock/htdocs/luci-static/resources/view/adblock/overview.js:432
+msgid "List of available network devices used by tcpdump."
+msgstr ""
+
+#: applications/luci-app-adblock/htdocs/luci-static/resources/view/adblock/overview.js:285
+msgid ""
+"List of available network interfaces to trigger the adblock start. Choose "
+"'unspecified' to use a classic startup timeout instead of a network trigger."
+msgstr ""
+
+#: applications/luci-app-adblock/htdocs/luci-static/resources/view/adblock/overview.js:382
+msgid ""
+"List of supported DNS backends with their default list directory. To "
+"overwrite the default path use the 'DNS Directory' option."
+msgstr ""
+
+#: applications/luci-app-adblock/htdocs/luci-static/resources/view/adblock/overview.js:271
+msgid ""
+"List of supported and fully pre-configured adblock sources, already active "
+"sources are pre-selected.<br /> <b><em>To avoid OOM errors, please do not "
+"select too many lists!</em></b><br /> List size information with the "
+"respective domain ranges as follows:<br /> &#8226;&#xa0;<b>S</b> (-10k), "
+"<b>M</b> (10k-30k) and <b>L</b> (30k-80k) should work for 128 MByte devices,"
+"<br /> &#8226;&#xa0;<b>XL</b> (80k-200k) should work for 256-512 MByte "
+"devices,<br /> &#8226;&#xa0;<b>XXL</b> (200k-) needs more RAM and Multicore "
+"support, e.g. x86 or raspberry devices.<br /> <p>&#xa0;</p>"
+msgstr ""
+
+#: applications/luci-app-adblock/htdocs/luci-static/resources/view/adblock/overview.js:368
+msgid "List of supported and fully pre-configured download utilities."
+msgstr ""
+"Elenco delle utility di download supportate e completamente preconfigurate."
+
+#: applications/luci-app-adblock/htdocs/luci-static/resources/view/adblock/overview.js:294
+msgid "Local DNS Ports"
+msgstr ""
+
+#: applications/luci-app-adblock/luasrc/controller/adblock.lua:11
+#: applications/luci-app-adblock/root/usr/share/luci/menu.d/luci-app-adblock.json:50
+msgid "Log View"
+msgstr ""
+
+#: applications/luci-app-adblock/htdocs/luci-static/resources/view/adblock/overview.js:334
+msgid "Low Priority Service"
+msgstr "Serviio a bassa priorità"
+
+#: applications/luci-app-adblock/htdocs/luci-static/resources/view/adblock/dnsreport.js:206
+msgid "Name / IP Address"
+msgstr ""
+
+#: applications/luci-app-adblock/htdocs/luci-static/resources/view/adblock/dnsreport.js:123
+msgid "No Query results!"
+msgstr ""
+
+#: applications/luci-app-adblock/htdocs/luci-static/resources/view/adblock/logread.js:19
+msgid "No adblock related logs yet!"
+msgstr ""
+
+#: applications/luci-app-adblock/luasrc/controller/adblock.lua:7
+#: applications/luci-app-adblock/root/usr/share/luci/menu.d/luci-app-adblock.json:18
+msgid "Overview"
+msgstr "Riepilogo"
+
+#: applications/luci-app-adblock/htdocs/luci-static/resources/view/adblock/overview.js:467
+msgid "Profile used by 'msmtp' for adblock notification E-Mails."
+msgstr ""
+
+#: applications/luci-app-adblock/htdocs/luci-static/resources/view/adblock/dnsreport.js:131
+msgid "Query"
+msgstr "Interrogazione"
+
+#: applications/luci-app-adblock/htdocs/luci-static/resources/view/adblock/dnsreport.js:81
+msgid "Query active blocklists and backups for a specific domain."
+msgstr ""
+
+#: applications/luci-app-adblock/htdocs/luci-static/resources/view/adblock/overview.js:471
+msgid ""
+"Raise the notification count, to get E-Mails if the overall blocklist count "
+"is less or equal to the given limit."
+msgstr ""
+
+#: applications/luci-app-adblock/htdocs/luci-static/resources/view/adblock/overview.js:323
+msgid "Receiver address for adblock notification e-mails."
+msgstr ""
+"Indirizzo del destinatario per e-mail di notifica di blocco degli annunci."
+
+#: applications/luci-app-adblock/htdocs/luci-static/resources/view/adblock/overview.js:291
+msgid ""
+"Redirect all DNS queries from 'lan' zone to the local DNS resolver, applies "
+"to UDP and TCP protocol."
+msgstr ""
+
+#: applications/luci-app-adblock/htdocs/luci-static/resources/view/adblock/overview.js:334
+msgid ""
+"Reduce the priority of the adblock background processing to take fewer "
+"resources from the system. Please note: This change requires a full adblock "
+"service restart to take effect."
+msgstr ""
+
+#: applications/luci-app-adblock/htdocs/luci-static/resources/view/adblock/dnsreport.js:183
+#: applications/luci-app-adblock/htdocs/luci-static/resources/view/adblock/overview.js:255
+msgid "Refresh"
+msgstr "Ricaricare"
+
+#: applications/luci-app-adblock/htdocs/luci-static/resources/view/adblock/dnsreport.js:138
+msgid "Refresh DNS Report"
+msgstr ""
+
+#: applications/luci-app-adblock/htdocs/luci-static/resources/view/adblock/overview.js:13
+msgid "Refresh Timer"
+msgstr ""
+
+#: applications/luci-app-adblock/htdocs/luci-static/resources/view/adblock/overview.js:240
+msgid "Refresh Timer..."
+msgstr ""
+
+#: applications/luci-app-adblock/htdocs/luci-static/resources/view/adblock/dnsreport.js:330
+msgid "Refresh..."
+msgstr ""
+
+#: applications/luci-app-adblock/htdocs/luci-static/resources/view/adblock/overview.js:311
+msgid "Relax SafeSearch"
+msgstr ""
+
+#: applications/luci-app-adblock/htdocs/luci-static/resources/view/adblock/overview.js:442
+msgid "Report Chunk Count"
+msgstr ""
+
+#: applications/luci-app-adblock/htdocs/luci-static/resources/view/adblock/overview.js:447
+msgid "Report Chunk Size"
+msgstr ""
+
+#: applications/luci-app-adblock/htdocs/luci-static/resources/view/adblock/overview.js:437
+msgid "Report Directory"
+msgstr "Directory dei report"
+
+#: applications/luci-app-adblock/htdocs/luci-static/resources/view/adblock/overview.js:432
+msgid "Report Interface"
+msgstr ""
+
+#: applications/luci-app-adblock/htdocs/luci-static/resources/view/adblock/overview.js:452
+msgid "Report Ports"
+msgstr ""
+
+#: applications/luci-app-adblock/htdocs/luci-static/resources/view/adblock/overview.js:442
+msgid "Report chunk count used by tcpdump."
+msgstr ""
+
+#: applications/luci-app-adblock/htdocs/luci-static/resources/view/adblock/overview.js:447
+msgid "Report chunk size used by tcpdump in MByte."
+msgstr ""
+
+#: applications/luci-app-adblock/htdocs/luci-static/resources/view/adblock/overview.js:406
+msgid ""
+"Resets the final DNS blocklist 'adb_list.overall' after DNS backend loading. "
+"Please note: This option starts a small ubus/adblock monitor in the "
+"background."
+msgstr ""
+
+#: applications/luci-app-adblock/htdocs/luci-static/resources/view/adblock/dnsreport.js:95
+msgid "Result"
+msgstr ""
+
+#: applications/luci-app-adblock/htdocs/luci-static/resources/view/adblock/overview.js:226
+msgid "Run Directories"
+msgstr ""
+
+#: applications/luci-app-adblock/htdocs/luci-static/resources/view/adblock/overview.js:229
+msgid "Run Flags"
+msgstr ""
+
+#: applications/luci-app-adblock/htdocs/luci-static/resources/view/adblock/overview.js:223
+msgid "Run Interfaces"
+msgstr ""
+
+#: applications/luci-app-adblock/htdocs/luci-static/resources/view/adblock/overview.js:220
+msgid "Run Utils"
+msgstr ""
+
+#: applications/luci-app-adblock/htdocs/luci-static/resources/view/adblock/dnsreport.js:38
+#: applications/luci-app-adblock/htdocs/luci-static/resources/view/adblock/dnsreport.js:73
+#: applications/luci-app-adblock/htdocs/luci-static/resources/view/adblock/overview.js:81
+msgid "Save"
+msgstr "Salva"
+
+#: applications/luci-app-adblock/htdocs/luci-static/resources/view/adblock/overview.js:319
+msgid ""
+"Send adblock related notification e-mails. Please note: this needs "
+"additional 'msmtp' package installation."
+msgstr ""
+
+#: applications/luci-app-adblock/htdocs/luci-static/resources/view/adblock/overview.js:459
+msgid "Sender address for adblock notification E-Mails."
+msgstr ""
+
+#: applications/luci-app-adblock/htdocs/luci-static/resources/view/adblock/overview.js:27
+msgid "Set/Replace a new adblock job"
+msgstr ""
+
+#: applications/luci-app-adblock/htdocs/luci-static/resources/view/adblock/overview.js:264
+msgid "Settings"
+msgstr "Impostazioni"
+
+#: applications/luci-app-adblock/htdocs/luci-static/resources/view/adblock/overview.js:344
+msgid ""
+"Size of the download queue for download processing (incl. sorting, merging "
+"etc.) in parallel."
+msgstr ""
+
+#: applications/luci-app-adblock/htdocs/luci-static/resources/view/adblock/overview.js:479
+msgid "Sources (Size, Focus)"
+msgstr ""
+
+#: applications/luci-app-adblock/htdocs/luci-static/resources/view/adblock/overview.js:294
+msgid ""
+"Space separated list of DNS-related firewall ports which should be forced "
+"locally."
+msgstr ""
+
+#: applications/luci-app-adblock/htdocs/luci-static/resources/view/adblock/overview.js:452
+msgid "Space separated list of ports used by tcpdump."
+msgstr ""
+
+#: applications/luci-app-adblock/htdocs/luci-static/resources/view/adblock/overview.js:376
+msgid "Special config options for the selected download utility."
+msgstr ""
+
+#: applications/luci-app-adblock/htdocs/luci-static/resources/view/adblock/dnsreport.js:306
+msgid "Start Timestamp"
+msgstr ""
+
+#: applications/luci-app-adblock/htdocs/luci-static/resources/view/adblock/overview.js:285
+msgid "Startup Trigger Interface"
+msgstr ""
+
+#: applications/luci-app-adblock/htdocs/luci-static/resources/view/adblock/overview.js:208
+msgid "Status / Version"
+msgstr ""
+
+#: applications/luci-app-adblock/htdocs/luci-static/resources/view/adblock/overview.js:248
+msgid "Suspend"
+msgstr "Sospendi"
+
+#: applications/luci-app-adblock/htdocs/luci-static/resources/view/adblock/overview.js:437
+msgid ""
+"Target directory for DNS related report files. Default is '/tmp', please use "
+"preferably an usb stick or another local disk."
+msgstr ""
+
+#: applications/luci-app-adblock/htdocs/luci-static/resources/view/adblock/overview.js:362
+msgid ""
+"Target directory for blocklist backups. Default is '/tmp', please use "
+"preferably an usb stick or another local disk."
+msgstr ""
+
+#: applications/luci-app-adblock/htdocs/luci-static/resources/view/adblock/overview.js:392
+msgid "Target directory for the generated blocklist 'adb_list.overall'."
+msgstr "Directory per la lista di blocco generata 'adb_list.overall'."
+
+#: applications/luci-app-adblock/htdocs/luci-static/resources/view/adblock/overview.js:420
+msgid "Target directory for the generated jail blocklist 'adb_list.jail'."
+msgstr ""
+
+#: applications/luci-app-adblock/htdocs/luci-static/resources/view/adblock/overview.js:70
+msgid "The Refresh Timer could not been updated."
+msgstr ""
+
+#: applications/luci-app-adblock/htdocs/luci-static/resources/view/adblock/overview.js:72
+msgid "The Refresh Timer has been updated."
+msgstr ""
+
+#: applications/luci-app-adblock/htdocs/luci-static/resources/view/adblock/overview.js:50
+msgid "The day of the week (opt., values: 1-7 possibly sep. by , or -)"
+msgstr ""
+
+#: applications/luci-app-adblock/htdocs/luci-static/resources/view/adblock/overview.js:40
+msgid "The hours portition (req., range: 0-23)"
+msgstr ""
+
+#: applications/luci-app-adblock/htdocs/luci-static/resources/view/adblock/overview.js:45
+msgid "The minutes portion (opt., range: 0-59)"
+msgstr ""
+
+#: applications/luci-app-adblock/htdocs/luci-static/resources/view/adblock/logread.js:26
+msgid "The syslog output, pre-filtered for adblock related messages only."
+msgstr ""
+"L'output di syslog, pre-filtrato solo per i messaggi relativi ad adblock."
+
+#: applications/luci-app-adblock/htdocs/luci-static/resources/view/adblock/blacklist.js:22
+msgid ""
+"This is the local adblock blacklist to always-deny certain (sub) domains."
+"<br /> Please note: add only one domain per line. Comments introduced with "
+"'#' are allowed - ip addresses, wildcards and regex are not."
+msgstr ""
+
+#: applications/luci-app-adblock/htdocs/luci-static/resources/view/adblock/whitelist.js:22
+msgid ""
+"This is the local adblock whitelist to always allow certain (sub) domains."
+"<br /> Please note: add only one domain per line. Comments introduced with "
+"'#' are allowed - ip addresses, wildcards and regex are not."
+msgstr ""
+
+#: applications/luci-app-adblock/htdocs/luci-static/resources/view/adblock/dnsreport.js:303
+msgid ""
+"This shows the last generated DNS Report, press the refresh button to get a "
+"current one."
+msgstr ""
+
+#: applications/luci-app-adblock/htdocs/luci-static/resources/view/adblock/dnsreport.js:257
+msgid "Time"
+msgstr ""
+
+#: applications/luci-app-adblock/htdocs/luci-static/resources/view/adblock/overview.js:396
+msgid "Timeout to wait for a successful DNS backend restart."
+msgstr ""
+
+#: applications/luci-app-adblock/htdocs/luci-static/resources/view/adblock/overview.js:14
+msgid ""
+"To keep your adblock lists up-to-date, you should setup an automatic update "
+"job for these lists."
+msgstr ""
+
+#: applications/luci-app-adblock/htdocs/luci-static/resources/view/adblock/dnsreport.js:335
+msgid "Top 10 Statistics"
+msgstr ""
+
+#: applications/luci-app-adblock/htdocs/luci-static/resources/view/adblock/overview.js:463
+msgid "Topic for adblock notification E-Mails."
+msgstr ""
+
+#: applications/luci-app-adblock/htdocs/luci-static/resources/view/adblock/dnsreport.js:312
+msgid "Total DNS Requests"
+msgstr ""
+
+#: applications/luci-app-adblock/htdocs/luci-static/resources/view/adblock/overview.js:339
+msgid "Trigger Delay"
+msgstr "Ritardo Innesco"
+
+#: applications/luci-app-adblock/htdocs/luci-static/resources/view/adblock/blacklist.js:16
+#: applications/luci-app-adblock/htdocs/luci-static/resources/view/adblock/whitelist.js:16
+msgid "Unable to save changes: %s"
+msgstr ""
+
+#: applications/luci-app-adblock/htdocs/luci-static/resources/view/adblock/overview.js:331
+msgid "Verbose Debug Logging"
+msgstr "Registro di Debug Dettagliato"
+
+#: applications/luci-app-adblock/htdocs/luci-static/resources/view/adblock/dnsreport.js:68
+#: applications/luci-app-adblock/htdocs/luci-static/resources/view/adblock/whitelist.js:14
+msgid ""
+"Whitelist changes have been saved. Refresh your adblock lists that changes "
+"take effect."
+msgstr ""
+
+#: applications/luci-app-adblock/htdocs/luci-static/resources/view/adblock/dnsreport.js:277
+msgid "Whitelist..."
+msgstr ""
+
+#: applications/luci-app-adblock/htdocs/luci-static/resources/view/adblock/overview.js:385
+msgid "dnsmasq (/tmp/dnsmasq.d)"
+msgstr ""
+
+#: applications/luci-app-adblock/htdocs/luci-static/resources/view/adblock/overview.js:388
+msgid "kresd (/etc/kresd)"
+msgstr ""
+
+#: applications/luci-app-adblock/htdocs/luci-static/resources/view/adblock/dnsreport.js:149
+msgid "max. result set size"
+msgstr ""
+
+#: applications/luci-app-adblock/htdocs/luci-static/resources/view/adblock/overview.js:387
+msgid "named (/var/lib/bind)"
+msgstr ""
+
+#: applications/luci-app-adblock/htdocs/luci-static/resources/view/adblock/overview.js:389
+msgid "raw (/tmp)"
+msgstr ""
+
+#: applications/luci-app-adblock/htdocs/luci-static/resources/view/adblock/overview.js:386
+msgid "unbound (/var/lib/unbound)"
+msgstr ""

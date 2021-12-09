@@ -1,0 +1,47 @@
+--- a/utils.c
++++ b/utils.c
+@@ -335,22 +335,29 @@ size_t strlcpy(char *dest, const char *s
+ 
+ size_t strlcat(char *dst, const char *str, size_t size)
+ {
+-	char *pos;
+-	size_t dstlen, srclen, copy;
++	char *d = dst;
++	const char *s = str;
++	size_t dlen;
++	size_t n = size;
+ 
+-	srclen = strlen(str);
+-	for (pos = dst; pos - dst < size && *dst; pos++)
+-		;
+-	dstlen = pos - dst;
+-	if (*dst)
+-		return dstlen + srclen;
+-	if (dstlen + srclen + 1 > size)
+-		copy = size - dstlen - 1;
+-	else
+-		copy = srclen;
+-	memcpy(pos, str, copy);
+-	pos[copy] = '\0';
+-	return dstlen + srclen;
++	/* Find the end of dst and adjust bytes left but don't go past end */
++	while (n-- != 0 && *d != '\0')
++		d++;
++	dlen = d - dst;
++	n = size - dlen;
++
++	if (n == 0)
++		return (dlen + strlen(s));
++	while (*s != '\0') {
++		if (n != 1) {
++			*d++ = *s;
++			n--;
++		}
++	s++;
++	}
++	*d = '\0';
++
++	return (dlen + (s - str)); /* count does not include NUL */
+ }
+ 
+ #endif /* ANDROID */

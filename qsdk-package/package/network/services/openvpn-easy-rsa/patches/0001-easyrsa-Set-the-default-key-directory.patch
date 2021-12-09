@@ -1,0 +1,29 @@
+From 267b0fff1a163b31f79d395831c2b1e319d5ea09 Mon Sep 17 00:00:00 2001
+From: Sandhya KS <sandhyks@codeaurora.org>
+Date: Mon, 23 Nov 2020 18:15:32 +0530
+Subject: [PATCH] easyrsa : Set the default key directory
+
+This patch tries to set the default key directory
+for easyrsa to the path '/etc/easy-rsa/pki'.
+
+Signed-off-by: Sandhya KS <sandhyks@codeaurora.org>
+---
+ vars.example | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/vars.example b/vars.example
+index 327a297..4625802 100644
+--- a/vars.example
++++ b/vars.example
+@@ -69,7 +69,7 @@ fi
+ # WARNING: init-pki will do a rm -rf on this directory so make sure you define
+ # it correctly! (Interactive mode will prompt before acting.)
+
+-#set_var EASYRSA_PKI		"$PWD/pki"
++set_var EASYRSA_PKI		"/etc/easy-rsa/pki"
+
+ # Define X509 DN mode.
+ # This is used to adjust what elements are included in the Subject field as the DN
+--
+2.17.1
+

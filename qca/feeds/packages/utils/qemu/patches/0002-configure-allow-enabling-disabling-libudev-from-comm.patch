@@ -1,0 +1,24 @@
+From acd47f780447c0c3f528e1530ad76267abba5661 Mon Sep 17 00:00:00 2001
+From: Yousong Zhou <yszhou4tech@gmail.com>
+Date: Tue, 2 Apr 2019 06:31:31 +0000
+Subject: [PATCH] configure: allow enabling/disabling libudev from command line
+
+---
+ configure | 4 ++++
+ 1 file changed, 4 insertions(+)
+
+diff --git a/configure b/configure
+index f4d949b35b..939f54178b 100755
+--- a/configure
++++ b/configure
+@@ -1518,6 +1518,10 @@ for opt do
+   ;;
+   --disable-libpmem) libpmem=no
+   ;;
++  --enable-libudev) libudev=yes
++  ;;
++  --disable-libudev) libudev=no
++  ;;
+   --disable-fortify-source) fortify_source="no"
+   ;;
+   *)
