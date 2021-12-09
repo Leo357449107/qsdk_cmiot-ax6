@@ -1,6 +1,6 @@
 /dts-v1/;
 /*
- * Copyright (c) 2019-2021, The Linux Foundation. All rights reserved.
+ * Copyright (c) 2019, The Linux Foundation. All rights reserved.
  *
  * Permission to use, copy, modify, and/or distribute this software for any
  * purpose with or without fee is hereby granted, provided that the above
@@ -16,6 +16,7 @@
  */
 
 #include "ipq6018.dtsi"
+#include <dt-bindings/input/input.h>
 #include "ipq6018-cpr-regulator.dtsi"
 
 / {
@@ -23,8 +24,8 @@
 	#size-cells = <0x2>;
 	model = "Qualcomm Technologies, Inc. IPQ6018/AP-CP03-C1";
 	compatible = "qcom,ipq6018-ap-cp03-c1", "qcom,ipq6018";
+	qcom,msm-id = <0x192 0x0>;
 	interrupt-parent = <&intc>;
-	qcom,msm-id = <0x1A5 0x0>;
 
 	aliases {
 		/*
@@ -33,6 +34,9 @@
 		 */
 		ethernet0 = "/soc/dp1";
 		ethernet1 = "/soc/dp2";
+		ethernet2 = "/soc/dp3";
+		ethernet3 = "/soc/dp4";
+
 	};
 
 	chosen {
@@ -101,10 +105,17 @@
 
 	button_pins: button_pins {
 		wps_button {
+			pins = "gpio60";
+			function = "gpio";
+			drive-strength = <8>;
+			bias-pull-up;
+		};
+
+		mesh_button {
 			pins = "gpio9";
 			function = "gpio";
 			drive-strength = <8>;
-			bias-pull-down;
+			bias-pull-up;
 		};
 	};
 
@@ -124,54 +135,112 @@
 		mux_2 {
 			pins = "gpio75";
 			function = "gpio";
+			drive-strength = <8>;
+			bias-pull-up;
+		};
+		mux_3 {
+			pins = "gpio77";
+			function = "gpio";
+			drive-strength = <8>;
 			bias-pull-up;
 		};
 	};
 
 	leds_pins: leds_pins {
-		led_5g {
-			pins = "gpio35";
+		led_2g {
+			pins = "gpio73";
 			function = "gpio";
-			drive-strength = <8>;
+			drive-strength = <0x8>;
+			bias-pull-up;
+		};
+
+		power {
+			pins = "gpio58";
+			function = "gpio";
+			drive-strength = <0x8>;
+			bias-pull-up;
+		};
+
+		wan_1 {
+			pins = "gpio74";
+			function = "gpio";
+			drive-strength = <0x8>;
 			bias-pull-down;
 		};
-		led_2g {
+
+		wan_2 {
+			pins = "gpio69";
+			function = "gpio";
+			drive-strength = <0x8>;
+			bias-pull-down;
+		};
+
+		lan1 {
 			pins = "gpio37";
 			function = "gpio";
-			drive-strength = <8>;
+			drive-strength = <0x8>;
 			bias-pull-down;
 		};
-	};
+
+		lan2 {
+			pins = "gpio35";
+			function = "gpio";
+			drive-strength = <0x8>;
+			bias-pull-down;
+		};
+
+		lan3 {
+			pins = "gpio70";
+			function = "gpio";
+			drive-strength = <0x8>;
+			bias-pull-down;
+		};
+
+	   };
 };
 
 &soc {
-	mdio@90000 {
+	mdio: mdio@90000 {
 		pinctrl-0 = <&mdio_pins>;
 		pinctrl-names = "default";
-		phy-reset-gpio = <&tlmm 75 0>;
+		phy-reset-gpio = <&tlmm 75 0 &tlmm 77 1>;
 		status = "ok";
 		phy0: ethernet-phy@0 {
-			reg = <3>;
+			reg = <4>;
 		};
 		phy1: ethernet-phy@1 {
-			reg = <4>;
+			reg = <0>;
+		};
+		phy2: ethernet-phy@2 {
+			reg = <1>;
+		};
+		phy3: ethernet-phy@3 {
+			reg = <3>;
 		};
 	};
 
 	ess-switch@3a000000 {
 		switch_cpu_bmp = <0x1>;  /* cpu port bitmap */
-		switch_lan_bmp = <0x08>; /* lan port bitmap */
-		switch_wan_bmp = <0x10>; /* wan port bitmap */
+		switch_lan_bmp = <0x1e>; /* lan port bitmap */
+		switch_wan_bmp = <0x20>; /* wan port bitmap */
 		switch_inner_bmp = <0xc0>; /*inner port bitmap*/
 		switch_mac_mode = <0x0>; /* mac mode for uniphy instance0*/
 		switch_mac_mode1 = <0xff>; /* mac mode for uniphy instance1*/
 		switch_mac_mode2 = <0xff>; /* mac mode for uniphy instance2*/
 		qcom,port_phyinfo {
 			port@3 {
-				port_id = <3>;
+				port_id = <5>;
 				phy_address = <4>;
 			};
-			port@4 {
+			port@0 {
+				port_id = <1>;
+				phy_address = <0>;
+			};
+			port@1 {
+				port_id = <2>;
+				phy_address = <1>;
+			};
+			port@2 {
 				port_id = <4>;
 				phy_address = <3>;
 			};
@@ -181,8 +250,8 @@
 	dp1 {
 		device_type = "network";
 		compatible = "qcom,nss-dp";
-		qcom,id = <3>;
-		reg = <0x3a001400 0x200>;
+		qcom,id = <5>;
+		reg = <0x3a001800 0x200>;
 		qcom,mactype = <0>;
 		local-mac-address = [000000000000];
 		qcom,link-poll = <1>;
@@ -191,6 +260,28 @@
 	};
 
 	dp2 {
+		device_type = "network";
+		compatible = "qcom,nss-dp";
+		qcom,id = <1>;
+		reg = <0x3a001000 0x200>;
+		qcom,mactype = <0>;
+		local-mac-address = [000000000000];
+		qcom,link-poll = <1>;
+		qcom,phy-mdio-addr = <0>;
+		phy-mode = "sgmii";
+	};
+	dp3 {
+		device_type = "network";
+		compatible = "qcom,nss-dp";
+		qcom,id = <2>;
+		reg = <0x3a001200 0x200>;
+		qcom,mactype = <0>;
+		local-mac-address = [000000000000];
+		qcom,link-poll = <1>;
+		qcom,phy-mdio-addr = <1>;
+		phy-mode = "sgmii";
+	};
+	dp4 {
 		device_type = "network";
 		compatible = "qcom,nss-dp";
 		qcom,id = <4>;
@@ -202,22 +293,82 @@
 		phy-mode = "sgmii";
 	};
 
+	nss-macsec0 {
+		compatible = "qcom,nss-macsec";
+		phy_addr = <0x18>;
+		phy_access_mode = <0x0>;
+		mdiobus = <&mdio>;
+	};
+
+	gpio_keys {
+		compatible = "gpio-keys";
+		pinctrl-0 = <&button_pins>;
+		pinctrl-names = "default";
+
+		button@1 {
+			label = "wps";
+			linux,code = <KEY_WPS_BUTTON>;
+			gpios = <&tlmm 60 GPIO_ACTIVE_LOW>;
+			linux,input-type = <1>;
+			debounce-interval = <60>;
+		};
+
+		button@2 {
+			label = "mesh";
+			linux,code = <KEY_ATTENDANT_ON>;
+			gpios = <&tlmm 9 GPIO_ACTIVE_LOW>;
+			linux,input-type = <1>;
+			debounce-interval = <60>;
+		};
+	};
+
+
 	leds {
 		compatible = "gpio-leds";
 		pinctrl-0 = <&leds_pins>;
 		pinctrl-names = "default";
 
-		led@35 {
-			label = "led_5g";
-			gpios = <&tlmm 35 GPIO_ACTIVE_HIGH>;
-			linux,default-trigger = "led_5g";
+		led@73 {
+			label = "led_2g";
+			gpios = <&tlmm 73 GPIO_ACTIVE_HIGH>;
+			linux,default-trigger = "led_2g";
+			default-state = "on";
+		};
+		led@74 {
+			label = "wan_1";
+			gpios = <&tlmm 74 GPIO_ACTIVE_HIGH>;
+			linux,default-trigger = "wan_1";
+			default-state = "off";
+		};
+		led@69 {
+			label = "wan_2";
+			gpios = <&tlmm 69 GPIO_ACTIVE_HIGH>;
+			linux,default-trigger = "wan_2";
 			default-state = "off";
 		};
 		led@37 {
-			label = "led_2g";
+			label = "lan1";
 			gpios = <&tlmm 37 GPIO_ACTIVE_HIGH>;
-			linux,default-trigger = "led_2g";
+			linux,default-trigger = "lan1";
 			default-state = "off";
+		};
+		led@35 {
+			label = "lan2";
+			gpios = <&tlmm 35 GPIO_ACTIVE_HIGH>;
+			linux,default-trigger = "lan2";
+			default-state = "off";
+		};
+		led@70 {
+			label = "lan3";
+			gpios = <&tlmm 70 GPIO_ACTIVE_HIGH>;
+			linux,default-trigger = "lan3";
+			default-state = "off";
+		};
+		led@58 {
+			label = "power";
+			gpios = <&tlmm 58 GPIO_ACTIVE_HIGH>;
+			linux,default-trigger = "power";
+			default-state = "on";
 		};
 	};
 };
@@ -267,14 +418,15 @@
 	status = "ok";
 };
 
-&qusb_phy_0 {
-	status = "ok";
-};
-
-&usb3 {
-	status = "ok";
-};
-
 &nss_crypto {
 	status = "ok";
 };
+
+&qusb_phy_0 {
+        status = "ok";
+};
+
+&usb3 {
+        status = "ok";
+};
+

@@ -26,9 +26,11 @@ ipq60xx_setup_interfaces()
 		ucidef_set_interfaces_lan_wan "eth1 eth2 eth3 eth4" "eth0"
 		;;
 	qcom,ipq6018-ap-cp02-c1 |\
-	qcom,ipq6018-ap-cp03-c1 |\
 	qcom,ipq6018-db-cp02)
 		ucidef_set_interfaces_lan_wan "eth1" "eth0"
+		;;
+	qcom,ipq6018-ap-cp03-c1)
+		ucidef_set_interfaces_lan_wan "eth1 eth2 eth3" "eth0"
 		;;
 	*)
 		echo "Unsupported hardware. Network interfaces not intialized"
