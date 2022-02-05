@@ -1,4 +1,5 @@
 /* Copyright (c) 2016-2018, The Linux Foundation. All rights reserved.
+ * Copyright (c) 2022, Qualcomm Innovation Center, Inc. All rights reserved.
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License version 2 and
@@ -33,6 +34,19 @@
 #define CNSS_RAMDUMP_MAGIC		0x574C414E /* WLAN in ASCII */
 #define CNSS_RAMDUMP_VERSION		0
 #define CNSS_RAMDUMP_FILE_NAME_MAX_LEN	(2 * CNSS_DEVICE_NAME_MAX_LEN)
+
+#define CNSS_DMS_QMI_CONNECTION_WAIT_MS 50
+#define CNSS_DMS_QMI_CONNECTION_WAIT_RETRY 200
+#define CNSS_DAEMON_CONNECT_TIMEOUT_MS  30000
+#define CNSS_CAL_DB_FILE_PREFIX "wlfw_cal_01"
+#define CNSS_CAL_DB_FILE_SUFFIX ".bin"
+
+
+enum cnss_cal_db_op {
+	CNSS_CAL_DB_UPLOAD,
+	CNSS_CAL_DB_DOWNLOAD,
+	CNSS_CAL_DB_INVALID_OP,
+};
 
 /* Currently these target mem modes are supported for various targets
  *
@@ -112,6 +126,22 @@
  * |   3  |  65MB  |    55MB   | 0x3700000 | 0x3800000 | 0x3900000 |   24MB   |
  * +------+--------+-----------+-----------+-----------+-----------+----------+
  * |   4  |  33MB  |    23MB   | 0x1700000 | 0x1800000 | 0x1900000 |   24MB   |
+ * +======+========+===========+===========+===========+===========+==========+
+ *
+ *				QCN9224
+ *
+ * Start Address varies for each RDP, please refer RDP specific DTS file.
+ * All offsets mentioned below are with reference to the start address from DTS
+ * HREMOTE Offset is always same as Start Offset
+ *
+ * MLO uses 16MB and comes at the end of all QCN9224 memory and MHI mem nodes
+ * RDDM size of QCN9224 is 6M and part of MHI regions.
+ *
+ * +======+========+===========+===========+===========+===========+==========+
+ * | MODE | Memory |  HREMOTE  |M3 Dump Off| QDSS Off  | Caldb Off | MHI DMA  |
+ * |      |        |    SIZE   |    1MB    |    1MB    |    8MB    | RESERVED |
+ * +======+========+===========+===========+===========+===========+==========+
+ * |   0  |  45MB  |    35MB   | 0x2300000 | 0x2400000 | 0x2500000 |   26MB   |
  * +======+========+===========+===========+===========+===========+==========+
  */
 #define MAX_TGT_MEM_MODES		5
@@ -316,6 +346,7 @@ enum cnss_driver_event_type {
 	CNSS_DRIVER_EVENT_QDSS_TRACE_SAVE,
 	CNSS_DRIVER_EVENT_QDSS_TRACE_FREE,
 	CNSS_DRIVER_EVENT_M3_DUMP_UPLOAD_REQ,
+	CNSS_DRIVER_EVENT_QDSS_MEM_READY,
 	CNSS_DRIVER_EVENT_MAX,
 };
 
@@ -336,6 +367,7 @@ enum cnss_driver_state {
 	CNSS_COEX_CONNECTED,
 	CNSS_IMS_CONNECTED,
 	CNSS_IN_SUSPEND_RESUME,
+	CNSS_DAEMON_CONNECTED,
 };
 
 struct cnss_recovery_data {
@@ -423,6 +455,10 @@ enum cnss_ce_index {
 	CNSS_CE_09,
 	CNSS_CE_10,
 	CNSS_CE_11,
+	CNSS_CE_12,
+	CNSS_CE_13,
+	CNSS_CE_14,
+	CNSS_CE_15,
 	CNSS_CE_COMMON,
 };
 
@@ -511,6 +547,10 @@ struct cnss_plat_data {
 	u32 fw_mem_seg_len;
 	struct cnss_fw_mem fw_mem[QMI_WLFW_MAX_NUM_MEM_SEG];
 	struct cnss_fw_mem m3_mem;
+	struct cnss_fw_mem *cal_mem;
+	u64 cal_time;
+	bool cbc_file_download;
+	u32 cal_file_size;
 	u32 qdss_mem_seg_len;
 	struct cnss_fw_mem qdss_mem[QMI_WLFW_MAX_NUM_MEM_SEG];
 	int tgt_mem_cfg_mode;
@@ -555,6 +595,13 @@ struct cnss_plat_data {
 	};
 	bool hds_support;
 	bool regdb_support;
+	bool qdss_support;
+	enum wlfw_bdf_dnld_method_v01 bdf_dnld_method;
+	u32 probe_order;
+	bool mlo_support;
+	bool mlo_capable;
+	/* This bar variable will be valid only for AHB devices. */
+	void __iomem *bar;
 };
 
 #ifdef CONFIG_ARCH_QCOM
@@ -615,5 +662,9 @@ int cnss_get_cpr_info(struct cnss_plat_data *plat_priv);
 int cnss_update_cpr_info(struct cnss_plat_data *plat_priv);
 void cnss_update_platform_feature_support(u8 type, u32 instance_id, u32 value);
 void coresight_abort(void);
+const char *cnss_get_fw_path(struct cnss_plat_data *plat_priv);
+unsigned int cnss_get_global_driver_mode(void);
+int cnss_cal_file_download_to_mem(struct cnss_plat_data *plat_priv,
+				  u32 *cal_file_size);
 
 #endif /* _CNSS_MAIN_H */

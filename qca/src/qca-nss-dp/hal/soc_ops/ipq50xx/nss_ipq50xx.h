@@ -1,7 +1,7 @@
 /*
  * Copyright (c) 2020-2021, The Linux Foundation. All rights reserved.
  *
- * Copyright (c) 2021 Qualcomm Innovation Center, Inc. All rights reserved.
+ * Copyright (c) 2021-2022 Qualcomm Innovation Center, Inc. All rights reserved.
  *
  * Permission to use, copy, modify, and/or distribute this software for any
  * purpose with or without fee is hereby granted, provided that the above
@@ -98,6 +98,8 @@ struct nss_dp_hal_gmac_stats_tx {
 	uint64_t tx_dropped;		/**< Number of TX dropped packets */
 	uint64_t tx_ts_create_errors;	/**< Number of tx timestamp creation errors */
 	uint64_t tx_desc_not_avail;	/**< TX descriptor unavailable */
+	uint64_t tx_nr_frags_pkts;	/**< Number of Tx scatter packets with nr_frags */
+	uint64_t tx_fraglist_pkts;	/**< Number of Tx scatter packets with frag_list */
 };
 
 /**

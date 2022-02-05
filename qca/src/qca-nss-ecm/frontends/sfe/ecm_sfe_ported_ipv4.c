@@ -1,6 +1,8 @@
 /*
  **************************************************************************
  * Copyright (c) 2015-2021 The Linux Foundation. All rights reserved.
+ * Copyright (c) 2022 Qualcomm Innovation Center, Inc. All rights reserved.
+ *
  * Permission to use, copy, modify, and/or distribute this software for
  * any purpose with or without fee is hereby granted, provided that the
  * above copyright notice and this permission notice appear in all copies.
@@ -111,6 +113,8 @@ struct ecm_sfe_ported_ipv4_connection_instance {
 	enum ecm_sfe_ipsec_state flow_ipsec_state;	/* Flow traffic need ipsec process or not */
 	enum ecm_sfe_ipsec_state return_ipsec_state;	/* Return traffic need ipsec process or not */
 #endif
+	struct ecm_sfe_common_fe_info fe_info;		/* Front end information */
+
 #if (DEBUG_LEVEL > 0)
 	uint16_t magic;
 #endif
@@ -126,6 +130,28 @@ static int ecm_sfe_ported_ipv4_accelerated_count[ECM_SFE_PORTED_IPV4_PROTO_MAX] 
 extern int nf_ct_tcp_no_window_check;
 #endif
 extern int nf_ct_tcp_be_liberal;
+
+/*
+ * ecm_sfe_ported_ipv4_get_stats_bitmap()
+ *	Get bit map
+ */
+static uint32_t ecm_sfe_ported_ipv4_get_stats_bitmap(struct ecm_front_end_connection_instance *feci, ecm_db_obj_dir_t dir)
+{
+	struct ecm_sfe_ported_ipv4_connection_instance *npci = (struct ecm_sfe_ported_ipv4_connection_instance *)feci;
+	DEBUG_CHECK_MAGIC(npci, ECM_SFE_PORTED_IPV4_CONNECTION_INSTANCE_MAGIC, "%px: magic failed", npci);
+	return ecm_sfe_common_get_stats_bitmap(&npci->fe_info, dir);
+}
+
+/*
+ * ecm_sfe_ported_ipv4_set_stats_bitmap()
+ *	Set bit map
+ */
+static void ecm_sfe_ported_ipv4_set_stats_bitmap(struct ecm_front_end_connection_instance *feci, ecm_db_obj_dir_t dir, uint8_t bit)
+{
+	struct ecm_sfe_ported_ipv4_connection_instance *npci = (struct ecm_sfe_ported_ipv4_connection_instance *)feci;
+	DEBUG_CHECK_MAGIC(npci, ECM_SFE_PORTED_IPV4_CONNECTION_INSTANCE_MAGIC, "%px: magic failed", npci);
+	ecm_sfe_common_set_stats_bitmap(&npci->fe_info, dir, bit);
+}
 
 /*
  * ecm_sfe_ported_ipv4_connection_callback()
@@ -485,7 +511,18 @@ static void ecm_sfe_ported_ipv4_connection_accelerate(struct ecm_front_end_conne
 				DEBUG_TRACE("%px: Bridge - ignore additional\n", npci);
 				break;
 			}
+
+			if (ecm_sfe_common_is_l2_iface_supported(ECM_DB_IFACE_TYPE_BRIDGE, list_index, from_ifaces_first)) {
+				nircm->rule_flags |= SFE_RULE_CREATE_FLAG_USE_FLOW_BOTTOM_INTERFACE;
+				feci->set_stats_bitmap(feci, ECM_DB_OBJ_DIR_FROM, ECM_DB_IFACE_TYPE_BRIDGE);
+			}
+
 			ecm_db_iface_bridge_address_get(ii, from_sfe_iface_address);
+			if (is_valid_ether_addr(from_sfe_iface_address)) {
+				ether_addr_copy((uint8_t *)nircm->src_mac_rule.flow_src_mac, from_sfe_iface_address);
+				nircm->src_mac_rule.mac_valid_flags |= SFE_SRC_MAC_FLOW_VALID;
+				nircm->valid_flags |= SFE_RULE_CREATE_SRC_MAC_VALID;
+			}
 			DEBUG_TRACE("%px: Bridge - mac: %pM\n", npci, from_sfe_iface_address);
 			break;
 
@@ -500,7 +537,18 @@ static void ecm_sfe_ported_ipv4_connection_accelerate(struct ecm_front_end_conne
 				DEBUG_TRACE("%px: OVS Bridge - ignore additional\n", npci);
 				break;
 			}
+
+			if (ecm_sfe_common_is_l2_iface_supported(ECM_DB_IFACE_TYPE_OVS_BRIDGE, list_index, from_ifaces_first)) {
+				nircm->rule_flags |= SFE_RULE_CREATE_FLAG_USE_FLOW_BOTTOM_INTERFACE;
+				feci->set_stats_bitmap(feci, ECM_DB_OBJ_DIR_FROM, ECM_DB_IFACE_TYPE_OVS_BRIDGE);
+			}
+
 			ecm_db_iface_ovs_bridge_address_get(ii, from_sfe_iface_address);
+			if (is_valid_ether_addr(from_sfe_iface_address)) {
+				ether_addr_copy((uint8_t *)nircm->src_mac_rule.flow_src_mac, from_sfe_iface_address);
+				nircm->src_mac_rule.mac_valid_flags |= SFE_SRC_MAC_FLOW_VALID;
+				nircm->valid_flags |= SFE_RULE_CREATE_SRC_MAC_VALID;
+			}
 			DEBUG_TRACE("%px: OVS Bridge - mac: %pM\n", npci, from_sfe_iface_address);
 #else
 			rule_invalid = true;
@@ -542,7 +590,8 @@ static void ecm_sfe_ported_ipv4_connection_accelerate(struct ecm_front_end_conne
 
 			nircm->pppoe_rule.flow_pppoe_session_id = pppoe_info.pppoe_session_id;
 			memcpy(nircm->pppoe_rule.flow_pppoe_remote_mac, pppoe_info.remote_mac, ETH_ALEN);
-			nircm->valid_flags |= SFE_RULE_CREATE_PPPOE_VALID;
+			nircm->valid_flags |= SFE_RULE_CREATE_PPPOE_DECAP_VALID;
+			nircm->rule_flags |= SFE_RULE_CREATE_FLAG_USE_FLOW_BOTTOM_INTERFACE;
 
 			DEBUG_TRACE("%px: PPPoE - session: %x, mac: %pM\n", npci,
 					nircm->pppoe_rule.flow_pppoe_session_id,
@@ -599,6 +648,25 @@ static void ecm_sfe_ported_ipv4_connection_accelerate(struct ecm_front_end_conne
 			DEBUG_TRACE("%px: VLAN - unsupported\n", npci);
 #endif
 			break;
+		case ECM_DB_IFACE_TYPE_MACVLAN:
+#ifdef ECM_INTERFACE_MACVLAN_ENABLE
+			if (ecm_sfe_common_is_l2_iface_supported(ECM_DB_IFACE_TYPE_MACVLAN, list_index, from_ifaces_first)) {
+				nircm->rule_flags |= SFE_RULE_CREATE_FLAG_USE_FLOW_BOTTOM_INTERFACE;
+				feci->set_stats_bitmap(feci, ECM_DB_OBJ_DIR_FROM, ECM_DB_IFACE_TYPE_MACVLAN);
+			}
+
+			ecm_db_iface_macvlan_address_get(ii, from_sfe_iface_address);
+			ether_addr_copy((uint8_t *)nircm->src_mac_rule.flow_src_mac, from_sfe_iface_address);
+			nircm->src_mac_rule.mac_valid_flags |= SFE_SRC_MAC_FLOW_VALID;
+			nircm->valid_flags |= SFE_RULE_CREATE_SRC_MAC_VALID;
+
+			DEBUG_TRACE("%px: Macvlan - mac: %pM\n", npci, from_sfe_iface_address);
+#else
+			rule_invalid = true;
+			DEBUG_TRACE("%px: MACVLAN - unsupported\n", npci);
+#endif
+			break;
+
 		case ECM_DB_IFACE_TYPE_IPSEC_TUNNEL:
 #ifdef ECM_INTERFACE_IPSEC_ENABLE
 			DEBUG_TRACE("%px: IPSEC\n", npci);
@@ -671,7 +739,19 @@ static void ecm_sfe_ported_ipv4_connection_accelerate(struct ecm_front_end_conne
 				DEBUG_TRACE("%px: Bridge - ignore additional\n", npci);
 				break;
 			}
+
+			if (ecm_sfe_common_is_l2_iface_supported(ECM_DB_IFACE_TYPE_BRIDGE, list_index, to_ifaces_first)) {
+				nircm->rule_flags |= SFE_RULE_CREATE_FLAG_USE_RETURN_BOTTOM_INTERFACE;
+				feci->set_stats_bitmap(feci, ECM_DB_OBJ_DIR_TO, ECM_DB_IFACE_TYPE_BRIDGE);
+			}
+
 			ecm_db_iface_bridge_address_get(ii, to_sfe_iface_address);
+			if (is_valid_ether_addr(to_sfe_iface_address)) {
+				ether_addr_copy((uint8_t *)nircm->src_mac_rule.return_src_mac, to_sfe_iface_address);
+				nircm->src_mac_rule.mac_valid_flags |= SFE_SRC_MAC_RETURN_VALID;
+				nircm->valid_flags |= SFE_RULE_CREATE_SRC_MAC_VALID;
+			}
+
 			DEBUG_TRACE("%px: Bridge - mac: %pM\n", npci, to_sfe_iface_address);
 			break;
 
@@ -686,7 +766,18 @@ static void ecm_sfe_ported_ipv4_connection_accelerate(struct ecm_front_end_conne
 				DEBUG_TRACE("%px: OVS Bridge - ignore additional\n", npci);
 				break;
 			}
+
+			if (ecm_sfe_common_is_l2_iface_supported(ECM_DB_IFACE_TYPE_OVS_BRIDGE, list_index, to_ifaces_first)) {
+				nircm->rule_flags |= SFE_RULE_CREATE_FLAG_USE_RETURN_BOTTOM_INTERFACE;
+				feci->set_stats_bitmap(feci, ECM_DB_OBJ_DIR_TO, ECM_DB_IFACE_TYPE_OVS_BRIDGE);
+			}
+
 			ecm_db_iface_ovs_bridge_address_get(ii, to_sfe_iface_address);
+			if (is_valid_ether_addr(to_sfe_iface_address)) {
+				ether_addr_copy((uint8_t *)nircm->src_mac_rule.flow_src_mac, to_sfe_iface_address);
+				nircm->src_mac_rule.mac_valid_flags |= SFE_SRC_MAC_RETURN_VALID;
+				nircm->valid_flags |= SFE_RULE_CREATE_SRC_MAC_VALID;
+			}
 			DEBUG_TRACE("%px: OVS Bridge - mac: %pM\n", npci, to_sfe_iface_address);
 #else
 			rule_invalid = true;
@@ -727,7 +818,8 @@ static void ecm_sfe_ported_ipv4_connection_accelerate(struct ecm_front_end_conne
 			ecm_db_iface_pppoe_session_info_get(ii, &pppoe_info);
 			nircm->pppoe_rule.return_pppoe_session_id = pppoe_info.pppoe_session_id;
 			memcpy(nircm->pppoe_rule.return_pppoe_remote_mac, pppoe_info.remote_mac, ETH_ALEN);
-			nircm->valid_flags |= SFE_RULE_CREATE_PPPOE_VALID;
+			nircm->valid_flags |= SFE_RULE_CREATE_PPPOE_ENCAP_VALID;
+			nircm->rule_flags |= SFE_RULE_CREATE_FLAG_USE_RETURN_BOTTOM_INTERFACE;
 
 			DEBUG_TRACE("%px: PPPoE - session: %x, mac: %pM\n", npci,
 				    nircm->pppoe_rule.return_pppoe_session_id,
@@ -784,6 +876,26 @@ static void ecm_sfe_ported_ipv4_connection_accelerate(struct ecm_front_end_conne
 			DEBUG_TRACE("%px: VLAN - unsupported\n", npci);
 #endif
 			break;
+
+		case ECM_DB_IFACE_TYPE_MACVLAN:
+#ifdef ECM_INTERFACE_MACVLAN_ENABLE
+			if (ecm_sfe_common_is_l2_iface_supported(ECM_DB_IFACE_TYPE_MACVLAN, list_index, to_ifaces_first)) {
+				nircm->rule_flags |= SFE_RULE_CREATE_FLAG_USE_RETURN_BOTTOM_INTERFACE;
+				feci->set_stats_bitmap(feci, ECM_DB_OBJ_DIR_TO, ECM_DB_IFACE_TYPE_MACVLAN);
+			}
+
+			ecm_db_iface_macvlan_address_get(ii, to_sfe_iface_address);
+			ether_addr_copy((uint8_t *)nircm->src_mac_rule.return_src_mac, to_sfe_iface_address);
+			nircm->src_mac_rule.mac_valid_flags |= SFE_SRC_MAC_RETURN_VALID;
+			nircm->valid_flags |= SFE_RULE_CREATE_SRC_MAC_VALID;
+
+			DEBUG_TRACE("%px: Macvlan - mac: %pM\n", npci, to_sfe_iface_address);
+#else
+			rule_invalid = true;
+			DEBUG_TRACE("%px: MACVLAN - unsupported\n", npci);
+#endif
+			break;
+
 		case ECM_DB_IFACE_TYPE_IPSEC_TUNNEL:
 #ifdef ECM_INTERFACE_IPSEC_ENABLE
 			DEBUG_TRACE("%px: IPSEC\n", npci);
@@ -847,6 +959,33 @@ static void ecm_sfe_ported_ipv4_connection_accelerate(struct ecm_front_end_conne
 		nircm->dscp_rule.return_dscp = pr->return_dscp;
 		nircm->rule_flags |= SFE_RULE_CREATE_FLAG_DSCP_MARKING;
 		nircm->valid_flags |= SFE_RULE_CREATE_DSCP_MARKING_VALID;
+	}
+
+	/*
+	 * Set up the flow and return mark.
+	 */
+	if (pr->process_actions & ECM_CLASSIFIER_PROCESS_ACTION_MARK) {
+		nircm->mark_rule.flow_mark = (uint32_t)pr->flow_mark;
+		nircm->mark_rule.return_mark = (uint32_t)pr->return_mark;
+		nircm->valid_flags |= SFE_RULE_CREATE_MARK_VALID;
+	}
+#endif
+
+#ifdef ECM_CLASSIFIER_OVS_ENABLE
+	if (ecm_front_end_is_feature_supported(ECM_FE_FEATURE_OVS_VLAN)) {
+		/*
+		 * Copy the both primary and secondary (if exist) VLAN tags.
+		 */
+		if (pr->process_actions & ECM_CLASSIFIER_PROCESS_ACTION_OVS_VLAN_TAG) {
+			nircm->vlan_primary_rule.ingress_vlan_tag = pr->ingress_vlan_tag[0];
+			nircm->vlan_primary_rule.egress_vlan_tag = pr->egress_vlan_tag[0];
+			nircm->valid_flags |= SFE_RULE_CREATE_VLAN_VALID;
+		}
+
+		if (pr->process_actions & ECM_CLASSIFIER_PROCESS_ACTION_OVS_VLAN_QINQ_TAG) {
+			nircm->vlan_secondary_rule.ingress_vlan_tag = pr->ingress_vlan_tag[1];
+			nircm->vlan_secondary_rule.egress_vlan_tag = pr->egress_vlan_tag[1];
+		}
 	}
 #endif
 
@@ -1063,7 +1202,9 @@ static void ecm_sfe_ported_ipv4_connection_accelerate(struct ecm_front_end_conne
 			"return_end: %u\n"
 			"return_max_end: %u\n"
 			"flow_dscp: %x\n"
-			"return_dscp: %x\n",
+			"return_dscp: %x\n"
+			"flow_mark:%x\n"
+			"return_mark:%x\n",
 			npci,
 			feci->ci,
 			nircm->tuple.protocol,
@@ -1098,7 +1239,9 @@ static void ecm_sfe_ported_ipv4_connection_accelerate(struct ecm_front_end_conne
 			nircm->tcp_rule.return_end,
 			nircm->tcp_rule.return_max_end,
 			nircm->dscp_rule.flow_dscp,
-			nircm->dscp_rule.return_dscp);
+			nircm->dscp_rule.return_dscp,
+			nircm->mark_rule.flow_mark,
+			nircm->mark_rule.return_mark);
 
 	if (protocol == IPPROTO_TCP) {
 
@@ -1724,6 +1867,11 @@ struct ecm_sfe_ported_ipv4_connection_instance *ecm_sfe_ported_ipv4_connection_i
 	feci->ae_interface_number_by_dev_type_get = ecm_sfe_common_get_interface_number_by_dev_type;
 	feci->ae_interface_type_get = ecm_sfe_common_get_interface_type;
 	feci->regenerate = ecm_sfe_common_connection_regenerate;
+
+	ecm_sfe_common_init_fe_info(&npci->fe_info);
+
+	feci->get_stats_bitmap = ecm_sfe_ported_ipv4_get_stats_bitmap;
+	feci->set_stats_bitmap = ecm_sfe_ported_ipv4_set_stats_bitmap;
 
 	if (protocol == IPPROTO_TCP) {
 		npci->ported_accelerated_count_index = ECM_SFE_PORTED_IPV4_PROTO_TCP;

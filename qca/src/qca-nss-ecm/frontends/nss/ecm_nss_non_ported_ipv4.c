@@ -1,6 +1,8 @@
 /*
  **************************************************************************
  * Copyright (c) 2014-2021 The Linux Foundation. All rights reserved.
+ * Copyright (c) 2022 Qualcomm Innovation Center, Inc. All rights reserved.
+ *
  * Permission to use, copy, modify, and/or distribute this software for
  * any purpose with or without fee is hereby granted, provided that the
  * above copyright notice and this permission notice appear in all copies.
@@ -1926,6 +1928,9 @@ struct ecm_nss_non_ported_ipv4_connection_instance *ecm_nss_non_ported_ipv4_conn
 	feci->ae_interface_number_by_dev_type_get = ecm_nss_common_get_interface_number_by_dev_type;
 	feci->ae_interface_type_get = ecm_nss_common_get_interface_type;
 	feci->regenerate = ecm_nss_common_connection_regenerate;
+
+	feci->get_stats_bitmap = ecm_nss_common_dummy_get_stats_bitmap;
+	feci->set_stats_bitmap = ecm_nss_common_dummy_set_stats_bitmap;
 
 	return nnpci;
 }

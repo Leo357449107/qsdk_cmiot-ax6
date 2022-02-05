@@ -64,6 +64,9 @@
 #ifdef CONFIG_AVR32
 #include <asm/arch/mmu.h>
 #endif
+#if defined(CONFIG_IPQ_RUNTIME_FAILSAFE)
+#include <asm/arch-qca-common/smem.h>
+#endif
 
 DECLARE_GLOBAL_DATA_PTR;
 
@@ -951,6 +954,9 @@ init_fnc_t init_sequence_r[] = {
 #endif
 #if defined(CONFIG_SPARC)
 	prom_init,
+#endif
+#if defined(CONFIG_IPQ_RUNTIME_FAILSAFE)
+	smem_update_bootconfig_to_flash,
 #endif
 	run_main_loop,
 };

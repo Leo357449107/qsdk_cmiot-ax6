@@ -1,0 +1,50 @@
+Source-Makefile: package/boot/uboot-mxs/Makefile
+Build-Types: host
+
+Package: u-boot-mx23_olinuxino
+Default: y
+Version: 2019.01-1
+Depends: +libc +GCC_LIBSSP:libssp +USE_GLIBC:librt +USE_GLIBC:libpthread @!IN_SDK @TARGET_mxs
+Conflicts: 
+Menu-Depends: 
+Provides: 
+Build-Variant: mx23_olinuxino
+Section: boot
+Category: Boot Loaders
+Title: U-Boot for Olinuxino i.MX233
+Maintainer: 
+Source: u-boot-2019.01.tar.bz2
+License: GPL-2.0 GPL-2.0+
+LicenseFiles: Licenses/README
+Type: bin
+Hidden: 1
+Description: U-Boot for Olinuxino i.MX233
+http://www.denx.de/wiki/U-Boot
+
+@@
+
+Build-Types: host
+
+Package: u-boot-duckbill
+Default: y
+Version: 2019.01-1
+Depends: +libc +GCC_LIBSSP:libssp +USE_GLIBC:librt +USE_GLIBC:libpthread @!IN_SDK @TARGET_mxs
+Conflicts: 
+Menu-Depends: 
+Provides: 
+Build-Variant: duckbill
+Section: boot
+Category: Boot Loaders
+Title: U-Boot for I2SE Duckbill
+Maintainer: 
+Source: u-boot-2019.01.tar.bz2
+License: GPL-2.0 GPL-2.0+
+LicenseFiles: Licenses/README
+Type: bin
+Hidden: 1
+Description: U-Boot for I2SE Duckbill
+http://www.denx.de/wiki/U-Boot
+
+@@
+
+

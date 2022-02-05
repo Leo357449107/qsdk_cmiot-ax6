@@ -104,8 +104,8 @@ static char *vrf_dflt_str = "0";
 static char *lb_dflt_str = "0";
 static char *cookie_dflt_str = "0";
 static char *priority_dflt_str = "no";
-static char *param_dflt_str = " ";
 #endif
+static char *param_dflt_str = " ";
 
 #if defined(HPPE)
 int parse_uci_option(struct switch_val *val, const char *option_names[], const int length)
@@ -6073,7 +6073,6 @@ parse_misc_pppoeen(struct switch_val *val)
 #endif
 
 #ifdef IN_IP
-#ifndef IN_IP_MINI
 static int
 parse_ip_hostentry(struct switch_val *val)
 {
@@ -6159,6 +6158,7 @@ parse_ip_hostentry(struct switch_val *val)
 	return rv;
 }
 
+#if !defined(IN_IP_MINI)
 static int
 parse_ip_intfentry(struct switch_val *val)
 {
@@ -6690,6 +6690,7 @@ parse_ip_rfsip6(struct switch_val *val)
 
 	return rv;
 }
+#endif
 
 static int
 parse_ip_vsiarpsg(struct switch_val *val)
@@ -6924,6 +6925,7 @@ parse_ip_pubip(struct switch_val *val)
 	return rv;
 }
 
+#if !defined(IN_IP_MINI)
 static int
 parse_ip_networkroute(struct switch_val *val)
 {
@@ -6962,6 +6964,7 @@ parse_ip_networkroute(struct switch_val *val)
 
 	return rv;
 }
+#endif
 
 static int
 parse_ip_intf(struct switch_val *val)
@@ -7282,7 +7285,6 @@ parse_ip_globalctrl(struct switch_val *val)
 
 	return rv;
 }
-#endif
 #endif
 
 #ifdef IN_NAT
@@ -12316,10 +12318,11 @@ static int
 parse_ip(const char *command_name, struct switch_val *val)
 {
 	int rv = -1;
-#ifndef IN_IP_MINI
 	if(!strcmp(command_name, "Hostentry")) {
 		rv = parse_ip_hostentry(val);
-	} else if(!strcmp(command_name, "Intfentry")) {
+	}
+#if !defined(IN_IP_MINI)
+	else if(!strcmp(command_name, "Intfentry")) {
 		rv = parse_ip_intfentry(val);
 	} else if(!strcmp(command_name, "Ptarplearn")) {
 		rv = parse_ip_ptarplearn(val);
@@ -12355,7 +12358,9 @@ parse_ip(const char *command_name, struct switch_val *val)
 		rv = parse_ip_rfsip4(val);
 	} else if(!strcmp(command_name, "Rfsip6")) {
 		rv = parse_ip_rfsip6(val);
-	} else if (!strcmp(command_name, "Vsiarpsg")) {
+	}
+#endif
+	else if (!strcmp(command_name, "Vsiarpsg")) {
 		rv = parse_ip_vsiarpsg(val);
 	} else if (!strcmp(command_name, "Vsisg")) {
 		rv = parse_ip_vsisg(val);
@@ -12365,9 +12370,13 @@ parse_ip(const char *command_name, struct switch_val *val)
 		rv = parse_ip_portsg(val);
 	} else if (!strcmp(command_name, "Pubip")) {
 		rv = parse_ip_pubip(val);
-	} else if (!strcmp(command_name, "Networkroute")) {
+	}
+#if !defined(IN_IP_MINI)
+	else if (!strcmp(command_name, "Networkroute")) {
 		rv = parse_ip_networkroute(val);
-	} else if (!strcmp(command_name, "Intf")) {
+	}
+#endif
+	else if (!strcmp(command_name, "Intf")) {
 		rv = parse_ip_intf(val);
 	} else if (!strcmp(command_name, "Vsiintf")) {
 		rv = parse_ip_vsiintf(val);
@@ -12386,7 +12395,6 @@ parse_ip(const char *command_name, struct switch_val *val)
 	} else if (!strcmp(command_name, "Hostentry")) {
 		rv = parse_ip_hostentry(val);
 	}
-#endif
 	return rv;
 }
 #endif

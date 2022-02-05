@@ -703,6 +703,10 @@ static sw_error_t ssdk_dt_parse_phy_info(struct device_node *switch_node, a_uint
 				if (!strncmp("sfp", media_type, strlen(media_type))) {
 					port_phyinfo->phy_features |= PHY_F_SFP;
 					SSDK_INFO("[PORT %d] media type is %s\n", port_id, media_type);
+				} else if (!strncmp("sfp_sgmii", media_type, strlen(media_type))) {
+					port_phyinfo->phy_features |= PHY_F_SFP;
+					port_phyinfo->phy_features |= PHY_F_SFP_SGMII;
+					SSDK_INFO("[PORT %d] media type sfp support sfp_sgmii\n", port_id);
 				}
 			}
 

@@ -1,0 +1,23 @@
+Source-Makefile: package/network/ipv6/6to4/Makefile
+
+Package: 6to4
+Version: 12-2
+Depends: +libc +GCC_LIBSSP:libssp +USE_GLIBC:librt +USE_GLIBC:libpthread @IPV6 +kmod-sit
+Conflicts: 
+Menu-Depends: 
+Provides: 
+Section: net
+Category: Network
+Repository: base
+Title: IPv6-to-IPv4 configuration support
+Maintainer: Jo-Philipp Wich <xm@subsignal.org>
+Source: 
+License: GPL-2.0
+Type: ipkg
+Description: Provides support for 6to4 tunnels in /etc/config/network.
+Refer to https://openwrt.org/docs/guide-user/base-system/basic-networking
+configuration details.
+Jo-Philipp Wich <xm@subsignal.org>
+@@
+
+

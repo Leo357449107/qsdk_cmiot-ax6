@@ -110,6 +110,8 @@ typedef enum ecm_classifier_acceleration_modes ecm_classifier_acceleration_mode_
 #define ECM_CLASSIFIER_PROCESS_ACTION_MIRROR_ENABLED 0x00000800	/* Contains mirror dynamic interface number */
 #endif
 
+#define ECM_CLASSIFIER_PROCESS_ACTION_MARK 0x00001000	/* Contains flow & return skb mark */
+
 /*
  * struct ecm_classifier_process_response
  *	Response structure returned by a process call
@@ -133,6 +135,8 @@ struct ecm_classifier_process_response {
 #endif
 	uint8_t flow_dscp;				/* DSCP mark for flow */
 	uint8_t return_dscp;				/* DSCP mark for return */
+	uint32_t flow_mark;				/* Mark to use for the packet*/
+	uint32_t return_mark;				/* Mark to use for the return packet*/
 #endif
 #ifdef ECM_CLASSIFIER_OVS_ENABLE
 	uint32_t ingress_vlan_tag[2];			/* Ingress VLAN tags */
@@ -321,6 +325,15 @@ static inline int ecm_classifier_process_response_state_get(struct ecm_state_fil
 			return result;
 		}
 		if ((result = ecm_state_write(sfi, "return_dscp", "%u", pr->return_dscp))) {
+			return result;
+		}
+	}
+
+	if (pr->process_actions & ECM_CLASSIFIER_PROCESS_ACTION_MARK) {
+		if ((result = ecm_state_write(sfi, "flow_mark", "%u", pr->flow_mark))) {
+			return result;
+		}
+		if ((result = ecm_state_write(sfi, "return_mark", "%u", pr->return_mark))) {
 			return result;
 		}
 	}

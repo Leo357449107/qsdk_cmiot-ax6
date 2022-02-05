@@ -1,0 +1,46 @@
+Source-Makefile: package/system/ucert/Makefile
+Build-Depends: ucert/host
+Build-Depends/host: libubox/host libjson-c/host usign/host
+Build-Types: host
+
+Package: ucert
+Version: 2020-05-24-00b921d80ac0dc47339305d803f865ff43c56d63-1
+Depends: +libc +GCC_LIBSSP:libssp +USE_GLIBC:librt +USE_GLIBC:libpthread +usign +libubox
+Conflicts: ucert-full
+Menu-Depends: 
+Provides: ucert
+Build-Variant: tiny
+Section: base
+Category: Base system
+Repository: base
+Title: OpenWrt certificate verification utility
+Maintainer: Daniel Golle <daniel@makrotopia.org>
+Source: ucert-2020-05-24-00b921d80ac0dc47339305d803f865ff43c56d63.tar.xz
+License: GPL-3.0+
+LicenseFiles: COPYING
+Type: ipkg
+Description: OpenWrt certificate verification utility
+Daniel Golle <daniel@makrotopia.org>
+@@
+
+Package: ucert-full
+Version: 2020-05-24-00b921d80ac0dc47339305d803f865ff43c56d63-1
+Depends: +libc +GCC_LIBSSP:libssp +USE_GLIBC:librt +USE_GLIBC:libpthread +usign +libubox +libjson-c +libblobmsg-json
+Conflicts: 
+Menu-Depends: 
+Provides: ucert
+Build-Variant: full
+Section: base
+Category: Base system
+Repository: base
+Title: OpenWrt certificate generation and verification utility
+Maintainer: Daniel Golle <daniel@makrotopia.org>
+Source: ucert-2020-05-24-00b921d80ac0dc47339305d803f865ff43c56d63.tar.xz
+License: GPL-3.0+
+LicenseFiles: COPYING
+Type: ipkg
+Description: OpenWrt certificate generation and verification utility
+Daniel Golle <daniel@makrotopia.org>
+@@
+
+

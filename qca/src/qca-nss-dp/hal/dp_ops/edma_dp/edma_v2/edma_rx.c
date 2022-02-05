@@ -1,6 +1,8 @@
 /*
  * Copyright (c) 2021, The Linux Foundation. All rights reserved.
  *
+ * Copyright (c) 2022 Qualcomm Innovation Center, Inc. All rights reserved.
+ *
  * Permission to use, copy, modify, and/or distribute this software for any
  * purpose with or without fee is hereby granted, provided that the above
  * copyright notice and this permission notice appear in all copies.
@@ -31,6 +33,7 @@ int edma_rx_alloc_buffer(struct edma_rxfill_ring *rxfill_ring, int alloc_count)
 	struct edma_rxfill_desc *rxfill_desc;
 	uint16_t prod_idx, start_idx;
 	uint16_t num_alloc = 0;
+	uint32_t rx_alloc_size = rxfill_ring->alloc_size;
 
 	/*
 	 * Get RXFILL ring producer index
@@ -45,7 +48,7 @@ int edma_rx_alloc_buffer(struct edma_rxfill_ring *rxfill_ring, int alloc_count)
 		/*
 		 * Allocate buffer
 		 */
-		skb = dev_alloc_skb(EDMA_BUF_SIZE + NET_IP_ALIGN);
+		skb = dev_alloc_skb(rx_alloc_size);
 		if (unlikely(!skb)) {
 			break;
 		}
@@ -80,14 +83,14 @@ int edma_rx_alloc_buffer(struct edma_rxfill_ring *rxfill_ring, int alloc_count)
 		EDMA_RXFILL_PACKET_LEN_SET(
 			rxfill_desc,
 			cpu_to_le32((uint32_t)
-			(EDMA_BUF_SIZE - EDMA_RX_SKB_HEADROOM - NET_IP_ALIGN)
+			(rx_alloc_size - EDMA_RX_SKB_HEADROOM - NET_IP_ALIGN)
 			& EDMA_RXFILL_BUF_SIZE_MASK));
 
 		/*
 		 * Invalidate skb->data
 		 */
-		dmac_inv_range((void *)skb->data,
-				(void *)(skb->data + EDMA_BUF_SIZE -
+		dmac_inv_range_no_dsb((void *)skb->data,
+				(void *)(skb->data + rx_alloc_size -
 					EDMA_RX_SKB_HEADROOM -
 					NET_IP_ALIGN));
 		prod_idx = (prod_idx + 1) & EDMA_RX_RING_SIZE_MASK;
@@ -105,15 +108,21 @@ int edma_rx_alloc_buffer(struct edma_rxfill_ring *rxfill_ring, int alloc_count)
 		 * that are processed.
 		 */
 		if (end_idx > start_idx) {
-			dmac_clean_range((void *)rxfill_desc,
+			dmac_clean_range_no_dsb((void *)rxfill_desc,
 					(void *)(rxfill_desc + num_alloc));
 		} else {
-			dmac_clean_range((void *)rxfill_ring->desc,
+			dmac_clean_range_no_dsb((void *)rxfill_ring->desc,
 					(void *)(rxfill_ring->desc + end_idx));
-			dmac_clean_range((void *)rxfill_desc,
+			dmac_clean_range_no_dsb((void *)rxfill_desc,
 					(void *)(rxfill_ring->desc +
 							EDMA_RX_RING_SIZE));
 		}
+
+		/*
+		 * Make sure the information written to the descriptors
+		 * is updated before writing to the hardware.
+		 */
+		dsb(st);
 
 		edma_reg_write(EDMA_REG_RXFILL_PROD_IDX(rxfill_ring->ring_id),
 								prod_idx);
@@ -121,6 +130,29 @@ int edma_rx_alloc_buffer(struct edma_rxfill_ring *rxfill_ring, int alloc_count)
 	}
 
 	return num_alloc;
+}
+
+/*
+ * edma_rx_checksum_verify()
+ *	Update hw checksum status into skb
+ */
+static void edma_rx_checksum_verify(struct edma_rxdesc_desc *rxdesc_desc,
+							struct sk_buff* skb)
+{
+	uint8_t pid = EDMA_RXDESC_PID_GET(rxdesc_desc);
+
+	skb_checksum_none_assert(skb);
+
+	if (likely(EDMA_RX_PID_IS_IPV4(pid))) {
+		if (likely(EDMA_RXDESC_L3CSUM_STATUS_GET(rxdesc_desc))
+			&& likely(EDMA_RXDESC_L4CSUM_STATUS_GET(rxdesc_desc))) {
+			skb->ip_summed = CHECKSUM_UNNECESSARY;
+		}
+	} else if (likely(EDMA_RX_PID_IS_IPV6(pid))) {
+		if (likely(EDMA_RXDESC_L4CSUM_STATUS_GET(rxdesc_desc))) {
+			skb->ip_summed = CHECKSUM_UNNECESSARY;
+		}
+	}
 }
 
 /*
@@ -165,14 +197,16 @@ static uint32_t edma_rx_reap(struct edma_gbl_ctx *egc, int budget,
 	 * that'll be processed.
 	 */
 	if (end_idx > cons_idx) {
-		dmac_inv_range((void *)rxdesc_desc,
+		dmac_inv_range_no_dsb((void *)rxdesc_desc,
 			(void *)(rxdesc_desc + work_to_do));
 	} else {
-		dmac_inv_range((void *)rxdesc_ring->pdesc,
+		dmac_inv_range_no_dsb((void *)rxdesc_ring->pdesc,
 			(void *)(rxdesc_ring->pdesc + end_idx));
-		dmac_inv_range((void *)rxdesc_desc,
+		dmac_inv_range_no_dsb((void *)rxdesc_desc,
 			(void *)(rxdesc_ring->pdesc + EDMA_RX_RING_SIZE));
 	}
+
+	dsb(st);
 
 	work_leftover = work_to_do & (EDMA_RX_MAX_PROCESS - 1);
 	while (likely(work_to_do--)) {
@@ -244,9 +278,11 @@ static uint32_t edma_rx_reap(struct edma_gbl_ctx *egc, int budget,
 		skb->protocol = eth_type_trans(skb, ndev);
 
 		/*
-		 * TODO: Enable Rx checksum offload.
+		 * Check Rx checksum offload status.
 		 */
-		skb->ip_summed = CHECKSUM_NONE;
+		if (likely(ndev->features & NETIF_F_RXCSUM)) {
+			edma_rx_checksum_verify(rxdesc_desc, skb);
+		}
 
 #ifdef CONFIG_NET_SWITCHDEV
 #if (LINUX_VERSION_CODE < KERNEL_VERSION(4, 5, 0))

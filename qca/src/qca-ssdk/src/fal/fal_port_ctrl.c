@@ -1836,7 +1836,7 @@ _fal_port_mru_mtu_get(a_uint32_t dev_id, fal_port_t port_id,
     rv = p_api->adpt_port_mru_mtu_get(dev_id, port_id, mru_size, mtu_size);
     return rv;
 }
-#ifndef IN_PORTCONTROL_MINI
+
 sw_error_t
 _fal_port_source_filter_get(a_uint32_t dev_id,
 		fal_port_t port_id, a_bool_t * enable)
@@ -1902,7 +1902,7 @@ _fal_port_source_filter_config_get(a_uint32_t dev_id,
 			src_filter_config);
 	return rv;
 }
-
+#ifndef IN_PORTCONTROL_MINI
 static sw_error_t
 _fal_port_interface_3az_status_set(a_uint32_t dev_id, fal_port_t port_id,
 		a_bool_t enable)
@@ -1937,6 +1937,7 @@ _fal_port_interface_3az_status_get(a_uint32_t dev_id, fal_port_t port_id,
 	return rv;
 
 }
+#endif
 
 static sw_error_t
 _fal_port_promisc_mode_get(a_uint32_t dev_id, fal_port_t port_id, a_bool_t *enable)
@@ -1955,7 +1956,6 @@ _fal_port_promisc_mode_get(a_uint32_t dev_id, fal_port_t port_id, a_bool_t *enab
 
 	return rv;
 }
-#endif
 
 static sw_error_t
 _fal_port_promisc_mode_set(a_uint32_t dev_id, fal_port_t port_id, a_bool_t enable)
@@ -3686,7 +3686,7 @@ fal_port_mru_mtu_get(a_uint32_t dev_id, fal_port_t port_id,
     FAL_API_UNLOCK;
     return rv;
 }
-#ifndef IN_PORTCONTROL_MINI
+
 sw_error_t
 fal_port_source_filter_status_get(a_uint32_t dev_id,
 		fal_port_t port_id, a_bool_t * enable)
@@ -3736,7 +3736,7 @@ fal_port_source_filter_config_get(a_uint32_t dev_id,
     FAL_API_UNLOCK;
     return rv;
 }
-
+#ifndef IN_PORTCONTROL_MINI
 sw_error_t
 fal_port_interface_3az_status_set(a_uint32_t dev_id, fal_port_t port_id,
 		a_bool_t enable)
@@ -3759,6 +3759,7 @@ fal_port_interface_3az_status_get(a_uint32_t dev_id, fal_port_t port_id,
     FAL_API_UNLOCK;
     return rv;
 }
+#endif
 
 sw_error_t
 fal_port_promisc_mode_get(a_uint32_t dev_id, fal_port_t port_id, a_bool_t *enable)
@@ -3770,7 +3771,6 @@ fal_port_promisc_mode_get(a_uint32_t dev_id, fal_port_t port_id, a_bool_t *enabl
     FAL_API_UNLOCK;
     return rv;
 }
-#endif
 
 sw_error_t
 fal_port_promisc_mode_set(a_uint32_t dev_id, fal_port_t port_id, a_bool_t enable)
@@ -3982,11 +3982,11 @@ EXPORT_SYMBOL(fal_port_interface_mode_apply);
 
 EXPORT_SYMBOL(fal_port_interface_mode_get );
 EXPORT_SYMBOL(fal_port_interface_mode_status_get );
+#endif
 EXPORT_SYMBOL(fal_port_source_filter_enable);
 EXPORT_SYMBOL(fal_port_source_filter_status_get);
 EXPORT_SYMBOL(fal_port_source_filter_config_get);
 EXPORT_SYMBOL(fal_port_source_filter_config_set);
-#endif
 EXPORT_SYMBOL(fal_port_max_frame_size_set);
 EXPORT_SYMBOL(fal_port_max_frame_size_get);
 #ifndef IN_PORTCONTROL_MINI
@@ -3996,9 +3996,9 @@ EXPORT_SYMBOL(fal_port_interface_3az_status_get);
 EXPORT_SYMBOL(fal_port_flowctrl_forcemode_set);
 #ifndef IN_PORTCONTROL_MINI
 EXPORT_SYMBOL(fal_port_flowctrl_forcemode_get);
+#endif
 EXPORT_SYMBOL(fal_port_promisc_mode_set);
 EXPORT_SYMBOL(fal_port_promisc_mode_get);
-#endif
 EXPORT_SYMBOL(fal_port_interface_eee_cfg_set);
 EXPORT_SYMBOL(fal_port_interface_eee_cfg_get);
 EXPORT_SYMBOL(fal_switch_port_loopback_set);

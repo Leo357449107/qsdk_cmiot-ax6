@@ -39,6 +39,8 @@
 struct nf_ct_dscpremark_ext {
 	__u32 flow_priority;	/* Original direction packet priority */
 	__u32 reply_priority;	/* Reply direction packet priority */
+	__u32 flow_mark;	/* Original direction packet mark */
+	__u32 reply_mark;	/* Reply direction packet mark */
 	__u16 igs_flow_qos_tag;	/* Original direction ingress packet priority */
 	__u16 igs_reply_qos_tag;	/* Reply direction ingress packet priority */
 	__u8 flow_dscp;		/* IP DSCP value for original direction */

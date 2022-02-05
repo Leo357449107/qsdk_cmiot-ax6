@@ -1,0 +1,19 @@
+Source-Makefile: package/kernel/lantiq/ltq-vdsl-fw/Makefile
+
+Package: ltq-vdsl-vr9-vectoring-fw-installer
+Version: 6.8.6-3
+Depends: +libc +GCC_LIBSSP:libssp +USE_GLIBC:librt +USE_GLIBC:libpthread @TARGET_lantiq_xrx200 +kmod-ltq-vdsl-vr9
+Conflicts: 
+Menu-Depends: 
+Provides: 
+Section: net
+Category: Network
+Title: VDSL2 Vectoring Firmware installer
+Maintainer: Daniel Golle <daniel@makrotopia.org>
+Source: 
+Type: ipkg
+Description: VDSL2 Vectoring Firmware installer
+Daniel Golle <daniel@makrotopia.org>
+@@
+
+

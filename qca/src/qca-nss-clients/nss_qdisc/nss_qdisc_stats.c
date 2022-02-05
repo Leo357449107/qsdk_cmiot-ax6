@@ -143,7 +143,7 @@ static inline struct nss_qdisc *nss_qdisc_stats_find_class_nq(struct nss_qdisc *
 
 	nq = (struct nss_qdisc *)clops->find(nqp->qdisc, classid);
 	if (!nq) {
-		nss_qdisc_warning("Class %u not found for qdisc %p\n", classid, nqp);
+		nss_qdisc_info("Class %u not found for qdisc %p\n", classid, nqp);
 		return NULL;
 	}
 
@@ -182,10 +182,15 @@ static void nss_qdisc_stats_process_node_stats(struct nss_qdisc *nqr,
 #if (LINUX_VERSION_CODE < KERNEL_VERSION(4, 14, 0))
 		nq = nss_qdisc_stats_get_class_nq(nq, qos_tag);
 #else
+		spinlock_t *root_lock = qdisc_lock(nqr->qdisc);
+		spin_lock(root_lock);
 		nq = nss_qdisc_stats_find_class_nq(nq, qos_tag);
 #endif
 		if (!nq) {
 			nss_qdisc_info("Qdisc %p (qos_tag %x): class node not found - \n", nq, qos_tag);
+#if (LINUX_VERSION_CODE >= KERNEL_VERSION(4, 14, 0))
+			spin_unlock(root_lock);
+#endif
 			return;
 		}
 	}
@@ -231,16 +236,20 @@ static void nss_qdisc_stats_process_node_stats(struct nss_qdisc *nqr,
 	/*
 	 * Shapers that maintain additional unique statistics will process them
 	 * via a registered callback. So invoke if its been registered.
+	 * NOTE: Please ensure the callback donot take qdisc root_lock.
 	 */
 	if (nq->stats_cb) {
 		nq->stats_cb(nq, response);
 	}
 
-#if (LINUX_VERSION_CODE < KERNEL_VERSION(4, 14, 0))
 	if (TC_H_MIN(qos_tag)) {
+#if (LINUX_VERSION_CODE < KERNEL_VERSION(4, 14, 0))
 		nss_qdisc_stats_put_class_nq(nq);
-	}
+#else
+		spinlock_t *root_lock = qdisc_lock(nqr->qdisc);
+		spin_unlock(root_lock);
 #endif
+	}
 }
 
 /*

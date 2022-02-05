@@ -1,0 +1,44 @@
+Source-Makefile: package/devel/gdb/Makefile
+
+Package: gdb
+Version: 8.3.1-1
+Depends: +libc +GCC_LIBSSP:libssp +USE_GLIBC:librt +USE_GLIBC:libpthread +!USE_MUSL:libthread-db +PACKAGE_zlib:zlib @!arc +libreadline +libncurses +zlib
+Conflicts: 
+Menu-Depends: 
+Provides: 
+Section: devel
+Category: Development
+Repository: base
+Title: GNU Debugger
+Maintainer: 
+Source: gdb-8.3.1.tar.xz
+License: GPL-3.0+
+Type: ipkg
+Description: GDB, the GNU Project debugger, allows you to see what is going on `inside'
+another program while it executes -- or what another program was doing at the
+moment it crashed.
+http://www.gnu.org/software/gdb/
+
+@@
+
+Package: gdbserver
+Version: 8.3.1-1
+Depends: +libc +GCC_LIBSSP:libssp +USE_GLIBC:librt +USE_GLIBC:libpthread +!USE_MUSL:libthread-db +PACKAGE_zlib:zlib @!arc
+Conflicts: 
+Menu-Depends: 
+Provides: 
+Section: devel
+Category: Development
+Repository: base
+Title: Remote server for GNU Debugger
+Maintainer: 
+Source: gdb-8.3.1.tar.xz
+License: GPL-3.0+
+Type: ipkg
+Description: GDBSERVER is a program that allows you to run GDB on a different machine than the
+one which is running the program being debugged.
+http://www.gnu.org/software/gdb/
+
+@@
+
+

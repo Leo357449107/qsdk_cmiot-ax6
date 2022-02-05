@@ -1,0 +1,50 @@
+Source-Makefile: package/network/utils/curl/Makefile
+
+Package: curl
+Submenu: File Transfer
+Version: 7.66.0-3
+Depends: +libc +GCC_LIBSSP:libssp +USE_GLIBC:librt +USE_GLIBC:libpthread +libcurl
+Conflicts: 
+Menu-Depends: 
+Provides: 
+Section: net
+Category: Network
+Repository: base
+Title: A client-side URL transfer utility
+Maintainer: Imre Kaloz <kaloz@openwrt.org>
+Source: curl-7.66.0.tar.xz
+License: MIT
+LicenseFiles: COPYING
+Type: ipkg
+Description: A client-side URL transfer utility
+http://curl.haxx.se/
+Imre Kaloz <kaloz@openwrt.org>
+@@
+
+Package: libcurl
+Menu: 1
+Version: 7.66.0-3
+ABIVersion: 4
+Depends: +libc +GCC_LIBSSP:libssp +USE_GLIBC:librt +USE_GLIBC:libpthread +LIBCURL_WOLFSSL:libwolfssl +LIBCURL_OPENSSL:libopenssl +LIBCURL_GNUTLS:libgnutls +LIBCURL_MBEDTLS:libmbedtls +LIBCURL_ZLIB:zlib +LIBCURL_THREADED_RESOLVER:libpthread +LIBCURL_LDAP:libopenldap +LIBCURL_LIBIDN2:libidn2 +LIBCURL_SSH2:libssh2 +LIBCURL_NGHTTP2:libnghttp2 +ca-bundle
+Conflicts: 
+Menu-Depends: 
+Provides: 
+Section: libs
+Category: Libraries
+Repository: base
+Title: A client-side URL transfer library
+Maintainer: Imre Kaloz <kaloz@openwrt.org>
+Source: curl-7.66.0.tar.xz
+License: MIT
+LicenseFiles: COPYING
+Type: ipkg
+Description: A client-side URL transfer library
+http://curl.haxx.se/
+Imre Kaloz <kaloz@openwrt.org>
+@@
+Config:
+
+  source "package/network/utils/curl/Config.in"
+@@
+
+

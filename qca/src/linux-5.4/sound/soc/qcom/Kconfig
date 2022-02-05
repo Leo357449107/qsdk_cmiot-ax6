@@ -113,21 +113,49 @@ config SND_SOC_SDM845
 config SND_SOC_IPQ
 	tristate "Soc Audio support for IPQ platforms"
 	depends on SND_SOC_QCOM && HAS_DMA
-	select SND_SOC_IPQ_ADSS
-	select SND_SOC_IPQ_MBOX
-	select SND_SOC_IPQ_PCM_RAW
 	help
 	Say Y or M to if you want to add support for SoC audio on
 	Qualcomm Technologies IPQ based board.
 
+config SND_SOC_IPQ_CODEC
+	tristate "SoC Audio CODEC support for IPQ platforms"
+	depends on ARCH_QCOM && SND_SOC_QCOM
+	help
+	Say Y or M if you want to add CODEC support for IPQ
+	based platforms.
+
 config SND_SOC_IPQ_ADSS
-	tristate
+	tristate "ipq adss"
+	depends on SND_SOC_IPQ
+
+config SND_SOC_IPQ_CPU_DAI
+	tristate "cpu dai"
+	depends on SND_SOC_IPQ
+
+config SND_SOC_IPQ_STEREO
+	tristate "ipq stereo"
 	depends on SND_SOC_IPQ
 
 config SND_SOC_IPQ_MBOX
-	tristate
+	tristate "ipq mbox"
+	depends on SND_SOC_IPQ
+
+config SND_SOC_IPQ_PCM_I2S
+	tristate "ipq pcm i2s"
+	depends on SND_SOC_IPQ
+
+config SND_SOC_IPQ_PCM_TDM
+	tristate "ipq pcm tdm"
 	depends on SND_SOC_IPQ
 
 config SND_SOC_IPQ_PCM_RAW
-	tristate
+	tristate "ipq pcm raw"
+	depends on SND_SOC_IPQ && SND_SOC_IPQ_ADSS && SND_SOC_IPQ_MBOX
+
+config SND_SOC_IPQ_LPASS
+	tristate "IPQ_LPASS"
 	depends on SND_SOC_IPQ
+
+config SND_SOC_IPQ_LPASS_PCM_RAW
+	tristate "IPQ_LPASS_PCM"
+	depends on SND_SOC_IPQ && SND_SOC_IPQ_LPASS

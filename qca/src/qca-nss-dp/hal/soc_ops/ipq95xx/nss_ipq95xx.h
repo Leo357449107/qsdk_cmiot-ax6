@@ -38,7 +38,10 @@ struct nss_dp_hal_gmac_stats {
 	uint64_t tx_bytes;		/**< Number of TX bytes */
 	uint64_t tx_dropped;		/**< Number of TX dropped packets */
 	uint64_t tx_no_desc_avail;	/**< Number of TX descriptor unavailable error */
-	uint64_t tx_non_linear_packets;	/**< Number of TX non-linear frame error */
+	uint64_t tx_nr_frag_packets;	/**< Number of TX nr fragment packets */
+	uint64_t tx_fraglist_packets;	/**< Number of TX fraglist packets */
+	uint64_t tx_fraglist_with_nr_frags_packets;	/**< Number of TX fraglist packets with nr fragments */
+	uint64_t tx_tso_packets;	/**< Number of TX TCP segmentation offload packets */
 };
 
 extern int edma_init(void);

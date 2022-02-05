@@ -1,6 +1,8 @@
 /*
  **************************************************************************
  * Copyright (c) 2014-2021 The Linux Foundation. All rights reserved.
+ * Copyright (c) 2022 Qualcomm Innovation Center, Inc. All rights reserved.
+ *
  * Permission to use, copy, modify, and/or distribute this software for
  * any purpose with or without fee is hereby granted, provided that the
  * above copyright notice and this permission notice appear in all copies.
@@ -6372,12 +6374,14 @@ static void ecm_interface_ovpn_stats_update(struct net_device *dev, ip_addr_t fr
  */
 static void ecm_interface_list_stats_update(int iface_list_first, struct ecm_db_iface_instance *iface_list[],
 					uint8_t *mac_addr, bool is_mcast_to_if, uint32_t tx_packets, uint32_t tx_bytes, uint32_t rx_packets,
-					uint32_t rx_bytes, bool is_ported, struct ecm_db_connection_instance *ci)
+					uint32_t rx_bytes, bool is_ported, struct ecm_db_connection_instance *ci, ecm_db_obj_dir_t dir)
 {
 	int list_index;
 #ifdef ECM_INTERFACE_MACVLAN_ENABLE
 	bool update_mcast_rx_stats = false;
 #endif
+
+	uint32_t stats_bitmap = ci->feci->get_stats_bitmap(ci->feci, dir);
 
 	for (list_index = iface_list_first; (list_index < ECM_DB_IFACE_HEIRARCHY_MAX); list_index++) {
 		struct ecm_db_iface_instance *ii;
@@ -6402,6 +6406,16 @@ static void ecm_interface_list_stats_update(int iface_list_first, struct ecm_db_
 		DEBUG_TRACE("found dev: %px (%s)\n", dev, dev->name);
 
 		if (likely(!is_mcast_to_if)) {
+
+			/*
+			 * Skip bridge forwarding table update if SFE L2 feature is disabled and the flow is route+bridge
+			 */
+			if (ci->feci->accel_engine == ECM_FRONT_END_ENGINE_SFE) {
+				if (ci->is_routed && !(stats_bitmap & BIT(ECM_DB_IFACE_TYPE_BRIDGE))) {
+					goto skip_bridge_refresh;
+				}
+			}
+
 			/*
 			 * Refresh the bridge forward table entry if the port is a bridge port.
 			 * Refresh if the ci is a 3-tuple PPPoE bridge flow.
@@ -6415,76 +6429,123 @@ static void ecm_interface_list_stats_update(int iface_list_first, struct ecm_db_
 			}
 		}
 
-		memset(&stats, 0, sizeof(stats));
-		switch (ii_type) {
-#ifdef ECM_INTERFACE_VLAN_ENABLE
-			case ECM_DB_IFACE_TYPE_VLAN:
-				DEBUG_INFO("VLAN\n");
-				stats.rx_packets = rx_packets;
-				stats.rx_bytes = rx_bytes;
-				stats.tx_packets = tx_packets;
-				stats.tx_bytes = tx_bytes;
-				__vlan_dev_update_accel_stats(dev, &stats);
-				break;
-#endif
-#ifdef ECM_INTERFACE_OVS_BRIDGE_ENABLE
-			case ECM_DB_IFACE_TYPE_OVS_BRIDGE:
-				DEBUG_INFO("OVS BRIDGE\n");
-				ovsmgr_bridge_interface_stats_update(dev,
-								     rx_packets, rx_bytes,
-								     tx_packets, tx_bytes);
-				break;
-#endif
-			case ECM_DB_IFACE_TYPE_BRIDGE:
-				DEBUG_INFO("BRIDGE\n");
-				stats.rx_packets = rx_packets;
-				stats.rx_bytes = rx_bytes;
-				stats.tx_packets = tx_packets;
-				stats.tx_bytes = tx_bytes;
-				br_dev_update_stats(dev, &stats);
-				break;
-#ifdef ECM_INTERFACE_PPPOE_ENABLE
-			case ECM_DB_IFACE_TYPE_PPPOE:
-				DEBUG_INFO("PPPOE\n");
-				ppp_update_stats(dev, rx_packets, rx_bytes, tx_packets, tx_bytes, 0, 0, 0, 0);
-				break;
-#endif
-#ifdef ECM_INTERFACE_OVPN_ENABLE
-			case ECM_DB_IFACE_TYPE_OVPN: {
-				ip_addr_t from_addr, to_addr;
+skip_bridge_refresh:
 
-				DEBUG_INFO("OVPN\n");
-				ecm_db_connection_address_get(ci, ECM_DB_OBJ_DIR_FROM, from_addr);
-				ecm_db_connection_address_get(ci, ECM_DB_OBJ_DIR_TO, to_addr);
-				ecm_interface_ovpn_stats_update(dev, from_addr, to_addr);
-			}
-			break;
-#endif
+		memset(&stats, 0, sizeof(stats));
+
+		/*
+		 * Update stats for interfaces supported by both NSS and SFE
+		 */
+		switch (ii_type) {
 #ifdef ECM_INTERFACE_MACVLAN_ENABLE
-			case ECM_DB_IFACE_TYPE_MACVLAN:
-				DEBUG_INFO("MACVLAN\n");
-				stats.rx_packets = rx_packets;
-				stats.rx_bytes = rx_bytes;
-				stats.tx_packets = tx_packets;
-				stats.tx_bytes = tx_bytes;
+		case ECM_DB_IFACE_TYPE_MACVLAN:
+			DEBUG_INFO("MACVLAN\n");
+
+			if (ci->feci->accel_engine == ECM_FRONT_END_ENGINE_SFE) {
+				if (!(stats_bitmap & BIT(ECM_DB_IFACE_TYPE_MACVLAN))) {
+					dev_put(dev);
+					continue;
+				}
+			}
+
+			stats.rx_packets = rx_packets;
+			stats.rx_bytes = rx_bytes;
+			stats.tx_packets = tx_packets;
+			stats.tx_bytes = tx_bytes;
 #ifdef ECM_MULTICAST_ENABLE
-				/*
-				 * Update multicast rx statistics only for
-				 * 'from' interface.
-				 */
-				update_mcast_rx_stats = (!is_mcast_to_if &&
-							ecm_db_multicast_connection_to_interfaces_set_check(ci));
+			/*
+			 * Update multicast rx statistics only for
+			 * 'from' interface.
+			 */
+			update_mcast_rx_stats = (!is_mcast_to_if &&
+						ecm_db_multicast_connection_to_interfaces_set_check(ci));
 #endif
-				macvlan_offload_stats_update(dev, &stats, update_mcast_rx_stats);
-				break;
+			macvlan_offload_stats_update(dev, &stats, update_mcast_rx_stats);
+
+			/*
+			 * Continue updating stats for other interface.
+			 */
+			dev_put(dev);
+			continue;
 #endif
-			default:
-				/*
-				 * TODO: Extend it accordingly
-				 */
-				break;
+
+		case ECM_DB_IFACE_TYPE_BRIDGE:
+			DEBUG_INFO("BRIDGE\n");
+			if (ci->feci->accel_engine == ECM_FRONT_END_ENGINE_SFE) {
+				if (!(stats_bitmap & BIT(ECM_DB_IFACE_TYPE_BRIDGE))) {
+					dev_put(dev);
+					continue;
+				}
+			}
+
+			stats.rx_packets = rx_packets;
+			stats.rx_bytes = rx_bytes;
+			stats.tx_packets = tx_packets;
+			stats.tx_bytes = tx_bytes;
+			br_dev_update_stats(dev, &stats);
+			dev_put(dev);
+			continue;
+
+#ifdef ECM_INTERFACE_OVS_BRIDGE_ENABLE
+		case ECM_DB_IFACE_TYPE_OVS_BRIDGE:
+			DEBUG_INFO("OVS BRIDGE\n");
+			if (ci->feci->accel_engine == ECM_FRONT_END_ENGINE_SFE) {
+				if (!(stats_bitmap & BIT(ECM_DB_IFACE_TYPE_OVS_BRIDGE))) {
+					dev_put(dev);
+					continue;
+				}
+			}
+			ovsmgr_bridge_interface_stats_update(dev, rx_packets, rx_bytes, tx_packets, tx_bytes);
+			dev_put(dev);
+			continue;
+#endif
+		default:
+			break;
 		}
 
+		/*
+		 * Update stats for the interfaces supported by only the NSS acceleration engine.
+		 */
+		if (ci->feci->accel_engine != ECM_FRONT_END_ENGINE_NSS ) {
+			DEBUG_TRACE("Invalid stats update for iface type=%d\n", ii_type);
+			dev_put(dev);
+			continue;
+		}
+
+		switch (ii_type) {
+#ifdef ECM_INTERFACE_VLAN_ENABLE
+		case ECM_DB_IFACE_TYPE_VLAN:
+			DEBUG_INFO("VLAN\n");
+			stats.rx_packets = rx_packets;
+			stats.rx_bytes = rx_bytes;
+			stats.tx_packets = tx_packets;
+			stats.tx_bytes = tx_bytes;
+			__vlan_dev_update_accel_stats(dev, &stats);
+			break;
+#endif
+#ifdef ECM_INTERFACE_PPPOE_ENABLE
+		case ECM_DB_IFACE_TYPE_PPPOE:
+			DEBUG_INFO("PPPOE\n");
+			ppp_update_stats(dev, rx_packets, rx_bytes, tx_packets, tx_bytes, 0, 0, 0, 0);
+			break;
+#endif
+#ifdef ECM_INTERFACE_OVPN_ENABLE
+		case ECM_DB_IFACE_TYPE_OVPN: {
+			ip_addr_t from_addr, to_addr;
+
+			DEBUG_INFO("OVPN\n");
+			ecm_db_connection_address_get(ci, ECM_DB_OBJ_DIR_FROM, from_addr);
+			ecm_db_connection_address_get(ci, ECM_DB_OBJ_DIR_TO, to_addr);
+			ecm_interface_ovpn_stats_update(dev, from_addr, to_addr);
+		}
+		break;
+#endif
+		default:
+			/*
+			 * TODO: Extend it accordingly
+			 */
+			break;
+		}
 		dev_put(dev);
 	}
 }
@@ -6523,7 +6584,7 @@ void ecm_interface_stats_update(struct ecm_db_connection_instance *ci,
 	DEBUG_INFO("%px: Update from interface stats\n", ci);
 	from_ifaces_first = ecm_db_connection_interfaces_get_and_ref(ci, from_ifaces, ECM_DB_OBJ_DIR_FROM);
 	ecm_db_connection_node_address_get(ci, ECM_DB_OBJ_DIR_FROM, mac_addr);
-	ecm_interface_list_stats_update(from_ifaces_first, from_ifaces, mac_addr, false, from_tx_packets, from_tx_bytes, from_rx_packets, from_rx_bytes, is_ported, ci);
+	ecm_interface_list_stats_update(from_ifaces_first, from_ifaces, mac_addr, false, from_tx_packets, from_tx_bytes, from_rx_packets, from_rx_bytes, is_ported, ci, ECM_DB_OBJ_DIR_FROM);
 	ecm_db_connection_interfaces_deref(from_ifaces, from_ifaces_first);
 
 	/*
@@ -6534,7 +6595,7 @@ void ecm_interface_stats_update(struct ecm_db_connection_instance *ci,
 	DEBUG_INFO("%px: Update to interface stats\n", ci);
 	to_ifaces_first = ecm_db_connection_interfaces_get_and_ref(ci, to_ifaces, ECM_DB_OBJ_DIR_TO);
 	ecm_db_connection_node_address_get(ci, ECM_DB_OBJ_DIR_TO, mac_addr);
-	ecm_interface_list_stats_update(to_ifaces_first, to_ifaces, mac_addr, false, to_tx_packets, to_tx_bytes, to_rx_packets, to_rx_bytes, is_ported, ci);
+	ecm_interface_list_stats_update(to_ifaces_first, to_ifaces, mac_addr, false, to_tx_packets, to_tx_bytes, to_rx_packets, to_rx_bytes, is_ported, ci, ECM_DB_OBJ_DIR_TO);
 	ecm_db_connection_interfaces_deref(to_ifaces, to_ifaces_first);
 }
 EXPORT_SYMBOL(ecm_interface_stats_update);
@@ -6578,7 +6639,7 @@ void ecm_interface_multicast_stats_update(struct ecm_db_connection_instance *ci,
 	DEBUG_INFO("%px: Update from interface stats\n", ci);
 	from_ifaces_first = ecm_db_connection_interfaces_get_and_ref(ci, from_ifaces, ECM_DB_OBJ_DIR_FROM);
 	ecm_db_connection_node_address_get(ci, ECM_DB_OBJ_DIR_FROM, mac_addr);
-	ecm_interface_list_stats_update(from_ifaces_first, from_ifaces, mac_addr, false, 0, 0, from_rx_packets, from_rx_bytes, is_ported, ci);
+	ecm_interface_list_stats_update(from_ifaces_first, from_ifaces, mac_addr, false, 0, 0, from_rx_packets, from_rx_bytes, is_ported, ci, ECM_DB_OBJ_DIR_FROM);
 	ecm_db_connection_interfaces_deref(from_ifaces, from_ifaces_first);
 
 	/*
@@ -6602,7 +6663,7 @@ void ecm_interface_multicast_stats_update(struct ecm_db_connection_instance *ci,
 		if (to_ifaces_first[if_index] < ECM_DB_IFACE_HEIRARCHY_MAX) {
 			ii_temp = ecm_db_multicast_if_heirarchy_get(to_ifaces, if_index);
 			ecm_db_multicast_copy_if_heirarchy(to_list_single, ii_temp);
-			ecm_interface_list_stats_update(to_ifaces_first[if_index], to_list_single, mac_addr, true, from_tx_packets, from_tx_bytes, 0, 0, is_ported, ci);
+			ecm_interface_list_stats_update(to_ifaces_first[if_index], to_list_single, mac_addr, true, from_tx_packets, from_tx_bytes, 0, 0, is_ported, ci, ECM_DB_OBJ_DIR_TO);
 		}
 	}
 

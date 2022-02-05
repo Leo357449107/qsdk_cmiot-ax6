@@ -27,9 +27,11 @@
 #include <mmc.h>
 #include <sdhci.h>
 #include <usb.h>
+#include <watchdog.h>
 
 #define DLOAD_MAGIC_COOKIE	0x10
 #define DLOAD_DISABLED		0x40
+#define DLOAD_BITS		0xFF
 
 DECLARE_GLOBAL_DATA_PTR;
 
@@ -39,6 +41,9 @@ extern int ipq_spi_init(u16);
 
 unsigned int qpic_frequency = 0, qpic_phase = 0;
 extern unsigned int qpic_training_offset;
+extern unsigned ipq_runtime_fs_feature_enabled;
+
+extern	int qca_scm_dpr(u32, u32, void *, size_t);
 
 void qca_serial_init(struct ipq_serial_platdata *plat)
 {
@@ -57,6 +62,31 @@ void qca_serial_init(struct ipq_serial_platdata *plat)
 
 	return;
 }
+
+#ifdef CONFIG_IPQ_RUNTIME_FAILSAFE
+void fdt_fixup_runtime_failsafe(void *blob)
+{
+	int node_off, ret;
+	const char *fs_node = {"/soc/qti,scm_restart_reason"};
+
+	/* This fixup is for informing HLOS whether
+	 * runtime failsafe feature is enabled or not
+	 */
+	node_off = fdt_path_offset(blob, fs_node);
+	if (node_off < 0) {
+		printf("%s: Failsafe: unable to find node '%s'\n",
+				__func__, fs_node);
+		return;
+	}
+
+	ret = fdt_setprop_u32(blob, node_off, "qti,runtime-failsafe",
+			ipq_runtime_fs_feature_enabled);
+	if (ret) {
+		printf("%s : Unable to set property 'ipq,runtime_failsafe'\n",__func__);
+		return;
+	}
+}
+#endif
 
 void fdt_fixup_qpic(void *blob)
 {
@@ -849,8 +879,16 @@ void set_function_select_as_mdc_mdio(void)
 	}
 }
 
-void nssnoc_init(void)
-{
+void nssnoc_init(void){
+	unsigned int gcc_nssnoc_memnoc_bfdcd_cmd_rcgr_addr = 0x1817004;
+	unsigned int gcc_qdss_at_cmd_rcgr_addr = 0x182D004;
+
+	writel(0x102, gcc_nssnoc_memnoc_bfdcd_cmd_rcgr_addr + 4);
+	writel(0x1, gcc_nssnoc_memnoc_bfdcd_cmd_rcgr_addr);
+
+	writel(0x109, gcc_qdss_at_cmd_rcgr_addr + 4);
+	writel(0x1, gcc_qdss_at_cmd_rcgr_addr);
+
 	/* Enable required NSSNOC clocks */
 	writel(readl(GCC_MEM_NOC_NSSNOC_CLK) | GCC_CBCR_CLK_ENABLE,
 		GCC_MEM_NOC_NSSNOC_CLK);
@@ -1195,11 +1233,26 @@ unsigned long timer_read_counter(void)
 	return 0;
 }
 
+#ifdef CONFIG_HW_WATCHDOG
+void hw_watchdog_reset(void)
+{
+	writel(1, APCS_WDT_RST);
+}
+#endif
+
 void reset_crashdump(void)
 {
 	unsigned int ret = 0;
+	unsigned int cookie = 0;
+
+#ifdef CONFIG_IPQ_RUNTIME_FAILSAFE
+	cookie = ipq_read_tcsr_boot_misc();
+	fs_debug("\nFailsafe: %s: Clearing DLOAD and NonHLOS bits\n", __func__);
+	cookie &= ~(DLOAD_BITS);
+	cookie &= ~(IPQ_FS_NONHLOS_BIT);
+#endif
 	qca_scm_sdi();
-	ret = qca_scm_dload(CLEAR_MAGIC);
+	ret = qca_scm_dload(cookie);
 	if (ret)
 		printf ("Error in reseting the Magic cookie\n");
 	return;
@@ -1268,7 +1321,6 @@ struct dumpinfo_t dumpinfo_n[] = {
 	{ "DATARAM.BIN", 0x00290000, 0x00014000, 0 },
 	{ "MSGRAM.BIN", 0x00060000, 0x00006000, 1 },
 	{ "IMEM.BIN", 0x08600000, 0x00001000, 0 },
-	{ "NSSUTCM.BIN", 0x08600658, 0x00030000, 0, 1, 0x2000 },
 	{ "UNAME.BIN", 0, 0, 0, 0, 0, MINIMAL_DUMP },
 	{ "CPU_INFO.BIN", 0, 0, 0, 0, 0, MINIMAL_DUMP },
 	{ "DMESG.BIN", 0, 0, 0, 0, 0, MINIMAL_DUMP },
@@ -1292,7 +1344,6 @@ struct dumpinfo_t dumpinfo_s[] = {
 	{ "DATARAM.BIN", 0x00290000, 0x00014000, 0 },
 	{ "MSGRAM.BIN", 0x00060000, 0x00006000, 1 },
 	{ "IMEM.BIN", 0x08600000, 0x00001000, 0 },
-	{ "NSSUTCM.BIN", 0x08600658, 0x00030000, 0, 1, 0x2000 },
 	{ "UNAME.BIN", 0, 0, 0, 0, 0, MINIMAL_DUMP },
 	{ "CPU_INFO.BIN", 0, 0, 0, 0, 0, MINIMAL_DUMP },
 	{ "DMESG.BIN", 0, 0, 0, 0, 0, MINIMAL_DUMP },
@@ -1301,11 +1352,29 @@ struct dumpinfo_t dumpinfo_s[] = {
 };
 int dump_entries_s = ARRAY_SIZE(dumpinfo_s);
 
+#ifdef CONFIG_IPQ_RUNTIME_FAILSAFE
+int ipq_read_tcsr_boot_misc(void)
+{
+	u32 *dmagic = (u32 *)CONFIG_IPQ9574_DMAGIC_ADDR;
+	return *dmagic;
+}
+
+int is_hlos_crashed(void)
+{
+	u32 *dmagic = (u32 *)CONFIG_IPQ9574_DMAGIC_ADDR;
+
+	if (*dmagic & IPQ_FS_HLOS_BIT)
+		return 1;
+
+	return 0;
+}
+#endif
+
 int apps_iscrashed_crashdump_disabled(void)
 {
 	u32 *dmagic = (u32 *)CONFIG_IPQ9574_DMAGIC_ADDR;
 
-	if (*dmagic == DLOAD_DISABLED)
+	if (*dmagic & DLOAD_DISABLED)
 		return 1;
 
 	return 0;
@@ -1315,7 +1384,7 @@ int apps_iscrashed(void)
 {
 	u32 *dmagic = (u32 *)CONFIG_IPQ9574_DMAGIC_ADDR;
 
-	if (*dmagic == DLOAD_MAGIC_COOKIE)
+	if (*dmagic & DLOAD_MAGIC_COOKIE)
 		return 1;
 
 	return 0;
@@ -1448,3 +1517,49 @@ void ipq_uboot_fdt_fixup(void)
 	}
 	return;
 }
+
+int do_dpr(cmd_tbl_t *cmdtp, int flag, int argc, char *const argv[])
+{
+	int ret;
+	char *loadaddr;
+	uint32_t dpr_status = 0;
+	struct dpr {
+		uint32_t address;
+		uint32_t status;
+	} dpr;
+
+	if (argc > 2) {
+		return CMD_RET_USAGE;
+	}
+
+	if (argc == 2){
+		dpr.address = simple_strtoul(argv[1], NULL, 16);
+	} else {
+		loadaddr = getenv("fileaddr");
+
+		if (loadaddr == NULL) {
+			printf("No Arguments provided\n");
+			printf("Command format: dpr_execute <address>\n");
+			return CMD_RET_USAGE;
+		}
+		if (loadaddr != NULL)
+			dpr.address = simple_strtoul(loadaddr, NULL, 16);
+	}
+
+	dpr.status = (uint32_t)&dpr_status;
+
+	ret = qca_scm_dpr(SCM_SVC_FUSE, TME_DPR_PROCESSING,
+			&dpr, sizeof(dpr));
+
+	if (ret || dpr_status){
+		printf("%s: Error in DPR Processing (%d, %d)\n",
+			__func__, ret, dpr_status);
+	} else {
+		printf("DPR Process sucessful\n");
+	}
+	return ret;
+}
+
+U_BOOT_CMD(dpr_execute, 2, 0, do_dpr,
+		"Debug Policy Request processing\n",
+		"dpr_execute [address] - Processing dpr\n");

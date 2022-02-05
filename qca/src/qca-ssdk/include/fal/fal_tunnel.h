@@ -71,7 +71,13 @@ enum {
 	FUNC_TUNNEL_UDF_PROFILE_CFG_SET,
 	FUNC_TUNNEL_UDF_PROFILE_CFG_GET,
 	FUNC_TUNNEL_EXP_DECAP_SET,
-	FUNC_TUNNEL_EXP_DECAP_GET
+	FUNC_TUNNEL_EXP_DECAP_GET,
+	FUNC_TUNNEL_DECAP_KEY_SET,
+	FUNC_TUNNEL_DECAP_KEY_GET,
+	FUNC_TUNNEL_DECAP_EN_SET,
+	FUNC_TUNNEL_DECAP_EN_GET,
+	FUNC_TUNNEL_DECAP_ACTION_UPDATE,
+	FUNC_TUNNEL_DECAP_COUNTER_GET,
 };
 
 /* tunnel type */
@@ -194,10 +200,19 @@ typedef struct {
 } fal_tunnel_udp_entry_t;
 
 typedef struct {
+	a_uint16_t key_bmp; /*tunnel key included bit map*/
+	a_uint32_t tunnel_info_mask; /*mask value for tunnel_info */
+	a_uint8_t udf0_idx; /*UDF0 id used to select one UDF from total four UDFs */
+	a_uint16_t udf0_mask; /*UDF0 mask for udf0 */
+	a_uint8_t udf1_idx; /*UDF1 id used to select one UDF from total four UDFs */
+	a_uint16_t udf1_mask; /*UDF1 mask for udf1 */
+} fal_tunnel_decap_key_t;
+
+typedef struct {
 	a_uint32_t entry_id; /*entry index*/
 	a_uint8_t ip_ver; /*0 for ipv4 or 1 for ipv6*/
 	fal_tunnel_type_t tunnel_type;/*tunnel type*/
-	a_uint16_t key_bmp; /*tunnel key included bit map*/
+	a_uint16_t key_bmp; /*tunnel valid bitmap for udf0, udf1 and tunnel_info */
 	union {
 		fal_ip4_addr_t ip4_addr;
 		fal_ip6_addr_t ip6_addr;
@@ -210,13 +225,8 @@ typedef struct {
 	a_uint16_t sport; /*matched l4 src port*/
 	a_uint16_t dport; /*matched l4 dst port*/
 	a_uint32_t tunnel_info; /*matched 32 bit vni and reserved or key filed of GRE */
-	a_uint32_t tunnel_info_mask; /*mask value for tunnel_info */
-	a_uint8_t udf0_idx; /*UDF0 id used to select one UDF from total four UDFs */
 	a_uint16_t udf0; /*UDF0 value */
-	a_uint16_t udf0_mask; /*UDF0 mask for udf0 */
-	a_uint8_t udf1_idx; /*UDF1 id used to select one UDF from total four UDFs */
 	a_uint16_t udf1; /*UDF1 value */
-	a_uint16_t udf1_mask; /*UDF1 mask for udf1 */
 } fal_tunnel_rule_t;
 
 typedef enum {
@@ -237,7 +247,22 @@ typedef struct {
 	a_uint16_t cvlan_id; /*CVLAN ID used for CVLAN check */
 } fal_tunnel_verify_entry_t;
 
+enum {
+	FAL_TUNNEL_SVLAN_UPDATE,
+	FAL_TUNNEL_CVLAN_UPDATE,
+	FAL_TUNNEL_L3IF_UPDATE,
+	FAL_TUNNEL_DECAP_UPDATE,
+	FAL_TUNNEL_DEACCE_UPDATE,
+	FAL_TUNNEL_SRCINFO_UPDATE,
+	FAL_TUNNEL_PKT_MODE_UPDATE,
+	FAL_TUNNEL_SERVICE_CODE_UPDATE,
+	FAL_TUNNEL_UDP_CSUM_ZERO_UPDATE,
+	FAL_TUNNEL_EXP_PROFILE_UPDATE,
+	FAL_TUNNEL_FWD_CMD_UPDATE,
+};
+
 typedef struct {
+	a_uint32_t update_bmp; /* the bitmap for updating the field of this structure */
 	fal_fwd_cmd_t fwd_cmd; /*forward type*/
 	fal_tunnel_verify_entry_t verify_entry; /* l3_if, vlan verification */
 	a_bool_t deacce_en; /*0 for disable and 1 for enable*/
@@ -534,6 +559,30 @@ typedef struct {
 	a_uint16_t udp_sport_mask; /* the mask of the udp port */
 	a_uint32_t proto_map_data[4]; /* used by edit_rule when proto_map used */
 } fal_tunnel_encap_header_ctrl_t;
+
+sw_error_t
+fal_tunnel_decap_key_set(a_uint32_t dev_id,
+		fal_tunnel_type_t tunnel_type, fal_tunnel_decap_key_t *key_gen);
+
+sw_error_t
+fal_tunnel_decap_key_get(a_uint32_t dev_id,
+		fal_tunnel_type_t tunnel_type, fal_tunnel_decap_key_t *key_gen);
+
+sw_error_t
+fal_tunnel_decap_en_set(a_uint32_t dev_id,
+		a_uint32_t tunnel_index, a_bool_t en);
+
+sw_error_t
+fal_tunnel_decap_en_get(a_uint32_t dev_id,
+		a_uint32_t tunnel_index, a_bool_t *en);
+
+sw_error_t
+fal_tunnel_decap_action_update(a_uint32_t dev_id,
+		a_uint32_t tunnel_index, fal_tunnel_action_t *update_action);
+
+sw_error_t
+fal_tunnel_decap_counter_get(a_uint32_t dev_id,
+		a_uint32_t tunnel_index, fal_entry_counter_t *decap_counter);
 
 sw_error_t
 fal_tunnel_decap_entry_add(a_uint32_t dev_id,

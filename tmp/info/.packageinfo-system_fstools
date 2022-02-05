@@ -1,0 +1,97 @@
+Source-Makefile: package/system/fstools/Makefile
+Build-Depends: util-linux
+
+Package: fstools
+Menu: 1
+Version: 2020-05-12-84269037b75de93bdd4ea75b7f50ba77ba976377-1
+Depends: +libc +GCC_LIBSSP:libssp +USE_GLIBC:librt +USE_GLIBC:libpthread +ubox +NAND_SUPPORT:ubi-utils
+Conflicts: 
+Menu-Depends: 
+Provides: 
+Section: base
+Category: Base system
+Title: OpenWrt filesystem tools
+Maintainer: John Crispin <john@phrozen.org>
+Source: fstools-2020-05-12-84269037b75de93bdd4ea75b7f50ba77ba976377.tar.xz
+License: GPL-2.0
+Type: ipkg
+Description: OpenWrt filesystem tools
+John Crispin <john@phrozen.org>
+@@
+Config:
+
+	config FSTOOLS_UBIFS_EXTROOT
+		depends on PACKAGE_fstools
+		depends on NAND_SUPPORT
+		bool "Support extroot functionality with UBIFS"
+		default y
+		help
+			This option makes it possible to use extroot functionality if the root filesystem resides on an UBIFS partition
+
+	config FSTOOLS_OVL_MOUNT_FULL_ACCESS_TIME
+		depends on PACKAGE_fstools
+		bool "Full access time accounting"
+		default n
+		help
+			This option enables the full access time accounting (warning: it will increase the flash writes).
+
+	config FSTOOLS_OVL_MOUNT_COMPRESS_ZLIB
+		depends on PACKAGE_fstools
+		bool "Compress using zlib"
+		default n
+		help
+			This option enables the compression using zlib on the storage device.
+@@
+
+Package: snapshot-tool
+Version: 2020-05-12-84269037b75de93bdd4ea75b7f50ba77ba976377-1
+Depends: +libc +GCC_LIBSSP:libssp +USE_GLIBC:librt +USE_GLIBC:libpthread +libubox +fstools
+Conflicts: 
+Menu-Depends: 
+Provides: 
+Section: base
+Category: Base system
+Title: rootfs snapshoting tool
+Maintainer: John Crispin <john@phrozen.org>
+Source: fstools-2020-05-12-84269037b75de93bdd4ea75b7f50ba77ba976377.tar.xz
+License: GPL-2.0
+Type: ipkg
+Description: rootfs snapshoting tool
+John Crispin <john@phrozen.org>
+@@
+
+Package: block-mount
+Version: 2020-05-12-84269037b75de93bdd4ea75b7f50ba77ba976377-1
+Depends: +libc +GCC_LIBSSP:libssp +USE_GLIBC:librt +USE_GLIBC:libpthread +ubox +libubox +libuci +libblobmsg-json +libjson-c
+Conflicts: 
+Menu-Depends: 
+Provides: 
+Section: base
+Category: Base system
+Title: Block device mounting and checking
+Maintainer: John Crispin <john@phrozen.org>
+Source: fstools-2020-05-12-84269037b75de93bdd4ea75b7f50ba77ba976377.tar.xz
+License: GPL-2.0
+Type: ipkg
+Description: Block device mounting and checking
+John Crispin <john@phrozen.org>
+@@
+
+Package: blockd
+Version: 2020-05-12-84269037b75de93bdd4ea75b7f50ba77ba976377-1
+Depends: +libc +GCC_LIBSSP:libssp +USE_GLIBC:librt +USE_GLIBC:libpthread +block-mount +fstools +libubus +kmod-fs-autofs4 +libblobmsg-json +libjson-c
+Conflicts: 
+Menu-Depends: 
+Provides: 
+Section: base
+Category: Base system
+Title: Block device automounting
+Maintainer: John Crispin <john@phrozen.org>
+Source: fstools-2020-05-12-84269037b75de93bdd4ea75b7f50ba77ba976377.tar.xz
+License: GPL-2.0
+Type: ipkg
+Description: Block device automounting
+John Crispin <john@phrozen.org>
+@@
+
+

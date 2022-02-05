@@ -366,543 +366,56 @@ union in_flow_host_tbl_op_u {
 };
 
 /*[register] IN_FLOW_TBL_OP_DATA0*/
-#define IN_FLOW_TBL_OP_DATA0
+#define IN_FLOW_TBL_OP_DATA
 #if defined(APPE)
-#define IN_FLOW_TBL_OP_DATA0_ADDRESS 0x550
+#define IN_FLOW_TBL_OP_DATA_ADDRESS 0x550
+#define IN_FLOW_TBL_OP_DATA_NUM     11
 #else
-#define IN_FLOW_TBL_OP_DATA0_ADDRESS 0x3c0
+#define IN_FLOW_TBL_OP_DATA_ADDRESS 0x3c0
+#define IN_FLOW_TBL_OP_DATA_NUM     9
 #endif
-#define IN_FLOW_TBL_OP_DATA0_NUM     1
-#define IN_FLOW_TBL_OP_DATA0_INC     0x4
-#define IN_FLOW_TBL_OP_DATA0_TYPE    REG_TYPE_RW
-#define IN_FLOW_TBL_OP_DATA0_DEFAULT 0x0
+#define IN_FLOW_TBL_OP_DATA_INC     0x4
+#define IN_FLOW_TBL_OP_DATA_TYPE    REG_TYPE_RW
+#define IN_FLOW_TBL_OP_DATA_DEFAULT 0x0
 	/*[field] DATA*/
-	#define IN_FLOW_TBL_OP_DATA0_DATA
-	#define IN_FLOW_TBL_OP_DATA0_DATA_OFFSET  0
-	#define IN_FLOW_TBL_OP_DATA0_DATA_LEN     32
-	#define IN_FLOW_TBL_OP_DATA0_DATA_DEFAULT 0x0
+	#define IN_FLOW_TBL_OP_DATA_DATA
+	#define IN_FLOW_TBL_OP_DATA_DATA_OFFSET  0
+	#define IN_FLOW_TBL_OP_DATA_DATA_LEN     32
+	#define IN_FLOW_TBL_OP_DATA_DATA_DEFAULT 0x0
 
-struct in_flow_tbl_op_data0 {
+struct in_flow_tbl_op_data {
 	a_uint32_t  data:32;
 };
 
-union in_flow_tbl_op_data0_u {
+union in_flow_tbl_op_data_u {
 	a_uint32_t val;
-	struct in_flow_tbl_op_data0 bf;
+	struct in_flow_tbl_op_data bf;
 };
 
-/*[register] IN_FLOW_TBL_OP_DATA1*/
-#define IN_FLOW_TBL_OP_DATA1
+/*[register] FLOW_HOST_TBL_OP_DATA*/
+#define FLOW_HOST_TBL_OP_DATA
 #if defined(APPE)
-#define IN_FLOW_TBL_OP_DATA1_ADDRESS 0x554
+#define FLOW_HOST_TBL_OP_DATA_ADDRESS 0x58c
 #else
-#define IN_FLOW_TBL_OP_DATA1_ADDRESS 0x3c4
+#define FLOW_HOST_TBL_OP_DATA_ADDRESS 0x3e4
 #endif
-#define IN_FLOW_TBL_OP_DATA1_NUM     1
-#define IN_FLOW_TBL_OP_DATA1_INC     0x4
-#define IN_FLOW_TBL_OP_DATA1_TYPE    REG_TYPE_RW
-#define IN_FLOW_TBL_OP_DATA1_DEFAULT 0x0
+#define FLOW_HOST_TBL_OP_DATA_NUM     10
+#define FLOW_HOST_TBL_OP_DATA_INC     0x4
+#define FLOW_HOST_TBL_OP_DATA_TYPE    REG_TYPE_RW
+#define FLOW_HOST_TBL_OP_DATA_DEFAULT 0x0
 	/*[field] DATA*/
-	#define IN_FLOW_TBL_OP_DATA1_DATA
-	#define IN_FLOW_TBL_OP_DATA1_DATA_OFFSET  0
-	#define IN_FLOW_TBL_OP_DATA1_DATA_LEN     32
-	#define IN_FLOW_TBL_OP_DATA1_DATA_DEFAULT 0x0
+	#define FLOW_HOST_TBL_OP_DATA_DATA
+	#define FLOW_HOST_TBL_OP_DATA_DATA_OFFSET  0
+	#define FLOW_HOST_TBL_OP_DATA_DATA_LEN     32
+	#define FLOW_HOST_TBL_OP_DATA_DATA_DEFAULT 0x0
 
-struct in_flow_tbl_op_data1 {
+struct flow_host_tbl_op_data {
 	a_uint32_t  data:32;
 };
 
-union in_flow_tbl_op_data1_u {
+union flow_host_tbl_op_data_u {
 	a_uint32_t val;
-	struct in_flow_tbl_op_data1 bf;
-};
-
-/*[register] IN_FLOW_TBL_OP_DATA2*/
-#define IN_FLOW_TBL_OP_DATA2
-#if defined(APPE)
-#define IN_FLOW_TBL_OP_DATA2_ADDRESS 0x558
-#else
-#define IN_FLOW_TBL_OP_DATA2_ADDRESS 0x3c8
-#endif
-#define IN_FLOW_TBL_OP_DATA2_NUM     1
-#define IN_FLOW_TBL_OP_DATA2_INC     0x4
-#define IN_FLOW_TBL_OP_DATA2_TYPE    REG_TYPE_RW
-#define IN_FLOW_TBL_OP_DATA2_DEFAULT 0x0
-	/*[field] DATA*/
-	#define IN_FLOW_TBL_OP_DATA2_DATA
-	#define IN_FLOW_TBL_OP_DATA2_DATA_OFFSET  0
-	#define IN_FLOW_TBL_OP_DATA2_DATA_LEN     32
-	#define IN_FLOW_TBL_OP_DATA2_DATA_DEFAULT 0x0
-
-struct in_flow_tbl_op_data2 {
-	a_uint32_t  data:32;
-};
-
-union in_flow_tbl_op_data2_u {
-	a_uint32_t val;
-	struct in_flow_tbl_op_data2 bf;
-};
-
-/*[register] IN_FLOW_TBL_OP_DATA3*/
-#define IN_FLOW_TBL_OP_DATA3
-#if defined(APPE)
-#define IN_FLOW_TBL_OP_DATA3_ADDRESS 0x55c
-#else
-#define IN_FLOW_TBL_OP_DATA3_ADDRESS 0x3cc
-#endif
-#define IN_FLOW_TBL_OP_DATA3_NUM     1
-#define IN_FLOW_TBL_OP_DATA3_INC     0x4
-#define IN_FLOW_TBL_OP_DATA3_TYPE    REG_TYPE_RW
-#define IN_FLOW_TBL_OP_DATA3_DEFAULT 0x0
-	/*[field] DATA*/
-	#define IN_FLOW_TBL_OP_DATA3_DATA
-	#define IN_FLOW_TBL_OP_DATA3_DATA_OFFSET  0
-	#define IN_FLOW_TBL_OP_DATA3_DATA_LEN     32
-	#define IN_FLOW_TBL_OP_DATA3_DATA_DEFAULT 0x0
-
-struct in_flow_tbl_op_data3 {
-	a_uint32_t  data:32;
-};
-
-union in_flow_tbl_op_data3_u {
-	a_uint32_t val;
-	struct in_flow_tbl_op_data3 bf;
-};
-
-/*[register] IN_FLOW_TBL_OP_DATA4*/
-#define IN_FLOW_TBL_OP_DATA4
-#if defined(APPE)
-#define IN_FLOW_TBL_OP_DATA4_ADDRESS 0x560
-#else
-#define IN_FLOW_TBL_OP_DATA4_ADDRESS 0x3d0
-#endif
-#define IN_FLOW_TBL_OP_DATA4_NUM     1
-#define IN_FLOW_TBL_OP_DATA4_INC     0x4
-#define IN_FLOW_TBL_OP_DATA4_TYPE    REG_TYPE_RW
-#define IN_FLOW_TBL_OP_DATA4_DEFAULT 0x0
-	/*[field] DATA*/
-	#define IN_FLOW_TBL_OP_DATA4_DATA
-	#define IN_FLOW_TBL_OP_DATA4_DATA_OFFSET  0
-	#define IN_FLOW_TBL_OP_DATA4_DATA_LEN     32
-	#define IN_FLOW_TBL_OP_DATA4_DATA_DEFAULT 0x0
-
-struct in_flow_tbl_op_data4 {
-	a_uint32_t  data:32;
-};
-
-union in_flow_tbl_op_data4_u {
-	a_uint32_t val;
-	struct in_flow_tbl_op_data4 bf;
-};
-
-/*[register] IN_FLOW_TBL_OP_DATA5*/
-#define IN_FLOW_TBL_OP_DATA5
-#if defined(APPE)
-#define IN_FLOW_TBL_OP_DATA5_ADDRESS 0x564
-#else
-#define IN_FLOW_TBL_OP_DATA5_ADDRESS 0x3d4
-#endif
-#define IN_FLOW_TBL_OP_DATA5_NUM     1
-#define IN_FLOW_TBL_OP_DATA5_INC     0x4
-#define IN_FLOW_TBL_OP_DATA5_TYPE    REG_TYPE_RW
-#define IN_FLOW_TBL_OP_DATA5_DEFAULT 0x0
-	/*[field] DATA*/
-	#define IN_FLOW_TBL_OP_DATA5_DATA
-	#define IN_FLOW_TBL_OP_DATA5_DATA_OFFSET  0
-	#define IN_FLOW_TBL_OP_DATA5_DATA_LEN     32
-	#define IN_FLOW_TBL_OP_DATA5_DATA_DEFAULT 0x0
-
-struct in_flow_tbl_op_data5 {
-	a_uint32_t  data:32;
-};
-
-union in_flow_tbl_op_data5_u {
-	a_uint32_t val;
-	struct in_flow_tbl_op_data5 bf;
-};
-
-/*[register] IN_FLOW_TBL_OP_DATA6*/
-#define IN_FLOW_TBL_OP_DATA6
-#if defined(APPE)
-#define IN_FLOW_TBL_OP_DATA6_ADDRESS 0x568
-#else
-#define IN_FLOW_TBL_OP_DATA6_ADDRESS 0x3d8
-#endif
-#define IN_FLOW_TBL_OP_DATA6_NUM     1
-#define IN_FLOW_TBL_OP_DATA6_INC     0x4
-#define IN_FLOW_TBL_OP_DATA6_TYPE    REG_TYPE_RW
-#define IN_FLOW_TBL_OP_DATA6_DEFAULT 0x0
-	/*[field] DATA*/
-	#define IN_FLOW_TBL_OP_DATA6_DATA
-	#define IN_FLOW_TBL_OP_DATA6_DATA_OFFSET  0
-	#define IN_FLOW_TBL_OP_DATA6_DATA_LEN     32
-	#define IN_FLOW_TBL_OP_DATA6_DATA_DEFAULT 0x0
-
-struct in_flow_tbl_op_data6 {
-	a_uint32_t  data:32;
-};
-
-union in_flow_tbl_op_data6_u {
-	a_uint32_t val;
-	struct in_flow_tbl_op_data6 bf;
-};
-
-/*[register] IN_FLOW_TBL_OP_DATA7*/
-#define IN_FLOW_TBL_OP_DATA7
-#if defined(APPE)
-#define IN_FLOW_TBL_OP_DATA7_ADDRESS 0x56c
-#else
-#define IN_FLOW_TBL_OP_DATA7_ADDRESS 0x3dc
-#endif
-#define IN_FLOW_TBL_OP_DATA7_NUM     1
-#define IN_FLOW_TBL_OP_DATA7_INC     0x4
-#define IN_FLOW_TBL_OP_DATA7_TYPE    REG_TYPE_RW
-#define IN_FLOW_TBL_OP_DATA7_DEFAULT 0x0
-	/*[field] DATA*/
-	#define IN_FLOW_TBL_OP_DATA7_DATA
-	#define IN_FLOW_TBL_OP_DATA7_DATA_OFFSET  0
-	#define IN_FLOW_TBL_OP_DATA7_DATA_LEN     32
-	#define IN_FLOW_TBL_OP_DATA7_DATA_DEFAULT 0x0
-
-struct in_flow_tbl_op_data7 {
-	a_uint32_t  data:32;
-};
-
-union in_flow_tbl_op_data7_u {
-	a_uint32_t val;
-	struct in_flow_tbl_op_data7 bf;
-};
-
-/*[register] IN_FLOW_TBL_OP_DATA8*/
-#define IN_FLOW_TBL_OP_DATA8
-#if defined(APPE)
-#define IN_FLOW_TBL_OP_DATA8_ADDRESS 0x570
-#else
-#define IN_FLOW_TBL_OP_DATA8_ADDRESS 0x3e0
-#endif
-#define IN_FLOW_TBL_OP_DATA8_NUM     1
-#define IN_FLOW_TBL_OP_DATA8_INC     0x4
-#define IN_FLOW_TBL_OP_DATA8_TYPE    REG_TYPE_RW
-#define IN_FLOW_TBL_OP_DATA8_DEFAULT 0x0
-	/*[field] DATA*/
-	#define IN_FLOW_TBL_OP_DATA8_DATA
-	#define IN_FLOW_TBL_OP_DATA8_DATA_OFFSET  0
-	#define IN_FLOW_TBL_OP_DATA8_DATA_LEN     32
-	#define IN_FLOW_TBL_OP_DATA8_DATA_DEFAULT 0x0
-
-struct in_flow_tbl_op_data8 {
-	a_uint32_t  data:32;
-};
-
-union in_flow_tbl_op_data8_u {
-	a_uint32_t val;
-	struct in_flow_tbl_op_data8 bf;
-};
-
-#if defined(APPE)
-/*[register] IN_FLOW_TBL_OP_DATA9*/
-#define IN_FLOW_TBL_OP_DATA9
-#define IN_FLOW_TBL_OP_DATA9_ADDRESS 0x574
-#define IN_FLOW_TBL_OP_DATA9_NUM     1
-#define IN_FLOW_TBL_OP_DATA9_INC     0x4
-#define IN_FLOW_TBL_OP_DATA9_TYPE    REG_TYPE_RW
-#define IN_FLOW_TBL_OP_DATA9_DEFAULT 0x0
-	/*[field] DATA*/
-	#define IN_FLOW_TBL_OP_DATA9_DATA
-	#define IN_FLOW_TBL_OP_DATA9_DATA_OFFSET  0
-	#define IN_FLOW_TBL_OP_DATA9_DATA_LEN     32
-	#define IN_FLOW_TBL_OP_DATA9_DATA_DEFAULT 0x0
-
-struct in_flow_tbl_op_data9 {
-	a_uint32_t  data:32;
-};
-
-union in_flow_tbl_op_data9_u {
-	a_uint32_t val;
-	struct in_flow_tbl_op_data9 bf;
-};
-
-/*[register] IN_FLOW_TBL_OP_DATA10*/
-#define IN_FLOW_TBL_OP_DATA10
-#define IN_FLOW_TBL_OP_DATA10_ADDRESS 0x578
-#define IN_FLOW_TBL_OP_DATA10_NUM     1
-#define IN_FLOW_TBL_OP_DATA10_INC     0x4
-#define IN_FLOW_TBL_OP_DATA10_TYPE    REG_TYPE_RW
-#define IN_FLOW_TBL_OP_DATA10_DEFAULT 0x0
-	/*[field] DATA*/
-	#define IN_FLOW_TBL_OP_DATA10_DATA
-	#define IN_FLOW_TBL_OP_DATA10_DATA_OFFSET  0
-	#define IN_FLOW_TBL_OP_DATA10_DATA_LEN     32
-	#define IN_FLOW_TBL_OP_DATA10_DATA_DEFAULT 0x0
-
-struct in_flow_tbl_op_data10 {
-	a_uint32_t  data:32;
-};
-
-union in_flow_tbl_op_data10_u {
-	a_uint32_t val;
-	struct in_flow_tbl_op_data10 bf;
-};
-#endif
-
-/*[register] FLOW_HOST_TBL_OP_DATA0*/
-#define FLOW_HOST_TBL_OP_DATA0
-#if defined(APPE)
-#define FLOW_HOST_TBL_OP_DATA0_ADDRESS 0x58c
-#else
-#define FLOW_HOST_TBL_OP_DATA0_ADDRESS 0x3e4
-#endif
-#define FLOW_HOST_TBL_OP_DATA0_NUM     1
-#define FLOW_HOST_TBL_OP_DATA0_INC     0x4
-#define FLOW_HOST_TBL_OP_DATA0_TYPE    REG_TYPE_RW
-#define FLOW_HOST_TBL_OP_DATA0_DEFAULT 0x0
-	/*[field] DATA*/
-	#define FLOW_HOST_TBL_OP_DATA0_DATA
-	#define FLOW_HOST_TBL_OP_DATA0_DATA_OFFSET  0
-	#define FLOW_HOST_TBL_OP_DATA0_DATA_LEN     32
-	#define FLOW_HOST_TBL_OP_DATA0_DATA_DEFAULT 0x0
-
-struct flow_host_tbl_op_data0 {
-	a_uint32_t  data:32;
-};
-
-union flow_host_tbl_op_data0_u {
-	a_uint32_t val;
-	struct flow_host_tbl_op_data0 bf;
-};
-
-/*[register] FLOW_HOST_TBL_OP_DATA1*/
-#define FLOW_HOST_TBL_OP_DATA1
-#if defined(APPE)
-#define FLOW_HOST_TBL_OP_DATA1_ADDRESS 0x590
-#else
-#define FLOW_HOST_TBL_OP_DATA1_ADDRESS 0x3e8
-#endif
-#define FLOW_HOST_TBL_OP_DATA1_NUM     1
-#define FLOW_HOST_TBL_OP_DATA1_INC     0x4
-#define FLOW_HOST_TBL_OP_DATA1_TYPE    REG_TYPE_RW
-#define FLOW_HOST_TBL_OP_DATA1_DEFAULT 0x0
-	/*[field] DATA*/
-	#define FLOW_HOST_TBL_OP_DATA1_DATA
-	#define FLOW_HOST_TBL_OP_DATA1_DATA_OFFSET  0
-	#define FLOW_HOST_TBL_OP_DATA1_DATA_LEN     32
-	#define FLOW_HOST_TBL_OP_DATA1_DATA_DEFAULT 0x0
-
-struct flow_host_tbl_op_data1 {
-	a_uint32_t  data:32;
-};
-
-union flow_host_tbl_op_data1_u {
-	a_uint32_t val;
-	struct flow_host_tbl_op_data1 bf;
-};
-
-/*[register] FLOW_HOST_TBL_OP_DATA2*/
-#define FLOW_HOST_TBL_OP_DATA2
-#if defined(APPE)
-#define FLOW_HOST_TBL_OP_DATA2_ADDRESS 0x594
-#else
-#define FLOW_HOST_TBL_OP_DATA2_ADDRESS 0x3ec
-#endif
-#define FLOW_HOST_TBL_OP_DATA2_NUM     1
-#define FLOW_HOST_TBL_OP_DATA2_INC     0x4
-#define FLOW_HOST_TBL_OP_DATA2_TYPE    REG_TYPE_RW
-#define FLOW_HOST_TBL_OP_DATA2_DEFAULT 0x0
-	/*[field] DATA*/
-	#define FLOW_HOST_TBL_OP_DATA2_DATA
-	#define FLOW_HOST_TBL_OP_DATA2_DATA_OFFSET  0
-	#define FLOW_HOST_TBL_OP_DATA2_DATA_LEN     32
-	#define FLOW_HOST_TBL_OP_DATA2_DATA_DEFAULT 0x0
-
-struct flow_host_tbl_op_data2 {
-	a_uint32_t  data:32;
-};
-
-union flow_host_tbl_op_data2_u {
-	a_uint32_t val;
-	struct flow_host_tbl_op_data2 bf;
-};
-
-/*[register] FLOW_HOST_TBL_OP_DATA3*/
-#define FLOW_HOST_TBL_OP_DATA3
-#if defined(APPE)
-#define FLOW_HOST_TBL_OP_DATA3_ADDRESS 0x598
-#else
-#define FLOW_HOST_TBL_OP_DATA3_ADDRESS 0x3f0
-#endif
-#define FLOW_HOST_TBL_OP_DATA3_NUM     1
-#define FLOW_HOST_TBL_OP_DATA3_INC     0x4
-#define FLOW_HOST_TBL_OP_DATA3_TYPE    REG_TYPE_RW
-#define FLOW_HOST_TBL_OP_DATA3_DEFAULT 0x0
-	/*[field] DATA*/
-	#define FLOW_HOST_TBL_OP_DATA3_DATA
-	#define FLOW_HOST_TBL_OP_DATA3_DATA_OFFSET  0
-	#define FLOW_HOST_TBL_OP_DATA3_DATA_LEN     32
-	#define FLOW_HOST_TBL_OP_DATA3_DATA_DEFAULT 0x0
-
-struct flow_host_tbl_op_data3 {
-	a_uint32_t  data:32;
-};
-
-union flow_host_tbl_op_data3_u {
-	a_uint32_t val;
-	struct flow_host_tbl_op_data3 bf;
-};
-
-/*[register] FLOW_HOST_TBL_OP_DATA4*/
-#define FLOW_HOST_TBL_OP_DATA4
-#if defined(APPE)
-#define FLOW_HOST_TBL_OP_DATA4_ADDRESS 0x59c
-#else
-#define FLOW_HOST_TBL_OP_DATA4_ADDRESS 0x3f4
-#endif
-#define FLOW_HOST_TBL_OP_DATA4_NUM     1
-#define FLOW_HOST_TBL_OP_DATA4_INC     0x4
-#define FLOW_HOST_TBL_OP_DATA4_TYPE    REG_TYPE_RW
-#define FLOW_HOST_TBL_OP_DATA4_DEFAULT 0x0
-	/*[field] DATA*/
-	#define FLOW_HOST_TBL_OP_DATA4_DATA
-	#define FLOW_HOST_TBL_OP_DATA4_DATA_OFFSET  0
-	#define FLOW_HOST_TBL_OP_DATA4_DATA_LEN     32
-	#define FLOW_HOST_TBL_OP_DATA4_DATA_DEFAULT 0x0
-
-struct flow_host_tbl_op_data4 {
-	a_uint32_t  data:32;
-};
-
-union flow_host_tbl_op_data4_u {
-	a_uint32_t val;
-	struct flow_host_tbl_op_data4 bf;
-};
-
-/*[register] FLOW_HOST_TBL_OP_DATA5*/
-#define FLOW_HOST_TBL_OP_DATA5
-#if defined(APPE)
-#define FLOW_HOST_TBL_OP_DATA5_ADDRESS 0x5a0
-#else
-#define FLOW_HOST_TBL_OP_DATA5_ADDRESS 0x3f8
-#endif
-#define FLOW_HOST_TBL_OP_DATA5_NUM     1
-#define FLOW_HOST_TBL_OP_DATA5_INC     0x4
-#define FLOW_HOST_TBL_OP_DATA5_TYPE    REG_TYPE_RW
-#define FLOW_HOST_TBL_OP_DATA5_DEFAULT 0x0
-	/*[field] DATA*/
-	#define FLOW_HOST_TBL_OP_DATA5_DATA
-	#define FLOW_HOST_TBL_OP_DATA5_DATA_OFFSET  0
-	#define FLOW_HOST_TBL_OP_DATA5_DATA_LEN     32
-	#define FLOW_HOST_TBL_OP_DATA5_DATA_DEFAULT 0x0
-
-struct flow_host_tbl_op_data5 {
-	a_uint32_t  data:32;
-};
-
-union flow_host_tbl_op_data5_u {
-	a_uint32_t val;
-	struct flow_host_tbl_op_data5 bf;
-};
-
-/*[register] FLOW_HOST_TBL_OP_DATA6*/
-#define FLOW_HOST_TBL_OP_DATA6
-#if defined(APPE)
-#define FLOW_HOST_TBL_OP_DATA6_ADDRESS 0x5a4
-#else
-#define FLOW_HOST_TBL_OP_DATA6_ADDRESS 0x3fc
-#endif
-#define FLOW_HOST_TBL_OP_DATA6_NUM     1
-#define FLOW_HOST_TBL_OP_DATA6_INC     0x4
-#define FLOW_HOST_TBL_OP_DATA6_TYPE    REG_TYPE_RW
-#define FLOW_HOST_TBL_OP_DATA6_DEFAULT 0x0
-	/*[field] DATA*/
-	#define FLOW_HOST_TBL_OP_DATA6_DATA
-	#define FLOW_HOST_TBL_OP_DATA6_DATA_OFFSET  0
-	#define FLOW_HOST_TBL_OP_DATA6_DATA_LEN     32
-	#define FLOW_HOST_TBL_OP_DATA6_DATA_DEFAULT 0x0
-
-struct flow_host_tbl_op_data6 {
-	a_uint32_t  data:32;
-};
-
-union flow_host_tbl_op_data6_u {
-	a_uint32_t val;
-	struct flow_host_tbl_op_data6 bf;
-};
-
-/*[register] FLOW_HOST_TBL_OP_DATA7*/
-#define FLOW_HOST_TBL_OP_DATA7
-#if defined(APPE)
-#define FLOW_HOST_TBL_OP_DATA7_ADDRESS 0x5a8
-#else
-#define FLOW_HOST_TBL_OP_DATA7_ADDRESS 0x400
-#endif
-#define FLOW_HOST_TBL_OP_DATA7_NUM     1
-#define FLOW_HOST_TBL_OP_DATA7_INC     0x4
-#define FLOW_HOST_TBL_OP_DATA7_TYPE    REG_TYPE_RW
-#define FLOW_HOST_TBL_OP_DATA7_DEFAULT 0x0
-	/*[field] DATA*/
-	#define FLOW_HOST_TBL_OP_DATA7_DATA
-	#define FLOW_HOST_TBL_OP_DATA7_DATA_OFFSET  0
-	#define FLOW_HOST_TBL_OP_DATA7_DATA_LEN     32
-	#define FLOW_HOST_TBL_OP_DATA7_DATA_DEFAULT 0x0
-
-struct flow_host_tbl_op_data7 {
-	a_uint32_t  data:32;
-};
-
-union flow_host_tbl_op_data7_u {
-	a_uint32_t val;
-	struct flow_host_tbl_op_data7 bf;
-};
-
-/*[register] FLOW_HOST_TBL_OP_DATA8*/
-#define FLOW_HOST_TBL_OP_DATA8
-#if defined(APPE)
-#define FLOW_HOST_TBL_OP_DATA8_ADDRESS 0x5ac
-#else
-#define FLOW_HOST_TBL_OP_DATA8_ADDRESS 0x404
-#endif
-#define FLOW_HOST_TBL_OP_DATA8_NUM     1
-#define FLOW_HOST_TBL_OP_DATA8_INC     0x4
-#define FLOW_HOST_TBL_OP_DATA8_TYPE    REG_TYPE_RW
-#define FLOW_HOST_TBL_OP_DATA8_DEFAULT 0x0
-	/*[field] DATA*/
-	#define FLOW_HOST_TBL_OP_DATA8_DATA
-	#define FLOW_HOST_TBL_OP_DATA8_DATA_OFFSET  0
-	#define FLOW_HOST_TBL_OP_DATA8_DATA_LEN     32
-	#define FLOW_HOST_TBL_OP_DATA8_DATA_DEFAULT 0x0
-
-struct flow_host_tbl_op_data8 {
-	a_uint32_t  data:32;
-};
-
-union flow_host_tbl_op_data8_u {
-	a_uint32_t val;
-	struct flow_host_tbl_op_data8 bf;
-};
-
-/*[register] FLOW_HOST_TBL_OP_DATA9*/
-#define FLOW_HOST_TBL_OP_DATA9
-#if defined(APPE)
-#define FLOW_HOST_TBL_OP_DATA9_ADDRESS 0x5b0
-#else
-#define FLOW_HOST_TBL_OP_DATA9_ADDRESS 0x408
-#endif
-#define FLOW_HOST_TBL_OP_DATA9_NUM     1
-#define FLOW_HOST_TBL_OP_DATA9_INC     0x4
-#define FLOW_HOST_TBL_OP_DATA9_TYPE    REG_TYPE_RW
-#define FLOW_HOST_TBL_OP_DATA9_DEFAULT 0x0
-	/*[field] DATA*/
-	#define FLOW_HOST_TBL_OP_DATA9_DATA
-	#define FLOW_HOST_TBL_OP_DATA9_DATA_OFFSET  0
-	#define FLOW_HOST_TBL_OP_DATA9_DATA_LEN     32
-	#define FLOW_HOST_TBL_OP_DATA9_DATA_DEFAULT 0x0
-
-struct flow_host_tbl_op_data9 {
-	a_uint32_t  data:32;
-};
-
-union flow_host_tbl_op_data9_u {
-	a_uint32_t val;
-	struct flow_host_tbl_op_data9 bf;
+	struct flow_host_tbl_op_data bf;
 };
 
 /*[register] IN_FLOW_TBL_OP_RSLT*/
@@ -912,7 +425,7 @@ union flow_host_tbl_op_data9_u {
 #else
 #define IN_FLOW_TBL_OP_RSLT_ADDRESS 0x40c
 #endif
-#define IN_FLOW_TBL_OP_RSLT_NUM     1
+#define IN_FLOW_TBL_OP_RSLT_NUM     10
 #define IN_FLOW_TBL_OP_RSLT_INC     0x4
 #define IN_FLOW_TBL_OP_RSLT_TYPE    REG_TYPE_RO
 #define IN_FLOW_TBL_OP_RSLT_DEFAULT 0x0
@@ -1085,544 +598,57 @@ union in_flow_host_tbl_rd_op_u {
 	struct in_flow_host_tbl_rd_op bf;
 };
 
-/*[register] IN_FLOW_TBL_RD_OP_DATA0*/
-#define IN_FLOW_TBL_RD_OP_DATA0
+/*[register] IN_FLOW_TBL_RD_OP_DATA*/
+#define IN_FLOW_TBL_RD_OP_DATA
 #if defined(APPE)
-#define IN_FLOW_TBL_RD_OP_DATA0_ADDRESS 0x614
+#define IN_FLOW_TBL_RD_OP_DATA_ADDRESS 0x614
+#define IN_FLOW_TBL_RD_OP_DATA_NUM     11
 #else
-#define IN_FLOW_TBL_RD_OP_DATA0_ADDRESS 0x41c
+#define IN_FLOW_TBL_RD_OP_DATA_ADDRESS 0x41c
+#define IN_FLOW_TBL_RD_OP_DATA_NUM     9
 #endif
-#define IN_FLOW_TBL_RD_OP_DATA0_NUM     1
-#define IN_FLOW_TBL_RD_OP_DATA0_INC     0x4
-#define IN_FLOW_TBL_RD_OP_DATA0_TYPE    REG_TYPE_RW
-#define IN_FLOW_TBL_RD_OP_DATA0_DEFAULT 0x0
+#define IN_FLOW_TBL_RD_OP_DATA_INC     0x4
+#define IN_FLOW_TBL_RD_OP_DATA_TYPE    REG_TYPE_RW
+#define IN_FLOW_TBL_RD_OP_DATA_DEFAULT 0x0
 	/*[field] DATA*/
-	#define IN_FLOW_TBL_RD_OP_DATA0_DATA
-	#define IN_FLOW_TBL_RD_OP_DATA0_DATA_OFFSET  0
-	#define IN_FLOW_TBL_RD_OP_DATA0_DATA_LEN     32
-	#define IN_FLOW_TBL_RD_OP_DATA0_DATA_DEFAULT 0x0
+	#define IN_FLOW_TBL_RD_OP_DATA_DATA
+	#define IN_FLOW_TBL_RD_OP_DATA_DATA_OFFSET  0
+	#define IN_FLOW_TBL_RD_OP_DATA_DATA_LEN     32
+	#define IN_FLOW_TBL_RD_OP_DATA_DATA_DEFAULT 0x0
 
-struct in_flow_tbl_rd_op_data0 {
+struct in_flow_tbl_rd_op_data {
 	a_uint32_t  data:32;
 };
 
-union in_flow_tbl_rd_op_data0_u {
+union in_flow_tbl_rd_op_data_u {
 	a_uint32_t val;
-	struct in_flow_tbl_rd_op_data0 bf;
+	struct in_flow_tbl_rd_op_data bf;
 };
 
-/*[register] IN_FLOW_TBL_RD_OP_DATA1*/
-#define IN_FLOW_TBL_RD_OP_DATA1
+/*[register] FLOW_HOST_TBL_RD_OP_DATA*/
+#define FLOW_HOST_TBL_RD_OP_DATA
 #if defined(APPE)
-#define IN_FLOW_TBL_RD_OP_DATA1_ADDRESS 0x618
+#define FLOW_HOST_TBL_RD_OP_DATA_ADDRESS 0x650
 #else
-#define IN_FLOW_TBL_RD_OP_DATA1_ADDRESS 0x420
+#define FLOW_HOST_TBL_RD_OP_DATA_ADDRESS 0x440
 #endif
-#define IN_FLOW_TBL_RD_OP_DATA1_NUM     1
-#define IN_FLOW_TBL_RD_OP_DATA1_INC     0x4
-#define IN_FLOW_TBL_RD_OP_DATA1_TYPE    REG_TYPE_RW
-#define IN_FLOW_TBL_RD_OP_DATA1_DEFAULT 0x0
+#define FLOW_HOST_TBL_RD_OP_DATA_NUM     10
+#define FLOW_HOST_TBL_RD_OP_DATA_INC     0x4
+#define FLOW_HOST_TBL_RD_OP_DATA_TYPE    REG_TYPE_RW
+#define FLOW_HOST_TBL_RD_OP_DATA_DEFAULT 0x0
 	/*[field] DATA*/
-	#define IN_FLOW_TBL_RD_OP_DATA1_DATA
-	#define IN_FLOW_TBL_RD_OP_DATA1_DATA_OFFSET  0
-	#define IN_FLOW_TBL_RD_OP_DATA1_DATA_LEN     32
-	#define IN_FLOW_TBL_RD_OP_DATA1_DATA_DEFAULT 0x0
+	#define FLOW_HOST_TBL_RD_OP_DATA_DATA
+	#define FLOW_HOST_TBL_RD_OP_DATA_DATA_OFFSET  0
+	#define FLOW_HOST_TBL_RD_OP_DATA_DATA_LEN     32
+	#define FLOW_HOST_TBL_RD_OP_DATA_DATA_DEFAULT 0x0
 
-struct in_flow_tbl_rd_op_data1 {
+struct flow_host_tbl_rd_op_data {
 	a_uint32_t  data:32;
 };
 
-union in_flow_tbl_rd_op_data1_u {
+union flow_host_tbl_rd_op_data_u {
 	a_uint32_t val;
-	struct in_flow_tbl_rd_op_data1 bf;
-};
-
-/*[register] IN_FLOW_TBL_RD_OP_DATA2*/
-#define IN_FLOW_TBL_RD_OP_DATA2
-#if defined(APPE)
-#define IN_FLOW_TBL_RD_OP_DATA2_ADDRESS 0x61c
-#else
-#define IN_FLOW_TBL_RD_OP_DATA2_ADDRESS 0x424
-#endif
-#define IN_FLOW_TBL_RD_OP_DATA2_NUM     1
-#define IN_FLOW_TBL_RD_OP_DATA2_INC     0x4
-#define IN_FLOW_TBL_RD_OP_DATA2_TYPE    REG_TYPE_RW
-#define IN_FLOW_TBL_RD_OP_DATA2_DEFAULT 0x0
-	/*[field] DATA*/
-	#define IN_FLOW_TBL_RD_OP_DATA2_DATA
-	#define IN_FLOW_TBL_RD_OP_DATA2_DATA_OFFSET  0
-	#define IN_FLOW_TBL_RD_OP_DATA2_DATA_LEN     32
-	#define IN_FLOW_TBL_RD_OP_DATA2_DATA_DEFAULT 0x0
-
-struct in_flow_tbl_rd_op_data2 {
-	a_uint32_t  data:32;
-};
-
-union in_flow_tbl_rd_op_data2_u {
-	a_uint32_t val;
-	struct in_flow_tbl_rd_op_data2 bf;
-};
-
-/*[register] IN_FLOW_TBL_RD_OP_DATA3*/
-#define IN_FLOW_TBL_RD_OP_DATA3
-#if defined(APPE)
-#define IN_FLOW_TBL_RD_OP_DATA3_ADDRESS 0x620
-#else
-#define IN_FLOW_TBL_RD_OP_DATA3_ADDRESS 0x428
-#endif
-#define IN_FLOW_TBL_RD_OP_DATA3_NUM     1
-#define IN_FLOW_TBL_RD_OP_DATA3_INC     0x4
-#define IN_FLOW_TBL_RD_OP_DATA3_TYPE    REG_TYPE_RW
-#define IN_FLOW_TBL_RD_OP_DATA3_DEFAULT 0x0
-	/*[field] DATA*/
-	#define IN_FLOW_TBL_RD_OP_DATA3_DATA
-	#define IN_FLOW_TBL_RD_OP_DATA3_DATA_OFFSET  0
-	#define IN_FLOW_TBL_RD_OP_DATA3_DATA_LEN     32
-	#define IN_FLOW_TBL_RD_OP_DATA3_DATA_DEFAULT 0x0
-
-struct in_flow_tbl_rd_op_data3 {
-	a_uint32_t  data:32;
-};
-
-union in_flow_tbl_rd_op_data3_u {
-	a_uint32_t val;
-	struct in_flow_tbl_rd_op_data3 bf;
-};
-
-/*[register] IN_FLOW_TBL_RD_OP_DATA4*/
-#define IN_FLOW_TBL_RD_OP_DATA4
-#if defined(APPE)
-#define IN_FLOW_TBL_RD_OP_DATA4_ADDRESS 0x624
-#else
-#define IN_FLOW_TBL_RD_OP_DATA4_ADDRESS 0x42c
-#endif
-#define IN_FLOW_TBL_RD_OP_DATA4_NUM     1
-#define IN_FLOW_TBL_RD_OP_DATA4_INC     0x4
-#define IN_FLOW_TBL_RD_OP_DATA4_TYPE    REG_TYPE_RW
-#define IN_FLOW_TBL_RD_OP_DATA4_DEFAULT 0x0
-	/*[field] DATA*/
-	#define IN_FLOW_TBL_RD_OP_DATA4_DATA
-	#define IN_FLOW_TBL_RD_OP_DATA4_DATA_OFFSET  0
-	#define IN_FLOW_TBL_RD_OP_DATA4_DATA_LEN     32
-	#define IN_FLOW_TBL_RD_OP_DATA4_DATA_DEFAULT 0x0
-
-struct in_flow_tbl_rd_op_data4 {
-	a_uint32_t  data:32;
-};
-
-union in_flow_tbl_rd_op_data4_u {
-	a_uint32_t val;
-	struct in_flow_tbl_rd_op_data4 bf;
-};
-
-/*[register] IN_FLOW_TBL_RD_OP_DATA5*/
-#define IN_FLOW_TBL_RD_OP_DATA5
-#if defined(APPE)
-#define IN_FLOW_TBL_RD_OP_DATA5_ADDRESS 0x628
-#else
-#define IN_FLOW_TBL_RD_OP_DATA5_ADDRESS 0x430
-#endif
-#define IN_FLOW_TBL_RD_OP_DATA5_NUM     1
-#define IN_FLOW_TBL_RD_OP_DATA5_INC     0x4
-#define IN_FLOW_TBL_RD_OP_DATA5_TYPE    REG_TYPE_RW
-#define IN_FLOW_TBL_RD_OP_DATA5_DEFAULT 0x0
-	/*[field] DATA*/
-	#define IN_FLOW_TBL_RD_OP_DATA5_DATA
-	#define IN_FLOW_TBL_RD_OP_DATA5_DATA_OFFSET  0
-	#define IN_FLOW_TBL_RD_OP_DATA5_DATA_LEN     32
-	#define IN_FLOW_TBL_RD_OP_DATA5_DATA_DEFAULT 0x0
-
-struct in_flow_tbl_rd_op_data5 {
-	a_uint32_t  data:32;
-};
-
-union in_flow_tbl_rd_op_data5_u {
-	a_uint32_t val;
-	struct in_flow_tbl_rd_op_data5 bf;
-};
-
-/*[register] IN_FLOW_TBL_RD_OP_DATA6*/
-#define IN_FLOW_TBL_RD_OP_DATA6
-#if defined(APPE)
-#define IN_FLOW_TBL_RD_OP_DATA6_ADDRESS 0x62c
-#else
-#define IN_FLOW_TBL_RD_OP_DATA6_ADDRESS 0x434
-#endif
-#define IN_FLOW_TBL_RD_OP_DATA6_NUM     1
-#define IN_FLOW_TBL_RD_OP_DATA6_INC     0x4
-#define IN_FLOW_TBL_RD_OP_DATA6_TYPE    REG_TYPE_RW
-#define IN_FLOW_TBL_RD_OP_DATA6_DEFAULT 0x0
-	/*[field] DATA*/
-	#define IN_FLOW_TBL_RD_OP_DATA6_DATA
-	#define IN_FLOW_TBL_RD_OP_DATA6_DATA_OFFSET  0
-	#define IN_FLOW_TBL_RD_OP_DATA6_DATA_LEN     32
-	#define IN_FLOW_TBL_RD_OP_DATA6_DATA_DEFAULT 0x0
-
-struct in_flow_tbl_rd_op_data6 {
-	a_uint32_t  data:32;
-};
-
-union in_flow_tbl_rd_op_data6_u {
-	a_uint32_t val;
-	struct in_flow_tbl_rd_op_data6 bf;
-};
-
-/*[register] IN_FLOW_TBL_RD_OP_DATA7*/
-#define IN_FLOW_TBL_RD_OP_DATA7
-#if defined(APPE)
-#define IN_FLOW_TBL_RD_OP_DATA7_ADDRESS 0x630
-#else
-#define IN_FLOW_TBL_RD_OP_DATA7_ADDRESS 0x438
-#endif
-#define IN_FLOW_TBL_RD_OP_DATA7_NUM     1
-#define IN_FLOW_TBL_RD_OP_DATA7_INC     0x4
-#define IN_FLOW_TBL_RD_OP_DATA7_TYPE    REG_TYPE_RW
-#define IN_FLOW_TBL_RD_OP_DATA7_DEFAULT 0x0
-	/*[field] DATA*/
-	#define IN_FLOW_TBL_RD_OP_DATA7_DATA
-	#define IN_FLOW_TBL_RD_OP_DATA7_DATA_OFFSET  0
-	#define IN_FLOW_TBL_RD_OP_DATA7_DATA_LEN     32
-	#define IN_FLOW_TBL_RD_OP_DATA7_DATA_DEFAULT 0x0
-
-struct in_flow_tbl_rd_op_data7 {
-	a_uint32_t  data:32;
-};
-
-union in_flow_tbl_rd_op_data7_u {
-	a_uint32_t val;
-	struct in_flow_tbl_rd_op_data7 bf;
-};
-
-/*[register] IN_FLOW_TBL_RD_OP_DATA8*/
-#define IN_FLOW_TBL_RD_OP_DATA8
-#if defined(APPE)
-#define IN_FLOW_TBL_RD_OP_DATA8_ADDRESS 0x634
-#else
-#define IN_FLOW_TBL_RD_OP_DATA8_ADDRESS 0x43c
-#endif
-#define IN_FLOW_TBL_RD_OP_DATA8_NUM     1
-#define IN_FLOW_TBL_RD_OP_DATA8_INC     0x4
-#define IN_FLOW_TBL_RD_OP_DATA8_TYPE    REG_TYPE_RW
-#define IN_FLOW_TBL_RD_OP_DATA8_DEFAULT 0x0
-	/*[field] DATA*/
-	#define IN_FLOW_TBL_RD_OP_DATA8_DATA
-	#define IN_FLOW_TBL_RD_OP_DATA8_DATA_OFFSET  0
-	#define IN_FLOW_TBL_RD_OP_DATA8_DATA_LEN     32
-	#define IN_FLOW_TBL_RD_OP_DATA8_DATA_DEFAULT 0x0
-
-struct in_flow_tbl_rd_op_data8 {
-	a_uint32_t  data:32;
-};
-
-union in_flow_tbl_rd_op_data8_u {
-	a_uint32_t val;
-	struct in_flow_tbl_rd_op_data8 bf;
-};
-
-#if defined(APPE)
-/*[register] IN_FLOW_TBL_RD_OP_DATA9*/
-#define IN_FLOW_TBL_RD_OP_DATA9
-#define IN_FLOW_TBL_RD_OP_DATA9_ADDRESS 0x638
-#define IN_FLOW_TBL_RD_OP_DATA9_NUM     1
-#define IN_FLOW_TBL_RD_OP_DATA9_INC     0x4
-#define IN_FLOW_TBL_RD_OP_DATA9_TYPE    REG_TYPE_RW
-#define IN_FLOW_TBL_RD_OP_DATA9_DEFAULT 0x0
-	/*[field] DATA*/
-	#define IN_FLOW_TBL_RD_OP_DATA9_DATA
-	#define IN_FLOW_TBL_RD_OP_DATA9_DATA_OFFSET  0
-	#define IN_FLOW_TBL_RD_OP_DATA9_DATA_LEN     32
-	#define IN_FLOW_TBL_RD_OP_DATA9_DATA_DEFAULT 0x0
-
-struct in_flow_tbl_rd_op_data9 {
-	a_uint32_t  data:32;
-};
-
-union in_flow_tbl_rd_op_data9_u {
-	a_uint32_t val;
-	struct in_flow_tbl_rd_op_data9 bf;
-};
-
-/*[register] IN_FLOW_TBL_RD_OP_DATA10*/
-#define IN_FLOW_TBL_RD_OP_DATA10
-#define IN_FLOW_TBL_RD_OP_DATA10_ADDRESS 0x63c
-#define IN_FLOW_TBL_RD_OP_DATA10_NUM     1
-#define IN_FLOW_TBL_RD_OP_DATA10_INC     0x4
-#define IN_FLOW_TBL_RD_OP_DATA10_TYPE    REG_TYPE_RW
-#define IN_FLOW_TBL_RD_OP_DATA10_DEFAULT 0x0
-	/*[field] DATA*/
-	#define IN_FLOW_TBL_RD_OP_DATA10_DATA
-	#define IN_FLOW_TBL_RD_OP_DATA10_DATA_OFFSET  0
-	#define IN_FLOW_TBL_RD_OP_DATA10_DATA_LEN     32
-	#define IN_FLOW_TBL_RD_OP_DATA10_DATA_DEFAULT 0x0
-
-struct in_flow_tbl_rd_op_data10 {
-	a_uint32_t  data:32;
-};
-
-union in_flow_tbl_rd_op_data10_u {
-	a_uint32_t val;
-	struct in_flow_tbl_rd_op_data10 bf;
-};
-#endif
-
-/*[register] FLOW_HOST_TBL_RD_OP_DATA0*/
-#define FLOW_HOST_TBL_RD_OP_DATA0
-#if defined(APPE)
-#define FLOW_HOST_TBL_RD_OP_DATA0_ADDRESS 0x650
-#else
-#define FLOW_HOST_TBL_RD_OP_DATA0_ADDRESS 0x440
-#endif
-#define FLOW_HOST_TBL_RD_OP_DATA0_NUM     1
-#define FLOW_HOST_TBL_RD_OP_DATA0_INC     0x4
-#define FLOW_HOST_TBL_RD_OP_DATA0_TYPE    REG_TYPE_RW
-#define FLOW_HOST_TBL_RD_OP_DATA0_DEFAULT 0x0
-	/*[field] DATA*/
-	#define FLOW_HOST_TBL_RD_OP_DATA0_DATA
-	#define FLOW_HOST_TBL_RD_OP_DATA0_DATA_OFFSET  0
-	#define FLOW_HOST_TBL_RD_OP_DATA0_DATA_LEN     32
-	#define FLOW_HOST_TBL_RD_OP_DATA0_DATA_DEFAULT 0x0
-
-struct flow_host_tbl_rd_op_data0 {
-	a_uint32_t  data:32;
-};
-
-union flow_host_tbl_rd_op_data0_u {
-	a_uint32_t val;
-	struct flow_host_tbl_rd_op_data0 bf;
-};
-
-/*[register] FLOW_HOST_TBL_RD_OP_DATA1*/
-#define FLOW_HOST_TBL_RD_OP_DATA1
-#if defined(APPE)
-#define FLOW_HOST_TBL_RD_OP_DATA1_ADDRESS 0x654
-#else
-#define FLOW_HOST_TBL_RD_OP_DATA1_ADDRESS 0x444
-#endif
-#define FLOW_HOST_TBL_RD_OP_DATA1_NUM     1
-#define FLOW_HOST_TBL_RD_OP_DATA1_INC     0x4
-#define FLOW_HOST_TBL_RD_OP_DATA1_TYPE    REG_TYPE_RW
-#define FLOW_HOST_TBL_RD_OP_DATA1_DEFAULT 0x0
-	/*[field] DATA*/
-	#define FLOW_HOST_TBL_RD_OP_DATA1_DATA
-	#define FLOW_HOST_TBL_RD_OP_DATA1_DATA_OFFSET  0
-	#define FLOW_HOST_TBL_RD_OP_DATA1_DATA_LEN     32
-	#define FLOW_HOST_TBL_RD_OP_DATA1_DATA_DEFAULT 0x0
-
-struct flow_host_tbl_rd_op_data1 {
-	a_uint32_t  data:32;
-};
-
-union flow_host_tbl_rd_op_data1_u {
-	a_uint32_t val;
-	struct flow_host_tbl_rd_op_data1 bf;
-};
-
-/*[register] FLOW_HOST_TBL_RD_OP_DATA2*/
-#define FLOW_HOST_TBL_RD_OP_DATA2
-#if defined(APPE)
-#define FLOW_HOST_TBL_RD_OP_DATA2_ADDRESS 0x658
-#else
-#define FLOW_HOST_TBL_RD_OP_DATA2_ADDRESS 0x448
-#endif
-#define FLOW_HOST_TBL_RD_OP_DATA2_NUM     1
-#define FLOW_HOST_TBL_RD_OP_DATA2_INC     0x4
-#define FLOW_HOST_TBL_RD_OP_DATA2_TYPE    REG_TYPE_RW
-#define FLOW_HOST_TBL_RD_OP_DATA2_DEFAULT 0x0
-	/*[field] DATA*/
-	#define FLOW_HOST_TBL_RD_OP_DATA2_DATA
-	#define FLOW_HOST_TBL_RD_OP_DATA2_DATA_OFFSET  0
-	#define FLOW_HOST_TBL_RD_OP_DATA2_DATA_LEN     32
-	#define FLOW_HOST_TBL_RD_OP_DATA2_DATA_DEFAULT 0x0
-
-struct flow_host_tbl_rd_op_data2 {
-	a_uint32_t  data:32;
-};
-
-union flow_host_tbl_rd_op_data2_u {
-	a_uint32_t val;
-	struct flow_host_tbl_rd_op_data2 bf;
-};
-
-/*[register] FLOW_HOST_TBL_RD_OP_DATA3*/
-#define FLOW_HOST_TBL_RD_OP_DATA3
-#if defined(APPE)
-#define FLOW_HOST_TBL_RD_OP_DATA3_ADDRESS 0x65c
-#else
-#define FLOW_HOST_TBL_RD_OP_DATA3_ADDRESS 0x44c
-#endif
-#define FLOW_HOST_TBL_RD_OP_DATA3_NUM     1
-#define FLOW_HOST_TBL_RD_OP_DATA3_INC     0x4
-#define FLOW_HOST_TBL_RD_OP_DATA3_TYPE    REG_TYPE_RW
-#define FLOW_HOST_TBL_RD_OP_DATA3_DEFAULT 0x0
-	/*[field] DATA*/
-	#define FLOW_HOST_TBL_RD_OP_DATA3_DATA
-	#define FLOW_HOST_TBL_RD_OP_DATA3_DATA_OFFSET  0
-	#define FLOW_HOST_TBL_RD_OP_DATA3_DATA_LEN     32
-	#define FLOW_HOST_TBL_RD_OP_DATA3_DATA_DEFAULT 0x0
-
-struct flow_host_tbl_rd_op_data3 {
-	a_uint32_t  data:32;
-};
-
-union flow_host_tbl_rd_op_data3_u {
-	a_uint32_t val;
-	struct flow_host_tbl_rd_op_data3 bf;
-};
-
-/*[register] FLOW_HOST_TBL_RD_OP_DATA4*/
-#define FLOW_HOST_TBL_RD_OP_DATA4
-#if defined(APPE)
-#define FLOW_HOST_TBL_RD_OP_DATA4_ADDRESS 0x660
-#else
-#define FLOW_HOST_TBL_RD_OP_DATA4_ADDRESS 0x450
-#endif
-#define FLOW_HOST_TBL_RD_OP_DATA4_NUM     1
-#define FLOW_HOST_TBL_RD_OP_DATA4_INC     0x4
-#define FLOW_HOST_TBL_RD_OP_DATA4_TYPE    REG_TYPE_RW
-#define FLOW_HOST_TBL_RD_OP_DATA4_DEFAULT 0x0
-	/*[field] DATA*/
-	#define FLOW_HOST_TBL_RD_OP_DATA4_DATA
-	#define FLOW_HOST_TBL_RD_OP_DATA4_DATA_OFFSET  0
-	#define FLOW_HOST_TBL_RD_OP_DATA4_DATA_LEN     32
-	#define FLOW_HOST_TBL_RD_OP_DATA4_DATA_DEFAULT 0x0
-
-struct flow_host_tbl_rd_op_data4 {
-	a_uint32_t  data:32;
-};
-
-union flow_host_tbl_rd_op_data4_u {
-	a_uint32_t val;
-	struct flow_host_tbl_rd_op_data4 bf;
-};
-
-/*[register] FLOW_HOST_TBL_RD_OP_DATA5*/
-#define FLOW_HOST_TBL_RD_OP_DATA5
-#if defined(APPE)
-#define FLOW_HOST_TBL_RD_OP_DATA5_ADDRESS 0x664
-#else
-#define FLOW_HOST_TBL_RD_OP_DATA5_ADDRESS 0x454
-#endif
-#define FLOW_HOST_TBL_RD_OP_DATA5_NUM     1
-#define FLOW_HOST_TBL_RD_OP_DATA5_INC     0x4
-#define FLOW_HOST_TBL_RD_OP_DATA5_TYPE    REG_TYPE_RW
-#define FLOW_HOST_TBL_RD_OP_DATA5_DEFAULT 0x0
-	/*[field] DATA*/
-	#define FLOW_HOST_TBL_RD_OP_DATA5_DATA
-	#define FLOW_HOST_TBL_RD_OP_DATA5_DATA_OFFSET  0
-	#define FLOW_HOST_TBL_RD_OP_DATA5_DATA_LEN     32
-	#define FLOW_HOST_TBL_RD_OP_DATA5_DATA_DEFAULT 0x0
-
-struct flow_host_tbl_rd_op_data5 {
-	a_uint32_t  data:32;
-};
-
-union flow_host_tbl_rd_op_data5_u {
-	a_uint32_t val;
-	struct flow_host_tbl_rd_op_data5 bf;
-};
-
-/*[register] FLOW_HOST_TBL_RD_OP_DATA6*/
-#define FLOW_HOST_TBL_RD_OP_DATA6
-#if defined(APPE)
-#define FLOW_HOST_TBL_RD_OP_DATA6_ADDRESS 0x668
-#else
-#define FLOW_HOST_TBL_RD_OP_DATA6_ADDRESS 0x458
-#endif
-#define FLOW_HOST_TBL_RD_OP_DATA6_NUM     1
-#define FLOW_HOST_TBL_RD_OP_DATA6_INC     0x4
-#define FLOW_HOST_TBL_RD_OP_DATA6_TYPE    REG_TYPE_RW
-#define FLOW_HOST_TBL_RD_OP_DATA6_DEFAULT 0x0
-	/*[field] DATA*/
-	#define FLOW_HOST_TBL_RD_OP_DATA6_DATA
-	#define FLOW_HOST_TBL_RD_OP_DATA6_DATA_OFFSET  0
-	#define FLOW_HOST_TBL_RD_OP_DATA6_DATA_LEN     32
-	#define FLOW_HOST_TBL_RD_OP_DATA6_DATA_DEFAULT 0x0
-
-struct flow_host_tbl_rd_op_data6 {
-	a_uint32_t  data:32;
-};
-
-union flow_host_tbl_rd_op_data6_u {
-	a_uint32_t val;
-	struct flow_host_tbl_rd_op_data6 bf;
-};
-
-/*[register] FLOW_HOST_TBL_RD_OP_DATA7*/
-#define FLOW_HOST_TBL_RD_OP_DATA7
-#if defined(APPE)
-#define FLOW_HOST_TBL_RD_OP_DATA7_ADDRESS 0x66c
-#else
-#define FLOW_HOST_TBL_RD_OP_DATA7_ADDRESS 0x45c
-#endif
-#define FLOW_HOST_TBL_RD_OP_DATA7_NUM     1
-#define FLOW_HOST_TBL_RD_OP_DATA7_INC     0x4
-#define FLOW_HOST_TBL_RD_OP_DATA7_TYPE    REG_TYPE_RW
-#define FLOW_HOST_TBL_RD_OP_DATA7_DEFAULT 0x0
-	/*[field] DATA*/
-	#define FLOW_HOST_TBL_RD_OP_DATA7_DATA
-	#define FLOW_HOST_TBL_RD_OP_DATA7_DATA_OFFSET  0
-	#define FLOW_HOST_TBL_RD_OP_DATA7_DATA_LEN     32
-	#define FLOW_HOST_TBL_RD_OP_DATA7_DATA_DEFAULT 0x0
-
-struct flow_host_tbl_rd_op_data7 {
-	a_uint32_t  data:32;
-};
-
-union flow_host_tbl_rd_op_data7_u {
-	a_uint32_t val;
-	struct flow_host_tbl_rd_op_data7 bf;
-};
-
-/*[register] FLOW_HOST_TBL_RD_OP_DATA8*/
-#define FLOW_HOST_TBL_RD_OP_DATA8
-#if defined(APPE)
-#define FLOW_HOST_TBL_RD_OP_DATA8_ADDRESS 0x670
-#else
-#define FLOW_HOST_TBL_RD_OP_DATA8_ADDRESS 0x460
-#endif
-#define FLOW_HOST_TBL_RD_OP_DATA8_NUM     1
-#define FLOW_HOST_TBL_RD_OP_DATA8_INC     0x4
-#define FLOW_HOST_TBL_RD_OP_DATA8_TYPE    REG_TYPE_RW
-#define FLOW_HOST_TBL_RD_OP_DATA8_DEFAULT 0x0
-	/*[field] DATA*/
-	#define FLOW_HOST_TBL_RD_OP_DATA8_DATA
-	#define FLOW_HOST_TBL_RD_OP_DATA8_DATA_OFFSET  0
-	#define FLOW_HOST_TBL_RD_OP_DATA8_DATA_LEN     32
-	#define FLOW_HOST_TBL_RD_OP_DATA8_DATA_DEFAULT 0x0
-
-struct flow_host_tbl_rd_op_data8 {
-	a_uint32_t  data:32;
-};
-
-union flow_host_tbl_rd_op_data8_u {
-	a_uint32_t val;
-	struct flow_host_tbl_rd_op_data8 bf;
-};
-
-/*[register] FLOW_HOST_TBL_RD_OP_DATA9*/
-#define FLOW_HOST_TBL_RD_OP_DATA9
-#if defined(APPE)
-#define FLOW_HOST_TBL_RD_OP_DATA9_ADDRESS 0x674
-#else
-#define FLOW_HOST_TBL_RD_OP_DATA9_ADDRESS 0x464
-#endif
-#define FLOW_HOST_TBL_RD_OP_DATA9_NUM     1
-#define FLOW_HOST_TBL_RD_OP_DATA9_INC     0x4
-#define FLOW_HOST_TBL_RD_OP_DATA9_TYPE    REG_TYPE_RW
-#define FLOW_HOST_TBL_RD_OP_DATA9_DEFAULT 0x0
-	/*[field] DATA*/
-	#define FLOW_HOST_TBL_RD_OP_DATA9_DATA
-	#define FLOW_HOST_TBL_RD_OP_DATA9_DATA_OFFSET  0
-	#define FLOW_HOST_TBL_RD_OP_DATA9_DATA_LEN     32
-	#define FLOW_HOST_TBL_RD_OP_DATA9_DATA_DEFAULT 0x0
-
-struct flow_host_tbl_rd_op_data9 {
-	a_uint32_t  data:32;
-};
-
-union flow_host_tbl_rd_op_data9_u {
-	a_uint32_t val;
-	struct flow_host_tbl_rd_op_data9 bf;
+	struct flow_host_tbl_rd_op_data bf;
 };
 
 /*[register] IN_FLOW_TBL_RD_OP_RSLT*/
@@ -1697,544 +723,57 @@ union flow_host_tbl_rd_op_rslt_u {
 	struct flow_host_tbl_rd_op_rslt bf;
 };
 
-/*[register] IN_FLOW_TBL_RD_RSLT_DATA0*/
-#define IN_FLOW_TBL_RD_RSLT_DATA0
+/*[register] IN_FLOW_TBL_RD_RSLT_DATA*/
+#define IN_FLOW_TBL_RD_RSLT_DATA
 #if defined(APPE)
-#define IN_FLOW_TBL_RD_RSLT_DATA0_ADDRESS 0x6b0
+#define IN_FLOW_TBL_RD_RSLT_DATA_ADDRESS 0x6b0
+#define IN_FLOW_TBL_RD_RSLT_DATA_NUM     11
 #else
-#define IN_FLOW_TBL_RD_RSLT_DATA0_ADDRESS 0x470
+#define IN_FLOW_TBL_RD_RSLT_DATA_ADDRESS 0x470
+#define IN_FLOW_TBL_RD_RSLT_DATA_NUM     9
 #endif
-#define IN_FLOW_TBL_RD_RSLT_DATA0_NUM     1
-#define IN_FLOW_TBL_RD_RSLT_DATA0_INC     0x4
-#define IN_FLOW_TBL_RD_RSLT_DATA0_TYPE    REG_TYPE_RO
-#define IN_FLOW_TBL_RD_RSLT_DATA0_DEFAULT 0x0
+#define IN_FLOW_TBL_RD_RSLT_DATA_INC     0x4
+#define IN_FLOW_TBL_RD_RSLT_DATA_TYPE    REG_TYPE_RO
+#define IN_FLOW_TBL_RD_RSLT_DATA_DEFAULT 0x0
 	/*[field] DATA*/
-	#define IN_FLOW_TBL_RD_RSLT_DATA0_DATA
-	#define IN_FLOW_TBL_RD_RSLT_DATA0_DATA_OFFSET  0
-	#define IN_FLOW_TBL_RD_RSLT_DATA0_DATA_LEN     32
-	#define IN_FLOW_TBL_RD_RSLT_DATA0_DATA_DEFAULT 0x0
+	#define IN_FLOW_TBL_RD_RSLT_DATA_DATA
+	#define IN_FLOW_TBL_RD_RSLT_DATA_DATA_OFFSET  0
+	#define IN_FLOW_TBL_RD_RSLT_DATA_DATA_LEN     32
+	#define IN_FLOW_TBL_RD_RSLT_DATA_DATA_DEFAULT 0x0
 
-struct in_flow_tbl_rd_rslt_data0 {
+struct in_flow_tbl_rd_rslt_data {
 	a_uint32_t  data:32;
 };
 
-union in_flow_tbl_rd_rslt_data0_u {
+union in_flow_tbl_rd_rslt_data_u {
 	a_uint32_t val;
-	struct in_flow_tbl_rd_rslt_data0 bf;
+	struct in_flow_tbl_rd_rslt_data bf;
 };
 
-/*[register] IN_FLOW_TBL_RD_RSLT_DATA1*/
-#define IN_FLOW_TBL_RD_RSLT_DATA1
+/*[register] FLOW_HOST_TBL_RD_RSLT_DATA*/
+#define FLOW_HOST_TBL_RD_RSLT_DATA
 #if defined(APPE)
-#define IN_FLOW_TBL_RD_RSLT_DATA1_ADDRESS 0x6b4
+#define FLOW_HOST_TBL_RD_RSLT_DATA_ADDRESS 0x6ec
 #else
-#define IN_FLOW_TBL_RD_RSLT_DATA1_ADDRESS 0x474
+#define FLOW_HOST_TBL_RD_RSLT_DATA_ADDRESS 0x494
 #endif
-#define IN_FLOW_TBL_RD_RSLT_DATA1_NUM     1
-#define IN_FLOW_TBL_RD_RSLT_DATA1_INC     0x4
-#define IN_FLOW_TBL_RD_RSLT_DATA1_TYPE    REG_TYPE_RO
-#define IN_FLOW_TBL_RD_RSLT_DATA1_DEFAULT 0x0
+#define FLOW_HOST_TBL_RD_RSLT_DATA_NUM     10
+#define FLOW_HOST_TBL_RD_RSLT_DATA_INC     0x4
+#define FLOW_HOST_TBL_RD_RSLT_DATA_TYPE    REG_TYPE_RO
+#define FLOW_HOST_TBL_RD_RSLT_DATA_DEFAULT 0x0
 	/*[field] DATA*/
-	#define IN_FLOW_TBL_RD_RSLT_DATA1_DATA
-	#define IN_FLOW_TBL_RD_RSLT_DATA1_DATA_OFFSET  0
-	#define IN_FLOW_TBL_RD_RSLT_DATA1_DATA_LEN     32
-	#define IN_FLOW_TBL_RD_RSLT_DATA1_DATA_DEFAULT 0x0
+	#define FLOW_HOST_TBL_RD_RSLT_DATA_DATA
+	#define FLOW_HOST_TBL_RD_RSLT_DATA_DATA_OFFSET  0
+	#define FLOW_HOST_TBL_RD_RSLT_DATA_DATA_LEN     32
+	#define FLOW_HOST_TBL_RD_RSLT_DATA_DATA_DEFAULT 0x0
 
-struct in_flow_tbl_rd_rslt_data1 {
+struct flow_host_tbl_rd_rslt_data {
 	a_uint32_t  data:32;
 };
 
-union in_flow_tbl_rd_rslt_data1_u {
+union flow_host_tbl_rd_rslt_data_u {
 	a_uint32_t val;
-	struct in_flow_tbl_rd_rslt_data1 bf;
-};
-
-/*[register] IN_FLOW_TBL_RD_RSLT_DATA2*/
-#define IN_FLOW_TBL_RD_RSLT_DATA2
-#if defined(APPE)
-#define IN_FLOW_TBL_RD_RSLT_DATA2_ADDRESS 0x6b8
-#else
-#define IN_FLOW_TBL_RD_RSLT_DATA2_ADDRESS 0x478
-#endif
-#define IN_FLOW_TBL_RD_RSLT_DATA2_NUM     1
-#define IN_FLOW_TBL_RD_RSLT_DATA2_INC     0x4
-#define IN_FLOW_TBL_RD_RSLT_DATA2_TYPE    REG_TYPE_RO
-#define IN_FLOW_TBL_RD_RSLT_DATA2_DEFAULT 0x0
-	/*[field] DATA*/
-	#define IN_FLOW_TBL_RD_RSLT_DATA2_DATA
-	#define IN_FLOW_TBL_RD_RSLT_DATA2_DATA_OFFSET  0
-	#define IN_FLOW_TBL_RD_RSLT_DATA2_DATA_LEN     32
-	#define IN_FLOW_TBL_RD_RSLT_DATA2_DATA_DEFAULT 0x0
-
-struct in_flow_tbl_rd_rslt_data2 {
-	a_uint32_t  data:32;
-};
-
-union in_flow_tbl_rd_rslt_data2_u {
-	a_uint32_t val;
-	struct in_flow_tbl_rd_rslt_data2 bf;
-};
-
-/*[register] IN_FLOW_TBL_RD_RSLT_DATA3*/
-#define IN_FLOW_TBL_RD_RSLT_DATA3
-#if defined(APPE)
-#define IN_FLOW_TBL_RD_RSLT_DATA3_ADDRESS 0x6bc
-#else
-#define IN_FLOW_TBL_RD_RSLT_DATA3_ADDRESS 0x47c
-#endif
-#define IN_FLOW_TBL_RD_RSLT_DATA3_NUM     1
-#define IN_FLOW_TBL_RD_RSLT_DATA3_INC     0x4
-#define IN_FLOW_TBL_RD_RSLT_DATA3_TYPE    REG_TYPE_RO
-#define IN_FLOW_TBL_RD_RSLT_DATA3_DEFAULT 0x0
-	/*[field] DATA*/
-	#define IN_FLOW_TBL_RD_RSLT_DATA3_DATA
-	#define IN_FLOW_TBL_RD_RSLT_DATA3_DATA_OFFSET  0
-	#define IN_FLOW_TBL_RD_RSLT_DATA3_DATA_LEN     32
-	#define IN_FLOW_TBL_RD_RSLT_DATA3_DATA_DEFAULT 0x0
-
-struct in_flow_tbl_rd_rslt_data3 {
-	a_uint32_t  data:32;
-};
-
-union in_flow_tbl_rd_rslt_data3_u {
-	a_uint32_t val;
-	struct in_flow_tbl_rd_rslt_data3 bf;
-};
-
-/*[register] IN_FLOW_TBL_RD_RSLT_DATA4*/
-#define IN_FLOW_TBL_RD_RSLT_DATA4
-#if defined(APPE)
-#define IN_FLOW_TBL_RD_RSLT_DATA4_ADDRESS 0x6c0
-#else
-#define IN_FLOW_TBL_RD_RSLT_DATA4_ADDRESS 0x480
-#endif
-#define IN_FLOW_TBL_RD_RSLT_DATA4_NUM     1
-#define IN_FLOW_TBL_RD_RSLT_DATA4_INC     0x4
-#define IN_FLOW_TBL_RD_RSLT_DATA4_TYPE    REG_TYPE_RO
-#define IN_FLOW_TBL_RD_RSLT_DATA4_DEFAULT 0x0
-	/*[field] DATA*/
-	#define IN_FLOW_TBL_RD_RSLT_DATA4_DATA
-	#define IN_FLOW_TBL_RD_RSLT_DATA4_DATA_OFFSET  0
-	#define IN_FLOW_TBL_RD_RSLT_DATA4_DATA_LEN     32
-	#define IN_FLOW_TBL_RD_RSLT_DATA4_DATA_DEFAULT 0x0
-
-struct in_flow_tbl_rd_rslt_data4 {
-	a_uint32_t  data:32;
-};
-
-union in_flow_tbl_rd_rslt_data4_u {
-	a_uint32_t val;
-	struct in_flow_tbl_rd_rslt_data4 bf;
-};
-
-/*[register] IN_FLOW_TBL_RD_RSLT_DATA5*/
-#define IN_FLOW_TBL_RD_RSLT_DATA5
-#if defined(APPE)
-#define IN_FLOW_TBL_RD_RSLT_DATA5_ADDRESS 0x6c4
-#else
-#define IN_FLOW_TBL_RD_RSLT_DATA5_ADDRESS 0x484
-#endif
-#define IN_FLOW_TBL_RD_RSLT_DATA5_NUM     1
-#define IN_FLOW_TBL_RD_RSLT_DATA5_INC     0x4
-#define IN_FLOW_TBL_RD_RSLT_DATA5_TYPE    REG_TYPE_RO
-#define IN_FLOW_TBL_RD_RSLT_DATA5_DEFAULT 0x0
-	/*[field] DATA*/
-	#define IN_FLOW_TBL_RD_RSLT_DATA5_DATA
-	#define IN_FLOW_TBL_RD_RSLT_DATA5_DATA_OFFSET  0
-	#define IN_FLOW_TBL_RD_RSLT_DATA5_DATA_LEN     32
-	#define IN_FLOW_TBL_RD_RSLT_DATA5_DATA_DEFAULT 0x0
-
-struct in_flow_tbl_rd_rslt_data5 {
-	a_uint32_t  data:32;
-};
-
-union in_flow_tbl_rd_rslt_data5_u {
-	a_uint32_t val;
-	struct in_flow_tbl_rd_rslt_data5 bf;
-};
-
-/*[register] IN_FLOW_TBL_RD_RSLT_DATA6*/
-#define IN_FLOW_TBL_RD_RSLT_DATA6
-#if defined(APPE)
-#define IN_FLOW_TBL_RD_RSLT_DATA6_ADDRESS 0x6c8
-#else
-#define IN_FLOW_TBL_RD_RSLT_DATA6_ADDRESS 0x488
-#endif
-#define IN_FLOW_TBL_RD_RSLT_DATA6_NUM     1
-#define IN_FLOW_TBL_RD_RSLT_DATA6_INC     0x4
-#define IN_FLOW_TBL_RD_RSLT_DATA6_TYPE    REG_TYPE_RO
-#define IN_FLOW_TBL_RD_RSLT_DATA6_DEFAULT 0x0
-	/*[field] DATA*/
-	#define IN_FLOW_TBL_RD_RSLT_DATA6_DATA
-	#define IN_FLOW_TBL_RD_RSLT_DATA6_DATA_OFFSET  0
-	#define IN_FLOW_TBL_RD_RSLT_DATA6_DATA_LEN     32
-	#define IN_FLOW_TBL_RD_RSLT_DATA6_DATA_DEFAULT 0x0
-
-struct in_flow_tbl_rd_rslt_data6 {
-	a_uint32_t  data:32;
-};
-
-union in_flow_tbl_rd_rslt_data6_u {
-	a_uint32_t val;
-	struct in_flow_tbl_rd_rslt_data6 bf;
-};
-
-/*[register] IN_FLOW_TBL_RD_RSLT_DATA7*/
-#define IN_FLOW_TBL_RD_RSLT_DATA7
-#if defined(APPE)
-#define IN_FLOW_TBL_RD_RSLT_DATA7_ADDRESS 0x6cc
-#else
-#define IN_FLOW_TBL_RD_RSLT_DATA7_ADDRESS 0x48c
-#endif
-#define IN_FLOW_TBL_RD_RSLT_DATA7_NUM     1
-#define IN_FLOW_TBL_RD_RSLT_DATA7_INC     0x4
-#define IN_FLOW_TBL_RD_RSLT_DATA7_TYPE    REG_TYPE_RO
-#define IN_FLOW_TBL_RD_RSLT_DATA7_DEFAULT 0x0
-	/*[field] DATA*/
-	#define IN_FLOW_TBL_RD_RSLT_DATA7_DATA
-	#define IN_FLOW_TBL_RD_RSLT_DATA7_DATA_OFFSET  0
-	#define IN_FLOW_TBL_RD_RSLT_DATA7_DATA_LEN     32
-	#define IN_FLOW_TBL_RD_RSLT_DATA7_DATA_DEFAULT 0x0
-
-struct in_flow_tbl_rd_rslt_data7 {
-	a_uint32_t  data:32;
-};
-
-union in_flow_tbl_rd_rslt_data7_u {
-	a_uint32_t val;
-	struct in_flow_tbl_rd_rslt_data7 bf;
-};
-
-/*[register] IN_FLOW_TBL_RD_RSLT_DATA8*/
-#define IN_FLOW_TBL_RD_RSLT_DATA8
-#if defined(APPE)
-#define IN_FLOW_TBL_RD_RSLT_DATA8_ADDRESS 0x6d0
-#else
-#define IN_FLOW_TBL_RD_RSLT_DATA8_ADDRESS 0x490
-#endif
-#define IN_FLOW_TBL_RD_RSLT_DATA8_NUM     1
-#define IN_FLOW_TBL_RD_RSLT_DATA8_INC     0x4
-#define IN_FLOW_TBL_RD_RSLT_DATA8_TYPE    REG_TYPE_RO
-#define IN_FLOW_TBL_RD_RSLT_DATA8_DEFAULT 0x0
-	/*[field] DATA*/
-	#define IN_FLOW_TBL_RD_RSLT_DATA8_DATA
-	#define IN_FLOW_TBL_RD_RSLT_DATA8_DATA_OFFSET  0
-	#define IN_FLOW_TBL_RD_RSLT_DATA8_DATA_LEN     32
-	#define IN_FLOW_TBL_RD_RSLT_DATA8_DATA_DEFAULT 0x0
-
-struct in_flow_tbl_rd_rslt_data8 {
-	a_uint32_t  data:32;
-};
-
-union in_flow_tbl_rd_rslt_data8_u {
-	a_uint32_t val;
-	struct in_flow_tbl_rd_rslt_data8 bf;
-};
-
-#if defined(APPE)
-/*[register] IN_FLOW_TBL_RD_RSLT_DATA9*/
-#define IN_FLOW_TBL_RD_RSLT_DATA9
-#define IN_FLOW_TBL_RD_RSLT_DATA9_ADDRESS 0x6d4
-#define IN_FLOW_TBL_RD_RSLT_DATA9_NUM     1
-#define IN_FLOW_TBL_RD_RSLT_DATA9_INC     0x4
-#define IN_FLOW_TBL_RD_RSLT_DATA9_TYPE    REG_TYPE_RO
-#define IN_FLOW_TBL_RD_RSLT_DATA9_DEFAULT 0x0
-	/*[field] DATA*/
-	#define IN_FLOW_TBL_RD_RSLT_DATA9_DATA
-	#define IN_FLOW_TBL_RD_RSLT_DATA9_DATA_OFFSET  0
-	#define IN_FLOW_TBL_RD_RSLT_DATA9_DATA_LEN     32
-	#define IN_FLOW_TBL_RD_RSLT_DATA9_DATA_DEFAULT 0x0
-
-struct in_flow_tbl_rd_rslt_data9 {
-	a_uint32_t  data:32;
-};
-
-union in_flow_tbl_rd_rslt_data9_u {
-	a_uint32_t val;
-	struct in_flow_tbl_rd_rslt_data9 bf;
-};
-
-/*[register] IN_FLOW_TBL_RD_RSLT_DATA10*/
-#define IN_FLOW_TBL_RD_RSLT_DATA10
-#define IN_FLOW_TBL_RD_RSLT_DATA10_ADDRESS 0x6d8
-#define IN_FLOW_TBL_RD_RSLT_DATA10_NUM     1
-#define IN_FLOW_TBL_RD_RSLT_DATA10_INC     0x4
-#define IN_FLOW_TBL_RD_RSLT_DATA10_TYPE    REG_TYPE_RO
-#define IN_FLOW_TBL_RD_RSLT_DATA10_DEFAULT 0x0
-	/*[field] DATA*/
-	#define IN_FLOW_TBL_RD_RSLT_DATA10_DATA
-	#define IN_FLOW_TBL_RD_RSLT_DATA10_DATA_OFFSET  0
-	#define IN_FLOW_TBL_RD_RSLT_DATA10_DATA_LEN     32
-	#define IN_FLOW_TBL_RD_RSLT_DATA10_DATA_DEFAULT 0x0
-
-struct in_flow_tbl_rd_rslt_data10 {
-	a_uint32_t  data:32;
-};
-
-union in_flow_tbl_rd_rslt_data10_u {
-	a_uint32_t val;
-	struct in_flow_tbl_rd_rslt_data10 bf;
-};
-#endif
-
-/*[register] FLOW_HOST_TBL_RD_RSLT_DATA0*/
-#define FLOW_HOST_TBL_RD_RSLT_DATA0
-#if defined(APPE)
-#define FLOW_HOST_TBL_RD_RSLT_DATA0_ADDRESS 0x6ec
-#else
-#define FLOW_HOST_TBL_RD_RSLT_DATA0_ADDRESS 0x494
-#endif
-#define FLOW_HOST_TBL_RD_RSLT_DATA0_NUM     1
-#define FLOW_HOST_TBL_RD_RSLT_DATA0_INC     0x4
-#define FLOW_HOST_TBL_RD_RSLT_DATA0_TYPE    REG_TYPE_RO
-#define FLOW_HOST_TBL_RD_RSLT_DATA0_DEFAULT 0x0
-	/*[field] DATA*/
-	#define FLOW_HOST_TBL_RD_RSLT_DATA0_DATA
-	#define FLOW_HOST_TBL_RD_RSLT_DATA0_DATA_OFFSET  0
-	#define FLOW_HOST_TBL_RD_RSLT_DATA0_DATA_LEN     32
-	#define FLOW_HOST_TBL_RD_RSLT_DATA0_DATA_DEFAULT 0x0
-
-struct flow_host_tbl_rd_rslt_data0 {
-	a_uint32_t  data:32;
-};
-
-union flow_host_tbl_rd_rslt_data0_u {
-	a_uint32_t val;
-	struct flow_host_tbl_rd_rslt_data0 bf;
-};
-
-/*[register] FLOW_HOST_TBL_RD_RSLT_DATA1*/
-#define FLOW_HOST_TBL_RD_RSLT_DATA1
-#if defined(APPE)
-#define FLOW_HOST_TBL_RD_RSLT_DATA1_ADDRESS 0x6f0
-#else
-#define FLOW_HOST_TBL_RD_RSLT_DATA1_ADDRESS 0x498
-#endif
-#define FLOW_HOST_TBL_RD_RSLT_DATA1_NUM     1
-#define FLOW_HOST_TBL_RD_RSLT_DATA1_INC     0x4
-#define FLOW_HOST_TBL_RD_RSLT_DATA1_TYPE    REG_TYPE_RO
-#define FLOW_HOST_TBL_RD_RSLT_DATA1_DEFAULT 0x0
-	/*[field] DATA*/
-	#define FLOW_HOST_TBL_RD_RSLT_DATA1_DATA
-	#define FLOW_HOST_TBL_RD_RSLT_DATA1_DATA_OFFSET  0
-	#define FLOW_HOST_TBL_RD_RSLT_DATA1_DATA_LEN     32
-	#define FLOW_HOST_TBL_RD_RSLT_DATA1_DATA_DEFAULT 0x0
-
-struct flow_host_tbl_rd_rslt_data1 {
-	a_uint32_t  data:32;
-};
-
-union flow_host_tbl_rd_rslt_data1_u {
-	a_uint32_t val;
-	struct flow_host_tbl_rd_rslt_data1 bf;
-};
-
-/*[register] FLOW_HOST_TBL_RD_RSLT_DATA2*/
-#define FLOW_HOST_TBL_RD_RSLT_DATA2
-#if defined(APPE)
-#define FLOW_HOST_TBL_RD_RSLT_DATA2_ADDRESS 0x6f4
-#else
-#define FLOW_HOST_TBL_RD_RSLT_DATA2_ADDRESS 0x49c
-#endif
-#define FLOW_HOST_TBL_RD_RSLT_DATA2_NUM     1
-#define FLOW_HOST_TBL_RD_RSLT_DATA2_INC     0x4
-#define FLOW_HOST_TBL_RD_RSLT_DATA2_TYPE    REG_TYPE_RO
-#define FLOW_HOST_TBL_RD_RSLT_DATA2_DEFAULT 0x0
-	/*[field] DATA*/
-	#define FLOW_HOST_TBL_RD_RSLT_DATA2_DATA
-	#define FLOW_HOST_TBL_RD_RSLT_DATA2_DATA_OFFSET  0
-	#define FLOW_HOST_TBL_RD_RSLT_DATA2_DATA_LEN     32
-	#define FLOW_HOST_TBL_RD_RSLT_DATA2_DATA_DEFAULT 0x0
-
-struct flow_host_tbl_rd_rslt_data2 {
-	a_uint32_t  data:32;
-};
-
-union flow_host_tbl_rd_rslt_data2_u {
-	a_uint32_t val;
-	struct flow_host_tbl_rd_rslt_data2 bf;
-};
-
-/*[register] FLOW_HOST_TBL_RD_RSLT_DATA3*/
-#define FLOW_HOST_TBL_RD_RSLT_DATA3
-#if defined(APPE)
-#define FLOW_HOST_TBL_RD_RSLT_DATA3_ADDRESS 0x6f8
-#else
-#define FLOW_HOST_TBL_RD_RSLT_DATA3_ADDRESS 0x4a0
-#endif
-#define FLOW_HOST_TBL_RD_RSLT_DATA3_NUM     1
-#define FLOW_HOST_TBL_RD_RSLT_DATA3_INC     0x4
-#define FLOW_HOST_TBL_RD_RSLT_DATA3_TYPE    REG_TYPE_RO
-#define FLOW_HOST_TBL_RD_RSLT_DATA3_DEFAULT 0x0
-	/*[field] DATA*/
-	#define FLOW_HOST_TBL_RD_RSLT_DATA3_DATA
-	#define FLOW_HOST_TBL_RD_RSLT_DATA3_DATA_OFFSET  0
-	#define FLOW_HOST_TBL_RD_RSLT_DATA3_DATA_LEN     32
-	#define FLOW_HOST_TBL_RD_RSLT_DATA3_DATA_DEFAULT 0x0
-
-struct flow_host_tbl_rd_rslt_data3 {
-	a_uint32_t  data:32;
-};
-
-union flow_host_tbl_rd_rslt_data3_u {
-	a_uint32_t val;
-	struct flow_host_tbl_rd_rslt_data3 bf;
-};
-
-/*[register] FLOW_HOST_TBL_RD_RSLT_DATA4*/
-#define FLOW_HOST_TBL_RD_RSLT_DATA4
-#if defined(APPE)
-#define FLOW_HOST_TBL_RD_RSLT_DATA4_ADDRESS 0x6fc
-#else
-#define FLOW_HOST_TBL_RD_RSLT_DATA4_ADDRESS 0x4a4
-#endif
-#define FLOW_HOST_TBL_RD_RSLT_DATA4_NUM     1
-#define FLOW_HOST_TBL_RD_RSLT_DATA4_INC     0x4
-#define FLOW_HOST_TBL_RD_RSLT_DATA4_TYPE    REG_TYPE_RO
-#define FLOW_HOST_TBL_RD_RSLT_DATA4_DEFAULT 0x0
-	/*[field] DATA*/
-	#define FLOW_HOST_TBL_RD_RSLT_DATA4_DATA
-	#define FLOW_HOST_TBL_RD_RSLT_DATA4_DATA_OFFSET  0
-	#define FLOW_HOST_TBL_RD_RSLT_DATA4_DATA_LEN     32
-	#define FLOW_HOST_TBL_RD_RSLT_DATA4_DATA_DEFAULT 0x0
-
-struct flow_host_tbl_rd_rslt_data4 {
-	a_uint32_t  data:32;
-};
-
-union flow_host_tbl_rd_rslt_data4_u {
-	a_uint32_t val;
-	struct flow_host_tbl_rd_rslt_data4 bf;
-};
-
-/*[register] FLOW_HOST_TBL_RD_RSLT_DATA5*/
-#define FLOW_HOST_TBL_RD_RSLT_DATA5
-#if defined(APPE)
-#define FLOW_HOST_TBL_RD_RSLT_DATA5_ADDRESS 0x700
-#else
-#define FLOW_HOST_TBL_RD_RSLT_DATA5_ADDRESS 0x4a8
-#endif
-#define FLOW_HOST_TBL_RD_RSLT_DATA5_NUM     1
-#define FLOW_HOST_TBL_RD_RSLT_DATA5_INC     0x4
-#define FLOW_HOST_TBL_RD_RSLT_DATA5_TYPE    REG_TYPE_RO
-#define FLOW_HOST_TBL_RD_RSLT_DATA5_DEFAULT 0x0
-	/*[field] DATA*/
-	#define FLOW_HOST_TBL_RD_RSLT_DATA5_DATA
-	#define FLOW_HOST_TBL_RD_RSLT_DATA5_DATA_OFFSET  0
-	#define FLOW_HOST_TBL_RD_RSLT_DATA5_DATA_LEN     32
-	#define FLOW_HOST_TBL_RD_RSLT_DATA5_DATA_DEFAULT 0x0
-
-struct flow_host_tbl_rd_rslt_data5 {
-	a_uint32_t  data:32;
-};
-
-union flow_host_tbl_rd_rslt_data5_u {
-	a_uint32_t val;
-	struct flow_host_tbl_rd_rslt_data5 bf;
-};
-
-/*[register] FLOW_HOST_TBL_RD_RSLT_DATA6*/
-#define FLOW_HOST_TBL_RD_RSLT_DATA6
-#if defined(APPE)
-#define FLOW_HOST_TBL_RD_RSLT_DATA6_ADDRESS 0x704
-#else
-#define FLOW_HOST_TBL_RD_RSLT_DATA6_ADDRESS 0x4ac
-#endif
-#define FLOW_HOST_TBL_RD_RSLT_DATA6_NUM     1
-#define FLOW_HOST_TBL_RD_RSLT_DATA6_INC     0x4
-#define FLOW_HOST_TBL_RD_RSLT_DATA6_TYPE    REG_TYPE_RO
-#define FLOW_HOST_TBL_RD_RSLT_DATA6_DEFAULT 0x0
-	/*[field] DATA*/
-	#define FLOW_HOST_TBL_RD_RSLT_DATA6_DATA
-	#define FLOW_HOST_TBL_RD_RSLT_DATA6_DATA_OFFSET  0
-	#define FLOW_HOST_TBL_RD_RSLT_DATA6_DATA_LEN     32
-	#define FLOW_HOST_TBL_RD_RSLT_DATA6_DATA_DEFAULT 0x0
-
-struct flow_host_tbl_rd_rslt_data6 {
-	a_uint32_t  data:32;
-};
-
-union flow_host_tbl_rd_rslt_data6_u {
-	a_uint32_t val;
-	struct flow_host_tbl_rd_rslt_data6 bf;
-};
-
-/*[register] FLOW_HOST_TBL_RD_RSLT_DATA7*/
-#define FLOW_HOST_TBL_RD_RSLT_DATA7
-#if defined(APPE)
-#define FLOW_HOST_TBL_RD_RSLT_DATA7_ADDRESS 0x708
-#else
-#define FLOW_HOST_TBL_RD_RSLT_DATA7_ADDRESS 0x4b0
-#endif
-#define FLOW_HOST_TBL_RD_RSLT_DATA7_NUM     1
-#define FLOW_HOST_TBL_RD_RSLT_DATA7_INC     0x4
-#define FLOW_HOST_TBL_RD_RSLT_DATA7_TYPE    REG_TYPE_RO
-#define FLOW_HOST_TBL_RD_RSLT_DATA7_DEFAULT 0x0
-	/*[field] DATA*/
-	#define FLOW_HOST_TBL_RD_RSLT_DATA7_DATA
-	#define FLOW_HOST_TBL_RD_RSLT_DATA7_DATA_OFFSET  0
-	#define FLOW_HOST_TBL_RD_RSLT_DATA7_DATA_LEN     32
-	#define FLOW_HOST_TBL_RD_RSLT_DATA7_DATA_DEFAULT 0x0
-
-struct flow_host_tbl_rd_rslt_data7 {
-	a_uint32_t  data:32;
-};
-
-union flow_host_tbl_rd_rslt_data7_u {
-	a_uint32_t val;
-	struct flow_host_tbl_rd_rslt_data7 bf;
-};
-
-/*[register] FLOW_HOST_TBL_RD_RSLT_DATA8*/
-#define FLOW_HOST_TBL_RD_RSLT_DATA8
-#if defined(APPE)
-#define FLOW_HOST_TBL_RD_RSLT_DATA8_ADDRESS 0x70c
-#else
-#define FLOW_HOST_TBL_RD_RSLT_DATA8_ADDRESS 0x4b4
-#endif
-#define FLOW_HOST_TBL_RD_RSLT_DATA8_NUM     1
-#define FLOW_HOST_TBL_RD_RSLT_DATA8_INC     0x4
-#define FLOW_HOST_TBL_RD_RSLT_DATA8_TYPE    REG_TYPE_RO
-#define FLOW_HOST_TBL_RD_RSLT_DATA8_DEFAULT 0x0
-	/*[field] DATA*/
-	#define FLOW_HOST_TBL_RD_RSLT_DATA8_DATA
-	#define FLOW_HOST_TBL_RD_RSLT_DATA8_DATA_OFFSET  0
-	#define FLOW_HOST_TBL_RD_RSLT_DATA8_DATA_LEN     32
-	#define FLOW_HOST_TBL_RD_RSLT_DATA8_DATA_DEFAULT 0x0
-
-struct flow_host_tbl_rd_rslt_data8 {
-	a_uint32_t  data:32;
-};
-
-union flow_host_tbl_rd_rslt_data8_u {
-	a_uint32_t val;
-	struct flow_host_tbl_rd_rslt_data8 bf;
-};
-
-/*[register] FLOW_HOST_TBL_RD_RSLT_DATA9*/
-#define FLOW_HOST_TBL_RD_RSLT_DATA9
-#if defined(APPE)
-#define FLOW_HOST_TBL_RD_RSLT_DATA9_ADDRESS 0x710
-#else
-#define FLOW_HOST_TBL_RD_RSLT_DATA9_ADDRESS 0x4b8
-#endif
-#define FLOW_HOST_TBL_RD_RSLT_DATA9_NUM     1
-#define FLOW_HOST_TBL_RD_RSLT_DATA9_INC     0x4
-#define FLOW_HOST_TBL_RD_RSLT_DATA9_TYPE    REG_TYPE_RO
-#define FLOW_HOST_TBL_RD_RSLT_DATA9_DEFAULT 0x0
-	/*[field] DATA*/
-	#define FLOW_HOST_TBL_RD_RSLT_DATA9_DATA
-	#define FLOW_HOST_TBL_RD_RSLT_DATA9_DATA_OFFSET  0
-	#define FLOW_HOST_TBL_RD_RSLT_DATA9_DATA_LEN     32
-	#define FLOW_HOST_TBL_RD_RSLT_DATA9_DATA_DEFAULT 0x0
-
-struct flow_host_tbl_rd_rslt_data9 {
-	a_uint32_t  data:32;
-};
-
-union flow_host_tbl_rd_rslt_data9_u {
-	a_uint32_t val;
-	struct flow_host_tbl_rd_rslt_data9 bf;
+	struct flow_host_tbl_rd_rslt_data bf;
 };
 
 /*[table] IN_FLOW_3TUPLE_TBL*/

@@ -1,4 +1,5 @@
 /* Copyright (c) 2016-2018, The Linux Foundation. All rights reserved.
+ * Copyright (c) 2022, Qualcomm Innovation Center, Inc. All rights reserved.
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License version 2 and
@@ -33,12 +34,15 @@
 #include "qmi.h"
 #include "bus.h"
 #include "genl.h"
+#include "cnss_plat_ipc_qmi.h"
 
 #define CNSS_DUMP_FORMAT_VER		0x11
 #define CNSS_DUMP_FORMAT_VER_V2		0x22
 #define CNSS_DUMP_MAGIC_VER_V2		0x42445953
 #define CNSS_DUMP_NAME			"CNSS_WLAN"
 #define CNSS_DUMP_DESC_SIZE		0x1000
+#define CNSS_MHI_SEG_LEN		SZ_512K
+#define CNSS_DUMP_DESC_TOLERANCE	64
 #define CNSS_DUMP_SEG_VER		0x1
 #define WLAN_RECOVERY_DELAY		1000
 #define FILE_SYSTEM_READY		1
@@ -54,11 +58,14 @@
 #define CNSS_QMI_TIMEOUT_DEFAULT	10000
 #define CNSS_BDF_TYPE_DEFAULT		CNSS_BDF_ELF
 #define CNSS_TIME_SYNC_PERIOD_DEFAULT	900000
-#define QCN9000_DEFAULT_FW_FILE_NAME	"qcn9000/amss.bin"
-#define QCN9224_DEFAULT_FW_FILE_NAME	"qcn9224/amss.bin"
+#define DEFAULT_FW_FILE_NAME		"amss.bin"
 #define QCN9224_MLO_MIN_LINKS 2
 
 #define MAX_NUMBER_OF_SOCS 4
+#define CNSS_PROBE_ORDER_MASK 0xF
+#define CNSS_PROBE_ORDER_DEFAULT 0xFF
+#define CNSS_PROBE_ORDER_SHIFT 4
+
 struct cnss_plat_data *plat_env[MAX_NUMBER_OF_SOCS];
 int plat_env_index;
 
@@ -82,6 +89,14 @@ static int bdf_pci1;
 module_param(bdf_pci1, int, 0644);
 MODULE_PARM_DESC(bdf_pci1, "bdf_pci1");
 
+static int bdf_pci2;
+module_param(bdf_pci2, int, 0644);
+MODULE_PARM_DESC(bdf_pci1, "bdf_pci2");
+
+static int bdf_pci3;
+module_param(bdf_pci3, int, 0644);
+MODULE_PARM_DESC(bdf_pci1, "bdf_pci3");
+
 int timeout_factor = 1;
 module_param(timeout_factor, int, 0644);
 MODULE_PARM_DESC(timeout_factor, "timeout_factor");
@@ -102,12 +117,26 @@ static int disable_caldata_bmap;
 module_param(disable_caldata_bmap, int, 0644);
 MODULE_PARM_DESC(disable_caldata_bmap, "Bitmap to Disable Caldata download");
 
-static int disable_regdb_bmap = 0xF;
+static int disable_regdb_bmap;
 module_param(disable_regdb_bmap, int, 0644);
 MODULE_PARM_DESC(disable_regdb_bmap, "Bitmap to Disable RegDB download");
 
+/* probe_order needs to be defined in the format of hex.
+ * The order of socX can be rearranged based on the given value.
+ * For example, if default order is Soc0->Soc1->Soc2, then 0x213 will make
+ * the order as Soc1->Soc0->Soc2.
+ * If probe_order is 0 or not specified, then default order will be takes place.
+ */
+static unsigned int probe_order;
+module_param(probe_order, uint, 0644);
+MODULE_PARM_DESC(probe_order, "Probe order");
+
 #define FW_READY_DELAY	100  /* in msecs */
-#ifdef CONFIG_KASAN
+
+/* In IPQ5018, if CPU load is high FW_READY might take longer than
+ * default value of 15s. Increasing FW_READY timeout to 60s for IPQ5018
+ */
+#if defined(CONFIG_KASAN) || defined(CONFIG_IPQ_APSS_5018)
 static int fw_ready_timeout = 60;
 static int cold_boot_cal_timeout = 180;
 #else
@@ -127,6 +156,12 @@ MODULE_PARM_DESC(soc_version_major, "SOC Major Version");
 static int enable_qcn9224_support;
 module_param(enable_qcn9224_support, int, 0444);
 MODULE_PARM_DESC(enable_qcn9224_support, "Enable QCN9224 support");
+
+unsigned int enable_mlo_support;
+module_param(enable_mlo_support, uint, 0600);
+MODULE_PARM_DESC(enable_mlo_support, "enable_mlo_support");
+
+extern unsigned int mlo_num_chips;
 
 enum skip_cnss_options {
 	CNSS_SKIP_NONE,
@@ -172,6 +207,40 @@ static void cnss_set_plat_priv(struct platform_device *plat_dev,
 		return;
 	}
 	plat_env[plat_env_index++] = plat_priv;
+}
+
+static int cnss_get_event(unsigned long subsys_event,
+			  struct cnss_plat_data *plat_priv)
+{
+	int event = -EINVAL;
+
+	switch (subsys_event) {
+	case SUBSYS_BEFORE_SHUTDOWN:
+		event = CNSS_BEFORE_SHUTDOWN;
+		break;
+	case SUBSYS_AFTER_SHUTDOWN:
+		event = CNSS_AFTER_SHUTDOWN;
+		break;
+	case SUBSYS_BEFORE_POWERUP:
+		event = CNSS_BEFORE_POWERUP;
+		break;
+	case SUBSYS_AFTER_POWERUP:
+		event = CNSS_AFTER_POWERUP;
+		break;
+	case SUBSYS_RAMDUMP_NOTIFICATION:
+		event = CNSS_RAMDUMP_NOTIFICATION;
+		break;
+	case SUBSYS_POWERUP_FAILURE:
+		event = CNSS_POWERUP_FAILURE;
+		break;
+	case SUBSYS_PREPARE_FOR_FATAL_SHUTDOWN:
+		event = CNSS_PREPARE_FOR_FATAL_SHUTDOWN;
+		break;
+	default:
+		cnss_pr_err("Invalid event, event: %ld", subsys_event);
+		break;
+	}
+	return event;
 }
 
 void *cnss_get_pci_dev_by_device_id(int device_id)
@@ -259,6 +328,31 @@ int cnss_get_plat_env_index_from_plat_priv(struct cnss_plat_data *plat_priv)
 	}
 
 	return -EINVAL;
+}
+
+const char *cnss_get_fw_path(struct cnss_plat_data *plat_priv)
+{
+	switch (plat_priv->device_id) {
+	case QCA8074_DEVICE_ID:
+	case QCA8074V2_DEVICE_ID:
+		return "IPQ8074/";
+	case QCA6018_DEVICE_ID:
+		return "IPQ6018/";
+	case QCA5018_DEVICE_ID:
+		return "IPQ5018/";
+	case QCA9574_DEVICE_ID:
+		return "IPQ9574/";
+	case QCN9000_DEVICE_ID:
+		return "qcn9000/";
+	case QCN6122_DEVICE_ID:
+		return "qcn6122/";
+	case QCN9224_DEVICE_ID:
+		return "qcn9224/";
+	default:
+		cnss_pr_err("No such device id 0x%lx\n", plat_priv->device_id);
+	}
+
+	return "UNKNOWN";
 }
 
 #ifdef CONFIG_CNSS2_PM
@@ -424,6 +518,95 @@ void cnss_remove_pm_qos(struct device *dev)
 }
 EXPORT_SYMBOL(cnss_remove_pm_qos);
 
+static int cnss_cal_db_mem_update(struct cnss_plat_data *plat_priv,
+				  enum cnss_cal_db_op op, u32 *size)
+{
+	int ret = 0;
+	char filename[50];
+
+	u32 timeout = cnss_get_qmi_timeout(plat_priv)
+		      + CNSS_DAEMON_CONNECT_TIMEOUT_MS;
+
+	if (op >= CNSS_CAL_DB_INVALID_OP)
+		return -EINVAL;
+
+	if ((plat_priv->bus_type == CNSS_BUS_PCI) ||
+	    (plat_priv->device_id == QCN6122_DEVICE_ID))
+		snprintf(filename, sizeof(filename),
+			 CNSS_CAL_DB_FILE_PREFIX"_%s"CNSS_CAL_DB_FILE_SUFFIX,
+			 plat_priv->device_name);
+	else
+		snprintf(filename, sizeof(filename),
+			 CNSS_CAL_DB_FILE_PREFIX CNSS_CAL_DB_FILE_SUFFIX);
+
+	cnss_pr_info("%s: File Operation %u size %lu file name %s\n", __func__,
+		     op, *size, filename);
+
+	if (*size == 0) {
+		cnss_pr_err("Invalid cal file size\n");
+		return -EINVAL;
+	}
+
+	/* Ensure cnss-daemon is connected */
+	if (!is_cnss_daemon_connected(timeout)) {
+		cnss_pr_err("Daemon not yet connected\n");
+		CNSS_ASSERT(0);
+		return ret;
+	}
+
+	if (!plat_priv->cal_mem->va) {
+		cnss_pr_err("CAL DB Memory not setup for FW\n");
+		return -EINVAL;
+	}
+
+	/* Copy CAL DB file contents to/from CAL_TYPE_DDR mem allocated to FW */
+	if (op == CNSS_CAL_DB_DOWNLOAD) {
+		cnss_pr_dbg("Initiating Calibration file download to mem\n");
+		ret = cnss_plat_ipc_qmi_file_download(filename,
+						      plat_priv->cal_mem->va,
+						      size);
+	} else {
+		cnss_pr_dbg("Initiating Calibration mem upload to file\n");
+		ret = cnss_plat_ipc_qmi_file_upload(filename,
+						    plat_priv->cal_mem->va,
+						    *size);
+	}
+
+	if (ret)
+		cnss_pr_err("Cal DB file %s %s failure\n",
+			    filename,
+			    op == CNSS_CAL_DB_DOWNLOAD ? "download" : "upload");
+	else
+		cnss_pr_dbg("Cal DB file %s %s size %d done\n",
+			    filename,
+			    op == CNSS_CAL_DB_DOWNLOAD ? "download" : "upload",
+			    *size);
+
+	return ret;
+}
+
+static int cnss_cal_mem_upload_to_file(struct cnss_plat_data *plat_priv)
+{
+	if (plat_priv->cal_file_size > plat_priv->cal_mem->size) {
+		cnss_pr_err("Cal file size is larger than Cal DB Mem size\n");
+		return -EINVAL;
+	}
+	return cnss_cal_db_mem_update(plat_priv, CNSS_CAL_DB_UPLOAD,
+				      &plat_priv->cal_file_size);
+}
+
+int cnss_cal_file_download_to_mem(struct cnss_plat_data *plat_priv,
+				  u32 *cal_file_size)
+{
+	/* To download pass the total size of cal DB mem allocated.
+	 * After cal file is download to mem, its size is updated in
+	 * return pointer
+	 */
+	*cal_file_size = plat_priv->cal_mem->size;
+	return cnss_cal_db_mem_update(plat_priv, CNSS_CAL_DB_DOWNLOAD,
+				      cal_file_size);
+}
+
 int cnss_wlan_enable(struct device *dev,
 		     struct cnss_wlan_enable_cfg *config,
 		     enum cnss_driver_mode mode,
@@ -431,9 +614,12 @@ int cnss_wlan_enable(struct device *dev,
 {
 	struct cnss_plat_data *plat_priv = cnss_bus_dev_to_plat_priv(dev);
 	int ret;
+	u32 cal_file_size = 0;
 
 	if (!plat_priv)
 		return 0;
+
+	cal_file_size = plat_priv->cal_file_size;
 
 	if (plat_priv->device_id == QCA6174_DEVICE_ID)
 		return 0;
@@ -471,10 +657,28 @@ int cnss_wlan_enable(struct device *dev,
 
 skip_cfg:
 
-	if (mode == CNSS_CALIBRATION || mode == CNSS_FTM_CALIBRATION)
+	if (mode == CNSS_CALIBRATION || mode == CNSS_FTM_CALIBRATION) {
 		set_bit(CNSS_COLD_BOOT_CAL, &plat_priv->driver_state);
+		/* Only check whether cnss-daemon is connected.
+		 * It is not required to wait until it gets connected here.
+		 * Hence pass the timeout value as 0.
+		 */
+		if (is_cnss_daemon_connected(0)) {
+			cnss_pr_dbg("%s: cal_file_size %u !\n", __func__,
+				    cal_file_size);
+			cnss_wlfw_cal_report_req_send_sync(plat_priv,
+							   cal_file_size);
+			plat_priv->cal_time = jiffies;
+		}
+	}
 
 	ret = cnss_wlfw_wlan_mode_send_sync(plat_priv, mode);
+
+	if (mode == CNSS_MISSION && plat_priv->qdss_support) {
+		cnss_pr_info("Starting QDSS for %s\n", plat_priv->device_name);
+		cnss_wlfw_qdss_dnld_send_sync(plat_priv);
+	}
+
 out:
 	return ret;
 }
@@ -758,7 +962,7 @@ int cnss_get_mlo_chip_id(struct device *dev)
 	if (of_property_read_u32(bus_dev->of_node, "mlo_chip_info",
 				 &mlo_chip_phandle)) {
 		cnss_pr_err("could not get mlo_chip_phandle\n");
-		return -EINVAL;
+		return -ENOENT;
 	}
 
 	mlo_chip_node = of_find_node_by_phandle(mlo_chip_phandle);
@@ -789,6 +993,9 @@ bool cnss_get_mlo_capable(struct device *dev)
 		return false;
 
 	if (plat_priv->device_id != QCN9224_DEVICE_ID)
+		return false;
+
+	if (!plat_priv->mlo_support)
 		return false;
 
 	bus_dev = &plat_priv->plat_dev->dev;
@@ -870,7 +1077,7 @@ int cnss_get_num_mlo_links(struct device *dev)
 	if (of_property_read_u32(bus_dev->of_node, "mlo_chip_info",
 				 &mlo_chip_phandle)) {
 		cnss_pr_err("could not get mlo_chip_phandle\n");
-		return -EINVAL;
+		return -ENOENT;
 	}
 
 	mlo_chip_node = of_find_node_by_phandle(mlo_chip_phandle);
@@ -918,6 +1125,10 @@ int cnss_get_num_mlo_capable_devices(unsigned int *device_id, int num_elements)
 						plat_priv->device_id;
 		}
 	}
+
+	if (mlo_num_chips)
+		return mlo_num_chips;
+
 	return num_capable;
 }
 EXPORT_SYMBOL(cnss_get_num_mlo_capable_devices);
@@ -951,7 +1162,7 @@ int cnss_get_dev_link_ids(struct device *dev, u8 *link_ids, int max_elements)
 	if (of_property_read_u32(bus_dev->of_node, "mlo_chip_info",
 				 &mlo_chip_phandle)) {
 		cnss_pr_err("could not get mlo_chip_phandle\n");
-		return -EINVAL;
+		return -ENOENT;
 	}
 
 	mlo_chip_node = of_find_node_by_phandle(mlo_chip_phandle);
@@ -1027,8 +1238,11 @@ void cnss_wait_for_cold_boot_cal_done(struct device *dev)
 		 * Check if this device has already completed cold boot cal
 		 * If already completed, we need not wait
 		 */
-		if (!test_bit(CNSS_COLD_BOOT_CAL, &plat_priv->driver_state))
+		if (!test_bit(CNSS_COLD_BOOT_CAL, &plat_priv->driver_state)) {
+			cnss_pr_dbg("%s: Device already completed cold boot cal!\n",
+				    __func__);
 			return;
+		}
 
 		cnss_pr_info("Coldboot Calbration wait started for Device: 0x%lx, timeout: %d seconds\n",
 			     plat_priv->device_id, cold_boot_cal_timeout);
@@ -1171,6 +1385,8 @@ static char *cnss_driver_event_to_str(enum cnss_driver_event_type type)
 		return "QDSS_TRACE_SAVE";
 	case CNSS_DRIVER_EVENT_QDSS_TRACE_FREE:
 		return "QDSS_TRACE_FREE";
+	case CNSS_DRIVER_EVENT_QDSS_MEM_READY:
+		return "QDSS_MEM_READY";
 	case CNSS_DRIVER_EVENT_M3_DUMP_UPLOAD_REQ:
 		return "M3_DUMP_UPLOAD_REQ";
 	case CNSS_DRIVER_EVENT_MAX:
@@ -1533,10 +1749,13 @@ static int cnss_qca8074_notifier_atomic_nb(struct notifier_block *nb,
 	struct cnss_plat_data *plat_priv =
 		container_of(nb, struct cnss_plat_data, modem_atomic_nb);
 	struct cnss_wlan_driver *driver_ops;
-
+	int event_code = cnss_get_event(code, plat_priv);
 	driver_ops = plat_priv->driver_ops;
 
-	if (code == SUBSYS_PREPARE_FOR_FATAL_SHUTDOWN)
+	if (event_code < 0)
+		return NOTIFY_OK;
+
+	if (event_code == CNSS_PREPARE_FOR_FATAL_SHUTDOWN) {
 		cnss_pr_err("XXX TARGET ASSERTED XXX\n");
 		cnss_pr_err("XXX TARGET %s instance_id 0x%x plat_env idx %d XXX\n",
 			    plat_priv->device_name,
@@ -1547,6 +1766,7 @@ static int cnss_qca8074_notifier_atomic_nb(struct notifier_block *nb,
 		driver_ops->fatal((struct pci_dev *)plat_priv->plat_dev,
 				  (const struct pci_device_id *)
 				  plat_priv->plat_dev_id);
+	}
 
 	return NOTIFY_OK;
 }
@@ -1558,21 +1778,25 @@ static int cnss_qcn9000_notifier_nb(struct notifier_block *nb,
 	struct cnss_plat_data *plat_priv =
 		container_of(nb, struct cnss_plat_data, modem_nb);
 	struct cnss_wlan_driver *driver_ops;
+	int event_code = cnss_get_event(code, plat_priv);
 
 	driver_ops = plat_priv->driver_ops;
 
-	if (code == SUBSYS_AFTER_POWERUP) {
+	if (event_code < 0)
+		return NOTIFY_OK;
+
+	if (event_code == CNSS_AFTER_POWERUP) {
 		driver_ops->probe((struct pci_dev *)plat_priv->plat_dev,
 				  (const struct pci_device_id *)
 				  plat_priv->plat_dev_id);
 		clear_bit(CNSS_DRIVER_RECOVERY, &plat_priv->driver_state);
 		clear_bit(CNSS_DRIVER_LOADING, &plat_priv->driver_state);
 		set_bit(CNSS_DRIVER_PROBED, &plat_priv->driver_state);
-	} else if (code == SUBSYS_BEFORE_SHUTDOWN) {
+	} else if (event_code == CNSS_BEFORE_SHUTDOWN) {
 		driver_ops->remove((struct pci_dev *)plat_priv->plat_dev);
 		clear_bit(CNSS_DRIVER_PROBED, &plat_priv->driver_state);
 		clear_bit(CNSS_DEV_ERR_NOTIFY, &plat_priv->driver_state);
-	} else if (code == SUBSYS_RAMDUMP_NOTIFICATION) {
+	} else if (event_code == CNSS_RAMDUMP_NOTIFICATION) {
 		coresight_abort();
 		driver_ops->reinit((struct pci_dev *)plat_priv->plat_dev,
 				   (const struct pci_device_id *)
@@ -1582,7 +1806,7 @@ static int cnss_qcn9000_notifier_nb(struct notifier_block *nb,
 	} else {
 		driver_ops->update_status((struct pci_dev *)plat_priv->plat_dev,
 					  (const struct pci_device_id *)
-					  plat_priv->plat_dev_id, code);
+					  plat_priv->plat_dev_id, event_code);
 	}
 
 	return NOTIFY_OK;
@@ -1619,31 +1843,35 @@ static int cnss_qca8074_notifier_nb(struct notifier_block *nb,
 	struct cnss_plat_data *plat_priv =
 		container_of(nb, struct cnss_plat_data, modem_nb);
 	struct cnss_wlan_driver *driver_ops;
+	int event_code = cnss_get_event(code, plat_priv);
 
 	driver_ops = plat_priv->driver_ops;
 
-	if (code == SUBSYS_AFTER_POWERUP) {
+	if (event_code < 0)
+		return NOTIFY_OK;
+
+	if (event_code == CNSS_AFTER_POWERUP) {
 		driver_ops->probe((struct pci_dev *)plat_priv->plat_dev,
 				  (const struct pci_device_id *)
 				  plat_priv->plat_dev_id);
-	} else if (code == SUBSYS_BEFORE_SHUTDOWN) {
-		cnss_bus_free_fw_mem(plat_priv);
-		cnss_bus_free_qdss_mem(plat_priv);
+	} else if (event_code == CNSS_BEFORE_SHUTDOWN) {
 		driver_ops->remove((struct pci_dev *)plat_priv->plat_dev);
-	} else if (code == SUBSYS_RAMDUMP_NOTIFICATION) {
+	} else if (event_code == CNSS_RAMDUMP_NOTIFICATION) {
 		coresight_abort();
 		driver_ops->reinit((struct pci_dev *)plat_priv->plat_dev,
 				   (const struct pci_device_id *)
 				   plat_priv->plat_dev_id);
 		return NOTIFY_DONE;
 	} else {
-		if (code == SUBSYS_AFTER_SHUTDOWN) {
+		if (event_code == CNSS_AFTER_SHUTDOWN) {
 			clear_bit(CNSS_FW_READY, &plat_priv->driver_state);
 			clear_bit(CNSS_FW_MEM_READY, &plat_priv->driver_state);
+			cnss_bus_free_fw_mem(plat_priv);
+			cnss_bus_free_qdss_mem(plat_priv);
 		}
 		driver_ops->update_status((struct pci_dev *)plat_priv->plat_dev,
 					  (const struct pci_device_id *)
-					  plat_priv->plat_dev_id, code);
+					  plat_priv->plat_dev_id, event_code);
 		cnss_free_soc_info(plat_priv);
 	}
 
@@ -1708,6 +1936,96 @@ int cnss_unregister_notifier_cb(struct cnss_plat_data *plat_priv)
 	}
 	return 0;
 }
+
+static void cnss_sort_probe_order(void)
+{
+	int i = 0;
+	int j = 0;
+
+	for (i = 0; i < plat_env_index; i++)
+		for (j = i + 1; j < plat_env_index; j++)
+			if (plat_env[i]->probe_order > plat_env[j]->probe_order)
+				swap(plat_env[i], plat_env[j]);
+}
+
+int cnss_wlan_probe_driver(void)
+{
+	int ret;
+	int i;
+	struct cnss_plat_data *plat_priv;
+
+	cnss_sort_probe_order();
+	for (i = 0; i < plat_env_index; i++) {
+		plat_priv = plat_env[i];
+
+		if (!plat_priv)
+			continue;
+
+		if (!plat_priv->cold_boot_support &&
+		    (driver_mode == CNSS_CALIBRATION ||
+		     driver_mode == CNSS_FTM_CALIBRATION)) {
+			cnss_pr_info("Skipping driver register for device 0x%lx for mode %d\n",
+				     plat_priv->device_id, driver_mode);
+			continue;
+		}
+
+		plat_priv->target_asserted = 0;
+		plat_priv->target_assert_timestamp = 0;
+		plat_priv->driver_status = CNSS_LOAD_UNLOAD;
+
+		if (plat_priv->bus_type == CNSS_BUS_PCI) {
+			cnss_pci_init(plat_priv);
+			set_bit(CNSS_DRIVER_LOADING, &plat_priv->driver_state);
+		}
+		ret = cnss_register_subsys(plat_priv);
+		if (ret)
+			goto reset_ctx;
+
+		plat_priv->driver_status = CNSS_INITIALIZED;
+	}
+
+	return 0;
+
+reset_ctx:
+	cnss_pr_err("Failed to get subsystem, err = %d\n", ret);
+	plat_priv->driver_status = CNSS_UNINITIALIZED;
+	plat_priv->driver_ops = NULL;
+	return ret;
+}
+EXPORT_SYMBOL(cnss_wlan_probe_driver);
+
+int cnss_wlan_register_driver_ops(struct cnss_wlan_driver *driver_ops)
+{
+	int i;
+	struct cnss_plat_data *plat_priv;
+
+	for (i = 0; i < plat_env_index; i++) {
+		plat_priv = plat_env[i];
+
+		if (!plat_priv)
+			continue;
+
+		switch (plat_priv->bus_type) {
+		case CNSS_BUS_AHB:
+			if (strcmp(driver_ops->name, "pld_ahb") == 0)
+				plat_priv->driver_ops = driver_ops;
+
+			break;
+		case CNSS_BUS_PCI:
+			if (strcmp(driver_ops->name, "pld_pcie") == 0)
+				plat_priv->driver_ops = driver_ops;
+
+			break;
+		default:
+			cnss_pr_err("%s: Invalid bus type for device 0x%lx\n",
+				    __func__, plat_priv->device_id);
+			break;
+		}
+	}
+
+	return 0;
+}
+EXPORT_SYMBOL(cnss_wlan_register_driver_ops);
 
 int cnss_wlan_register_driver(struct cnss_wlan_driver *driver_ops)
 {
@@ -1974,17 +2292,21 @@ static int cnss_modem_notifier_nb(struct notifier_block *nb,
 	struct cnss_plat_data *plat_priv =
 		container_of(nb, struct cnss_plat_data, modem_nb);
 	struct cnss_esoc_info *esoc_info;
+	int event_code = cnss_get_event(code, plat_priv);
 
-	cnss_pr_dbg("Modem notifier: event %lu\n", code);
+	cnss_pr_dbg("Modem notifier: event %lu\n", event_code);
 
 	if (!plat_priv)
 		return NOTIFY_DONE;
 
+	if (event_code < 0)
+		return NOTIFY_OK;
+
 	esoc_info = &plat_priv->esoc_info;
 
-	if (code == SUBSYS_AFTER_POWERUP)
+	if (event_code == CNSS_AFTER_POWERUP)
 		esoc_info->modem_current_status = 1;
-	else if (code == SUBSYS_BEFORE_SHUTDOWN)
+	else if (event_code == CNSS_BEFORE_SHUTDOWN)
 		esoc_info->modem_current_status = 0;
 	else
 		return NOTIFY_DONE;
@@ -2467,13 +2789,21 @@ static int cnss_cold_boot_cal_done_hdlr(struct cnss_plat_data *plat_priv,
 {
 	struct cnss_cal_info *cal_info = data;
 
-	if (!test_bit(CNSS_COLD_BOOT_CAL, &plat_priv->driver_state))
+	if (!test_bit(CNSS_COLD_BOOT_CAL, &plat_priv->driver_state)) {
+		cnss_pr_dbg("%s: Driver not in cold boot cal state, returning!\n",
+			    __func__);
 		goto out;
+	}
 
 	switch (cal_info->cal_status) {
 	case CNSS_CAL_DONE:
 		cnss_pr_info("Coldboot Calibration completed successfully for device 0x%lx\n",
 			     plat_priv->device_id);
+		/* Send cal upload req to cnss-daemon after confirming that
+		 * it is connected to cnss2 over QMI.
+		 */
+		if (is_cnss_daemon_connected(0))
+			cnss_cal_mem_upload_to_file(plat_priv);
 		plat_priv->cal_done = true;
 		break;
 	case CNSS_CAL_TIMEOUT:
@@ -2704,6 +3034,16 @@ static int cnss_qdss_trace_free_hdlr(struct cnss_plat_data *plat_priv)
 	cnss_bus_free_qdss_mem(plat_priv);
 
 	return 0;
+}
+
+static int cnss_qdss_mem_ready_hdlr(struct cnss_plat_data *plat_priv)
+{
+	if (!plat_priv->qdss_support)
+		return 0;
+
+	return cnss_wlfw_send_qdss_trace_mode_req(plat_priv,
+						  QMI_WLFW_QDSS_TRACE_ON_V01,
+						  0);
 }
 
 static void m3_dump_open_timeout_func(struct timer_list *timer)
@@ -3111,6 +3451,9 @@ static void cnss_driver_event_work(struct work_struct *work)
 		case CNSS_DRIVER_EVENT_QDSS_TRACE_FREE:
 			ret = cnss_qdss_trace_free_hdlr(plat_priv);
 			break;
+		case CNSS_DRIVER_EVENT_QDSS_MEM_READY:
+			ret = cnss_qdss_mem_ready_hdlr(plat_priv);
+			break;
 		case CNSS_DRIVER_EVENT_M3_DUMP_UPLOAD_REQ:
 			ret = cnss_m3_dump_upload_req_hdlr(plat_priv,
 							   event->data);
@@ -3339,6 +3682,23 @@ static void cnss_unregister_ramdump_v1(struct cnss_plat_data *plat_priv)
 				  ramdump_info->ramdump_pa);
 }
 
+static u32 cnss_get_dump_desc_size(struct cnss_plat_data *plat_priv)
+{
+	u32 descriptor_size = 0;
+	u32 segment_len = CNSS_MHI_SEG_LEN;
+	u32 wlan_sram_size = plat_priv->ramdump_info_v2.ramdump_size;
+	struct pci_dev *pci_dev = plat_priv->pci_dev;
+
+	of_property_read_u32(pci_dev->dev.of_node, "qti,rddm-seg-len",
+			     &segment_len);
+
+	descriptor_size = (((wlan_sram_size / segment_len) +
+			    CNSS_DUMP_DESC_TOLERANCE) *
+			    sizeof(struct cnss_dump_seg));
+
+	return descriptor_size;
+}
+
 static int cnss_register_ramdump_v2(struct cnss_plat_data *plat_priv)
 {
 	int ret = 0;
@@ -3367,7 +3727,8 @@ static int cnss_register_ramdump_v2(struct cnss_plat_data *plat_priv)
 	info_v2->dump_data_vaddr = NULL;
 	info_v2->dump_data_valid = false;
 
-	info_v2->dump_data_vaddr = kzalloc(CNSS_DUMP_DESC_SIZE, GFP_KERNEL);
+	info_v2->dump_data_vaddr = kzalloc(cnss_get_dump_desc_size(plat_priv),
+					   GFP_KERNEL);
 	if (!info_v2->dump_data_vaddr)
 		return -ENOMEM;
 
@@ -3880,10 +4241,30 @@ void cnss_update_platform_feature_support(u8 type, u32 instance_id, u32 value)
 		cnss_pr_info("Setting regdb_support=%d for instance_id 0x%x\n",
 			     value, instance_id);
 		break;
+	case CNSS_GENL_MSG_TYPE_QDSS_SUPPORT:
+		plat_priv->qdss_support = value;
+		cnss_pr_info("Setting qdss_support=%d for instance_id 0x%x\n",
+			     value, instance_id);
+		break;
+	case CNSS_GENL_MSG_TYPE_QDSS_START:
+		cnss_pr_info("Starting QDSS for %s", plat_priv->device_name);
+		cnss_wlfw_qdss_dnld_send_sync(plat_priv);
+		break;
+	case CNSS_GENL_MSG_TYPE_QDSS_STOP:
+		cnss_pr_info("Stopping QDSS for %s", plat_priv->device_name);
+		cnss_wlfw_send_qdss_trace_mode_req(plat_priv,
+						   QMI_WLFW_QDSS_TRACE_OFF_V01,
+						   value);
+		break;
 	default:
 		cnss_pr_err("Unknown type %d\n", type);
 		break;
 	}
+}
+
+unsigned int cnss_get_global_driver_mode(void)
+{
+	return driver_mode;
 }
 
 static int platform_get_qcn6122_userpd_id(struct platform_device *plat_dev,
@@ -4050,6 +4431,21 @@ static void cnss_rproc_unregister(struct cnss_plat_data *plat_priv)
 	}
 }
 
+static void cnss_fill_probe_order(struct cnss_plat_data *plat_priv)
+{
+	u32 prb_order = 0;
+
+	if (probe_order) {
+		plat_priv->probe_order = (probe_order & CNSS_PROBE_ORDER_MASK);
+		probe_order >>= CNSS_PROBE_ORDER_SHIFT;
+	} else if (!of_property_read_u32(plat_priv->plat_dev->dev.of_node,
+					 "probe-order", &prb_order)) {
+		plat_priv->probe_order = prb_order;
+	} else {
+		plat_priv->probe_order = CNSS_PROBE_ORDER_DEFAULT;
+	}
+}
+
 static int cnss_probe(struct platform_device *plat_dev)
 {
 	int ret = 0;
@@ -4154,9 +4550,13 @@ static int cnss_probe(struct platform_device *plat_dev)
 	plat_priv->service_id = WLFW_SERVICE_ID_V01;
 
 	switch (plat_priv->device_id) {
-	case QCN9000_DEVICE_ID:
 	case QCN9224_DEVICE_ID:
+		plat_priv->mlo_support = !!enable_mlo_support;
+		plat_priv->mlo_capable = 1;
+		/* Fall Through */
+	case QCN9000_DEVICE_ID:
 		plat_priv->bus_type = CNSS_BUS_PCI;
+		plat_priv->bdf_dnld_method = WLFW_SEND_BDF_OVER_QMI_V01;
 		plat_priv->qrtr_node_id = node_id;
 		plat_priv->wlfw_service_instance_id = node_id + FW_ID_BASE;
 
@@ -4165,20 +4565,27 @@ static int cnss_probe(struct platform_device *plat_dev)
 		else
 			node_id_base = QCN9000_NODE_ID_BASE;
 
-		if (plat_priv->wlfw_service_instance_id == node_id_base)
+		switch (plat_priv->wlfw_service_instance_id - node_id_base) {
+		case 0:
 			plat_priv->board_info.board_id_override = bdf_pci0;
-		else if (plat_priv->wlfw_service_instance_id ==
-			 node_id_base + 1)
+			break;
+		case 1:
 			plat_priv->board_info.board_id_override = bdf_pci1;
+			break;
+		case 2:
+			plat_priv->board_info.board_id_override = bdf_pci2;
+			break;
+		case 3:
+			plat_priv->board_info.board_id_override = bdf_pci3;
+			break;
+		default:
+			break;
+		}
 
-		if (plat_priv->device_id == QCN9224_DEVICE_ID)
-			snprintf(plat_priv->firmware_name,
-				 sizeof(plat_priv->firmware_name),
-				 QCN9224_DEFAULT_FW_FILE_NAME);
-		else
-			snprintf(plat_priv->firmware_name,
-				 sizeof(plat_priv->firmware_name),
-				 QCN9000_DEFAULT_FW_FILE_NAME);
+		snprintf(plat_priv->firmware_name,
+			 sizeof(plat_priv->firmware_name),
+			 "%s%s", cnss_get_fw_path(plat_priv),
+			 DEFAULT_FW_FILE_NAME);
 		break;
 	case QCA8074_DEVICE_ID:
 	case QCA8074V2_DEVICE_ID:
@@ -4186,12 +4593,14 @@ static int cnss_probe(struct platform_device *plat_dev)
 	case QCA6018_DEVICE_ID:
 	case QCA9574_DEVICE_ID:
 		plat_priv->bus_type = CNSS_BUS_AHB;
+		plat_priv->bdf_dnld_method = WLFW_DIRECT_BDF_COPY_V01;
 		plat_priv->wlfw_service_instance_id =
 			WLFW_SERVICE_INS_ID_V01_QCA8074;
 		plat_priv->board_info.board_id_override = bdf_integrated;
 		break;
 	case QCN6122_DEVICE_ID:
 		plat_priv->bus_type = CNSS_BUS_AHB;
+		plat_priv->bdf_dnld_method = WLFW_DIRECT_BDF_COPY_V01;
 		plat_priv->userpd_id = userpd_id;
 		plat_priv->wlfw_service_instance_id =
 			WLFW_SERVICE_INS_ID_V01_QCN6122 + userpd_id;
@@ -4224,6 +4633,7 @@ static int cnss_probe(struct platform_device *plat_dev)
 	if (ret)
 		goto out;
 
+	cnss_fill_probe_order(plat_priv);
 	cnss_set_mod_param_feature_support(plat_priv, CALDATA);
 	cnss_set_mod_param_feature_support(plat_priv, REGDB);
 	cnss_set_plat_priv(plat_dev, plat_priv);
@@ -4371,12 +4781,14 @@ static int __init cnss_initialize(void)
 	if (ret)
 		cnss_debug_deinit();
 	cnss_bus_init_by_type(CNSS_BUS_PCI);
+	cnss_plat_ipc_qmi_svc_init();
 
 	return ret;
 }
 
 static void __exit cnss_exit(void)
 {
+	cnss_plat_ipc_qmi_svc_exit();
 	platform_driver_unregister(&cnss_platform_driver);
 	cnss_debug_deinit();
 }

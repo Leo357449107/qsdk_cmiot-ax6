@@ -1,0 +1,266 @@
+Source-Makefile: package/boot/uboot-kirkwood/Makefile
+
+Package: u-boot-dockstar
+Default: y if (TARGET_kirkwood_Default || TARGET_kirkwood_DEVICE_seagate_dockstar || TARGET_DEVICE_kirkwood_DEVICE_seagate_dockstar)
+Version: 2019.01-2
+Depends: +libc +GCC_LIBSSP:libssp +USE_GLIBC:librt +USE_GLIBC:libpthread @!IN_SDK @TARGET_kirkwood
+Conflicts: 
+Menu-Depends: 
+Provides: 
+Build-Variant: dockstar
+Section: boot
+Category: Boot Loaders
+Title: U-Boot for Seagate DockStar
+Maintainer: 
+Source: u-boot-2019.01.tar.bz2
+License: GPL-2.0 GPL-2.0+
+LicenseFiles: Licenses/README
+Type: bin
+Description: U-Boot for Seagate DockStar
+http://www.denx.de/wiki/U-Boot
+
+@@
+
+
+Package: u-boot-dockstar_second_stage
+Default: y if (TARGET_kirkwood_Default || TARGET_kirkwood_DEVICE_seagate_dockstar || TARGET_DEVICE_kirkwood_DEVICE_seagate_dockstar)
+Version: 2019.01-2
+Depends: +libc +GCC_LIBSSP:libssp +USE_GLIBC:librt +USE_GLIBC:libpthread @!IN_SDK @TARGET_kirkwood
+Conflicts: 
+Menu-Depends: 
+Provides: 
+Build-Variant: dockstar_second_stage
+Section: boot
+Category: Boot Loaders
+Title: U-Boot for Seagate DockStar (second stage)
+Maintainer: 
+Source: u-boot-2019.01.tar.bz2
+License: GPL-2.0 GPL-2.0+
+LicenseFiles: Licenses/README
+Type: bin
+Description: U-Boot for Seagate DockStar (second stage)
+http://www.denx.de/wiki/U-Boot
+
+@@
+
+
+Package: u-boot-goflexhome
+Default: y if (TARGET_kirkwood_Default || TARGET_kirkwood_DEVICE_seagate_goflexhome || TARGET_kirkwood_DEVICE_seagate_goflexnet || TARGET_DEVICE_kirkwood_DEVICE_seagate_goflexhome || TARGET_DEVICE_kirkwood_DEVICE_seagate_goflexnet)
+Version: 2019.01-2
+Depends: +libc +GCC_LIBSSP:libssp +USE_GLIBC:librt +USE_GLIBC:libpthread @!IN_SDK @TARGET_kirkwood
+Conflicts: 
+Menu-Depends: 
+Provides: 
+Build-Variant: goflexhome
+Section: boot
+Category: Boot Loaders
+Title: U-Boot for the Seagate GoFlexHome/GoFlexNet
+Maintainer: 
+Source: u-boot-2019.01.tar.bz2
+License: GPL-2.0 GPL-2.0+
+LicenseFiles: Licenses/README
+Type: bin
+Description: U-Boot for the Seagate GoFlexHome/GoFlexNet
+http://www.denx.de/wiki/U-Boot
+
+@@
+
+
+Package: u-boot-ib62x0
+Default: y if (TARGET_kirkwood_Default || TARGET_kirkwood_DEVICE_raidsonic_ib-nas62x0 || TARGET_DEVICE_kirkwood_DEVICE_raidsonic_ib-nas62x0)
+Version: 2019.01-2
+Depends: +libc +GCC_LIBSSP:libssp +USE_GLIBC:librt +USE_GLIBC:libpthread @!IN_SDK @TARGET_kirkwood
+Conflicts: 
+Menu-Depends: 
+Provides: 
+Build-Variant: ib62x0
+Section: boot
+Category: Boot Loaders
+Title: U-Boot for RaidSonic ICY BOX NAS6210 and NAS6220
+Maintainer: 
+Source: u-boot-2019.01.tar.bz2
+License: GPL-2.0 GPL-2.0+
+LicenseFiles: Licenses/README
+Type: bin
+Description: U-Boot for RaidSonic ICY BOX NAS6210 and NAS6220
+http://www.denx.de/wiki/U-Boot
+
+@@
+
+
+Package: u-boot-ib62x0_second_stage
+Default: y if (TARGET_kirkwood_Default || TARGET_kirkwood_DEVICE_raidsonic_ib-nas62x0 || TARGET_DEVICE_kirkwood_DEVICE_raidsonic_ib-nas62x0)
+Version: 2019.01-2
+Depends: +libc +GCC_LIBSSP:libssp +USE_GLIBC:librt +USE_GLIBC:libpthread @!IN_SDK @TARGET_kirkwood
+Conflicts: 
+Menu-Depends: 
+Provides: 
+Build-Variant: ib62x0_second_stage
+Section: boot
+Category: Boot Loaders
+Title: U-Boot for RaidSonic ICY BOX NAS6210 and NAS6220 (second stage)
+Maintainer: 
+Source: u-boot-2019.01.tar.bz2
+License: GPL-2.0 GPL-2.0+
+LicenseFiles: Licenses/README
+Type: bin
+Description: U-Boot for RaidSonic ICY BOX NAS6210 and NAS6220 (second stage)
+http://www.denx.de/wiki/U-Boot
+
+@@
+
+
+Package: u-boot-iconnect
+Default: y if (TARGET_kirkwood_Default || TARGET_kirkwood_DEVICE_iom_iconnect-1.1 || TARGET_DEVICE_kirkwood_DEVICE_iom_iconnect-1.1)
+Version: 2019.01-2
+Depends: +libc +GCC_LIBSSP:libssp +USE_GLIBC:librt +USE_GLIBC:libpthread @!IN_SDK @TARGET_kirkwood
+Conflicts: 
+Menu-Depends: 
+Provides: 
+Build-Variant: iconnect
+Section: boot
+Category: Boot Loaders
+Title: U-Boot for Iomega iConnect Wireless
+Maintainer: 
+Source: u-boot-2019.01.tar.bz2
+License: GPL-2.0 GPL-2.0+
+LicenseFiles: Licenses/README
+Type: bin
+Description: U-Boot for Iomega iConnect Wireless
+http://www.denx.de/wiki/U-Boot
+
+@@
+
+
+Package: u-boot-iconnect_second_stage
+Default: y if (TARGET_kirkwood_Default || TARGET_kirkwood_DEVICE_iom_iconnect-1.1 || TARGET_DEVICE_kirkwood_DEVICE_iom_iconnect-1.1)
+Version: 2019.01-2
+Depends: +libc +GCC_LIBSSP:libssp +USE_GLIBC:librt +USE_GLIBC:libpthread @!IN_SDK @TARGET_kirkwood
+Conflicts: 
+Menu-Depends: 
+Provides: 
+Build-Variant: iconnect_second_stage
+Section: boot
+Category: Boot Loaders
+Title: U-Boot for Iomega iConnect Wireless (second stage)
+Maintainer: 
+Source: u-boot-2019.01.tar.bz2
+License: GPL-2.0 GPL-2.0+
+LicenseFiles: Licenses/README
+Type: bin
+Description: U-Boot for Iomega iConnect Wireless (second stage)
+http://www.denx.de/wiki/U-Boot
+
+@@
+
+
+Package: u-boot-nsa310
+Default: y if (TARGET_kirkwood_Default || TARGET_kirkwood_DEVICE_zyxel_nsa310b || TARGET_DEVICE_kirkwood_DEVICE_zyxel_nsa310b)
+Version: 2019.01-2
+Depends: +libc +GCC_LIBSSP:libssp +USE_GLIBC:librt +USE_GLIBC:libpthread @!IN_SDK @TARGET_kirkwood
+Conflicts: 
+Menu-Depends: 
+Provides: 
+Build-Variant: nsa310
+Section: boot
+Category: Boot Loaders
+Title: U-Boot for Zyxel NSA310
+Maintainer: 
+Source: u-boot-2019.01.tar.bz2
+License: GPL-2.0 GPL-2.0+
+LicenseFiles: Licenses/README
+Type: bin
+Description: U-Boot for Zyxel NSA310
+http://www.denx.de/wiki/U-Boot
+
+@@
+
+
+Package: u-boot-nsa325
+Default: y if (TARGET_kirkwood_Default || TARGET_kirkwood_DEVICE_zyxel_nsa325 || TARGET_DEVICE_kirkwood_DEVICE_zyxel_nsa325)
+Version: 2019.01-2
+Depends: +libc +GCC_LIBSSP:libssp +USE_GLIBC:librt +USE_GLIBC:libpthread @!IN_SDK @TARGET_kirkwood
+Conflicts: 
+Menu-Depends: 
+Provides: 
+Build-Variant: nsa325
+Section: boot
+Category: Boot Loaders
+Title: U-Boot for Zyxel NSA325v1 and v2
+Maintainer: 
+Source: u-boot-2019.01.tar.bz2
+License: GPL-2.0 GPL-2.0+
+LicenseFiles: Licenses/README
+Type: bin
+Description: U-Boot for Zyxel NSA325v1 and v2
+http://www.denx.de/wiki/U-Boot
+
+@@
+
+
+Package: u-boot-pogo_e02
+Default: y if (TARGET_kirkwood_Default || TARGET_kirkwood_DEVICE_cloudengines_pogoe02 || TARGET_DEVICE_kirkwood_DEVICE_cloudengines_pogoe02)
+Version: 2019.01-2
+Depends: +libc +GCC_LIBSSP:libssp +USE_GLIBC:librt +USE_GLIBC:libpthread @!IN_SDK @TARGET_kirkwood
+Conflicts: 
+Menu-Depends: 
+Provides: 
+Build-Variant: pogo_e02
+Section: boot
+Category: Boot Loaders
+Title: U-Boot for Cloud Engines Pogoplug E02
+Maintainer: 
+Source: u-boot-2019.01.tar.bz2
+License: GPL-2.0 GPL-2.0+
+LicenseFiles: Licenses/README
+Type: bin
+Description: U-Boot for Cloud Engines Pogoplug E02
+http://www.denx.de/wiki/U-Boot
+
+@@
+
+
+Package: u-boot-pogo_e02_second_stage
+Default: y if (TARGET_kirkwood_Default || TARGET_kirkwood_DEVICE_cloudengines_pogoe02 || TARGET_DEVICE_kirkwood_DEVICE_cloudengines_pogoe02)
+Version: 2019.01-2
+Depends: +libc +GCC_LIBSSP:libssp +USE_GLIBC:librt +USE_GLIBC:libpthread @!IN_SDK @TARGET_kirkwood
+Conflicts: 
+Menu-Depends: 
+Provides: 
+Build-Variant: pogo_e02_second_stage
+Section: boot
+Category: Boot Loaders
+Title: U-Boot for Cloud Engines Pogoplug E02 (second stage)
+Maintainer: 
+Source: u-boot-2019.01.tar.bz2
+License: GPL-2.0 GPL-2.0+
+LicenseFiles: Licenses/README
+Type: bin
+Description: U-Boot for Cloud Engines Pogoplug E02 (second stage)
+http://www.denx.de/wiki/U-Boot
+
+@@
+
+
+Package: u-boot-pogoplugv4
+Default: y if (TARGET_kirkwood_Default || TARGET_kirkwood_DEVICE_cloudengines_pogoplugv4 || TARGET_DEVICE_kirkwood_DEVICE_cloudengines_pogoplugv4)
+Version: 2019.01-2
+Depends: +libc +GCC_LIBSSP:libssp +USE_GLIBC:librt +USE_GLIBC:libpthread @!IN_SDK @TARGET_kirkwood
+Conflicts: 
+Menu-Depends: 
+Provides: 
+Build-Variant: pogoplugv4
+Section: boot
+Category: Boot Loaders
+Title: U-Boot for Cloud Engines Pogoplug V4
+Maintainer: 
+Source: u-boot-2019.01.tar.bz2
+License: GPL-2.0 GPL-2.0+
+LicenseFiles: Licenses/README
+Type: bin
+Description: U-Boot for Cloud Engines Pogoplug V4
+http://www.denx.de/wiki/U-Boot
+
+@@
+
+

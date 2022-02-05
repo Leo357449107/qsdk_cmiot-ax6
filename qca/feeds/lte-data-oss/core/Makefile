@@ -18,7 +18,7 @@ define KernelPackage/rmnet-core
   SECTION:=kernel
   CATEGORY:=Kernel modules
   SUBMENU:=Network Support
-  DEPENDS:=@TARGET_ipq806x||TARGET_ipq807x||TARGET_ipq_ipq807x||TARGET_ipq_ipq807x_64 +kmod-rmnet-ctl
+  DEPENDS:=@TARGET_ipq95xx||TARGET_ipq50xx||TARGET_ipq806x||TARGET_ipq807x||TARGET_ipq_ipq807x||TARGET_ipq_ipq807x_64 +kmod-rmnet-ctl
   TITLE:=RMNET driver for handling data in multiplexing and aggregation protocol (MAP) format
   FILES:=$(PKG_BUILD_DIR)/rmnet_core.ko
   KCONFIG:=RMNET_CORE=y
@@ -33,7 +33,7 @@ define KernelPackage/rmnet-ctl
   SECTION:=kernel
   CATEGORY:=Kernel modules
   SUBMENU:=Network Support
-  DEPENDS:=@TARGET_ipq806x||TARGET_ipq807x||TARGET_ipq_ipq807x||TARGET_ipq_ipq807x_64
+  DEPENDS:=@TARGET_ipq95xx||TARGET_ipq50xx||TARGET_ipq806x||TARGET_ipq807x||TARGET_ipq_ipq807x||TARGET_ipq_ipq807x_64
   TITLE:=RMNET CTL module for handling QMAP commands for flow control purposes
   FILES:=$(PKG_BUILD_DIR)/rmnet_ctl.ko
   KCONFIG:=RMNET_CTL=y

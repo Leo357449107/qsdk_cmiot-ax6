@@ -47,7 +47,21 @@ __ETHTOOL_DECLARE_LINK_MODE_MASK(SFP_PHY_FEATURES) __ro_after_init;
 static int
 sfp_phy_probe(struct phy_device *pdev)
 {
-	pdev->autoneg = AUTONEG_DISABLE;
+	fal_port_t port;
+	a_uint32_t addr;
+	struct qca_phy_priv *priv = pdev->priv;
+
+#if (LINUX_VERSION_CODE >= KERNEL_VERSION(4,9,0))
+	addr = pdev->mdio.addr;
+#else
+	addr = pdev->addr;
+#endif
+	port = qca_ssdk_phy_addr_to_port(priv->device_id, addr);
+	if (A_TRUE == ssdk_port_feature_get(priv->device_id, port, PHY_F_SFP_SGMII)) {
+		pdev->autoneg = AUTONEG_ENABLE;
+	} else {
+		pdev->autoneg = AUTONEG_DISABLE;
+	}
 	SSDK_INFO("sfp phy is probed!\n");
 	return 0;
 }
@@ -190,10 +204,13 @@ static void sfp_features_init(void)
 {
 	const int features[] = {
 		ETHTOOL_LINK_MODE_FIBRE_BIT,
+		ETHTOOL_LINK_MODE_100baseT_Full_BIT,
 		ETHTOOL_LINK_MODE_1000baseT_Full_BIT,
 		ETHTOOL_LINK_MODE_10000baseT_Full_BIT,
+		ETHTOOL_LINK_MODE_2500baseX_Full_BIT,
 		ETHTOOL_LINK_MODE_Pause_BIT,
 		ETHTOOL_LINK_MODE_Asym_Pause_BIT,
+		ETHTOOL_LINK_MODE_Autoneg_BIT,
 	};
 
 	linkmode_set_bit_array(features,
@@ -243,7 +260,14 @@ sw_error_t sfp_phy_interface_get_mode_status(a_uint32_t dev_id,
 {
 	sw_error_t rv = SW_OK;
 	a_uint16_t reg_data = 0, sfp_speed = 0;
+	a_uint16_t sfp_type = 0;
+	struct phy_device *phydev;
+	ssdk_port_phyinfo *port_phyinfo;
 
+	port_phyinfo = ssdk_port_phyinfo_get(dev_id, port_id);
+	SW_RTN_ON_NULL(port_phyinfo);
+	rv = hsl_port_phydev_get(dev_id, port_id, &phydev);
+	SW_RTN_ON_ERROR(rv);
 	rv = qca_phy_i2c_mii_read(dev_id, SFP_E2PROM_ADDR, SFP_SPEED_ADDR,
 		&reg_data);
 	SW_RTN_ON_ERROR(rv);
@@ -253,7 +277,27 @@ sw_error_t sfp_phy_interface_get_mode_status(a_uint32_t dev_id,
 	if(sfp_speed >= SFP_SPEED_1000M &&
 		sfp_speed < SFP_SPEED_2500M)
 	{
-		*interface_mode_status =  PORT_SGMII_FIBER;
+		reg_data = 0;
+		rv = qca_phy_i2c_mii_read(dev_id, SFP_E2PROM_ADDR, SFP_TYPE_ADDR,
+			&reg_data);
+		SW_RTN_ON_ERROR(rv);
+		sfp_type = SFP_TO_SFP_TYPE(reg_data);
+		if (sfp_type == SFP_TYPE_1000MBASE_T) {
+			/* sfp copper module mode*/
+			if (phydev->autoneg == AUTONEG_ENABLE) {
+				/* sfp copper module interface is sgmii mode */
+				*interface_mode_status = PHY_SGMII_BASET;
+				port_phyinfo->phy_features |= PHY_F_SFP_SGMII;
+			} else {
+				/* sfp copper module interface is serdes mode */
+				*interface_mode_status = PORT_SGMII_FIBER;
+				port_phyinfo->phy_features &= ~PHY_F_SFP_SGMII;
+			}
+		} else {
+			/* sfp fiber module mode */
+			*interface_mode_status = PORT_SGMII_FIBER;
+			port_phyinfo->phy_features &= ~PHY_F_SFP_SGMII;
+		}
 	}
 	else if(sfp_speed >= SFP_SPEED_10000M)
 	{
@@ -264,10 +308,7 @@ sw_error_t sfp_phy_interface_get_mode_status(a_uint32_t dev_id,
 	{
 		struct port_phy_status sfp_status= {0};
 		adpt_api_t *p_api;
-		struct phy_device *phydev;
 
-		rv = hsl_port_phydev_get(dev_id, port_id, &phydev);
-		SW_RTN_ON_ERROR(rv);
 		SW_RTN_ON_NULL(p_api = adpt_api_ptr_get(dev_id));
 		rv = p_api->adpt_port_phy_status_get(dev_id, port_id, &sfp_status);
 		SW_RTN_ON_ERROR(rv);
@@ -280,6 +321,7 @@ sw_error_t sfp_phy_interface_get_mode_status(a_uint32_t dev_id,
 						*interface_mode_status = PORT_SGMII_PLUS;
 					} else {
 						*interface_mode_status = PHY_SGMII_BASET;
+						port_phyinfo->phy_features |= PHY_F_SFP_SGMII;
 					}
 				}
 			} else {

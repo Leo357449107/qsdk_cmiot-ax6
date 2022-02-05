@@ -307,9 +307,9 @@ static int parse_elf_image_phdr(image_info *img_info, unsigned int addr)
 #ifdef CONFIG_IPQ_ROOTFS_AUTH
 static int copy_rootfs(unsigned int request, uint32_t size)
 {
-	int ret;
 	char runcmd[256];
 #ifdef CONFIG_QCA_MMC
+	int ret;
 	block_dev_desc_t *blk_dev;
 	disk_partition_t disk_info;
 	unsigned int active_part = 0;
@@ -401,6 +401,11 @@ static int authenticate_rootfs(unsigned int kernel_addr)
 	rootfs_img_info.size = sizeof(mbn_header_t) + mbn_ptr->image_size;
 
 	ret = qca_scm_secure_authenticate(&rootfs_img_info, sizeof(rootfs_img_info));
+
+	memset((void *)kernel_img_info.kernel_load_addr,  0, sizeof(mbn_header_t));
+	memset(mbn_ptr,  0,
+		(sizeof(mbn_header_t) + mbn_ptr->signature_size + mbn_ptr->cert_chain_size));
+
 	if (ret)
 		return CMD_RET_FAILURE;
 
@@ -435,6 +440,7 @@ static int authenticate_rootfs_elf(unsigned int rootfs_hdr)
 
 	rootfs_img_info.size = img_info.img_offset + img_info.img_size;
 	ret = qca_scm_secure_authenticate(&rootfs_img_info, sizeof(rootfs_img_info));
+	memset((void *)rootfs_hdr, 0, img_info.img_offset);
 	if (ret)
 		return CMD_RET_FAILURE;
 
@@ -635,6 +641,7 @@ static int do_boot_signedimg(cmd_tbl_t *cmdtp, int flag, int argc, char *const a
 	setenv("mtdids", mtdids);
 
 #ifndef CONFIG_IPQ_ELF_AUTH
+	mbn_header_t * mbn_ptr = (mbn_header_t *) request;
 	request += sizeof(mbn_header_t);
 #else
 	kernel_img_info.kernel_load_addr = request;
@@ -649,6 +656,11 @@ static int do_boot_signedimg(cmd_tbl_t *cmdtp, int flag, int argc, char *const a
 
 	ret = qca_scm_auth_kernel(&kernel_img_info,
 			sizeof(kernel_img_info));
+#ifndef CONFIG_IPQ_ELF_AUTH
+	memset((void *)mbn_ptr->signature_ptr, 0,(mbn_ptr->signature_size + mbn_ptr->cert_chain_size));
+#else
+	memset((void *)kernel_img_info.kernel_load_addr,  0, img_info.img_offset);
+#endif
 	if (ret) {
 		printf("Kernel image authentication failed \n");
 		BUG();
@@ -710,6 +722,9 @@ static int do_boot_unsignedimg(cmd_tbl_t *cmdtp, int flag, int argc, char *const
 	block_dev_desc_t *blk_dev;
 	disk_partition_t disk_info;
 	unsigned int active_part = 0;
+#endif
+#ifdef CONFIG_IPQ_ELF_AUTH
+	image_info img_info;
 #endif
 
 	if (argc == 2 && strncmp(argv[1], "debug", 5) == 0)
@@ -829,6 +844,13 @@ static int do_boot_unsignedimg(cmd_tbl_t *cmdtp, int flag, int argc, char *const
 			ret = config_select((CONFIG_SYS_LOAD_ADDR
 					     + sizeof(mbn_header_t)),
 					    runcmd, sizeof(runcmd));
+#ifdef CONFIG_IPQ_ELF_AUTH
+		} else if (!parse_elf_image_phdr(&img_info,
+					CONFIG_SYS_LOAD_ADDR)) {
+			ret = config_select((CONFIG_SYS_LOAD_ADDR +
+						img_info.img_offset),
+					    runcmd, sizeof(runcmd));
+#endif
 		} else if (ret == IMAGE_FORMAT_LEGACY) {
 			snprintf(runcmd, sizeof(runcmd),
 				 "bootm 0x%x\n", (CONFIG_SYS_LOAD_ADDR +

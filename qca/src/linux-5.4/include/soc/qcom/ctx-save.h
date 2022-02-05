@@ -43,6 +43,7 @@ typedef enum {
     CTX_SAVE_LOG_DUMP_TYPE_EMPTY,
 } minidump_tlv_type_t;
 
+int minidump_fill_segments_internal(const uint64_t start_addr, uint64_t size, minidump_tlv_type_t type, const char *name, int islowmem);
 int minidump_fill_segments(const uint64_t start_addr, uint64_t size, minidump_tlv_type_t type, const char *name);
 int minidump_store_module_info(const char *name , const unsigned long va, const unsigned long pa, minidump_tlv_type_t type);
 int minidump_store_mmu_info(const unsigned long va, const unsigned long pa);

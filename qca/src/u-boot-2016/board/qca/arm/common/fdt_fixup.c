@@ -400,8 +400,11 @@ void ipq_fdt_mem_rsvd_fixup(void *blob)
 	if (nodeoff < 0) {
 		nodeoff = fdt_path_offset(blob, "/qti,scm_restart_reason");
 		if (nodeoff < 0) {
-			debug("fdt-fixup: unable to find compatible node\n");
-			return;
+			nodeoff = fdt_path_offset(blob, "/soc/qti,scm_restart_reason");
+			if (nodeoff < 0) {
+				debug("fdt-fixup: unable to find compatible node\n");
+				return;
+			}
 		}
 	}
 
@@ -888,6 +891,11 @@ __weak void fdt_fixup_sdx65_gpio(void *blob)
 	return;
 }
 
+__weak void fdt_fixup_runtime_failsafe(void *blob)
+{
+	return;
+}
+
 void set_mtdids(void)
 {
 	char mtdids[256];
@@ -1047,6 +1055,9 @@ int ft_board_setup(void *blob, bd_t *bd)
 	fdt_fixup_cpus_node(blob);
 	fdt_low_memory_fixup(blob);
 	fdt_fixup_qpic(blob);
+#ifdef CONFIG_IPQ_RUNTIME_FAILSAFE
+	fdt_fixup_runtime_failsafe(blob);
+#endif
 	s = getenv("dload_warm_reset");
 	if (s)
 		fdt_fixup_set_dload_warm_reset(blob);

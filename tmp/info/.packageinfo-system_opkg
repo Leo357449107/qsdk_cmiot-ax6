@@ -1,0 +1,32 @@
+Source-Makefile: package/system/opkg/Makefile
+Build-Depends/host: libubox/host
+Build-Types: host
+
+Package: opkg
+Menu: 1
+Version: 2021-01-31-c5dccea956b8be14eabf6ff69b331a3e9ac36749-1
+Depends: +libc +GCC_LIBSSP:libssp +USE_GLIBC:librt +USE_GLIBC:libpthread +uclient-fetch +libpthread +libubox
+Conflicts: 
+Menu-Depends: 
+Provides: 
+Section: base
+Category: Base system
+Repository: base
+Title: opkg package manager
+Maintainer: Jo-Philipp Wich <jo@mein.io>
+Source: opkg-2021-01-31-c5dccea956b8be14eabf6ff69b331a3e9ac36749.tar.xz
+License: GPL-2.0
+LicenseFiles: COPYING
+Type: ipkg
+Description:   Lightweight package management system
+  opkg is the opkg Package Management System, for handling
+  installation and removal of packages on a system. It can
+  recursively follow dependencies and download all packages
+  necessary to install a particular package.
+
+  opkg knows how to install both .ipk and .deb packages.
+https://git.openwrt.org/project/opkg-lede.git
+Jo-Philipp Wich <jo@mein.io>
+@@
+
+

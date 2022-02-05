@@ -28,8 +28,11 @@ extern "C"
 #define SFP_SPEED_2500M        25
 #define SFP_SPEED_5000M        50
 #define SFP_SPEED_10000M       100
+#define SFP_TYPE_ADDR          0x6
+#define SFP_TYPE_1000MBASE_T   0x08
 
 #define SFP_TO_SFP_SPEED(reg_data) ((reg_data >> 8) & 0xff)
+#define SFP_TO_SFP_TYPE(reg_data) ((reg_data >> 8) & 0xff)
 
 int sfp_phy_device_setup(a_uint32_t dev_id, a_uint32_t port_id, a_uint32_t phy_id);
 void sfp_phy_device_remove(a_uint32_t dev_id, a_uint32_t port);

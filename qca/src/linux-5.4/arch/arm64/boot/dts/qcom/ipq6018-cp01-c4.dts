@@ -75,6 +75,8 @@
 };
 
 &tlmm {
+	gpio-reserved-ranges = <20 1>;
+
 	i2c_1_pins: i2c_1_pins {
 		mux {
 			pins = "gpio42", "gpio43";

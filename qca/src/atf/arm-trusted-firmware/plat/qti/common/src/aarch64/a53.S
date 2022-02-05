@@ -54,7 +54,6 @@ endfunc qti_a53_disable_dcache
 func qti_a53_reset_func
 
 	mov x19, x30
-
 	bl qtiseclib_a53_cluster_reset_func
 
 	mov	x30, x19

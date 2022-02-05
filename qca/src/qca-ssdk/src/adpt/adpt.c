@@ -16,6 +16,19 @@
 #include "ssdk_init.h"
 #if defined(HPPE)
 #include "adpt_hppe.h"
+#include "hppe_flow_reg.h"
+#include "hppe_ip_reg.h"
+#include "hppe_vsi_reg.h"
+#include "hppe_servcode_reg.h"
+#include "hppe_portctrl_reg.h"
+#include "hppe_portctrl.h"
+#include "hppe_qm_reg.h"
+#include "hppe_qm.h"
+#if defined(APPE)
+#include "appe_pppoe_reg.h"
+#else
+#include "hppe_pppoe_reg.h"
+#endif
 #endif
 #if defined(IN_SFP)
 #include "adpt_sfp.h"
@@ -413,6 +426,34 @@ sw_error_t adpt_module_func_ctrl_get(a_uint32_t dev_id,
 	}
 
 	return SW_OK;
+}
+
+sw_error_t adpt_ppe_capacity_get(a_uint32_t dev_id, fal_ppe_tbl_caps_t *ppe_capacity)
+{
+	ADPT_NULL_POINT_CHECK(ppe_capacity);
+
+#if defined(HPPE)
+	if (adpt_chip_type_get(dev_id) == CHIP_HPPE ||
+		adpt_chip_type_get(dev_id) == CHIP_APPE)
+	{
+		ppe_capacity->flow_caps = IN_FLOW_TBL_NUM;
+		ppe_capacity->host_caps = HOST_TBL_NUM;
+		ppe_capacity->nexthop_caps = IN_NEXTHOP_TBL_NUM;
+		ppe_capacity->pub_ip_caps = IN_PUB_IP_ADDR_TBL_NUM;
+		ppe_capacity->vsi_caps = VSI_TBL_NUM;
+		ppe_capacity->port_caps = PPE_CAPACITY_PORT_NUM;
+		ppe_capacity->l3_if_caps = IN_L3_IF_TBL_NUM;
+		ppe_capacity->my_mac_caps = MY_MAC_TBL_NUM;
+		ppe_capacity->queue_caps = PPE_CAPACITY_QUEUES_NUM;
+		ppe_capacity->service_code_caps = SERVICE_TBL_NUM;
+		ppe_capacity->pppoe_session_caps = PPPOE_SESSION_NUM;
+	}
+
+	return SW_OK;
+#else
+	return SW_NOT_SUPPORTED;
+#endif
+
 }
 
 sw_error_t adpt_init(a_uint32_t dev_id, ssdk_init_cfg *cfg)

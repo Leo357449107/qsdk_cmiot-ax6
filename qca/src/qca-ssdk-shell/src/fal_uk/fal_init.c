@@ -56,5 +56,12 @@ fal_module_func_ctrl_get(a_uint32_t dev_id, a_uint32_t module, fal_func_ctrl_t *
     return rv;
 }
 
+sw_error_t
+fal_ppe_capacity_get(a_uint32_t dev_id, fal_ppe_tbl_caps_t *ppe_capacity)
+{
+    sw_error_t rv;
 
+    rv = sw_uk_exec(SW_API_PPE_CAPACITY_GET, dev_id, ppe_capacity);
+    return rv;
+}
 

@@ -1,6 +1,6 @@
 /*
  * Copyright (c) 2020-2021, The Linux Foundation. All rights reserved.
- * Copyright (c) 2021 Qualcomm Innovation Center, Inc. All rights reserved.
+ * Copyright (c) 2021-2022 Qualcomm Innovation Center, Inc. All rights reserved.
  *
  * Permission to use, copy, modify, and/or distribute this software for any
  * purpose with or without fee is hereby granted, provided that the above
@@ -48,6 +48,7 @@ static inline void syn_dp_tx_clear_buf_entry(struct syn_dp_info_tx *tx_info, uin
 	tx_info->tx_buf_pool[tx_skb_index].len = 0;
 	tx_info->tx_buf_pool[tx_skb_index].skb = NULL;
 	tx_info->tx_buf_pool[tx_skb_index].desc_count = 0;
+	tx_info->tx_buf_pool[tx_skb_index].shinfo_addr_virt = 0;
 }
 
 /*
@@ -101,7 +102,7 @@ static inline struct dma_desc_tx *syn_dp_tx_process_nr_frags(struct syn_dp_info_
 		length = skb_frag_size(frag);
 		dma_addr = (dma_addr_t)virt_to_phys(frag_addr);
 
-		dmac_clean_range(frag_addr, frag_addr + length);
+		dmac_clean_range_no_dsb(frag_addr, frag_addr + length);
 
 		*total_length += length;
 		tx_desc = syn_dp_tx_set_desc_sg(tx_info, dma_addr, length, DESC_OWN_BY_DMA);
@@ -145,7 +146,7 @@ int syn_dp_tx_nr_frags(struct syn_dp_info_tx *tx_info, struct sk_buff *skb)
 	 * Flush the dma for non-paged skb data
 	 */
 	dma_addr = (dma_addr_t)virt_to_phys(skb->data);
-	dmac_clean_range((void *)skb->data, (void *)(skb->data + length));
+	dmac_clean_range_no_dsb((void *)skb->data, (void *)(skb->data + length));
 
 	total_len = length;
 
@@ -174,6 +175,7 @@ int syn_dp_tx_nr_frags(struct syn_dp_info_tx *tx_info, struct sk_buff *skb)
 	tx_info->tx_buf_pool[first_idx].desc_count = desc_needed;
 	tx_info->tx_buf_pool[first_idx].skb = skb;
 	tx_info->tx_buf_pool[first_idx].len = total_len;
+	tx_info->tx_buf_pool[first_idx].shinfo_addr_virt = (size_t)skb->end;
 
 	/*
 	 * For the last fragment, Enable the interrupt and set LS bit
@@ -194,6 +196,9 @@ int syn_dp_tx_nr_frags(struct syn_dp_info_tx *tx_info, struct sk_buff *skb)
 	 */
 	first_desc->status |= (DESC_OWN_BY_DMA | ((skb->ip_summed == CHECKSUM_PARTIAL) ? DESC_TX_CIS_TCP_PSEUDO_CS : 0));
 
+	atomic64_inc((atomic64_t *)&tx_info->tx_stats.tx_packets);
+	atomic64_inc((atomic64_t *)&tx_info->tx_stats.tx_nr_frags_pkts);
+	atomic64_add(total_len, (atomic64_t *)&tx_info->tx_stats.tx_bytes);
 	atomic_add(desc_needed, (atomic_t *)&tx_info->busy_tx_desc_cnt);
 	syn_resume_dma_tx(tx_info->mac_base);
 
@@ -252,7 +257,7 @@ int syn_dp_tx_frag_list(struct syn_dp_info_tx *tx_info, struct sk_buff *skb)
 	/*
 	 * Flush the data area of the head skb
 	 */
-	dmac_clean_range((void *)skb->data, (void *)(skb->data + length));
+	dmac_clean_range_no_dsb((void *)skb->data, (void *)(skb->data + length));
 
 	total_len = length;
 
@@ -283,7 +288,7 @@ int syn_dp_tx_frag_list(struct syn_dp_info_tx *tx_info, struct sk_buff *skb)
 		length = skb_headlen(iter_skb);
 		dma_addr = (dma_addr_t)virt_to_phys(iter_skb->data);
 
-		dmac_clean_range((void *)iter_skb->data, (void *)(iter_skb->data + length));
+		dmac_clean_range_no_dsb((void *)iter_skb->data, (void *)(iter_skb->data + length));
 
 		total_len += length;
 
@@ -314,6 +319,7 @@ int syn_dp_tx_frag_list(struct syn_dp_info_tx *tx_info, struct sk_buff *skb)
 	tx_info->tx_buf_pool[first_idx].desc_count = desc_needed;
 	tx_info->tx_buf_pool[first_idx].skb = skb;
 	tx_info->tx_buf_pool[first_idx].len = total_len;
+	tx_info->tx_buf_pool[first_idx].shinfo_addr_virt = (size_t)skb->end;
 
 	/*
 	 * For the last fragment, Enable the interrupt and set LS bit
@@ -334,6 +340,9 @@ int syn_dp_tx_frag_list(struct syn_dp_info_tx *tx_info, struct sk_buff *skb)
 	 */
 	first_desc->status |= (DESC_OWN_BY_DMA | ((skb->ip_summed == CHECKSUM_PARTIAL) ? DESC_TX_CIS_TCP_PSEUDO_CS : 0));
 
+	atomic64_inc((atomic64_t *)&tx_info->tx_stats.tx_packets);
+	atomic64_inc((atomic64_t *)&tx_info->tx_stats.tx_fraglist_pkts);
+	atomic64_add(total_len, (atomic64_t *)&tx_info->tx_stats.tx_bytes);
 	atomic_add(desc_needed, (atomic_t *)&tx_info->busy_tx_desc_cnt);
 	syn_resume_dma_tx(tx_info->mac_base);
 
@@ -373,6 +382,7 @@ static inline void syn_dp_tx_set_desc(struct syn_dp_info_tx *tx_info,
 	tx_info->tx_buf_pool[tx_idx].skb = skb;
 	tx_info->tx_buf_pool[tx_idx].len = length;
 	tx_info->tx_buf_pool[tx_idx].desc_count = 1;
+	tx_info->tx_buf_pool[tx_idx].shinfo_addr_virt = (size_t)skb->end;
 
 	/*
 	 * Ensure all write completed before setting own by dma bit so when gmac
@@ -397,10 +407,10 @@ int syn_dp_tx_complete(struct syn_dp_info_tx *tx_info, int budget)
 	struct sk_buff *skb;
 	uint32_t tx_skb_index, len;
 	uint32_t tx_packets = 0, total_len = 0;
-	uint32_t skb_free_start_idx;
-	uint32_t skb_free_end_idx = SYN_DP_TX_INVALID_DESC_INDEX;
-	uint32_t skb_free_abs_end_idx = 0;
 	uint32_t num_desc = 0;
+	uint32_t count = 0;
+	uint32_t free_idx;
+	struct syn_dp_tx_buf *tx_buf;
 
 	busy = desc_cnt = atomic_read((atomic_t *)&tx_info->busy_tx_desc_cnt);
 
@@ -417,7 +427,8 @@ int syn_dp_tx_complete(struct syn_dp_info_tx *tx_info, int budget)
 		busy = desc_cnt = budget;
 	}
 
-	skb_free_start_idx = syn_dp_tx_comp_index_get(tx_info);
+	tx_skb_index = syn_dp_tx_comp_index_get(tx_info);
+	prefetch((void *)tx_info->tx_buf_pool[tx_skb_index].shinfo_addr_virt);
 	do {
 		desc = syn_dp_tx_comp_desc_get(tx_info);
 		status = desc->status;
@@ -436,9 +447,14 @@ int syn_dp_tx_complete(struct syn_dp_info_tx *tx_info, int budget)
 		 * calculate the number of descriptors used by
 		 * the fragments in order to free it.
 		 */
-		num_desc = tx_info->tx_buf_pool[tx_skb_index].desc_count;
-		skb = tx_info->tx_buf_pool[tx_skb_index].skb;
-		len = tx_info->tx_buf_pool[tx_skb_index].len;
+		tx_buf = &tx_info->tx_buf_pool[tx_skb_index];
+		num_desc = tx_buf->desc_count;
+
+		skb = tx_info->skb_free_list[count] = tx_buf->skb;
+		tx_info->shinfo_addr_virt[count++] = tx_buf->shinfo_addr_virt;
+		len = tx_buf->len;
+
+		syn_dp_tx_clear_buf_entry(tx_info, tx_skb_index);
 
 		if (likely(status & DESC_TX_LAST)) {
 			if (likely(!(status & DESC_TX_ERROR))) {
@@ -446,19 +462,19 @@ int syn_dp_tx_complete(struct syn_dp_info_tx *tx_info, int budget)
 				BUG_ON(!skb);
 #endif
 				/*
-				 * No error, recored tx pkts/bytes and collision.
+				 * No error, record tx pkts/bytes and collision.
 				 */
 				tx_packets++;
 				total_len += len;
 			} else {
 
 				/*
-				 * Some error happen, collect error statistics.
+				 * Some error happened, collect error statistics.
 				 */
 				syn_dp_tx_error_cnt(tx_info, status);
 			}
 		}
-		skb_free_end_idx = tx_info->tx_comp_idx;
+
 		tx_info->tx_comp_idx = syn_dp_tx_inc_index(tx_info->tx_comp_idx, num_desc);
 
 		/*
@@ -472,40 +488,19 @@ int syn_dp_tx_complete(struct syn_dp_info_tx *tx_info, int budget)
 	} while (likely(busy && desc_cnt));
 
 	/*
-	 * Descriptors still held by DMA. We are done.
+	 * Prefetching the shinfo area before releasing to skb recycler gives benefit
+	 * in performance.
+	 * All the completed skb's shinfo are prefetched and skb's are freed in batch.
 	 */
-	if (unlikely(skb_free_end_idx == SYN_DP_TX_INVALID_DESC_INDEX)) {
-		goto done;
-	}
-
-	if (skb_free_end_idx < skb_free_start_idx) {
-
-		/*
-		 * If the ring is wrapped around, get the absolute end index.
-		 */
-		skb_free_abs_end_idx = skb_free_end_idx;
-		skb_free_end_idx = SYN_DP_TX_DESC_MAX_INDEX;
-	}
-
-	while (skb_free_end_idx >= skb_free_start_idx) {
-		if (likely(tx_info->tx_buf_pool[skb_free_start_idx].skb)) {
-			dev_kfree_skb_any(tx_info->tx_buf_pool[skb_free_start_idx].skb);
-			syn_dp_tx_clear_buf_entry(tx_info, skb_free_start_idx);
+	for (free_idx = 0; free_idx < count; free_idx++) {
+		if (likely((free_idx + 1) < count)) {
+			prefetch((void *)tx_info->shinfo_addr_virt[free_idx+1]);
 		}
-		skb_free_start_idx++;
+		dev_kfree_skb_any(tx_info->skb_free_list[free_idx]);
+		tx_info->skb_free_list[free_idx] = NULL;
+		tx_info->shinfo_addr_virt[free_idx] = 0;
 	}
 
-	if (skb_free_abs_end_idx) {
-		skb_free_start_idx = 0;
-		while (skb_free_start_idx <= skb_free_abs_end_idx) {
-			if (likely(tx_info->tx_buf_pool[skb_free_start_idx].skb)) {
-				dev_kfree_skb_any(tx_info->tx_buf_pool[skb_free_start_idx].skb);
-				syn_dp_tx_clear_buf_entry(tx_info, skb_free_start_idx);
-			}
-			skb_free_start_idx++;
-		}
-	}
-done:
 	atomic64_add(tx_packets, (atomic64_t *)&tx_info->tx_stats.tx_packets);
 	atomic64_add(total_len, (atomic64_t *)&tx_info->tx_stats.tx_bytes);
 
@@ -572,7 +567,7 @@ int syn_dp_tx(struct syn_dp_info_tx *tx_info, struct sk_buff *skb)
 
 	dma_addr = (dma_addr_t)virt_to_phys(skb->data);
 
-	dmac_clean_range((void *)skb->data, (void *)(skb->data + skb->len));
+	dmac_clean_range_no_dsb((void *)skb->data, (void *)(skb->data + skb->len));
 
 	/*
 	 * Queue packet to the GMAC rings

@@ -1,5 +1,8 @@
 /*
  * Copyright (c) 2012, 2017, The Linux Foundation. All rights reserved.
+ *
+ * Copyright (c) 2022, Qualcomm Innovation Center, Inc. All rights reserved.
+ *
  * Permission to use, copy, modify, and/or distribute this software for
  * any purpose with or without fee is hereby granted, provided that the
  * above copyright notice and this permission notice appear in all copies.
@@ -44,6 +47,9 @@
 #include "ssdk_plat.h"
 #include "ref_vlan.h"
 #include "ref_fdb.h"
+#ifdef IN_NETLINK
+#include "ssdk_netlink.h"
+#endif
 
 
 #if defined(IN_SWCONFIG)
@@ -171,6 +177,154 @@ ref_fdb_get_port_by_mac(unsigned int vid, const char * addr)
 		}
 	}
 	return 0xffffffff;
+}
+
+#define REF_FDB_MAX_MAC_DEVICES 48
+#define REF_FDB_MAC_INVALID 0
+#define REF_FDB_MAC_NEW 1
+#define REF_FDB_MAC_OLD 2
+#define REF_FDB_MAC_EXPIRE 3
+typedef struct
+{
+	fal_mac_addr_t addr;
+	fal_port_t port_id;
+	a_uint8_t state;
+} ref_fdb_info_t;
+static ref_fdb_info_t ref_fdb_info[SW_MAX_NR_DEV][REF_FDB_MAX_MAC_DEVICES] = {0};
+
+static sw_error_t
+_ref_fdb_update_mac(a_uint32_t dev_id, fal_fdb_entry_t * entry)
+{
+	a_uint32_t index, empty_index = REF_FDB_MAX_MAC_DEVICES;
+
+	for (index = 0; index < REF_FDB_MAX_MAC_DEVICES; index++)
+	{
+		if (ref_fdb_info[dev_id][index].state == REF_FDB_MAC_INVALID)
+		{
+			if (empty_index == REF_FDB_MAX_MAC_DEVICES)
+			{
+				empty_index = index;
+			}
+		}
+		if (ref_fdb_info[dev_id][index].state && !aos_mem_cmp(entry->addr.uc,
+				ref_fdb_info[dev_id][index].addr.uc, ETH_ALEN) &&
+				entry->port.id == ref_fdb_info[dev_id][index].port_id)
+		{
+			/* find, update state as old */
+			ref_fdb_info[dev_id][index].state = REF_FDB_MAC_OLD;
+			return SW_OK;
+		}
+	}
+	/* not find, store the new entry in the empty index */
+	if (empty_index == REF_FDB_MAX_MAC_DEVICES)
+	{
+		/* table is full */
+		SSDK_ERROR("table is full\n");
+		return SW_FULL;
+	}
+
+	aos_mem_copy(ref_fdb_info[dev_id][empty_index].addr.uc,
+			entry->addr.uc, ETH_ALEN);
+	ref_fdb_info[dev_id][empty_index].port_id = entry->port.id;
+	ref_fdb_info[dev_id][empty_index].state = REF_FDB_MAC_NEW;
+
+	return SW_OK;
+}
+
+static sw_error_t
+_ref_fdb_notify_mac(a_uint32_t dev_id, fal_pbmp_t port_map)
+{
+	a_uint32_t index = 0;
+	char *ifname = NULL;
+	/* check and notify mac devices */
+	for (index = 0; index < REF_FDB_MAX_MAC_DEVICES; index++)
+	{
+		if (!SW_IS_PBMP_MEMBER(port_map, ref_fdb_info[dev_id][index].port_id))
+		{
+			continue;
+		}
+		if (ref_fdb_info[dev_id][index].state == REF_FDB_MAC_NEW)
+		{
+			ifname = ssdk_port_to_ifname(dev_id,
+					ref_fdb_info[dev_id][index].port_id);
+			if (ifname)
+			{
+				SSDK_DEBUG("nofity new device on port %d ifname %s macaddr "
+					SW_MACSTR "\n", ref_fdb_info[dev_id][index].port_id,
+					ifname, SW_MAC2STR(ref_fdb_info[dev_id][index].addr.uc));
+#ifdef IN_NETLINK
+				ssdk_genl_notify_mac_info(SSDK_COMMAND_NEW_MAC, ifname,
+					ref_fdb_info[dev_id][index].addr.uc);
+#endif
+			}
+			ref_fdb_info[dev_id][index].state = REF_FDB_MAC_EXPIRE;
+		}
+		else if (ref_fdb_info[dev_id][index].state == REF_FDB_MAC_EXPIRE)
+		{
+			ifname = ssdk_port_to_ifname(dev_id,
+					ref_fdb_info[dev_id][index].port_id);
+			if (ifname)
+			{
+				SSDK_DEBUG("notify expire device on port %d ifname %s macaddr "
+					SW_MACSTR "\n", ref_fdb_info[dev_id][index].port_id,
+					ifname, SW_MAC2STR(ref_fdb_info[dev_id][index].addr.uc));
+#ifdef IN_NETLINK
+				ssdk_genl_notify_mac_info(SSDK_COMMAND_EXPIRE_MAC, ifname,
+					ref_fdb_info[dev_id][index].addr.uc);
+#endif
+			}
+			aos_mem_zero(&ref_fdb_info[dev_id][index], sizeof(ref_fdb_info_t));
+		}
+		else if (ref_fdb_info[dev_id][index].state == REF_FDB_MAC_OLD)
+		{
+			ref_fdb_info[dev_id][index].state = REF_FDB_MAC_EXPIRE;
+		}
+		/* for debug, dump the table info */
+		SSDK_DEBUG("index %d, state %d, portid %d, macaddr "
+			SW_MACSTR "\n", index, ref_fdb_info[dev_id][index].state,
+			ref_fdb_info[dev_id][index].port_id,
+			SW_MAC2STR(ref_fdb_info[dev_id][index].addr.uc));
+	}
+
+	return SW_OK;
+}
+
+sw_error_t
+ref_fdb_sw_sync_reset(a_uint32_t dev_id, fal_pbmp_t port_map)
+{
+	a_uint32_t index = 0;
+	SSDK_DEBUG("port_map 0x%x\n", port_map);
+	for (index = 0; index < REF_FDB_MAX_MAC_DEVICES; index++)
+	{
+		if (SW_IS_PBMP_MEMBER(port_map, ref_fdb_info[dev_id][index].port_id))
+		{
+			aos_mem_zero(&ref_fdb_info[dev_id][index], sizeof(ref_fdb_info_t));
+		}
+	}
+	return SW_OK;
+}
+
+sw_error_t
+ref_fdb_sw_sync_task(a_uint32_t dev_id, fal_pbmp_t port_map)
+{
+	sw_error_t rv = SW_OK;
+	fal_fdb_entry_t entry = {0};
+	a_uint32_t iterator = 0;
+
+	do
+	{
+		rv = fal_fdb_entry_getnext_byindex(dev_id, &iterator, &entry);
+		if (rv == SW_OK)
+		{
+			SSDK_DEBUG("iterator 0x%x\n", iterator);
+			if (SW_IS_PBMP_MEMBER(port_map, entry.port.id))
+			{
+				rv = _ref_fdb_update_mac(dev_id, &entry);
+				SW_RTN_ON_ERROR(rv);
+			}
+		}
+	} while (rv != SW_NO_MORE);
+	return _ref_fdb_notify_mac(dev_id, port_map);
 }
 
 EXPORT_SYMBOL(ref_fdb_get_port_by_mac);

@@ -1,4 +1,5 @@
 /* Copyright (c) 2015-2020 The Linux Foundation. All rights reserved.
+ * Copyright (c) 2022 Qualcomm Innovation Center, Inc. All rights reserved.
  *
  * Permission to use, copy, modify, and/or distribute this software for any
  * purpose with or without fee is hereby granted, provided that the above
@@ -2088,6 +2089,7 @@ ssize_t nss_cryptoapi_ctx_stats_read(struct file *fp, char __user *ubuf, size_t 
 	len += snprintf(buf + len, max_buf_len - len, "failed_nomem - %llu\n", stats->failed_nomem);
 	len += snprintf(buf + len, max_buf_len - len, "failed_req - %llu\n", stats->failed_req);
 	len += snprintf(buf + len, max_buf_len - len, "failed_align - %llu\n", stats->failed_align);
+	len += snprintf(buf + len, max_buf_len - len, "failed_len - %llu\n", stats->failed_len);
 
 	/*
 	 * This will autoexpand as crypto adds new error codes

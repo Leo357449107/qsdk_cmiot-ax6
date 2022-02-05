@@ -678,6 +678,7 @@ void ecm_db_mapping_add(struct ecm_db_mapping_instance *mi, struct ecm_db_host_i
 	/*
 	 * Insert mapping into the mappings hash table
 	 */
+	mi->hash_prev = NULL;
 	mi->hash_next = ecm_db_mapping_table[hash_index];
 	if (ecm_db_mapping_table[hash_index]) {
 		ecm_db_mapping_table[hash_index]->hash_prev = mi;

@@ -1,5 +1,8 @@
 /*
  * Copyright (c) 2012,2018, The Linux Foundation. All rights reserved.
+ *
+ * Copyright (c) 2022, Qualcomm Innovation Center, Inc. All rights reserved.
+ *
  * Permission to use, copy, modify, and/or distribute this software for
  * any purpose with or without fee is hereby granted, provided that the
  * above copyright notice and this permission notice appear in all copies.
@@ -46,6 +49,11 @@ qca_ar8327_sw_atu_dump(struct switch_dev *dev,
 
 fal_port_t
 ref_fdb_get_port_by_mac(unsigned int vid, const char * addr);
+
+sw_error_t
+ref_fdb_sw_sync_task(a_uint32_t dev_id, fal_pbmp_t port_map);
+sw_error_t
+ref_fdb_sw_sync_reset(a_uint32_t dev_id, fal_pbmp_t port_map);
 
 #ifdef __cplusplus
 }

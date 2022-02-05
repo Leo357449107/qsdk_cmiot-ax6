@@ -584,6 +584,7 @@ static void __init mm_init(void)
 	kmemleak_init();
 	pgtable_init();
 	debug_objects_mem_init();
+	debug_mem_usage_init();
 	vmalloc_init();
 	ioremap_huge_init();
 	/* Should be run before the first non-init thread is created */
@@ -1198,7 +1199,7 @@ static noinline void __init kernel_init_freeable(void)
 	 */
 	set_mems_allowed(node_states[N_MEMORY]);
 
-	cad_pid = task_pid(current);
+	cad_pid = get_pid(task_pid(current));
 
 	smp_prepare_cpus(setup_max_cpus);
 

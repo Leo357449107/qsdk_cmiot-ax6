@@ -176,6 +176,108 @@ _fal_tunnel_encap_ecn_mode_get(a_uint32_t dev_id, fal_tunnel_encap_ecn_t *ecn_ru
 }
 
 sw_error_t
+_fal_tunnel_decap_key_set(a_uint32_t dev_id,
+		fal_tunnel_type_t tunnel_type, fal_tunnel_decap_key_t *decap_key)
+{
+    adpt_api_t *p_api;
+    sw_error_t rv = SW_OK;
+
+    p_api = adpt_api_ptr_get(dev_id);
+    SW_RTN_ON_NULL(p_api);
+
+    if (NULL == p_api->adpt_tunnel_decap_key_set)
+        return SW_NOT_SUPPORTED;
+
+    rv = p_api->adpt_tunnel_decap_key_set(dev_id, tunnel_type, decap_key);
+    return rv;
+}
+
+sw_error_t
+_fal_tunnel_decap_key_get(a_uint32_t dev_id,
+		fal_tunnel_type_t tunnel_type, fal_tunnel_decap_key_t *decap_key)
+{
+    adpt_api_t *p_api;
+    sw_error_t rv = SW_OK;
+
+    p_api = adpt_api_ptr_get(dev_id);
+    SW_RTN_ON_NULL(p_api);
+
+    if (NULL == p_api->adpt_tunnel_decap_key_get)
+        return SW_NOT_SUPPORTED;
+
+    rv = p_api->adpt_tunnel_decap_key_get(dev_id, tunnel_type, decap_key);
+    return rv;
+}
+
+sw_error_t
+_fal_tunnel_decap_en_set(a_uint32_t dev_id,
+		a_uint32_t tunnel_index, a_bool_t en)
+{
+    adpt_api_t *p_api;
+    sw_error_t rv = SW_OK;
+
+    p_api = adpt_api_ptr_get(dev_id);
+    SW_RTN_ON_NULL(p_api);
+
+    if (NULL == p_api->adpt_tunnel_decap_en_set)
+        return SW_NOT_SUPPORTED;
+
+    rv = p_api->adpt_tunnel_decap_en_set(dev_id, tunnel_index, en);
+    return rv;
+}
+
+sw_error_t
+_fal_tunnel_decap_en_get(a_uint32_t dev_id,
+		a_uint32_t tunnel_index, a_bool_t *en)
+{
+    adpt_api_t *p_api;
+    sw_error_t rv = SW_OK;
+
+    p_api = adpt_api_ptr_get(dev_id);
+    SW_RTN_ON_NULL(p_api);
+
+    if (NULL == p_api->adpt_tunnel_decap_en_get)
+        return SW_NOT_SUPPORTED;
+
+    rv = p_api->adpt_tunnel_decap_en_get(dev_id, tunnel_index, en);
+    return rv;
+}
+
+sw_error_t
+_fal_tunnel_decap_action_update(a_uint32_t dev_id,
+		a_uint32_t tunnel_index, fal_tunnel_action_t *update_action)
+{
+    adpt_api_t *p_api;
+    sw_error_t rv = SW_OK;
+
+    p_api = adpt_api_ptr_get(dev_id);
+    SW_RTN_ON_NULL(p_api);
+
+    if (NULL == p_api->adpt_tunnel_decap_action_update)
+        return SW_NOT_SUPPORTED;
+
+    rv = p_api->adpt_tunnel_decap_action_update(dev_id, tunnel_index, update_action);
+    return rv;
+}
+
+sw_error_t
+_fal_tunnel_decap_counter_get(a_uint32_t dev_id,
+		a_uint32_t tunnel_index, fal_entry_counter_t *decap_counter)
+{
+    adpt_api_t *p_api;
+    sw_error_t rv = SW_OK;
+
+    p_api = adpt_api_ptr_get(dev_id);
+    SW_RTN_ON_NULL(p_api);
+
+    if (NULL == p_api->adpt_tunnel_decap_counter_get)
+        return SW_NOT_SUPPORTED;
+
+    rv = p_api->adpt_tunnel_decap_counter_get(dev_id, tunnel_index, decap_counter);
+    return rv;
+}
+
+sw_error_t
 _fal_tunnel_exp_decap_set(a_uint32_t dev_id, fal_port_t port_id, a_bool_t *enable)
 {
     adpt_api_t *p_api;
@@ -1440,10 +1542,84 @@ fal_tunnel_exp_decap_get(a_uint32_t dev_id, fal_port_t port_id, a_bool_t *enable
     return rv;
 }
 
-EXPORT_SYMBOL(fal_tunnel_exp_decap_set);
-EXPORT_SYMBOL(fal_tunnel_exp_decap_get);
-EXPORT_SYMBOL(fal_tunnel_encap_header_ctrl_set);
-EXPORT_SYMBOL(fal_tunnel_encap_header_ctrl_get);
+sw_error_t
+fal_tunnel_decap_key_set(a_uint32_t dev_id,
+		fal_tunnel_type_t tunnel_type, fal_tunnel_decap_key_t *decap_key)
+{
+    sw_error_t rv = SW_OK;
+
+    FAL_API_LOCK;
+    rv = _fal_tunnel_decap_key_set(dev_id, tunnel_type, decap_key);
+    FAL_API_UNLOCK;
+
+    return rv;
+}
+
+sw_error_t
+fal_tunnel_decap_key_get(a_uint32_t dev_id,
+		fal_tunnel_type_t tunnel_type, fal_tunnel_decap_key_t *decap_key)
+{
+    sw_error_t rv = SW_OK;
+
+    FAL_API_LOCK;
+    rv = _fal_tunnel_decap_key_get(dev_id, tunnel_type, decap_key);
+    FAL_API_UNLOCK;
+
+    return rv;
+}
+
+sw_error_t
+fal_tunnel_decap_en_set(a_uint32_t dev_id,
+		a_uint32_t tunnel_index, a_bool_t en)
+{
+    sw_error_t rv = SW_OK;
+
+    FAL_API_LOCK;
+    rv = _fal_tunnel_decap_en_set(dev_id, tunnel_index, en);
+    FAL_API_UNLOCK;
+
+    return rv;
+}
+
+sw_error_t
+fal_tunnel_decap_en_get(a_uint32_t dev_id,
+		a_uint32_t tunnel_index, a_bool_t *en)
+{
+    sw_error_t rv = SW_OK;
+
+    FAL_API_LOCK;
+    rv = _fal_tunnel_decap_en_get(dev_id, tunnel_index, en);
+    FAL_API_UNLOCK;
+
+    return rv;
+}
+
+sw_error_t
+fal_tunnel_decap_action_update(a_uint32_t dev_id,
+		a_uint32_t tunnel_index, fal_tunnel_action_t *update_action)
+{
+    sw_error_t rv = SW_OK;
+
+    FAL_API_LOCK;
+    rv = _fal_tunnel_decap_action_update(dev_id, tunnel_index, update_action);
+    FAL_API_UNLOCK;
+
+    return rv;
+}
+
+sw_error_t
+fal_tunnel_decap_counter_get(a_uint32_t dev_id,
+		a_uint32_t tunnel_index, fal_entry_counter_t *decap_counter)
+{
+    sw_error_t rv = SW_OK;
+
+    FAL_API_LOCK;
+    rv = _fal_tunnel_decap_counter_get(dev_id, tunnel_index, decap_counter);
+    FAL_API_UNLOCK;
+
+    return rv;
+}
+
 EXPORT_SYMBOL(fal_tunnel_decap_entry_add);
 EXPORT_SYMBOL(fal_tunnel_decap_entry_del);
 EXPORT_SYMBOL(fal_tunnel_decap_entry_get);
@@ -1461,6 +1637,8 @@ EXPORT_SYMBOL(fal_tunnel_intf_set);
 EXPORT_SYMBOL(fal_tunnel_intf_get);
 EXPORT_SYMBOL(fal_tunnel_encap_port_tunnelid_set);
 EXPORT_SYMBOL(fal_tunnel_encap_port_tunnelid_get);
+EXPORT_SYMBOL(fal_tunnel_encap_intf_tunnelid_set);
+EXPORT_SYMBOL(fal_tunnel_encap_intf_tunnelid_get);
 EXPORT_SYMBOL(fal_tunnel_encap_entry_add);
 EXPORT_SYMBOL(fal_tunnel_encap_entry_del);
 EXPORT_SYMBOL(fal_tunnel_encap_entry_get);
@@ -1474,10 +1652,21 @@ EXPORT_SYMBOL(fal_tunnel_udf_profile_entry_getfirst);
 EXPORT_SYMBOL(fal_tunnel_udf_profile_entry_getnext);
 EXPORT_SYMBOL(fal_tunnel_udf_profile_cfg_set);
 EXPORT_SYMBOL(fal_tunnel_udf_profile_cfg_get);
+EXPORT_SYMBOL(fal_tunnel_encap_header_ctrl_set);
+EXPORT_SYMBOL(fal_tunnel_encap_header_ctrl_get);
 EXPORT_SYMBOL(fal_tunnel_decap_ecn_mode_set);
 EXPORT_SYMBOL(fal_tunnel_decap_ecn_mode_get);
 EXPORT_SYMBOL(fal_tunnel_encap_ecn_mode_set);
 EXPORT_SYMBOL(fal_tunnel_encap_ecn_mode_get);
+EXPORT_SYMBOL(fal_tunnel_exp_decap_set);
+EXPORT_SYMBOL(fal_tunnel_exp_decap_get);
+EXPORT_SYMBOL(fal_tunnel_decap_key_set);
+EXPORT_SYMBOL(fal_tunnel_decap_key_get);
+EXPORT_SYMBOL(fal_tunnel_decap_en_set);
+EXPORT_SYMBOL(fal_tunnel_decap_en_get);
+EXPORT_SYMBOL(fal_tunnel_decap_action_update);
+EXPORT_SYMBOL(fal_tunnel_decap_counter_get);
+
 /**
  * @}
  */

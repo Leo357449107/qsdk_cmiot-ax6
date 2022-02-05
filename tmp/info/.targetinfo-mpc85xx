@@ -1,0 +1,150 @@
+Source-Makefile: target/linux/mpc85xx/Makefile
+Target: mpc85xx
+Target-Board: mpc85xx
+Target-Name: Freescale MPC85xx
+Target-Arch: powerpc
+Target-Arch-Packages: powerpc_8540
+Target-Features: dt gpio pci pcie ramdisk rtc squashfs usb
+Target-Depends: 
+Target-Optimization: -Os -pipe -mcpu=8540
+CPU-Type: 8540
+Linux-Version: 4.14.254
+Linux-Release: 1
+Linux-Kernel-Arch: powerpc
+Target-Description:
+
+@@
+Default-Packages: base-files libc libgcc busybox dropbear mtd uci opkg netifd fstools uclient-fetch logd urandom-seed urngd dnsmasq iptables ip6tables ppp ppp-mod-pppoe firewall odhcpd-ipv6only odhcp6c kmod-ipt-offload kmod-input-core kmod-input-gpio-keys kmod-button-hotplug kmod-leds-gpio swconfig kmod-ath9k wpad-basic kmod-usb2 iwinfo
+Target: mpc85xx/generic
+Target-Board: mpc85xx
+Target-Name: Generic
+Target-Arch: powerpc
+Target-Arch-Packages: powerpc_8540
+Target-Features: dt gpio nand pci pcie ramdisk rtc squashfs usb
+Target-Depends: 
+Target-Optimization: -Os -pipe -mcpu=8540
+CPU-Type: 8540
+Linux-Version: 4.14.254
+Linux-Release: 1
+Linux-Kernel-Arch: powerpc
+Target-Description:
+	Build firmware images for generic MPC85xx based boards.
+@@
+Default-Packages: base-files libc libgcc busybox dropbear mtd uci opkg netifd fstools uclient-fetch logd urandom-seed urngd dnsmasq iptables ip6tables ppp ppp-mod-pppoe firewall odhcpd-ipv6only odhcp6c kmod-ipt-offload kmod-input-core kmod-input-gpio-keys kmod-button-hotplug kmod-leds-gpio swconfig kmod-ath9k wpad-basic kmod-usb2 iwinfo
+Target-Profile: Default
+Target-Profile-Priority: 1
+Target-Profile-Name: Default Profile
+Target-Profile-Packages:  
+Target-Profile-Description:
+	Default package set compatible with most MPC85xx boards.
+@@
+
+Target-Profile: DEVICE_tl-wdr4900-v1
+Target-Profile-Name: TP-Link TL-WDR4900
+Target-Profile-Packages:  
+Target-Profile-hasImageMetadata: 1
+Target-Profile-SupportedDevices: tl-wdr4900-v1 tplink,tl-wdr4900-v1
+
+Target-Profile-Description:
+Build firmware images for TP-Link TL-WDR4900
+@@
+
+Target-Profile: DEVICE_red-15w-rev1
+Target-Profile-Name: Sophos RED 15w Rev.1
+Target-Profile-Packages:  
+Target-Profile-hasImageMetadata: 1
+Target-Profile-SupportedDevices: sophos,red-15w-rev1
+
+Target-Profile-Description:
+Build firmware images for Sophos RED 15w Rev.1
+@@
+
+Target: mpc85xx/p1020
+Target-Board: mpc85xx
+Target-Name: P1020
+Target-Arch: powerpc
+Target-Arch-Packages: powerpc_8540
+Target-Features: dt gpio nand pci pcie ramdisk rtc squashfs usb
+Target-Depends: 
+Target-Optimization: -Os -pipe -mcpu=8540
+CPU-Type: 8540
+Linux-Version: 4.14.254
+Linux-Release: 1
+Linux-Kernel-Arch: powerpc
+Target-Description:
+	Build firmware images for Freescale P1020 based boards.
+@@
+Default-Packages: base-files libc libgcc busybox dropbear mtd uci opkg netifd fstools uclient-fetch logd urandom-seed urngd dnsmasq iptables ip6tables ppp ppp-mod-pppoe firewall odhcpd-ipv6only odhcp6c kmod-ipt-offload kmod-input-core kmod-input-gpio-keys kmod-button-hotplug kmod-leds-gpio swconfig kmod-ath9k wpad-basic kmod-usb2 iwinfo
+Target-Profile: Default
+Target-Profile-Priority: 1
+Target-Profile-Name: Default Profile
+Target-Profile-Packages:  
+Target-Profile-Description:
+	Default package set compatible with most P1020 boards.
+@@
+
+Target-Profile: DEVICE_hiveap-330
+Target-Profile-Name: Aerohive HiveAP-330
+Target-Profile-Packages: kmod-tpm-i2c-atmel 
+Target-Profile-hasImageMetadata: 1
+Target-Profile-SupportedDevices: aerohive,hiveap-330
+
+Target-Profile-Description:
+Build firmware images for Aerohive HiveAP-330
+@@
+
+Target-Profile: DEVICE_ws-ap3710i
+Target-Profile-Name: Enterasys WS-AP3710i
+Target-Profile-Packages:  
+Target-Profile-hasImageMetadata: 1
+Target-Profile-SupportedDevices: enterasys,ws-ap3710i
+
+Target-Profile-Description:
+Build firmware images for Enterasys WS-AP3710i
+@@
+
+Target-Profile: DEVICE_panda
+Target-Profile-Name: OCEDO Panda
+Target-Profile-Packages: kmod-rtc-ds1307 uboot-envtools 
+Target-Profile-hasImageMetadata: 1
+Target-Profile-SupportedDevices: ocedo,panda
+
+Target-Profile-Description:
+Build firmware images for OCEDO Panda
+@@
+
+Target: mpc85xx/p2020
+Target-Board: mpc85xx
+Target-Name: P2020
+Target-Arch: powerpc
+Target-Arch-Packages: powerpc_8540
+Target-Features: dt gpio pci pcie ramdisk rtc squashfs usb
+Target-Depends: 
+Target-Optimization: -Os -pipe -mcpu=8540
+CPU-Type: 8540
+Linux-Version: 4.14.254
+Linux-Release: 1
+Linux-Kernel-Arch: powerpc
+Target-Description:
+	Build firmware images for Freescale P2020 based boards.
+@@
+Default-Packages: base-files libc libgcc busybox dropbear mtd uci opkg netifd fstools uclient-fetch logd urandom-seed urngd dnsmasq iptables ip6tables ppp ppp-mod-pppoe firewall odhcpd-ipv6only odhcp6c kmod-ipt-offload kmod-input-core kmod-input-gpio-keys kmod-button-hotplug kmod-leds-gpio swconfig kmod-ath9k wpad-basic kmod-usb2 iwinfo
+Target-Profile: Default
+Target-Profile-Priority: 1
+Target-Profile-Name: Default Profile
+Target-Profile-Packages:  
+Target-Profile-Description:
+	Default package set compatible with most P2020 boards.
+@@
+
+Target-Profile: DEVICE_p2020rdb
+Target-Profile-Name: Freescale P2020RDB
+Target-Profile-Packages: kmod-hwmon-core kmod-hwmon-lm90 kmod-rtc-ds1307 kmod-gpio-pca953x kmod-eeprom-at24 
+Target-Profile-hasImageMetadata: 1
+Target-Profile-SupportedDevices: fsl,P2020RDB
+
+Target-Profile-Description:
+Build firmware images for Freescale P2020RDB
+@@
+
+

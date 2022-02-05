@@ -110,8 +110,8 @@ void ipq9574_ppe_acl_set(int rule_id, int rule_type, int pkt_type, int l4_port_n
 				hw_reg.bf.pri = 0x0;
 
 			}
-			hw_reg.bf.src_0 = 0x6;
-			hw_reg.bf.src_1 = 0x7;
+			hw_reg.bf.src_0 = 0x0;
+			hw_reg.bf.src_1 = 0x3f;
 			ppe_ipo_rule_reg_set(&hw_reg, rule_id);
 			ppe_ipo_mask_reg_set(&hw_mask, rule_id);
 			ppe_ipo_action_set(&hw_act, rule_id);
@@ -153,7 +153,7 @@ static void ipq9574_ppe_ucast_queue_map_tbl_queue_id_set(int queue, int port)
  */
 static void ipq9574_vsi_setup(int vsi, uint8_t group_mask)
 {
-	uint32_t val = (group_mask << 24 | group_mask << 16 | group_mask << 8
+	uint32_t val = (group_mask << 24 | group_mask << 16 | 0x1
 							    | group_mask);
 
 	/* Set mask */
@@ -473,7 +473,7 @@ void ipq9574_pqsgmii_speed_set(int port, int speed, int status)
 	ppe_port_bridge_txmac_set(port + 1, status);
 	ipq9574_ppe_reg_write(IPQ9574_PPE_MAC_SPEED + (0x200 * port), speed);
 	ipq9574_ppe_reg_write(IPQ9574_PPE_MAC_ENABLE + (0x200 * port), 0x73);
-	ipq9574_ppe_reg_write(IPQ9574_PPE_MAC_MIB_CTL + (0x200 * port), 0x5);
+	ipq9574_ppe_reg_write(IPQ9574_PPE_MAC_MIB_CTL + (0x200 * port), 0x1);
 }
 
 /*
@@ -895,6 +895,8 @@ void ipq9574_ppe_provision_init(void)
 	ipq9574_ppe_vp_port_tbl_set(2, 3);
 	ipq9574_ppe_vp_port_tbl_set(3, 4);
 	ipq9574_ppe_vp_port_tbl_set(4, 5);
+	ipq9574_ppe_vp_port_tbl_set(5, 6);
+	ipq9574_ppe_vp_port_tbl_set(6, 7);
 #endif
 
 	/* Unicast priority map */
@@ -913,10 +915,6 @@ void ipq9574_ppe_provision_init(void)
 		ipq9574_ppe_c_sp_cfg_tbl_drr_id_set(i);
 		ipq9574_ppe_e_sp_cfg_tbl_drr_id_set(i);
 	}
-
-	/* sp_cfg_l0 and sp_cfg_l1 configuration */
-	ipq9574_ppe_reg_write(IPQ9574_PPE_TM_SHP_CFG_L0, 0x12b);
-	ipq9574_ppe_reg_write(IPQ9574_PPE_TM_SHP_CFG_L1, 0x3f);
 
 	/* Port0 multicast queue */
 	ipq9574_ppe_reg_write(0x409000, 0x00000000);
@@ -956,6 +954,8 @@ void ipq9574_ppe_provision_init(void)
 	ipq9574_vsi_setup(3, 0x05);
 	ipq9574_vsi_setup(4, 0x09);
 	ipq9574_vsi_setup(5, 0x11);
+	ipq9574_vsi_setup(6, 0x21);
+	ipq9574_vsi_setup(7, 0x41);
 #endif
 
 	/* Port 0-7 STP */

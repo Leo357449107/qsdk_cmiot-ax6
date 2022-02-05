@@ -560,10 +560,16 @@ static int nss_htb_delete_class(struct Qdisc *sch, unsigned long arg)
 	/*
 	 * If we are root class, we dont have to update our parent.
 	 * We simply deduct refcnt and return.
+	 * For 5.4 and above kernels, calling nss_htb_destroy_class
+	 * explicitly as there is no put_class which would have called
+	 * nss_htb_destroy_class when refcnt becomes zero.
 	 */
 	if (!cl->parent) {
 		refcnt = nss_qdisc_atomic_sub_return(&cl->nq);
 		sch_tree_unlock(sch);
+#if (LINUX_VERSION_CODE >= KERNEL_VERSION(4, 14, 0))
+		nss_htb_destroy_class(sch, cl);
+#endif
 		return 0;
 	}
 
@@ -582,6 +588,14 @@ static int nss_htb_delete_class(struct Qdisc *sch, unsigned long arg)
 	refcnt = nss_qdisc_atomic_sub_return(&cl->nq);
 	sch_tree_unlock(sch);
 
+	/*
+	 * For 5.4 and above kernels, calling nss_htb_destroy_class
+	 * explicitly as there is no put_class which would have called
+	 * nss_htb_destroy_class when refcnt becomes zero.
+	 */
+#if (LINUX_VERSION_CODE >= KERNEL_VERSION(4, 14, 0))
+	nss_htb_destroy_class(sch, cl);
+#endif
 	return 0;
 }
 

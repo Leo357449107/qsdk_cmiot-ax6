@@ -1,0 +1,21 @@
+Source-Makefile: package/network/utils/wwan/Makefile
+
+Package: wwan
+Version: 2014-07-17-1
+Depends: +libc +GCC_LIBSSP:libssp +USE_GLIBC:librt +USE_GLIBC:libpthread 
+Conflicts: 
+Menu-Depends: 
+Provides: 
+Section: net
+Category: Network
+Repository: base
+Title: Generic OpenWrt 3G/4G proto handler
+Maintainer: John Crispin <john@phrozen.org>
+Source: 
+License: GPL-2.0
+Type: ipkg
+Description: Generic OpenWrt 3G/4G proto handler
+John Crispin <john@phrozen.org>
+@@
+
+

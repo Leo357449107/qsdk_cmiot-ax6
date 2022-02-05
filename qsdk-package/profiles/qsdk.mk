@@ -68,7 +68,7 @@ SWITCH_SSDK_PKGS:= kmod-qca-ssdk-hnat kmod-qca-ssdk-nohnat qca-ssdk-shell swconf
 MACSEC_OPEN_PKGS:= wpa-supplicant-macsec hostapd-macsec
 
 WIFI_OPEN_PKGS:= kmod-ath11k wpad-mesh hostapd-utils \
-	sigma-dut-open wpa-cli qcmbr-10.4-netlink iwinfo \
+	sigma-dut-open wpa-cli qcmbr-netlink iwinfo \
 	athtestcmd-lith-nl -qca-whc-lbd -qca-whc-init -libhyficommon qca-wifi-scripts
 
 WIFI_OPEN_PKGS_8M:= kmod-ath11k wpad-mesh hostapd-utils \
@@ -78,15 +78,15 @@ WIFI_OPEN_PKGS_8M:= kmod-ath11k wpad-mesh hostapd-utils \
 WIFI_PKGS:=kmod-qca-wifi-unified-profile \
 	qca-hostap qca-hostapd-cli qca-wpa-supplicant \
 	qca-wpa-cli qca-cfg80211tool qca-wifi-scripts \
-	qca-acfg qca-wrapd athtestcmd-lith qca-iface-mgr-10.4 \
+	qca-acfg qca-wrapd athtestcmd-lith qca-iface-mgr \
 	qca-wapid qca-lowi athdiag whc-mesh whc-ui \
-	qca-spectral qca-icm qcmbr-10.4 sigma-dut \
+	qca-spectral qca-icm qcmbr sigma-dut \
 	qca-wpc qca-cfg80211 qca-cnss-daemon
 
 WIFI_PKGS_MINENT:=kmod-qca-wifi-custc-profile \
 	qca-hostap qca-hostapd-cli qca-wpa-supplicant \
 	qca-wpa-cli qca-spectral qca-wpc sigma-dut \
-	qcmbr-10.4 qca-wrapd qca-wapid qca-acfg \
+	qcmbr qca-wrapd qca-wapid qca-acfg \
 	qca-lowi qca-icm qca-cfg80211 athdiag qca-cnss-daemon \
 	athtestcmd-lith qca-cfg80211tool
 
@@ -94,7 +94,7 @@ WIFI_PKGS_256MB:=kmod-qca-wifi-lowmem-profile \
 	qca-hostap qca-hostapd-cli qca-wpa-supplicant \
 	qca-wpa-cli qca-cfg80211tool qca-wifi-scripts \
 	qca-wpc sigma-dut qca-wrapd qca-wapid qca-acfg \
-	qca-iface-mgr-10.4 qca-icm qca-cfg80211 athdiag qca-cnss-daemon \
+	qca-iface-mgr qca-icm qca-cfg80211 athdiag qca-cnss-daemon \
 	athtestcmd-lith whc-mesh
 #	whc-ui \
 
@@ -102,11 +102,12 @@ WIFI_PKGS_16M:=kmod-qca-wifi-flash_16mb-profile \
 	qca-hostap qca-hostapd-cli qca-wpa-supplicant \
 	qca-wpa-cli qca-cfg80211 qca-cfg80211tool qca-wifi-scripts
 
-WIFI_FW_PKGS:=qca-wifi-hk-fw-hw1-10.4-asic qca-wifi-cyp-fw-hw1-11.0-asic
+WIFI_FW_PKGS:=qca-wifi-hk-fw-hw1-10.4-asic qca-wifi-cyp-fw-hw1-11.0-asic qca-wifi-wkk-fw-hw1-asic \
+	qca-wifi-fw-hw3-10.4-asic qca-wifi-fw-hw6-10.4-asic qca-wifi-fw-hw4-10.4-asic
 
 OPENWRT_STANDARD:= luci openssl-util
 
-OPENWRT_256MB:=luci pm-utils wififw_mount_script qca-thermald-10.4 qca-wlanfw-upgrade -file \
+OPENWRT_256MB:=luci pm-utils wififw_mount_script qca-thermald qca-wlanfw-upgrade -file \
 	-kmod-ata-core -kmod-ata-ahci -kmod-ata-ahci-platform \
 	-kmod-usb2 -kmod-usb3 -kmod-usb-dwc3-qcom \
 	-kmod-usb-phy-qcom-dwc3 -kmod-usb-dwc3-of-simple \
@@ -119,14 +120,14 @@ USB_ETHERNET:= kmod-usb-net-rtl8152 kmod-usb-net
 
 TEST_TOOLS:=ethtool i2c-tools tcpdump
 
-UTILS:=file luci-app-samba rng-tools profilerd
+UTILS:=file luci-app-samba4 rng-tools profilerd
 
-COREBSP_UTILS:=pm-utils wififw_mount_script qca-thermald-10.4 qca-qmi-framework qca-time-services \
+COREBSP_UTILS:=pm-utils wififw_mount_script qca-thermald qca-qmi-framework qca-time-services \
 	qca-wlanfw-upgrade dashboard
 
 FAILSAFE:= kmod-bootconfig
 
-NETWORKING:=mcproxy -dnsmasq dnsmasq-dhcpv6 bridge ip-full mwan3 \
+NETWORKING:=mcproxy -dnsmasq dnsmasq-dhcpv6 bridge ip-bridge ip-full mwan3 \
 	rp-pppoe-relay iptables-mod-extra iputils-tracepath iputils-tracepath6 \
 	luci-app-upnp luci-app-ddns luci-proto-ipv6 \
 	kmod-nf-nathelper-extra kmod-nf-nathelper \
@@ -154,7 +155,7 @@ CD_ROUTER_256MB:=kmod-ipt-ipopt kmod-ipt-sctp lacpd \
 	arptables ddns-scripts \
 	quagga quagga-ripd quagga-zebra quagga-watchquagga quagga-vtysh \
 	kmod-ipv6 ip6tables iptables-mod-filter \
-	isc-dhcp-relay-ipv6 rp-pppoe-server
+	isc-dhcp-relay-ipv6 rp-pppoe-server iptables-mod-physdev
 
 BLUETOOTH:=kmod-bluetooth bluez-libs bluez-utils kmod-ath3k
 
@@ -215,7 +216,7 @@ EXTRA_NETWORKING:= $(CD_ROUTER) $(NSS_EIP197_FW) -rdk-v-wifi-ath10k kmod-qca-nss
 
 define Profile/QSDK_Premium
 	NAME:=Qualcomm Technologies, Inc SDK Premium Profile
-	PACKAGES:=$(OPENWRT_STANDARD) $(STORAGE) \
+	PACKAGES:=$(OPENWRT_STANDARD) $(STORAGE) $(AUDIO) \
 		$(VIDEO) $(TEST_TOOLS) $(COREBSP_UTILS) \
 		$(AQ_PHY) $(FAILSAFE) -lacpd $(USB_DIAG) $(SWITCH_SSDK_PKGS) $(CNSS_DIAG) \
 		$(FTM) $(QMSCT_CLIENT) $(KPI) $(NSS_COMMON) \
@@ -237,7 +238,7 @@ $(eval $(call Profile,QSDK_Premium))
 
 define Profile/QSDK_Open
 	NAME:=Qualcomm Technologies, Inc SDK Open Profile
-	PACKAGES:=$(OPENWRT_STANDARD) $(STORAGE) $(TEST_TOOLS) $(VIDEO) \
+	PACKAGES:=$(OPENWRT_STANDARD) $(STORAGE) $(TEST_TOOLS) $(AUDIO) $(VIDEO) \
 		$(COREBSP_UTILS) $(FAILSAFE) $(USB_DIAG) $(SWITCH_SSDK_NOHNAT_PKGS) \
 		$(FTM) $(KPI) $(UTILS) $(NETWORKING) $(EXTRA_NETWORKING) \
 		$(WIFI_OPEN_PKGS) $(USB_ETHERNET) $(NSS_COMMON) $(NSS_STANDARD) $(NSS_MESH) \
@@ -265,8 +266,8 @@ define Profile/QSDK_QBuilder
 		kmod-fs-vfat kmod-fs-ntfs ntfs-3g e2fsprogs losetup \
 		kmod-qca-nss-sfe \
 		rstp qca-mcs-apps qca-hostap qca-hostapd-cli qca-wpa-supplicant qca-wpa-cli \
-		qca-spectral qca-wpc sigma-dut qcmbr-10.4 qca-wrapd qca-wapid qca-acfg whc-mesh whc-ui \
-		qca-lowi qca-iface-mgr-10.4 qca-icm qca-cfg80211 athdiag qca-cnss-daemon athtestcmd-lith \
+		qca-spectral qca-wpc sigma-dut qcmbr qca-wrapd qca-wapid qca-acfg whc-mesh whc-ui \
+		qca-lowi qca-iface-mgr qca-icm qca-cfg80211 athdiag qca-cnss-daemon athtestcmd-lith \
 		qca-wifi-hk-fw-hw1-10.4-asic kmod-aq_phy kmod-qca_85xx_sw aq-fw-download mcproxy mwan3 \
 		-dnsmasq dnsmasq-dhcpv6 bridge ip-full trace-cmd rp-pppoe-relay iptables-mod-extra \
 		iputils-tracepath iputils-tracepath6 \
@@ -276,7 +277,7 @@ define Profile/QSDK_QBuilder
 		iptables-mod-filter iptables-mod-ipopt iptables-mod-conntrack-extra \
 		qca-nss-fw-eip-hk qca-nss-fw-eip-cp kmod-qca-ovsmgr \
 		file luci-app-samba rng-tools profilerd ethtool i2c-tools tcpdump \
-		pm-utils wififw_mount_script qca-thermald-10.4 qca-qmi-framework qca-time-services \
+		pm-utils wififw_mount_script qca-thermald qca-qmi-framework qca-time-services \
 		qca-wlanfw-upgrade dashboard iperf sysstat nlcfg kmod-bootconfig qca-cfg80211tool
 endef
 
@@ -328,7 +329,7 @@ define Profile/QSDK_256
 		$(NETWORKING_256MB) iperf rng-tools $(QCA_RFS) $(CHAR_DIAG) \
 		$(QCA_ECM_STANDARD) $(NSS_MACSEC) $(NSS_CLIENTS_256MB) $(FAILSAFE) \
 		-lacpd $(CNSS_DIAG) $(FTM) $(QMSCT_CLIENT) $(HYFI) $(QCA_EZMESH) kmod-macvlan \
-		$(IGMPSNOOPING_RSTP) e2fsprogs losetup
+		$(IGMPSNOOPING_RSTP) $(EMESH_SP) e2fsprogs losetup
 endef
 
 #       $(MHI_QRTR)
@@ -342,14 +343,14 @@ $(eval $(call Profile,QSDK_256))
 
 define Profile/QSDK_512
 	NAME:=Qualcomm Technologies, Inc SDK 512MB Profile
-	PACKAGES:=$(OPENWRT_STANDARD) $(NSS_COMMON) $(NSS_STANDARD) $(SWITCH_SSDK_PKGS) \
+	PACKAGES:=$(OPENWRT_STANDARD) $(AUDIO) $(NSS_COMMON) $(NSS_STANDARD) $(SWITCH_SSDK_PKGS) \
 		$(WIFI_PKGS) $(WIFI_FW_PKGS) $(STORAGE) $(CD_ROUTER) \
 		$(NETWORKING) $(OPENVPN) $(UTILS) $(NSS_SFE) $(HW_CRYPTO) $(QCA_RFS) \
 		$(VIDEO) $(IGMPSNOOPING_RSTP) $(IPSEC) $(QOS) $(QCA_ECM_PREMIUM) \
 		$(NSS_MACSEC) $(TEST_TOOLS) $(NSS_CRYPTO) $(NSS_CLIENTS_STANDARD) $(COREBSP_UTILS) \
 		$(MAP_PKGS) $(AQ_PHY) $(FAILSAFE) -lacpd $(USB_DIAG) \
 		$(NSS_EIP197_FW) $(CNSS_DIAG) $(FTM) $(QMSCT_CLIENT) $(KPI) $(NSS_USERSPACE) \
-		$(NSS_RMNET) $(HYFI) $(QCA_EZMESH) kmod-macvlan
+		$(NSS_RMNET) $(HYFI) $(EMESH_SP) $(QCA_EZMESH) kmod-macvlan
 endef
 
 #       $(MHI_QRTR)

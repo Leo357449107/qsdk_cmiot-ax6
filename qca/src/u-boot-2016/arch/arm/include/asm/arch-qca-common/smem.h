@@ -127,6 +127,7 @@ typedef struct
 extern qca_smem_bootconfig_info_t qca_smem_bootconfig_info;
 
 int smem_bootconfig_info(void);
+int smem_update_bootconfig_to_flash(void);
 unsigned int get_smem_spi_addr_len(void);
 unsigned int get_rootfs_active_partition(void);
 unsigned int get_mibib_active_partition(void);
@@ -134,4 +135,6 @@ void qca_smem_part_to_mtdparts(char *mtdid, int len);
 int ipq_smem_get_socinfo_cpu_type(uint32_t *cpu_type);
 int ipq_smem_get_socinfo_version(uint32_t *version);
 int ipq_smem_get_boot_flash(uint32_t *flash_type);
+int write_to_flash(int flash_type, uint32_t address, uint32_t offset,
+uint32_t part_size, uint32_t file_size, char *layout);
 #endif

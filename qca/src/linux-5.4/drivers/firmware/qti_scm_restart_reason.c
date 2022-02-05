@@ -25,15 +25,19 @@
 #include <linux/reboot.h>
 #include <linux/qcom_scm.h>
 #include "qcom_scm.h"
+#include <linux/device.h>
 
 static int dload_dis;
+static void __iomem *dload_reg;
+#define CFG_MAX_DIG_COUNT	2
+static unsigned long int kernel_complete;
 
 static void scm_restart_dload_mode_enable(void)
 {
 	if (!dload_dis) {
 		unsigned int magic_cookie = SET_MAGIC;
 		qti_scm_dload(QCOM_SCM_SVC_BOOT, SCM_CMD_TZ_FORCE_DLOAD_ID,
-				&magic_cookie);
+				&magic_cookie, dload_reg);
 	}
 }
 
@@ -42,7 +46,7 @@ static void scm_restart_dload_mode_disable(void)
 	unsigned int magic_cookie = CLEAR_MAGIC;
 
 	qti_scm_dload(QCOM_SCM_SVC_BOOT, SCM_CMD_TZ_FORCE_DLOAD_ID,
-			&magic_cookie);
+			&magic_cookie, dload_reg);
 };
 
 static void scm_restart_sdi_disable(void)
@@ -58,6 +62,38 @@ static int scm_restart_panic(struct notifier_block *this,
 
 	return NOTIFY_DONE;
 }
+
+static void scm_set_kernel_boot_complete(void)
+{
+	unsigned int val;
+
+	val = readl(dload_reg);
+	val &= SET_KERNEL_COMPLETE;
+	qti_scm_set_kernel_boot_complete(QCOM_SCM_SVC_BOOT, val);
+}
+
+static ssize_t kernel_boot_complete_show(struct device_driver *driver,
+							char *buff)
+{
+	return snprintf(buff, CFG_MAX_DIG_COUNT, "%ld", kernel_complete);
+}
+
+static ssize_t kernel_boot_complete_store(struct device_driver *driver,
+				const char *buff, size_t count)
+{
+	if (kstrtoul(buff, 0, &kernel_complete))
+		return -EINVAL;
+
+	if (kernel_complete == 1) {
+		scm_set_kernel_boot_complete();
+	} else {
+		return -EINVAL;
+	}
+
+	return count;
+
+}
+static DRIVER_ATTR_RW(kernel_boot_complete);
 
 static struct notifier_block panic_nb = {
 	.notifier_call = scm_restart_panic,
@@ -83,6 +119,7 @@ static int scm_restart_reason_probe(struct platform_device *pdev)
 	struct device_node *np;
 	unsigned int magic_cookie = SET_MAGIC_WARMRESET;
 	unsigned int dload_warm_reset = 0;
+	unsigned int runtime_failsafe;
 
 	np = of_node_get(pdev->dev.of_node);
 	if (!np)
@@ -96,13 +133,34 @@ static int scm_restart_reason_probe(struct platform_device *pdev)
 	if (ret)
 		dload_warm_reset = 0;
 
+	ret = of_property_read_u32(np, "qti,runtime-failsafe", &runtime_failsafe);
+	if (ret) {
+		runtime_failsafe = 0;
+		dload_reg = NULL;
+	}
+
+	if (runtime_failsafe) {
+		dload_reg = devm_platform_ioremap_resource(pdev, 0);
+		if (IS_ERR_OR_NULL(dload_reg)) {
+			pr_err("%s unable to get tcsr reg\n", __func__);
+			return PTR_ERR(dload_reg);
+		}
+
+		ret = driver_create_file(pdev->dev.driver,
+					&driver_attr_kernel_boot_complete);
+		if (ret) {
+			dev_err(&pdev->dev, "failed to create sysfs entry\n");
+			return ret;
+		}
+	}
+
 	ret = of_property_read_u32(np, "dload_sec_status", &dload_dis_sec);
 	if (ret)
 		dload_dis_sec = 0;
 
 	if (dload_dis_sec) {
 		qti_scm_dload(QCOM_SCM_SVC_BOOT,
-			SCM_CMD_TZ_SET_DLOAD_FOR_SECURE_BOOT, NULL);
+			SCM_CMD_TZ_SET_DLOAD_FOR_SECURE_BOOT, NULL, dload_reg);
 	}
 
 	/* Ensure Disable before enabling the dload and sdi bits
@@ -113,7 +171,7 @@ static int scm_restart_reason_probe(struct platform_device *pdev)
 		else
 			qti_scm_dload(QCOM_SCM_SVC_BOOT,
 				       SCM_CMD_TZ_FORCE_DLOAD_ID,
-				       &magic_cookie);
+				       &magic_cookie, dload_reg);
 		scm_restart_sdi_disable();
 	} else {
 		scm_restart_dload_mode_enable();

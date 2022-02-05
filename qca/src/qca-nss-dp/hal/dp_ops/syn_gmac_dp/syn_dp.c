@@ -154,10 +154,10 @@ static int syn_dp_if_init(struct nss_dp_data_plane_ctx *dpc)
 	 * Initialize Rx buffer mode setting and skb allocation length
 	 * based on (page vs fraglist/jumbo-mru).
 	 */
-	rx_info->alloc_buf_len = SYN_DP_SKB_ALLOC_SIZE;
+	rx_info->alloc_buf_len = dp_global_ctx.rx_buf_size;
 	rx_info->page_mode = gmac_dev->rx_page_mode;
 	if (rx_info->page_mode) {
-		rx_info->alloc_buf_len = (SYN_DP_PAGE_MODE_SKB_SIZE + NET_IP_ALIGN);
+		rx_info->alloc_buf_len = (SYN_DP_PAGE_MODE_SKB_SIZE + SYN_DP_SKB_HEADROOM + NET_IP_ALIGN);
 	}
 
 	if (gmac_dev->rx_jumbo_mru) {

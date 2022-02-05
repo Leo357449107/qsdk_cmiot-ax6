@@ -1,6 +1,8 @@
 /*
  **************************************************************************
  * Copyright (c) 2014-2021, The Linux Foundation. All rights reserved.
+ * Copyright (c) 2022 Qualcomm Innovation Center, Inc. All rights reserved.
+ *
  * Permission to use, copy, modify, and/or distribute this software for
  * any purpose with or without fee is hereby granted, provided that the
  * above copyright notice and this permission notice appear in all copies.
@@ -87,6 +89,8 @@ enum ecm_fe_feature {
 	ECM_FE_FEATURE_CONN_LIMIT	= (1 << 8),
 	ECM_FE_FEATURE_DSCP_ACTION	= (1 << 9),
 	ECM_FE_FEATURE_XFRM		= (1 << 10),
+	ECM_FE_FEATURE_OVS_BRIDGE		= (1 << 11),
+	ECM_FE_FEATURE_OVS_VLAN		= (1 << 12),
 };
 
 /*
@@ -129,6 +133,7 @@ struct ecm_front_end_connection_instance;
 typedef void (*ecm_front_end_connection_accelerate_method_t)(struct ecm_front_end_connection_instance *feci,
                                                                         struct ecm_classifier_process_response *pr, bool is_l2_encap,
                                                                         struct nf_conn *ct, struct sk_buff *skb);
+
 typedef bool (*ecm_front_end_connection_decelerate_method_t)(struct ecm_front_end_connection_instance *feci);
 typedef ecm_front_end_acceleration_mode_t (*ecm_front_end_connection_accel_state_get_method_t)(struct ecm_front_end_connection_instance *feci);
 typedef void (*ecm_front_end_connection_ref_method_t)(struct ecm_front_end_connection_instance *feci);
@@ -146,6 +151,9 @@ typedef int32_t (*ecm_front_end_connection_ae_interface_number_by_dev_type_get_m
 typedef int32_t (*ecm_front_end_connection_ae_interface_type_get_method_t)(struct ecm_front_end_connection_instance *feci, struct net_device *dev);
 typedef void (*ecm_front_end_connection_regenerate_method_t)(struct ecm_front_end_connection_instance *feci, struct ecm_db_connection_instance *ci);
 typedef void (*ecm_front_end_connection_multicast_update_method_t)(ip_addr_t ip_grp_addr, struct net_device *brdev);
+
+typedef void (*ecm_front_end_connection_set_stats_bitmap_t)(struct ecm_front_end_connection_instance *feci, ecm_db_obj_dir_t dir, uint8_t bit);
+typedef uint32_t (*ecm_front_end_connection_get_stats_bitmap_t)(struct ecm_front_end_connection_instance *feci, ecm_db_obj_dir_t dir);
 
 /*
  * Acceleration limiting modes.
@@ -199,6 +207,9 @@ struct ecm_front_end_connection_instance {
 	ecm_front_end_connection_state_get_callback_t state_get;		/* Obtain state for this object */
 #endif
 	ecm_front_end_connection_multicast_update_method_t multicast_update;	/* Update existing multicast connection */
+
+	ecm_front_end_connection_set_stats_bitmap_t set_stats_bitmap;		/* Set bitmap of interface types to be updated during sync */
+	ecm_front_end_connection_get_stats_bitmap_t get_stats_bitmap;		/* Get bitmap of interface types to be updated during sync */
 
 	enum ecm_front_end_engine accel_engine;	/* Acceleration engine type */
 
@@ -295,17 +306,21 @@ static inline enum ecm_front_end_type ecm_front_end_type_get(void)
  */
 static inline enum ecm_front_end_type ecm_front_end_type_select(void)
 {
+	bool nss_supported = false;
+	extern int front_end_selection;
+
+#ifdef ECM_FRONT_END_NSS_ENABLE
 #ifdef CONFIG_OF
-	bool nss_supported = of_machine_is_compatible("qcom,ipq8064") ||
+	nss_supported = of_machine_is_compatible("qcom,ipq8064") ||
 				of_machine_is_compatible("qcom,ipq8062") ||
 				of_machine_is_compatible("qcom,ipq807x") ||
 				of_machine_is_compatible("qcom,ipq8074") ||
 				of_machine_is_compatible("qcom,ipq6018") ||
 				of_machine_is_compatible("qcom,ipq5018");
 #else
-	bool nss_supported = true;
+	nss_supported = true;
 #endif
-	extern int front_end_selection;
+#endif
 
 	if (nss_supported && ((front_end_selection == ECM_FRONT_END_TYPE_AUTO) ||
 			      (front_end_selection == ECM_FRONT_END_TYPE_NSS))) {

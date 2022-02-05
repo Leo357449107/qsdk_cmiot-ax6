@@ -24,11 +24,9 @@ Signed-off-by: Maharaja Kennadyrajan <mkenna@codeaurora.org>
  create mode 100644 drivers/net/wireless/ath/ath11k/smart_ant_alg.c
  create mode 100644 drivers/net/wireless/ath/ath11k/smart_ant_alg.h
 
-Index: backports-20210222_001-5.4.89-b157d2276/drivers/net/wireless/ath/ath11k/Kconfig
-===================================================================
---- backports-20210222_001-5.4.89-b157d2276.orig/drivers/net/wireless/ath/ath11k/Kconfig
-+++ backports-20210222_001-5.4.89-b157d2276/drivers/net/wireless/ath/ath11k/Kconfig
-@@ -93,3 +93,10 @@ config ATH11K_CFR
+--- a/drivers/net/wireless/ath/ath11k/Kconfig
++++ b/drivers/net/wireless/ath/ath11k/Kconfig
+@@ -94,3 +94,10 @@ config ATH11K_CFR
  	  Enable ath11k cfr dump support
  
  	  Say Y to enable access to collect cfr data dump via debugfs.
@@ -39,10 +37,8 @@ Index: backports-20210222_001-5.4.89-b157d2276/drivers/net/wireless/ath/ath11k/K
 +	default y
 +	---help---
 +	This option enables smart antenna algorithm.
-Index: backports-20210222_001-5.4.89-b157d2276/drivers/net/wireless/ath/ath11k/Makefile
-===================================================================
---- backports-20210222_001-5.4.89-b157d2276.orig/drivers/net/wireless/ath/ath11k/Makefile
-+++ backports-20210222_001-5.4.89-b157d2276/drivers/net/wireless/ath/ath11k/Makefile
+--- a/drivers/net/wireless/ath/ath11k/Makefile
++++ b/drivers/net/wireless/ath/ath11k/Makefile
 @@ -29,6 +29,7 @@ ath11k-$(CPTCFG_ATH11K_SPECTRAL) += spec
  ath11k-$(CPTCFG_ATH11K_PKTLOG) += pktlog.o
  ath11k-$(CPTCFG_ATH11K_NSS_SUPPORT) += nss.o
@@ -51,10 +47,8 @@ Index: backports-20210222_001-5.4.89-b157d2276/drivers/net/wireless/ath/ath11k/M
  
  obj-$(CPTCFG_ATH11K_AHB) += ath11k_ahb.o
  ath11k_ahb-y += ahb.o
-Index: backports-20210222_001-5.4.89-b157d2276/drivers/net/wireless/ath/ath11k/core.c
-===================================================================
---- backports-20210222_001-5.4.89-b157d2276.orig/drivers/net/wireless/ath/ath11k/core.c
-+++ backports-20210222_001-5.4.89-b157d2276/drivers/net/wireless/ath/ath11k/core.c
+--- a/drivers/net/wireless/ath/ath11k/core.c
++++ b/drivers/net/wireless/ath/ath11k/core.c
 @@ -58,6 +58,12 @@ module_param(ath11k_caldata_bin_path, ch
  MODULE_PARM_DESC(ath11k_caldata_bin_path,
  		"Caldata bin path for loading");
@@ -68,10 +62,8 @@ Index: backports-20210222_001-5.4.89-b157d2276/drivers/net/wireless/ath/ath11k/c
  wait_queue_head_t ath11k_radio_prb_wq;
  EXPORT_SYMBOL(ath11k_radio_prb_wq);
  
-Index: backports-20210222_001-5.4.89-b157d2276/drivers/net/wireless/ath/ath11k/core.h
-===================================================================
---- backports-20210222_001-5.4.89-b157d2276.orig/drivers/net/wireless/ath/ath11k/core.h
-+++ backports-20210222_001-5.4.89-b157d2276/drivers/net/wireless/ath/ath11k/core.h
+--- a/drivers/net/wireless/ath/ath11k/core.h
++++ b/drivers/net/wireless/ath/ath11k/core.h
 @@ -28,6 +28,7 @@
  #include "rx_desc.h"
  #include "nss.h"
@@ -80,7 +72,7 @@ Index: backports-20210222_001-5.4.89-b157d2276/drivers/net/wireless/ath/ath11k/c
  
  extern unsigned int ath11k_skip_radio;
  extern wait_queue_head_t ath11k_radio_prb_wq;
-@@ -471,6 +472,7 @@ struct ath11k_sta {
+@@ -476,6 +477,7 @@ struct ath11k_sta {
  	u8 rssi_comb;
  	struct ath11k_htt_tx_stats *tx_stats;
  	struct ath11k_rx_peer_stats *rx_stats;
@@ -88,16 +80,17 @@ Index: backports-20210222_001-5.4.89-b157d2276/drivers/net/wireless/ath/ath11k/c
  
  #ifdef CPTCFG_MAC80211_DEBUGFS
  	/* protected by conf_mutex */
-@@ -790,6 +792,8 @@ struct ath11k {
+@@ -795,6 +797,9 @@ struct ath11k {
  	u8 cfr_enabled;
  	bool ani_enabled;
  	enum wmi_phy_mode cfr_phymode;
 +
 +	struct ath11k_smart_ant_info smart_ant_info;
++	u32 rx_antenna;
  };
  
  struct ath11k_band_cap {
-@@ -1239,6 +1243,24 @@ enum ath11k_fw_recovery_option {
+@@ -1244,6 +1249,24 @@ enum ath11k_fw_recovery_option {
  	ATH11K_FW_RECOVERY_ENABLE_SSR_ONLY,
  };
  
@@ -122,10 +115,8 @@ Index: backports-20210222_001-5.4.89-b157d2276/drivers/net/wireless/ath/ath11k/c
  extern const struct ce_pipe_config ath11k_target_ce_config_wlan_ipq8074[];
  extern const struct service_to_pipe ath11k_target_service_to_ce_map_wlan_ipq8074[];
  extern const struct service_to_pipe ath11k_target_service_to_ce_map_wlan_ipq6018[];
-Index: backports-20210222_001-5.4.89-b157d2276/drivers/net/wireless/ath/ath11k/debug.h
-===================================================================
---- backports-20210222_001-5.4.89-b157d2276.orig/drivers/net/wireless/ath/ath11k/debug.h
-+++ backports-20210222_001-5.4.89-b157d2276/drivers/net/wireless/ath/ath11k/debug.h
+--- a/drivers/net/wireless/ath/ath11k/debug.h
++++ b/drivers/net/wireless/ath/ath11k/debug.h
 @@ -29,6 +29,7 @@ enum ath11k_debug_mask {
  	ATH11K_DBG_CFR		= 0x00008000,
  	ATH11K_DBG_CFR_DUMP	= 0x00010000,
@@ -134,10 +125,8 @@ Index: backports-20210222_001-5.4.89-b157d2276/drivers/net/wireless/ath/ath11k/d
  	ATH11K_DBG_ANY		= 0xffffffff,
  };
  
-Index: backports-20210222_001-5.4.89-b157d2276/drivers/net/wireless/ath/ath11k/hw.c
-===================================================================
---- backports-20210222_001-5.4.89-b157d2276.orig/drivers/net/wireless/ath/ath11k/hw.c
-+++ backports-20210222_001-5.4.89-b157d2276/drivers/net/wireless/ath/ath11k/hw.c
+--- a/drivers/net/wireless/ath/ath11k/hw.c
++++ b/drivers/net/wireless/ath/ath11k/hw.c
 @@ -156,6 +156,7 @@ static void ath11k_init_wmi_config_ipq80
  	config->ema_max_vap_cnt = ab->num_radios;
  	config->ema_max_profile_period = TARGET_EMA_MAX_PROFILE_PERIOD;
@@ -146,10 +135,8 @@ Index: backports-20210222_001-5.4.89-b157d2276/drivers/net/wireless/ath/ath11k/h
  
  }
  
-Index: backports-20210222_001-5.4.89-b157d2276/drivers/net/wireless/ath/ath11k/mac.c
-===================================================================
---- backports-20210222_001-5.4.89-b157d2276.orig/drivers/net/wireless/ath/ath11k/mac.c
-+++ backports-20210222_001-5.4.89-b157d2276/drivers/net/wireless/ath/ath11k/mac.c
+--- a/drivers/net/wireless/ath/ath11k/mac.c
++++ b/drivers/net/wireless/ath/ath11k/mac.c
 @@ -314,7 +314,7 @@ int ath11k_mac_hw_ratecode_to_legacy_rat
  	return -EINVAL;
  }
@@ -182,7 +169,7 @@ Index: backports-20210222_001-5.4.89-b157d2276/drivers/net/wireless/ath/ath11k/m
  		ret = ath11k_station_disassoc(ar, vif, sta);
  		if (ret)
  			ath11k_warn(ar->ab, "Failed to disassociate station: %pM\n",
-@@ -7578,6 +7587,8 @@ ath11k_mac_update_vif_chan(struct ath11k
+@@ -7598,6 +7607,8 @@ ath11k_mac_update_vif_chan(struct ath11k
  	 * should be available for the channel switch now.
  	 */
  
@@ -191,7 +178,7 @@ Index: backports-20210222_001-5.4.89-b157d2276/drivers/net/wireless/ath/ath11k/m
  	/* TODO: Update ar->rx_channel */
  
  	for (i = 0; i < n_vifs; i++) {
-@@ -7793,6 +7804,21 @@ ath11k_mac_op_assign_vif_chanctx(struct
+@@ -7813,6 +7824,21 @@ ath11k_mac_op_assign_vif_chanctx(struct
  		goto out;
  	}
  
@@ -213,10 +200,8 @@ Index: backports-20210222_001-5.4.89-b157d2276/drivers/net/wireless/ath/ath11k/m
  	if (arvif->vdev_type != WMI_VDEV_TYPE_MONITOR && ar->monitor_vdev_created)
  		ath11k_mac_monitor_start(ar);
  
-Index: backports-20210222_001-5.4.89-b157d2276/drivers/net/wireless/ath/ath11k/mac.h
-===================================================================
---- backports-20210222_001-5.4.89-b157d2276.orig/drivers/net/wireless/ath/ath11k/mac.h
-+++ backports-20210222_001-5.4.89-b157d2276/drivers/net/wireless/ath/ath11k/mac.h
+--- a/drivers/net/wireless/ath/ath11k/mac.h
++++ b/drivers/net/wireless/ath/ath11k/mac.h
 @@ -142,6 +142,7 @@ int ath11k_mac_register(struct ath11k_ba
  int ath11k_mac_allocate(struct ath11k_base *ab);
  int ath11k_mac_hw_ratecode_to_legacy_rate(u8 hw_rc, u8 preamble, u8 *rateidx,
@@ -225,11 +210,9 @@ Index: backports-20210222_001-5.4.89-b157d2276/drivers/net/wireless/ath/ath11k/m
  u8 ath11k_mac_bitrate_to_idx(const struct ieee80211_supported_band *sband,
  			     u32 bitrate);
  u8 ath11k_mac_hw_rate_to_idx(const struct ieee80211_supported_band *sband,
-Index: backports-20210222_001-5.4.89-b157d2276/drivers/net/wireless/ath/ath11k/smart_ant.h
-===================================================================
 --- /dev/null
-+++ backports-20210222_001-5.4.89-b157d2276/drivers/net/wireless/ath/ath11k/smart_ant.h
-@@ -0,0 +1,73 @@
++++ b/drivers/net/wireless/ath/ath11k/smart_ant.h
+@@ -0,0 +1,88 @@
 +/* SPDX-License-Identifier: BSD-3-Clause-Clear */
 +/*
 + * Copyright (c) 2015, 2021 The Linux Foundation. All rights reserved.
@@ -302,11 +285,24 @@ Index: backports-20210222_001-5.4.89-b157d2276/drivers/net/wireless/ath/ath11k/s
 +{
 +	return ath11k_smart_ant_alg_enable(arvif);
 +}
++
++/* This API is to process tx feedback information such as tx rate
++ * PER, rssi and antennas used for tx. Based on feedback stats a
++ * a better antenna combination can be chosen for tx.
++ * Better tx antenna can be configured using ath11k_wmi_peer_set_smart_tx_ant().
++ * When needed this API can also request for feedback on packets with particular
++ * antenna at a particular rate.
++ */
++static inline void
++ath11k_smart_ant_proc_tx_feedback(struct ath11k_base *ab, u32 *data,
++				  u16 peer_id)
++{
++	ath11k_smart_ant_alg_proc_tx_feedback(ab, data, peer_id);
++}
++
 +#endif
-Index: backports-20210222_001-5.4.89-b157d2276/drivers/net/wireless/ath/ath11k/wmi.c
-===================================================================
---- backports-20210222_001-5.4.89-b157d2276.orig/drivers/net/wireless/ath/ath11k/wmi.c
-+++ backports-20210222_001-5.4.89-b157d2276/drivers/net/wireless/ath/ath11k/wmi.c
+--- a/drivers/net/wireless/ath/ath11k/wmi.c
++++ b/drivers/net/wireless/ath/ath11k/wmi.c
 @@ -145,6 +145,8 @@ static const struct wmi_tlv_policy wmi_t
  		= { .min_len = sizeof(struct wmi_obss_color_collision_event) },
  	[WMI_TAG_WDS_ADDR_EVENT]
@@ -456,13 +452,13 @@ Index: backports-20210222_001-5.4.89-b157d2276/drivers/net/wireless/ath/ath11k/w
 +	spin_unlock_bh(&ab->base_lock);
 +	rcu_read_unlock();
 +
-+	if (!arsta) {
-+		ath11k_warn(ab, "arsta is null \n");
++	if (!arsta)
 +		return;
-+ 	}
 +
 +	if (!arsta->smart_ant_sta) {
-+		ath11k_warn(ab, "arsta->smart_ant_sta is null \n");
++		ath11k_dbg(ab, ATH11K_DBG_SMART_ANT,
++			   "arsta->smart_ant_sta is null for the peer: %pM\n",
++			   fixed_param->macaddr.addr);
 + 		return;
 + 	}
 +
@@ -500,10 +496,24 @@ Index: backports-20210222_001-5.4.89-b157d2276/drivers/net/wireless/ath/ath11k/w
  	/* TODO: Add remaining events */
  	default:
  		ath11k_dbg(ab, ATH11K_DBG_WMI, "Unknown eventid: 0x%x\n", id);
-@@ -10267,3 +10432,362 @@ int ath11k_wmi_wow_enable(struct ath11k
+@@ -10267,3 +10432,393 @@ int ath11k_wmi_wow_enable(struct ath11k
  
  	return ath11k_wmi_cmd_send(ar->wmi, skb, WMI_WOW_ENABLE_CMDID);
  }
++
++void
++ath11k_wmi_sa_set_gpio_param(struct ath11k *ar,
++			     struct smart_ant_enable_params *params)
++{
++	params->gpio_pin[0] = ATH11K_SMART_ANT_PIN0;
++	params->gpio_func[0] = ATH11K_SMART_ANT_FUNC0;
++	params->gpio_pin[1] = ATH11K_SMART_ANT_PIN1;
++	params->gpio_func[1] = ATH11K_SMART_ANT_FUNC1;
++	params->gpio_pin[2] = 0;
++	params->gpio_func[2] = 0;
++	params->gpio_pin[3] = 0;
++	params->gpio_func[3] = 0;
++}
 +
 +int ath11k_wmi_pdev_set_rx_ant(struct ath11k *ar, u32 rx_antenna)
 +{
@@ -807,6 +817,7 @@ Index: backports-20210222_001-5.4.89-b157d2276/drivers/net/wireless/ath/ath11k/w
 +	struct wmi_pdev_set_smart_ant_cmd *cmd;
 +	struct wmi_pdev_smart_ant_gpio_handle_cmd *gpio_param;
 +	struct wmi_tlv *tlv;
++	struct smart_ant_enable_params *params = NULL;
 +	struct sk_buff *skb;
 +	void *ptr;
 +	int i;
@@ -818,6 +829,13 @@ Index: backports-20210222_001-5.4.89-b157d2276/drivers/net/wireless/ath/ath11k/w
 +	skb = ath11k_wmi_alloc_skb(wmi->wmi_ab, len);
 +	if (!skb)
 +		return -ENOMEM;
++
++	params = kzalloc(sizeof(struct smart_ant_enable_params),
++			 GFP_ATOMIC);
++	if (!params)
++		return -ENOMEM;
++
++	ath11k_wmi_sa_set_gpio_param(ar, params);
 +
 +	ptr = skb->data;
 +
@@ -846,11 +864,18 @@ Index: backports-20210222_001-5.4.89-b157d2276/drivers/net/wireless/ath/ath11k/w
 +		gpio_param->tlv_header = FIELD_PREP(WMI_TLV_TAG,
 +						    WMI_TAG_PDEV_SMART_ANT_GPIO_HANDLE) |
 +					 FIELD_PREP(WMI_TLV_LEN, len - TLV_HDR_SIZE);
-+
-+		/* Set the gpio pin and func values to 0 for ath11k chipsets. */
-+
-+		gpio_param->gpio_pin = 0;
-+		gpio_param->gpio_func = 0;
++		if (info->mode == WMI_SMART_ANT_MODE_SERIAL) {
++			if (i < WMI_SMART_ANT_MAX_SERIAL_ANTENNA) {
++				gpio_param->gpio_pin = params->gpio_pin[i];
++				gpio_param->gpio_func = params->gpio_func[i];
++			} else {
++				gpio_param->gpio_pin = 0;
++				gpio_param->gpio_func = 0;
++			}
++		} else if (info->mode == WMI_SMART_ANT_MODE_PARALLEL) {
++			gpio_param->gpio_pin = params->gpio_pin[i];
++			gpio_param->gpio_func = params->gpio_func[i];
++		}
 +		gpio_param->pdev_id = ar->pdev->pdev_id;
 +		gpio_param++;
 +	}
@@ -861,12 +886,12 @@ Index: backports-20210222_001-5.4.89-b157d2276/drivers/net/wireless/ath/ath11k/w
 +			    "failed to send WMI_PDEV_SMART_ANT_ENABLE_CMDID\n");
 +		dev_kfree_skb(skb);
 +	}
++
++	kfree(params);
 +	return ret;
 +}
-Index: backports-20210222_001-5.4.89-b157d2276/drivers/net/wireless/ath/ath11k/wmi.h
-===================================================================
---- backports-20210222_001-5.4.89-b157d2276.orig/drivers/net/wireless/ath/ath11k/wmi.h
-+++ backports-20210222_001-5.4.89-b157d2276/drivers/net/wireless/ath/ath11k/wmi.h
+--- a/drivers/net/wireless/ath/ath11k/wmi.h
++++ b/drivers/net/wireless/ath/ath11k/wmi.h
 @@ -11,6 +11,10 @@
  
  struct ath11k_base;
@@ -1003,20 +1028,16 @@ Index: backports-20210222_001-5.4.89-b157d2276/drivers/net/wireless/ath/ath11k/w
 +						  u32 vdev_id, const u8 *macaddr,
 +						  const struct wmi_peer_set_smart_ant_train_ant_fixed_param_cmd *arg);
  #endif
-Index: backports-20210222_001-5.4.89-b157d2276/local-symbols
-===================================================================
---- backports-20210222_001-5.4.89-b157d2276.orig/local-symbols
-+++ backports-20210222_001-5.4.89-b157d2276/local-symbols
-@@ -141,3 +141,4 @@ ATH11K_TRACING=
+--- a/local-symbols
++++ b/local-symbols
+@@ -142,3 +142,4 @@ ATH11K_TRACING=
  ATH11K_SPECTRAL=
  ATH11K_PKTLOG=
  ATH11K_CFR=
 +ATH11K_SMART_ANT_ALG=
-Index: backports-20210222_001-5.4.89-b157d2276/drivers/net/wireless/ath/ath11k/smart_ant_api.c
-===================================================================
 --- /dev/null
-+++ backports-20210222_001-5.4.89-b157d2276/drivers/net/wireless/ath/ath11k/smart_ant_api.c
-@@ -0,0 +1,280 @@
++++ b/drivers/net/wireless/ath/ath11k/smart_ant_api.c
+@@ -0,0 +1,342 @@
 +/* SPDX-License-Identifier: BSD-3-Clause-Clear */
 +/*
 + * Copyright (c) 2015, 2021 The Linux Foundation. All rights reserved.
@@ -1297,11 +1318,71 @@ Index: backports-20210222_001-5.4.89-b157d2276/drivers/net/wireless/ath/ath11k/s
 +
 +	return 0;
 +}
-Index: backports-20210222_001-5.4.89-b157d2276/drivers/net/wireless/ath/ath11k/smart_ant_api.h
-===================================================================
++
++static void ath11k_smart_ant_dbg_feedback(struct ath11k_base *ab,
++					  struct ath11k_smart_ant_tx_feedback *fb)
++{
++	ath11k_dbg(ab, ATH11K_DBG_SMART_ANT,
++		   "Tx feedback npkts: %d nbad: %d tx_antenna[0]: %d tx_antenna[1]: %d "
++		   "train pkt: %s goodput: %d rate_maxphy: [0x%x|0x%x|0x%x|0x%x] "
++		   "RSSI: [%d %d %d]\n",
++		   fb->npackets, fb->nbad, fb->tx_antenna[0], fb->tx_antenna[0],
++		   fb->is_trainpkt ? "True" : "False", fb->goodput, fb->ratemaxphy[0],
++		   fb->ratemaxphy[1], fb->ratemaxphy[2], fb->ratemaxphy[3], fb->rssi[0],
++		   fb->rssi[1], fb->rssi[2]);
++}
++
++static void ath11k_smart_ant_tx_fb_fill(struct ath11k_base *ab, u32 *data,
++					struct ath11k_smart_ant_tx_feedback *fb)
++{
++	int i;
++
++	fb->npackets = TXFD_MS(data, ATH11K_SMART_ANT_NPKTS);
++	fb->nbad = fb->npackets - TXFD_MS(data, ATH11K_SMART_ANT_NSUCC);
++
++	for (i = 0; i < ATH11K_SMART_ANT_MAX_SA_RSSI_CHAINS; i++)
++		fb->rssi[i] = data[ATH11K_SMART_ANT_RSSI + i];
++
++	fb->tx_antenna[0] = TXFD_MS(data, ATH11K_SMART_ANT_TX_ANT);
++	fb->is_trainpkt = TXFD_MS(data, ATH11K_SMART_ANT_IS_TRAIN_PKT);
++	if (fb->is_trainpkt)
++		fb->goodput = TXFD_MS(data, ATH11K_SMART_ANT_TRAIN_PKTS);
++
++	for (i = 0; i < ATH11K_SMART_ANT_MAX_RATE_COUNTERS; i++)
++		fb->ratemaxphy[i] = TXFD_MS(data, ATH11K_SMART_ANT_MAX_RATE);
++
++	ath11k_smart_ant_dbg_feedback(ab, fb);
++}
++
++void ath11k_smart_ant_alg_proc_tx_feedback(struct ath11k_base *ab, u32 *data,
++					   u16 peer_id)
++{
++	struct ath11k_sta *arsta;
++	struct ath11k_peer *peer = NULL;
++	struct ath11k_smart_ant_tx_feedback tx_feedback;
++
++	rcu_read_lock();
++	spin_lock_bh(&ab->base_lock);
++	peer = ath11k_peer_find_by_id(ab, peer_id);
++	if(peer && peer->sta) {
++		arsta = (struct ath11k_sta *)peer->sta->drv_priv;
++
++		if (!arsta->smart_ant_sta)
++			goto exit;
++
++		memset(&tx_feedback, 0, sizeof(tx_feedback));
++		ath11k_dbg(ab, ATH11K_DBG_SMART_ANT, "Tx feedback from sta: %pM\n",
++			   peer->addr);
++		ath11k_smart_ant_tx_fb_fill(ab, data, &tx_feedback);
++
++	}
++exit:
++	spin_unlock_bh(&ab->base_lock);
++	rcu_read_unlock();
++}
 --- /dev/null
-+++ backports-20210222_001-5.4.89-b157d2276/drivers/net/wireless/ath/ath11k/smart_ant_api.h
-@@ -0,0 +1,276 @@
++++ b/drivers/net/wireless/ath/ath11k/smart_ant_api.h
+@@ -0,0 +1,348 @@
 +/* SPDX-License-Identifier: BSD-3-Clause-Clear */
 +/*
 + * Copyright (c) 2015, 2021 The Linux Foundation. All rights reserved.
@@ -1374,11 +1455,50 @@ Index: backports-20210222_001-5.4.89-b157d2276/drivers/net/wireless/ath/ath11k/s
 +#define ATH11K_SMART_ANT_MAX_HT_RATE_WORDS      48
 +#define ATH11K_SMART_ANT_MAX_RATES              44
 +#define ATH11K_SMART_ANT_RSSI_SAMPLE            10
++#define ATH11K_SMART_ANT_MAX_RETRY		8
++#define ATH11K_SMART_ANT_MAX_SA_RSSI_CHAINS	8
++#define ATH11K_SMART_ANT_MAX_RATE_COUNTERS	4
++
++#define ATH11K_SMART_ANT_MAX_COMB_FB		2
 +
 +#define ATH11K_SMART_ANT_TX_FEEDBACK_CONFIG_DEFAULT 0xe4
 +
 +/* Max number of antenna combinations 2 ^ max_supported_ant */
 +#define ATH11K_SMART_ANT_COMB_MAX               16
++
++#define ATH11K_SMART_ANT_PIN0	14
++#define ATH11K_SMART_ANT_PIN1	15
++#define ATH11K_SMART_ANT_FUNC0	5
++#define ATH11K_SMART_ANT_FUNC1	5
++
++#define ATH11K_SMART_ANT_NPKTS		3
++#define ATH11K_SMART_ANT_NPKTS_M	0xffff
++#define ATH11K_SMART_ANT_NPKTS_S	0
++
++#define ATH11K_SMART_ANT_NSUCC		3
++#define ATH11K_SMART_ANT_NSUCC_M	0xffff0000
++#define ATH11K_SMART_ANT_NSUCC_S	16
++
++#define ATH11K_SMART_ANT_RSSI		5
++
++#define ATH11K_SMART_ANT_TX_ANT		5
++#define ATH11K_SMART_ANT_TX_ANT_M	0xffffffff
++#define ATH11K_SMART_ANT_TX_ANT_S	0
++
++#define ATH11K_SMART_ANT_IS_TRAIN_PKT	6
++#define ATH11K_SMART_ANT_IS_TRAIN_PKT_M	0x10000
++#define ATH11K_SMART_ANT_IS_TRAIN_PKT_S	16
++
++#define ATH11K_SMART_ANT_TRAIN_PKTS	6
++#define ATH11K_SMART_ANT_TRAIN_PKTS_M	0xffff
++#define ATH11K_SMART_ANT_TRAIN_PKTS_S	0
++
++#define ATH11K_SMART_ANT_MAX_RATE	7
++#define ATH11K_SMART_ANT_MAX_RATE_M	0xffffffff
++#define ATH11K_SMART_ANT_MAX_RATE_S	0
++
++#define TXFD_MS(data, info) \
++		((data[info] & info## _M) >> info## _S)
 +
 +enum ath11k_smart_ant_bw {
 +	ATH11K_SMART_ANT_BW_20,
@@ -1462,6 +1582,29 @@ Index: backports-20210222_001-5.4.89-b157d2276/drivers/net/wireless/ath/ath11k/s
 +	u32 rt_count[WMI_RATE_COUNT_MAX];
 +};
 +
++struct ath11k_smart_ant_comb_fb {
++	u8 nbad;
++	u8 npkts;
++	u8 bw;
++	u8 rate;
++};
++
++struct ath11k_smart_ant_tx_feedback {
++	u16 npackets;
++	u16 nbad;
++	u16 nshort_retries[ATH11K_SMART_ANT_MAX_RETRY];
++	u16 nlong_retries[ATH11K_SMART_ANT_MAX_RETRY];
++	u32 tx_antenna[ATH11K_SMART_ANT_MAX_RATE_SERIES];
++	u32 rssi[ATH11K_SMART_ANT_MAX_SA_RSSI_CHAINS];
++	u32 rate_mcs[ATH11K_SMART_ANT_MAX_RATE_SERIES];
++	u8 rate_index;
++	u8 is_trainpkt;
++	u16 ratemaxphy[ATH11K_SMART_ANT_MAX_RATE_COUNTERS];
++	u32 goodput;
++	u8 num_comb_feedback;
++	struct ath11k_smart_ant_comb_fb comb_fb[ATH11K_SMART_ANT_MAX_COMB_FB];
++};
++
 +struct ath11k_smart_ant_sta {
 +	struct ath11k *ar;
 +	u8 mac_addr[ETH_ALEN];
@@ -1475,6 +1618,7 @@ Index: backports-20210222_001-5.4.89-b157d2276/drivers/net/wireless/ath/ath11k/s
 +	struct ath11k_peer_rate_code_list_cap rate_cap;
 +	struct ath11k_smart_ant_train_info train_info;
 +	struct ath11k_smart_ant_train_data train_data;
++	struct ath11k_smart_ant_tx_feedback tx_feedback;
 +};
 +
 +/**
@@ -1544,6 +1688,8 @@ Index: backports-20210222_001-5.4.89-b157d2276/drivers/net/wireless/ath/ath11k/s
 +				     struct ieee80211_sta *sta);
 +void ath11k_smart_ant_alg_sta_disconnect(struct ath11k *ar,
 +					 struct ieee80211_sta *sta);
++void ath11k_smart_ant_alg_proc_tx_feedback(struct ath11k_base *ab, u32 *data,
++					   u16 peer_id);
 +#else
 +static inline
 +int ath11k_smart_ant_alg_enable(struct ath11k_vif *arvif)
@@ -1576,5 +1722,132 @@ Index: backports-20210222_001-5.4.89-b157d2276/drivers/net/wireless/ath/ath11k/s
 +{
 +}
 +
++static inline
++void ath11k_smart_ant_alg_proc_tx_feedback(struct ath11k_base *ab,
++					   u32 *data,
++					   u16 peer_id)
++{
++}
++
 +#endif /* CPTCFG_ATH11K_SMART_ANT_ALG */
 +#endif /* _SMART_ANT_ALG_ */
+--- a/drivers/net/wireless/ath/ath11k/dp.h
++++ b/drivers/net/wireless/ath/ath11k/dp.h
+@@ -1529,6 +1529,9 @@ enum  htt_ppdu_stats_usr_compln_status {
+ #define HTT_USR_CMPLTN_SHORT_RETRY(_val) \
+ 	    FIELD_GET(HTT_PPDU_STATS_USR_CMPLTN_CMN_FLAGS_SHORT_RETRY_M, _val)
+ 
++#define HTT_STATS_NUM_SUPPORTED_BW_SMART_ANTENNA 4
++#define HTT_STATS_MAX_CHAINS 8
++
+ struct htt_ppdu_stats_usr_cmpltn_cmn {
+ 	u8 status;
+ 	u8 tid_num;
+@@ -1537,7 +1540,29 @@ struct htt_ppdu_stats_usr_cmpltn_cmn {
+ 	u32 ack_rssi;
+ 	u16 mpdu_tried;
+ 	u16 mpdu_success;
+-	u32 flags; /* %HTT_PPDU_STATS_USR_CMPLTN_CMN_FLAGS_LONG_RETRIES*/
++	/* %HTT_PPDU_STATS_USR_CMPLTN_CMN_FLAGS_LONG_RETRIES
++	 * BIT [3 : 0] - long retries
++	 * BIT [7 : 4] - short_retries
++	 * BIT [8 : 8] - is_ampdu
++	 * BIT [12 : 9] - resp_type
++	 * BIT [15 : 13] - mprot_type
++	 * BIT [16 : 16] - rts_success
++	 * BIT [17 : 17] - rts_failure
++	 * BIT [18 : 18] - pream_punc_tx
++	 * BIT [31 : 19] - reserved0
++	 */
++	u32 flags;
++	u32 chain_rssi[HTT_STATS_MAX_CHAINS];
++	u32 tx_antenna_mask;
++	/* For SmartAntenna: Holds number of pending training packets during training. */
++	u16 pending_training_pkts;
++	/* BIT [0 : 0] - is_training: This flag indicates if peer is under training.
++	 * BIT [15 : 1] - reserved1:
++	 */
++	u16 is_training;
++	u32 max_rates[HTT_STATS_NUM_SUPPORTED_BW_SMART_ANTENNA];
++	u32 current_rate_per;
++	u32 sw_rts;
+ } __packed;
+ 
+ #define HTT_PPDU_STATS_ACK_BA_INFO_NUM_MPDU_M	GENMASK(8, 0)
+@@ -1559,7 +1584,6 @@ struct htt_ppdu_stats_usr_cmpltn_ack_ba_
+ #define HTT_PPDU_STATS_USR_CMN_FLAG_DELAYBA	BIT(14)
+ #define HTT_PPDU_STATS_USR_CMN_HDR_SW_PEERID	GENMASK(31, 16)
+ #define HTT_PPDU_STATS_USR_CMN_CTL_FRM_CTRL	GENMASK(15, 0)
+-#define HTT_STATS_MAX_CHAINS 8
+ #define HTT_PPDU_STATS_USER_CMN_TLV_TX_PWR_CHAINS_PER_U32 4
+ #define HTT_PPDU_STATS_USER_CMN_TX_PWR_ARR_SIZE HTT_STATS_MAX_CHAINS / \
+ 						HTT_PPDU_STATS_USER_CMN_TLV_TX_PWR_CHAINS_PER_U32
+--- a/drivers/net/wireless/ath/ath11k/dp_rx.c
++++ b/drivers/net/wireless/ath/ath11k/dp_rx.c
+@@ -9,6 +9,7 @@
+ #include <crypto/hash.h>
+ #include "core.h"
+ #include "debug.h"
++#include "smart_ant.h"
+ #include "debugfs_htt_stats.h"
+ #include "debugfs_sta.h"
+ #include "hal_desc.h"
+@@ -1388,6 +1389,7 @@ static int ath11k_htt_tlv_ppdu_stats_par
+ 		memcpy((void *)&user_stats->cmpltn_cmn, ptr,
+ 		       sizeof(struct htt_ppdu_stats_usr_cmpltn_cmn));
+ 		user_stats->tlv_flags |= BIT(tag);
++		ath11k_smart_ant_proc_tx_feedback(ab, ptr, peer_id);
+ 		break;
+ 	case HTT_PPDU_STATS_TAG_USR_COMPLTN_ACK_BA_STATUS:
+ 		if (len <
+@@ -4073,6 +4075,8 @@ int ath11k_dp_rx_process_mon_status(stru
+ 			ath11k_rx_stats_buf_pktlog_process(ar, skb->data, log_type, rx_buf_sz);
+ 		}
+ 
++		ar->rx_antenna = ppdu_info->rx_antenna;
++
+ 		spin_unlock_bh(&ab->base_lock);
+ 		rcu_read_unlock();
+ 		dev_kfree_skb_any(skb);
+--- a/drivers/net/wireless/ath/ath11k/hal_rx.c
++++ b/drivers/net/wireless/ath/ath11k/hal_rx.c
+@@ -1590,9 +1590,12 @@ ath11k_hal_rx_parse_mon_status_tlv(struc
+ 	case HAL_RXPCU_PPDU_END_INFO: {
+ 		struct hal_rx_ppdu_end_duration *ppdu_rx_duration =
+ 			(struct hal_rx_ppdu_end_duration *)tlv_data;
++		ppdu_info->rx_antenna =
++			FIELD_GET(HAL_RX_PPDU_END_DURATION_INFO0_RX_ANTENNA,
++				  __le32_to_cpu(ppdu_rx_duration->info0));
+ 		ppdu_info->rx_duration =
+ 			FIELD_GET(HAL_RX_PPDU_END_DURATION,
+-				  __le32_to_cpu(ppdu_rx_duration->info0));
++				  __le32_to_cpu(ppdu_rx_duration->info1));
+ 		ppdu_info->tsft =ppdu_rx_duration->rsvd0[1];
+ 		ppdu_info->tsft = (ppdu_info->tsft << 32) | ppdu_rx_duration->rsvd0[0];
+ 		break;
+--- a/drivers/net/wireless/ath/ath11k/hal_rx.h
++++ b/drivers/net/wireless/ath/ath11k/hal_rx.h
+@@ -224,6 +224,7 @@ struct hal_rx_mon_ppdu_info {
+ 	struct hal_rx_user_status userstats[HAL_MAX_UL_MU_USERS];
+ 	u8 userid;
+ 	u16 ampdu_id[HAL_MAX_UL_MU_USERS];
++	u32 rx_antenna;
+ };
+ 
+ #define HAL_RX_UL_OFDMA_USER_INFO_V0_W0_VALID			BIT(30)
+@@ -473,10 +474,13 @@ struct hal_rx_mpdu_info {
+ } __packed;
+ 
+ #define HAL_RX_PPDU_END_DURATION	GENMASK(23, 0)
++#define HAL_RX_PPDU_END_DURATION_INFO0_RX_ANTENNA	GENMASK(23, 0)
+ struct hal_rx_ppdu_end_duration {
+-	__le32 rsvd0[9];
++	__le32 rsvd0[2];
+ 	__le32 info0;
+-	__le32 rsvd1[4];
++	__le32 rsvd1[6];
++	__le32 info1;
++	__le32 rsvd2[4];
+ } __packed;
+ 
+ struct hal_rx_rxpcu_classification_overview {

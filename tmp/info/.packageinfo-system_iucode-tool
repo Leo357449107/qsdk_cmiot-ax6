@@ -1,0 +1,24 @@
+Source-Makefile: package/system/iucode-tool/Makefile
+Build-Depends: USE_UCLIBC:argp-standalone USE_MUSL:argp-standalone
+Build-Types: host
+
+Package: iucode-tool
+Version: 2.3.1-1
+Depends: +libc +GCC_LIBSSP:libssp +USE_GLIBC:librt +USE_GLIBC:libpthread @TARGET_x86
+Conflicts: 
+Menu-Depends: 
+Provides: 
+Section: utils
+Category: Base system
+Repository: base
+Title: Intel microcode loader
+Maintainer: Zoltan HERPAI <wigyori@uid0.hu>
+Source: iucode-tool_2.3.1.tar.xz
+License: GPL-2.0
+Type: ipkg
+Description: Intel microcode loader
+https://gitlab.com/iucode-tool/releases/raw/latest
+Zoltan HERPAI <wigyori@uid0.hu>
+@@
+
+

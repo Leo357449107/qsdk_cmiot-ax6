@@ -1,0 +1,22 @@
+Source-Makefile: package/system/usign/Makefile
+Build-Types: host
+
+Package: usign
+Version: 2020-05-23-f1f65026a94137c91b5466b149ef3ea3f20091e9-1
+Depends: +libc +GCC_LIBSSP:libssp +USE_GLIBC:librt +USE_GLIBC:libpthread +libubox
+Conflicts: 
+Menu-Depends: 
+Provides: 
+Section: base
+Category: Base system
+Repository: base
+Title: OpenWrt signature verification utility
+Maintainer: Felix Fietkau <nbd@nbd.name>
+Source: usign-2020-05-23-f1f65026a94137c91b5466b149ef3ea3f20091e9.tar.xz
+License: ISC
+Type: ipkg
+Description: OpenWrt signature verification utility
+Felix Fietkau <nbd@nbd.name>
+@@
+
+

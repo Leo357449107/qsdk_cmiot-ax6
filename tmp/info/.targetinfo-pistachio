@@ -1,0 +1,36 @@
+Source-Makefile: target/linux/pistachio/Makefile
+Target: pistachio
+Target-Board: pistachio
+Target-Name: MIPS pistachio
+Target-Arch: mipsel
+Target-Arch-Packages: mipsel_24kc_24kf
+Target-Features: dt fpu gpio mips16 nand squashfs targz usb usbgadget
+Target-Depends: 
+Target-Optimization: -Os -pipe -mno-branch-likely -mips32r2 -mtune=24kc
+CPU-Type: 24kc+24kf
+Linux-Version: 4.14.254
+Linux-Release: 1
+Linux-Kernel-Arch: mips
+Target-Description:
+
+@@
+Default-Packages: base-files libc libgcc busybox dropbear mtd uci opkg netifd fstools uclient-fetch logd urandom-seed urngd dnsmasq iptables ip6tables ppp ppp-mod-pppoe firewall odhcpd-ipv6only odhcp6c kmod-ipt-offload kmod-gpio-button-hotplug uboot-envtools 
+Target-Profile: Default
+Target-Profile-Priority: 1
+Target-Profile-Name: Default Profile
+Target-Profile-Packages:  
+Target-Profile-Description:
+	Default package set compatible with most boards.
+@@
+
+Target-Profile: DEVICE_marduk
+Target-Profile-Name: Creator Ci40
+Target-Profile-Packages: kmod-tpm-i2c-infineon 
+Target-Profile-hasImageMetadata: 1
+Target-Profile-SupportedDevices: 
+
+Target-Profile-Description:
+Build firmware images for Creator Ci40
+@@
+
+

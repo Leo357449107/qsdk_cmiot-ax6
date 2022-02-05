@@ -477,7 +477,7 @@ static bool __kasan_slab_free(struct kmem_cache *cache, void *object,
 
 bool kasan_slab_free(struct kmem_cache *cache, void *object, unsigned long ip)
 {
-	return __kasan_slab_free(cache, object, ip, true);
+	return __kasan_slab_free(cache, object, ip, false);
 }
 
 static void *__kasan_kmalloc(struct kmem_cache *cache, const void *object,

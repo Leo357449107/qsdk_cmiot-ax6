@@ -33,7 +33,7 @@ extern struct sdhci_host mmc_host;
 
 #define SMEM_PTN_NAME_MAX     16
 
-static int write_to_flash(int flash_type, uint32_t address, uint32_t offset,
+int write_to_flash(int flash_type, uint32_t address, uint32_t offset,
 uint32_t part_size, uint32_t file_size, char *layout)
 {
 

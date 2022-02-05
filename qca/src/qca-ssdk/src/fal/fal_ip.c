@@ -25,7 +25,6 @@
 #include <linux/kernel.h>
 #include <linux/module.h>
 
-#ifndef IN_IP_MINI
 sw_error_t
 _fal_ip_intf_mtu_mru_set(a_uint32_t dev_id, a_uint32_t l3_if, a_uint32_t mtu, a_uint32_t mru)
 {
@@ -285,6 +284,7 @@ _fal_ip_host_next(a_uint32_t dev_id, a_uint32_t next_mode,
     return rv;
 }
 
+#if !defined(IN_IP_MINI)
 static sw_error_t
 _fal_ip_host_counter_bind(a_uint32_t dev_id, a_uint32_t entry_id,
                           a_uint32_t cnt_id, a_bool_t enable)
@@ -922,23 +922,8 @@ _fal_default_rt_flow_cmd_get(a_uint32_t dev_id, a_uint32_t vrf_id,
     rv = p_api->ip_default_rt_flow_cmd_get(dev_id, vrf_id, type, cmd);
     return rv;
 }
+#endif
 
-sw_error_t
-_fal_ip_network_route_get(a_uint32_t dev_id,
-			a_uint32_t index, a_uint8_t type,
-			fal_network_route_entry_t *entry)
-{
-    adpt_api_t *p_api;
-    sw_error_t rv = SW_OK;
-
-    SW_RTN_ON_NULL(p_api = adpt_api_ptr_get(dev_id));
-
-    if (NULL == p_api->adpt_ip_network_route_get)
-        return SW_NOT_SUPPORTED;
-
-    rv = p_api->adpt_ip_network_route_get(dev_id, index, type, entry);
-    return rv;
-}
 sw_error_t
 _fal_ip_vsi_sg_cfg_get(a_uint32_t dev_id, a_uint32_t vsi,
     			fal_sg_cfg_t *sg_cfg)
@@ -955,21 +940,6 @@ _fal_ip_vsi_sg_cfg_get(a_uint32_t dev_id, a_uint32_t vsi,
     return rv;
 }
 
-sw_error_t
-_fal_ip_network_route_del(a_uint32_t dev_id,
-			a_uint32_t index, a_uint8_t type)
-{
-    adpt_api_t *p_api;
-    sw_error_t rv = SW_OK;
-
-    SW_RTN_ON_NULL(p_api = adpt_api_ptr_get(dev_id));
-
-    if (NULL == p_api->adpt_ip_network_route_del)
-        return SW_NOT_SUPPORTED;
-
-    rv = p_api->adpt_ip_network_route_del(dev_id, index, type);
-    return rv;
-}
 sw_error_t
 _fal_ip_port_sg_cfg_set(a_uint32_t dev_id, fal_port_t port_id,
     			fal_sg_cfg_t *sg_cfg)
@@ -1088,6 +1058,7 @@ _fal_ip_vsi_intf_get(a_uint32_t dev_id, a_uint32_t vsi, fal_intf_id_t *id)
     return rv;
 }
 
+#if !defined(IN_IP_MINI)
 sw_error_t
 _fal_ip_network_route_add(a_uint32_t dev_id,
 			a_uint32_t index,
@@ -1104,6 +1075,41 @@ _fal_ip_network_route_add(a_uint32_t dev_id,
     rv = p_api->adpt_ip_network_route_add(dev_id, index, entry);
     return rv;
 }
+
+sw_error_t
+_fal_ip_network_route_get(a_uint32_t dev_id,
+			a_uint32_t index, a_uint8_t type,
+			fal_network_route_entry_t *entry)
+{
+    adpt_api_t *p_api;
+    sw_error_t rv = SW_OK;
+
+    SW_RTN_ON_NULL(p_api = adpt_api_ptr_get(dev_id));
+
+    if (NULL == p_api->adpt_ip_network_route_get)
+        return SW_NOT_SUPPORTED;
+
+    rv = p_api->adpt_ip_network_route_get(dev_id, index, type, entry);
+    return rv;
+}
+
+sw_error_t
+_fal_ip_network_route_del(a_uint32_t dev_id,
+			a_uint32_t index, a_uint8_t type)
+{
+    adpt_api_t *p_api;
+    sw_error_t rv = SW_OK;
+
+    SW_RTN_ON_NULL(p_api = adpt_api_ptr_get(dev_id));
+
+    if (NULL == p_api->adpt_ip_network_route_del)
+        return SW_NOT_SUPPORTED;
+
+    rv = p_api->adpt_ip_network_route_del(dev_id, index, type);
+    return rv;
+}
+#endif
+
 sw_error_t
 _fal_ip_port_sg_cfg_get(a_uint32_t dev_id, fal_port_t port_id,
     			fal_sg_cfg_t *sg_cfg)
@@ -1457,6 +1463,7 @@ fal_ip_host_next(a_uint32_t dev_id, a_uint32_t next_mode,
     return rv;
 }
 
+#if !defined(IN_IP_MINI)
 /**
  * @brief Bind one counter entry to one host entry on one particular device.
  * @param[in] dev_id device id
@@ -2202,6 +2209,19 @@ fal_default_rt_flow_cmd_get(a_uint32_t dev_id, a_uint32_t vrf_id,
 }
 
 sw_error_t
+fal_ip_network_route_add(a_uint32_t dev_id,
+			a_uint32_t index,
+			fal_network_route_entry_t *entry)
+{
+    sw_error_t rv = SW_OK;
+
+    FAL_API_LOCK;
+    rv = _fal_ip_network_route_add(dev_id, index, entry);
+    FAL_API_UNLOCK;
+    return rv;
+}
+
+sw_error_t
 fal_ip_network_route_get(a_uint32_t dev_id,
 			a_uint32_t index, a_uint8_t type,
 			fal_network_route_entry_t *entry)
@@ -2210,17 +2230,6 @@ fal_ip_network_route_get(a_uint32_t dev_id,
 
     FAL_API_LOCK;
     rv = _fal_ip_network_route_get(dev_id, index, type, entry);
-    FAL_API_UNLOCK;
-    return rv;
-}
-sw_error_t
-fal_ip_vsi_sg_cfg_get(a_uint32_t dev_id, a_uint32_t vsi,
-    			fal_sg_cfg_t *sg_cfg)
-{
-    sw_error_t rv = SW_OK;
-
-    FAL_API_LOCK;
-    rv = _fal_ip_vsi_sg_cfg_get(dev_id, vsi, sg_cfg);
     FAL_API_UNLOCK;
     return rv;
 }
@@ -2236,6 +2245,20 @@ fal_ip_network_route_del(a_uint32_t dev_id,
     FAL_API_UNLOCK;
     return rv;
 }
+#endif
+
+sw_error_t
+fal_ip_vsi_sg_cfg_get(a_uint32_t dev_id, a_uint32_t vsi,
+		fal_sg_cfg_t *sg_cfg)
+{
+    sw_error_t rv = SW_OK;
+
+    FAL_API_LOCK;
+    rv = _fal_ip_vsi_sg_cfg_get(dev_id, vsi, sg_cfg);
+    FAL_API_UNLOCK;
+    return rv;
+}
+
 sw_error_t
 fal_ip_port_sg_cfg_set(a_uint32_t dev_id, fal_port_t port_id,
     			fal_sg_cfg_t *sg_cfg)
@@ -2322,18 +2345,6 @@ fal_ip_vsi_intf_get(a_uint32_t dev_id, a_uint32_t vsi, fal_intf_id_t *id)
     return rv;
 }
 
-sw_error_t
-fal_ip_network_route_add(a_uint32_t dev_id,
-			a_uint32_t index,
-			fal_network_route_entry_t *entry)
-{
-    sw_error_t rv = SW_OK;
-
-    FAL_API_LOCK;
-    rv = _fal_ip_network_route_add(dev_id, index, entry);
-    FAL_API_UNLOCK;
-    return rv;
-}
 sw_error_t
 fal_ip_port_sg_cfg_get(a_uint32_t dev_id, fal_port_t port_id,
     			fal_sg_cfg_t *sg_cfg)
@@ -2643,39 +2654,42 @@ fal_ip_intf_dmac_check_get(a_uint32_t dev_id, a_uint32_t l3_if, a_bool_t *enable
 	return rv;
 }
 
+#if !defined(IN_IP_MINI)
 EXPORT_SYMBOL(fal_ip_network_route_get);
-EXPORT_SYMBOL(fal_ip_host_add);
-EXPORT_SYMBOL(fal_ip_vsi_sg_cfg_get);
-EXPORT_SYMBOL(fal_ip_pub_addr_set);
-EXPORT_SYMBOL(fal_ip_port_sg_cfg_set);
-EXPORT_SYMBOL(fal_ip_port_intf_get);
-EXPORT_SYMBOL(fal_ip_vsi_arp_sg_cfg_set);
-EXPORT_SYMBOL(fal_ip_pub_addr_get);
-EXPORT_SYMBOL(fal_ip_port_intf_set);
-EXPORT_SYMBOL(fal_ip_vsi_sg_cfg_set);
-EXPORT_SYMBOL(fal_ip_host_next);
-EXPORT_SYMBOL(fal_ip_port_macaddr_set);
-EXPORT_SYMBOL(fal_ip_vsi_intf_get);
 EXPORT_SYMBOL(fal_ip_network_route_add);
-EXPORT_SYMBOL(fal_ip_port_sg_cfg_get);
-EXPORT_SYMBOL(fal_ip_intf_get);
 EXPORT_SYMBOL(fal_ip_network_route_del);
-EXPORT_SYMBOL(fal_ip_host_del);
-EXPORT_SYMBOL(fal_ip_route_mismatch_action_get);
-EXPORT_SYMBOL(fal_ip_vsi_arp_sg_cfg_get);
-EXPORT_SYMBOL(fal_ip_port_arp_sg_cfg_set);
-EXPORT_SYMBOL(fal_ip_vsi_mc_mode_set);
-EXPORT_SYMBOL(fal_ip_vsi_intf_set);
-EXPORT_SYMBOL(fal_ip_nexthop_get);
+#endif
+
+EXPORT_SYMBOL(fal_ip_pub_addr_set);
+EXPORT_SYMBOL(fal_ip_pub_addr_get);
 EXPORT_SYMBOL(fal_ip_route_mismatch_action_set);
-EXPORT_SYMBOL(fal_ip_host_get);
-EXPORT_SYMBOL(fal_ip_intf_set);
-EXPORT_SYMBOL(fal_ip_vsi_mc_mode_get);
-EXPORT_SYMBOL(fal_ip_port_macaddr_get);
-EXPORT_SYMBOL(fal_ip_port_arp_sg_cfg_get);
-EXPORT_SYMBOL(fal_ip_nexthop_set);
-EXPORT_SYMBOL(fal_ip_global_ctrl_get);
+EXPORT_SYMBOL(fal_ip_route_mismatch_action_get);
 EXPORT_SYMBOL(fal_ip_global_ctrl_set);
+EXPORT_SYMBOL(fal_ip_global_ctrl_get);
+EXPORT_SYMBOL(fal_ip_nexthop_set);
+EXPORT_SYMBOL(fal_ip_nexthop_get);
+EXPORT_SYMBOL(fal_ip_host_add);
+EXPORT_SYMBOL(fal_ip_host_next);
+EXPORT_SYMBOL(fal_ip_host_del);
+EXPORT_SYMBOL(fal_ip_host_get);
+EXPORT_SYMBOL(fal_ip_vsi_arp_sg_cfg_set);
+EXPORT_SYMBOL(fal_ip_vsi_arp_sg_cfg_get);
+EXPORT_SYMBOL(fal_ip_vsi_sg_cfg_set);
+EXPORT_SYMBOL(fal_ip_vsi_sg_cfg_get);
+EXPORT_SYMBOL(fal_ip_vsi_mc_mode_set);
+EXPORT_SYMBOL(fal_ip_vsi_mc_mode_get);
+EXPORT_SYMBOL(fal_ip_vsi_intf_set);
+EXPORT_SYMBOL(fal_ip_vsi_intf_get);
+EXPORT_SYMBOL(fal_ip_intf_set);
+EXPORT_SYMBOL(fal_ip_intf_get);
+EXPORT_SYMBOL(fal_ip_port_arp_sg_cfg_set);
+EXPORT_SYMBOL(fal_ip_port_arp_sg_cfg_get);
+EXPORT_SYMBOL(fal_ip_port_sg_cfg_set);
+EXPORT_SYMBOL(fal_ip_port_sg_cfg_get);
+EXPORT_SYMBOL(fal_ip_port_intf_set);
+EXPORT_SYMBOL(fal_ip_port_intf_get);
+EXPORT_SYMBOL(fal_ip_port_macaddr_set);
+EXPORT_SYMBOL(fal_ip_port_macaddr_get);
 /* the following APIs added for host data path */
 EXPORT_SYMBOL(fal_ip_intf_dmac_check_set);
 EXPORT_SYMBOL(fal_ip_intf_dmac_check_get);
@@ -2687,7 +2701,6 @@ EXPORT_SYMBOL(fal_ip_intf_macaddr_add);
 EXPORT_SYMBOL(fal_ip_intf_macaddr_del);
 EXPORT_SYMBOL(fal_ip_intf_macaddr_get_first);
 EXPORT_SYMBOL(fal_ip_intf_macaddr_get_next);
-#endif
 
 /*insert flag for outter fal, don't remove it*/
 

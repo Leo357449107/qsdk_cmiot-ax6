@@ -1,7 +1,7 @@
 /*
  * Copyright (c) 2016-2021, The Linux Foundation. All rights reserved.
  *
- * Copyright (c) 2021 Qualcomm Innovation Center, Inc. All rights reserved.
+ * Copyright (c) 2021-2022, Qualcomm Innovation Center, Inc. All rights reserved.
  *
  * Permission to use, copy, modify, and/or distribute this software for
  * any purpose with or without fee is hereby granted, provided that the
@@ -63,6 +63,20 @@ MODULE_PARM_DESC(overwrite_mode, "overwrite default page_mode setting");
 int jumbo_mru;
 module_param(jumbo_mru, int, 0);
 MODULE_PARM_DESC(jumbo_mru, "jumbo mode");
+
+#if defined(NSS_DP_IPQ95XX)
+int nss_dp_rx_fc_xoff = NSS_DP_RX_FC_XOFF_DEF;
+module_param(nss_dp_rx_fc_xoff, int, S_IRUGO);
+MODULE_PARM_DESC(nss_dp_rx_fc_xoff, "Rx ring's flow control XOFF threshold value");
+
+int nss_dp_rx_fc_xon = NSS_DP_RX_FC_XON_DEF;
+module_param(nss_dp_rx_fc_xon, int, S_IRUGO);
+MODULE_PARM_DESC(nss_dp_rx_fc_xon, "Rx ring's flow control XON threshold value");
+
+int nss_dp_rx_ac_fc_threshold = NSS_DP_RX_AC_FC_THRES_DEF;
+module_param(nss_dp_rx_ac_fc_threshold, int, S_IRUGO);
+MODULE_PARM_DESC(nss_dp_rx_ac_fc_threshold, "Rx ring's mapped PPE queue's FC threshold value");
+#endif
 
 /*
  * nss_dp_do_ioctl()
@@ -308,7 +322,7 @@ static int nss_dp_open(struct net_device *netdev)
 	}
 
 	/*
-	 * Inform the Linux Networking stack about the hardwar capability of
+	 * Inform the Linux Networking stack about the hardware capability of
 	 * checksum offloading and other features. Each data_plane is
 	 * responsible to maintain the feature set it supports
 	 */
@@ -568,8 +582,9 @@ static int32_t nss_dp_of_get_pdata(struct device_node *np,
 		pr_info("GMAC%d(%px) Invalid MAC@ - using %pM\n", dp_priv->macid,
 						dp_priv, netdev->dev_addr);
 	}
+#if !defined(NSS_DP_MEM_PROFILE_LOW) && !defined(NSS_DP_MEM_PROFILE_MEDIUM)
+	of_property_read_u32(np, "qcom,rx-page-mode", &dp_priv->rx_page_mode);
 
-	dp_priv->rx_page_mode = of_property_read_bool(np, "qcom,rx-page-mode");
 	if (overwrite_mode) {
 		pr_info("Page mode is overwritten: %d\n", page_mode);
 		dp_priv->rx_page_mode = page_mode;
@@ -580,7 +595,12 @@ static int32_t nss_dp_of_get_pdata(struct device_node *np,
 		dp_priv->rx_jumbo_mru = jumbo_mru;
 		pr_info("Jumbo mru is enabled: %d\n", dp_priv->rx_jumbo_mru);
 	}
-
+#else
+	if (overwrite_mode || page_mode || jumbo_mru) {
+		pr_err("Low memory profiles does not support page mode/jumbo mru\n");
+		return -EFAULT;
+	}
+#endif
 	return 0;
 }
 
@@ -941,6 +961,11 @@ int __init nss_dp_init(void)
 	int ret;
 
 	dp_global_ctx.common_init_done = false;
+
+	/*
+	 * Get the buffer size to allocate
+	 */
+	dp_global_ctx.rx_buf_size = NSS_DP_RX_BUFFER_SIZE;
 
 	/*
 	 * Check platform compatibility and

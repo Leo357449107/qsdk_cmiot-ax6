@@ -119,6 +119,7 @@ struct mhi_link_info {
  * @MHI_EE_WFW: WLAN firmware mode
  * @MHI_EE_PTHRU: Passthrough
  * @MHI_EE_EDL: Embedded downloader
+ * @MHI_EE_FP: Flash Programmer Environment
  */
 enum mhi_ee_type {
 	MHI_EE_PBL,
@@ -128,7 +129,8 @@ enum mhi_ee_type {
 	MHI_EE_WFW,
 	MHI_EE_PTHRU,
 	MHI_EE_EDL,
-	MHI_EE_MAX_SUPPORTED = MHI_EE_EDL,
+	MHI_EE_FP,
+	MHI_EE_MAX_SUPPORTED = MHI_EE_FP,
 	MHI_EE_DISABLE_TRANSITION, /* local EE, not related to mhi spec */
 	MHI_EE_NOT_SUPPORTED,
 	MHI_EE_MAX,
@@ -298,6 +300,7 @@ struct mhi_controller_config {
  * @bhi: Points to base of MHI BHI register space
  * @bhie: Points to base of MHI BHIe register space
  * @wake_db: MHI WAKE doorbell register address
+ * @edl_db: MHI EDL channel 91 doorbell register address
  * @iova_start: IOMMU starting address for data (required)
  * @iova_stop: IOMMU stop address for data (required)
  * @fw_image: Firmware image name for normal booting (required)
@@ -381,6 +384,7 @@ struct mhi_controller {
 	void __iomem *bhi;
 	void __iomem *bhie;
 	void __iomem *wake_db;
+	void __iomem *edl_db;
 
 	dma_addr_t iova_start;
 	dma_addr_t iova_stop;
@@ -452,6 +456,8 @@ struct mhi_controller {
 	bool pre_init;
 	bool wake_set;
 	void *priv_data;
+	int disable_rddm_prealloc;
+	u32 rddm_seg_len;
 };
 
 /**
@@ -785,10 +791,9 @@ int mhi_update_bhie_table_for_dyn_paging(struct mhi_controller *mhi_cntrl,
  * mhi_scan_rddm_cookie - Look for supplied cookie value in the BHI debug
  * registers set by device to indicate rddm readiness for debugging purposes.
  * @mhi_cntrl: MHI controller
- * @off: BHI debug reg offset
  * @cookie: cookie/pattern value to match
  */
-bool mhi_scan_rddm_cookie(struct mhi_controller *mhi_cntrl, u32 off, u32 cookie);
+bool mhi_scan_rddm_cookie(struct mhi_controller *mhi_cntrl, u32 cookie);
 
 /**
  * mhi_debug_reg_dump - dump MHI registers for debug purpose

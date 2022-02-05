@@ -759,13 +759,6 @@ struct sub_cmd_des_t g_fdb_des[] =
 {
 #ifndef IN_FDB_MINI
 	{"entry", "set",   SW_API_FDB_ADD, NULL},
-	{"entry", "add",   SW_API_FDB_ADD, NULL},
-	{"entry", "del",   SW_API_FDB_DELMAC, NULL},
-	{"entry", "flush",   SW_API_FDB_DELALL, NULL},
-	{"entry", "transfer",   SW_API_FDB_TRANSFER, NULL},
-	{"portEntry", "flush",   SW_API_FDB_DELPORT, NULL},
-	{"firstEntry", "find",   SW_API_FDB_FIRST, NULL},
-	{"nextEntry", "find",   SW_API_FDB_NEXT, NULL},
 #endif
 	{"portLearn", "set",   SW_API_FDB_PT_LEARN_SET, NULL},
 #ifndef IN_FDB_MINI
@@ -777,16 +770,11 @@ struct sub_cmd_des_t g_fdb_des[] =
 	{"learnlimit", "set",   SW_API_FDB_LEARN_LIMIT_SET, NULL},
 	{"learnexceedcmd", "set",   SW_API_FDB_LEARN_EXCEED_CMD_SET, NULL},
 	{"resventry", "set",   SW_API_FDB_RESV_ADD, NULL},
-	{"resventry", "add",   SW_API_FDB_RESV_ADD, NULL},
-	{"resventry", "del",   SW_API_FDB_RESV_DEL, NULL},
 	{"ptLearnstatic", "set",   SW_API_FDB_PT_LEARN_STATIC_SET, NULL},
-	{"port", "add",   SW_API_FDB_PORT_ADD, NULL},
-	{"port", "del",   SW_API_FDB_PORT_DEL, NULL},
 	{"LearnCtrl", "set", SW_API_FDB_LEARN_CTRL_SET, NULL},
 	{"PtLearnCtrl", "set", SW_API_FDB_PT_NEWADDR_LEARN_SET, NULL},
 	{"PtStationMove", "set", SW_API_FDB_PT_STAMOVE_SET, NULL},
 	{"PtMacLimitCtrl", "set", SW_API_FDB_PT_MACLIMIT_CTRL_SET, NULL},
-        {"fidEntry", "flush", SW_API_FDB_DEL_BY_FID, NULL},
 #endif
 	{NULL, NULL,  0, NULL},/*end of desc*/
 };
@@ -1079,11 +1067,11 @@ struct sub_cmd_des_t g_misc_des[] =
 #ifdef IN_IP
 struct sub_cmd_des_t g_ip_des[] =
 {
-#ifndef IN_IP_MINI
 	{"hostentry", "set", SW_API_IP_HOST_ADD, NULL},
 	{"hostentry", "add", SW_API_IP_HOST_ADD, NULL},
 	{"hostentry", "del", SW_API_IP_HOST_DEL, NULL},
 	{"hostentry", "next", SW_API_IP_HOST_NEXT, NULL},
+#if !defined(IN_IP_MINI)
 	{"hostentry", "bindcnt", SW_API_IP_HOST_COUNTER_BIND, NULL},
 	{"hostentry", "bindpppoe", SW_API_IP_HOST_PPPOE_BIND, NULL},
 	{"ptarplearn", "set", SW_API_IP_PT_ARP_LEARN_SET, NULL},
@@ -1107,9 +1095,10 @@ struct sub_cmd_des_t g_ip_des[] =
 	{"rfsip6", "set", SW_API_IP_RFS_IP6_SET, NULL},
 	{"defaultflowcmd", "set", SW_API_IP_DEFAULT_FLOW_CMD_SET, NULL},
 	{"defaultrtflowcmd", "set", SW_API_IP_DEFAULT_RT_FLOW_CMD_SET, NULL},
-	{"vsiarpsg", "set",  SW_API_IP_VIS_ARP_SG_CFG_SET, NULL},
 	{"networkroute", "set",  SW_API_IP_NETWORK_ROUTE_ADD, NULL},
 	{"networkroute", "add",  SW_API_IP_NETWORK_ROUTE_ADD, NULL},
+#endif
+	{"vsiarpsg", "set",  SW_API_IP_VIS_ARP_SG_CFG_SET, NULL},
 	{"intf", "set",  SW_API_IP_INTF_SET, NULL},
 	{"vsiintf", "set",  SW_API_IP_VSI_INTF_SET, NULL},
 	{"portintf", "set",  SW_API_IP_PORT_INTF_SET, NULL},
@@ -1122,7 +1111,6 @@ struct sub_cmd_des_t g_ip_des[] =
 	{"portarpsg", "set",  SW_API_IP_PORT_ARP_SG_SET, NULL},
 	{"mcmode", "set",  SW_API_IP_VSI_MC_MODE_SET, NULL},
 	{"globalctrl", "set",  SW_API_GLOBAL_CTRL_SET, NULL},
-#endif
 	{NULL, NULL,  0, NULL},/*end of desc*/
 };
 #endif
@@ -1386,6 +1374,7 @@ struct sub_cmd_des_t g_tunnel_des[] =
     {"Encapecn", "set", SW_API_TUNNEL_ENCAP_ECN_MODE_SET, NULL},
     {"Decapecn", "set", SW_API_TUNNEL_DECAP_ECN_MODE_SET, NULL},
     {"Decapexpfmtctrl", "set", SW_API_TUNNEL_EXP_DECAP_SET, NULL},
+    {"Decapkey", "set", SW_API_TUNNEL_DECAP_KEY_SET, NULL},
     {NULL, NULL, 0, NULL},/*end of desc*/
 };
 #endif

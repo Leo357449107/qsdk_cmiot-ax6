@@ -570,26 +570,26 @@ adpt_appe_tunnel_decap_entry_convert(a_uint32_t dev_id, fal_tunnel_decap_entry_t
 }
 
 static sw_error_t
-adpt_appe_tunnel_key_op(a_uint32_t dev_id,
-		fal_tunnel_op_type_t op_type, fal_tunnel_rule_t *rule_key)
+adpt_appe_tunnel_key_op(a_uint32_t dev_id, fal_tunnel_type_t tunnel_type,
+		fal_tunnel_op_type_t op_type, fal_tunnel_decap_key_t *rule_key)
 {
 	sw_error_t rv = SW_OK;
 	union tl_key_gen_u key_gen;
 
 	ADPT_DEV_ID_CHECK(dev_id);
 	ADPT_NULL_POINT_CHECK(rule_key);
-	TUNNEL_DECAP_TYPE_CHECK(rule_key->tunnel_type);
+	TUNNEL_DECAP_TYPE_CHECK(tunnel_type);
 
 	aos_mem_zero(&key_gen, sizeof(union tl_key_gen_u));
 
 	switch (op_type) {
 		case FAL_TUNNEL_OP_TYPE_DEL:
 		case FAL_TUNNEL_OP_TYPE_FLUSH:
-			rv = appe_tl_key_gen_set(dev_id, rule_key->tunnel_type, &key_gen);
+			rv = appe_tl_key_gen_set(dev_id, tunnel_type, &key_gen);
 			SW_RTN_ON_ERROR(rv);
 			break;
 		case FAL_TUNNEL_OP_TYPE_GET:
-			rv = appe_tl_key_gen_get(dev_id, rule_key->tunnel_type, &key_gen);
+			rv = appe_tl_key_gen_get(dev_id, tunnel_type, &key_gen);
 			SW_RTN_ON_ERROR(rv);
 
 			if (key_gen.bf.sip_inc) {
@@ -629,7 +629,7 @@ adpt_appe_tunnel_key_op(a_uint32_t dev_id,
 			rule_key->tunnel_info_mask = key_gen.bf.vni_resv_mask_0 |
 				key_gen.bf.vni_resv_mask_1 <<
 				SW_FIELD_OFFSET_IN_WORD(TL_KEY_GEN_VNI_RESV_MASK_OFFSET);
-			rule_key->tunnel_type = key_gen.bf.key_type;
+			// tunnel_type = key_gen.bf.key_type;
 			break;
 		case FAL_TUNNEL_OP_TYPE_ADD:
 			key_gen.bf.sip_inc = (rule_key->key_bmp >>
@@ -657,9 +657,9 @@ adpt_appe_tunnel_key_op(a_uint32_t dev_id,
 			key_gen.bf.vni_resv_mask_0 = rule_key->tunnel_info_mask;
 			key_gen.bf.vni_resv_mask_1 = rule_key->tunnel_info_mask >>
 				SW_FIELD_OFFSET_IN_WORD(TL_KEY_GEN_VNI_RESV_MASK_OFFSET);
-			key_gen.bf.key_type = rule_key->tunnel_type;
+			key_gen.bf.key_type = tunnel_type;
 
-			rv = appe_tl_key_gen_set(dev_id, rule_key->tunnel_type, &key_gen);
+			rv = appe_tl_key_gen_set(dev_id, tunnel_type, &key_gen);
 			SW_RTN_ON_ERROR(rv);
 			break;
 		default:
@@ -688,10 +688,7 @@ adpt_appe_tunnel_decap_entry_get(a_uint32_t dev_id,
 	rule_key = &entry->decap_rule;
 	entry_action = &entry->decap_action;
 
-	if (rule_key->tunnel_type >= FAL_TUNNEL_TYPE_INVALID_TUNNEL) {
-		SSDK_ERROR("%s invalid tunnel type: %d\n", __func__, rule_key->tunnel_type);
-		return SW_OUT_OF_RANGE;
-	}
+	TUNNEL_DECAP_TYPE_CHECK(rule_key->tunnel_type);
 
 	if (get_mode == FAL_TUNNEL_OP_MODE_INDEX) {
 		TUNNEL_DECAP_ID_CHECK(entry->decap_rule.entry_id);
@@ -711,9 +708,6 @@ adpt_appe_tunnel_decap_entry_get(a_uint32_t dev_id,
 	}
 
 	rv = adpt_appe_tunnel_decap_entry_convert(dev_id, entry, &tl_tbl, A_FALSE);
-	SW_RTN_ON_ERROR(rv);
-
-	rv = adpt_appe_tunnel_key_op(dev_id, FAL_TUNNEL_OP_TYPE_GET, rule_key);
 	SW_RTN_ON_ERROR(rv);
 
 	rv = appe_tl_cnt_tbl_get(dev_id, rule_key->entry_id, &tl_cnt_tbl);
@@ -743,11 +737,7 @@ adpt_appe_tunnel_decap_entry_add(a_uint32_t dev_id,
 
 	rule_key = &entry->decap_rule;
 	entry_action = &entry->decap_action;
-
-	if (rule_key->tunnel_type >= FAL_TUNNEL_TYPE_INVALID_TUNNEL) {
-		SSDK_ERROR("%s invalid tunnel type: %d\n", __func__, rule_key->tunnel_type);
-		return SW_OUT_OF_RANGE;
-	}
+	TUNNEL_DECAP_TYPE_CHECK(rule_key->tunnel_type);
 
 	if (add_mode == FAL_TUNNEL_OP_MODE_INDEX) {
 		TUNNEL_DECAP_ID_CHECK(entry->decap_rule.entry_id);
@@ -758,9 +748,6 @@ adpt_appe_tunnel_decap_entry_add(a_uint32_t dev_id,
 
 	rv = appe_tunnel_decap_entry_op(dev_id, FAL_TUNNEL_OP_TYPE_ADD,
 			add_mode, &tl_tbl, &rule_key->entry_id);
-	SW_RTN_ON_ERROR(rv);
-
-	rv = adpt_appe_tunnel_key_op(dev_id, FAL_TUNNEL_OP_TYPE_ADD, rule_key);
 	SW_RTN_ON_ERROR(rv);
 
 	rv = adpt_appe_tunnel_decap_entry_get(dev_id, FAL_TUNNEL_OP_MODE_INDEX, entry);
@@ -784,11 +771,7 @@ adpt_appe_tunnel_decap_entry_del(a_uint32_t dev_id,
 	aos_mem_zero(&tl_cnt_tbl, sizeof(union tl_cnt_tbl_u));
 
 	rule_key = &entry->decap_rule;
-
-	if (rule_key->tunnel_type >= FAL_TUNNEL_TYPE_INVALID_TUNNEL) {
-		SSDK_ERROR("%s invalid tunnel type: %d\n", __func__, rule_key->tunnel_type);
-		return SW_OUT_OF_RANGE;
-	}
+	TUNNEL_DECAP_TYPE_CHECK(rule_key->tunnel_type);
 
 	if (del_mode == FAL_TUNNEL_OP_MODE_INDEX) {
 		TUNNEL_DECAP_ID_CHECK(entry->decap_rule.entry_id);
@@ -801,9 +784,6 @@ adpt_appe_tunnel_decap_entry_del(a_uint32_t dev_id,
 
 	rv = appe_tunnel_decap_entry_op(dev_id, FAL_TUNNEL_OP_TYPE_DEL,
 			del_mode, &tl_tbl, &rule_key->entry_id);
-	SW_RTN_ON_ERROR(rv);
-
-	rv = adpt_appe_tunnel_key_op(dev_id, FAL_TUNNEL_OP_TYPE_DEL, rule_key);
 	SW_RTN_ON_ERROR(rv);
 
 	rv = appe_tl_cnt_tbl_set(dev_id, rule_key->entry_id, &tl_cnt_tbl);
@@ -845,9 +825,6 @@ adpt_appe_tunnel_decap_entry_getnext(a_uint32_t dev_id,
 	}
 
 	rv = adpt_appe_tunnel_decap_entry_convert(dev_id, entry, &tl_tbl, A_FALSE);
-	SW_RTN_ON_ERROR(rv);
-
-	rv = adpt_appe_tunnel_key_op(dev_id, FAL_TUNNEL_OP_TYPE_GET, &entry->decap_rule);
 	SW_RTN_ON_ERROR(rv);
 
 	rv = appe_tl_cnt_tbl_get(dev_id, entry->decap_rule.entry_id, &tl_cnt_tbl);
@@ -2632,6 +2609,171 @@ adpt_appe_tunnel_exp_decap_get(a_uint32_t dev_id, fal_port_t port_id, a_bool_t *
 	return rv;
 }
 
+sw_error_t adpt_appe_tunnel_decap_key_set(a_uint32_t dev_id,
+		fal_tunnel_type_t tunnel_type, fal_tunnel_decap_key_t *key_gen)
+{
+	sw_error_t rv = SW_OK;
+
+	rv = adpt_appe_tunnel_key_op(dev_id, tunnel_type, FAL_TUNNEL_OP_TYPE_ADD, key_gen);
+	return rv;
+}
+
+sw_error_t adpt_appe_tunnel_decap_key_get(a_uint32_t dev_id,
+		fal_tunnel_type_t tunnel_type, fal_tunnel_decap_key_t *key_gen)
+{
+	sw_error_t rv = SW_OK;
+
+	rv = adpt_appe_tunnel_key_op(dev_id, tunnel_type, FAL_TUNNEL_OP_TYPE_GET, key_gen);
+	return rv;
+}
+
+sw_error_t adpt_appe_tunnel_decap_en_set(a_uint32_t dev_id,
+		a_uint32_t tunnel_index, a_bool_t en)
+{
+	sw_error_t rv = SW_OK;
+
+	ADPT_DEV_ID_CHECK(dev_id);
+	TUNNEL_DECAP_ID_CHECK(tunnel_index);
+
+	rv = appe_tl_tbl_decap_en_set(dev_id, tunnel_index, en);
+
+	return rv;
+}
+
+sw_error_t adpt_appe_tunnel_decap_en_get(a_uint32_t dev_id,
+		a_uint32_t tunnel_index, a_bool_t *en)
+{
+	sw_error_t rv = SW_OK;
+	a_uint32_t decap_en;
+
+	ADPT_DEV_ID_CHECK(dev_id);
+	TUNNEL_DECAP_ID_CHECK(tunnel_index);
+	ADPT_NULL_POINT_CHECK(en);
+
+	rv = appe_tl_tbl_decap_en_get(dev_id, tunnel_index, &decap_en);
+	SW_RTN_ON_ERROR(rv);
+
+	*en = !!decap_en;
+
+	return rv;
+}
+
+sw_error_t adpt_appe_tunnel_decap_action_update(a_uint32_t dev_id,
+		a_uint32_t tunnel_index, fal_tunnel_action_t *update_action)
+{
+	sw_error_t rv = SW_OK;
+	union tl_tbl_u tl_tbl;
+	a_uint32_t update_bitmap = 0;
+	a_uint8_t update_field = FAL_TUNNEL_SVLAN_UPDATE;
+
+	ADPT_DEV_ID_CHECK(dev_id);
+	TUNNEL_DECAP_ID_CHECK(tunnel_index);
+	ADPT_NULL_POINT_CHECK(update_action);
+
+	aos_mem_zero(&tl_tbl, sizeof(union tl_tbl_u));
+
+	rv = appe_tl_tbl_get(dev_id, tunnel_index, &tl_tbl);
+	SW_RTN_ON_ERROR(rv);
+
+	update_bitmap = update_action->update_bmp;
+	while (update_bitmap) {
+		if (update_bitmap & 1) {
+			switch (update_field) {
+				case FAL_TUNNEL_SVLAN_UPDATE:
+					tl_tbl.bf0.svlan_fmt =
+						update_action->verify_entry.svlan_fmt;
+					tl_tbl.bf0.svlan_id_0 =
+						update_action->verify_entry.svlan_id;
+					tl_tbl.bf0.svlan_id_1 =
+						update_action->verify_entry.svlan_id >>
+						SW_FIELD_OFFSET_IN_WORD(TL_TBL_SVLAN_ID_OFFSET);
+					tl_tbl.bf0.svlan_check_en =
+						update_action->verify_entry.verify_bmp &
+						FAL_TUNNEL_SVLAN_CHECK_EN ? A_TRUE : A_FALSE;
+					break;
+				case FAL_TUNNEL_CVLAN_UPDATE:
+					tl_tbl.bf0.cvlan_fmt =
+						update_action->verify_entry.cvlan_fmt;
+					tl_tbl.bf0.cvlan_id =
+						update_action->verify_entry.cvlan_id;
+					tl_tbl.bf0.cvlan_check_en =
+						update_action->verify_entry.verify_bmp &
+						FAL_TUNNEL_CVLAN_CHECK_EN ? A_TRUE : A_FALSE;
+					break;
+				case FAL_TUNNEL_L3IF_UPDATE:
+					tl_tbl.bf0.tl_l3_if = update_action->verify_entry.tl_l3_if;
+					tl_tbl.bf0.tl_l3_if_check_en =
+						update_action->verify_entry.verify_bmp &
+						FAL_TUNNEL_L3IF_CHECK_EN ? A_TRUE : A_FALSE;
+					break;
+				case FAL_TUNNEL_DECAP_UPDATE:
+					tl_tbl.bf0.decap_en = update_action->decap_en;
+					break;
+				case FAL_TUNNEL_DEACCE_UPDATE:
+					tl_tbl.bf0.de_acce = update_action->deacce_en;
+					break;
+				case FAL_TUNNEL_SRCINFO_UPDATE:
+					tl_tbl.bf0.src_info_valid = update_action->src_info_enable;
+					tl_tbl.bf0.src_info_type = update_action->src_info_type;
+					tl_tbl.bf0.src_info = update_action->src_info;
+					break;
+				case FAL_TUNNEL_PKT_MODE_UPDATE:
+					tl_tbl.bf0.spcp_mode = update_action->spcp_mode;
+					tl_tbl.bf0.sdei_mode = update_action->sdei_mode;
+					tl_tbl.bf0.cpcp_mode = update_action->cpcp_mode;
+					tl_tbl.bf0.cdei_mode = update_action->cdei_mode;
+					tl_tbl.bf0.ttl_mode = update_action->ttl_mode;
+					tl_tbl.bf0.dscp_mode = update_action->dscp_mode;
+					tl_tbl.bf0.ecn_mode = update_action->ecn_mode;
+					break;
+				case FAL_TUNNEL_SERVICE_CODE_UPDATE:
+					tl_tbl.bf0.service_code_en =
+						update_action->service_code_en;
+					tl_tbl.bf0.service_code = update_action->service_code;
+					break;
+				case FAL_TUNNEL_UDP_CSUM_ZERO_UPDATE:
+					tl_tbl.bf0.udp_csum_zero = update_action->udp_csum_zero;
+					break;
+				case FAL_TUNNEL_EXP_PROFILE_UPDATE:
+					tl_tbl.bf0.exp_profile = update_action->exp_profile;
+					break;
+				case FAL_TUNNEL_FWD_CMD_UPDATE:
+					tl_tbl.bf0.fwd_type = update_action->fwd_cmd;
+					break;
+				default:
+					break;
+			}
+		}
+		update_bitmap >>= 1;
+		update_field++;
+	}
+	rv = appe_tl_tbl_set(dev_id, tunnel_index, &tl_tbl);
+	return rv;
+}
+
+sw_error_t adpt_appe_tunnel_decap_counter_get(a_uint32_t dev_id,
+		a_uint32_t tunnel_index, fal_entry_counter_t *decap_counter)
+{
+	sw_error_t rv = SW_OK;
+	union tl_cnt_tbl_u tl_cnt_tbl;
+
+	ADPT_DEV_ID_CHECK(dev_id);
+	TUNNEL_DECAP_ID_CHECK(tunnel_index);
+	ADPT_NULL_POINT_CHECK(decap_counter);
+
+	aos_mem_zero(&tl_cnt_tbl, sizeof(union tl_cnt_tbl_u));
+
+	rv = appe_tl_cnt_tbl_get(dev_id, tunnel_index, &tl_cnt_tbl);
+	SW_RTN_ON_ERROR(rv);
+
+	decap_counter->matched_pkts = tl_cnt_tbl.bf.rx_pkt_cnt;
+	decap_counter->matched_bytes = ((a_uint64_t)tl_cnt_tbl.bf.rx_byte_cnt_1 <<
+			SW_FIELD_OFFSET_IN_WORD(TL_CNT_TBL_RX_BYTE_CNT_OFFSET)) |
+		tl_cnt_tbl.bf.rx_byte_cnt_0;
+
+	return rv;
+}
+
 void adpt_appe_tunnel_func_bitmap_init(a_uint32_t dev_id)
 {
 	adpt_api_t *p_adpt_api = NULL;
@@ -2641,8 +2783,53 @@ void adpt_appe_tunnel_func_bitmap_init(a_uint32_t dev_id)
 	if(p_adpt_api == NULL)
 		return;
 
-	p_adpt_api->adpt_tunnel_func_bitmap[0] = 0;
-	p_adpt_api->adpt_tunnel_func_bitmap[1] = 0;
+	p_adpt_api->adpt_tunnel_func_bitmap[0] = BIT(FUNC_TUNNEL_INTF_SET) |
+		BIT(FUNC_TUNNEL_INTF_GET) |
+		BIT(FUNC_TUNNEL_ENCAP_RULE_ENTRY_SET) |
+		BIT(FUNC_TUNNEL_ENCAP_RULE_ENTRY_GET) |
+		BIT(FUNC_TUNNEL_ENCAP_RULE_ENTRY_DEL) |
+		BIT(FUNC_TUNNEL_ENCAP_INTF_TUNNELID_SET) |
+		BIT(FUNC_TUNNEL_ENCAP_INTF_TUNNELID_GET) |
+		BIT(FUNC_TUNNEL_VLAN_INTF_ADD) |
+		BIT(FUNC_TUNNEL_VLAN_INTF_GETFIRST) |
+		BIT(FUNC_TUNNEL_VLAN_INTF_GETNEXT) |
+		BIT(FUNC_TUNNEL_VLAN_INTF_DEL) |
+		BIT(FUNC_TUNNEL_ENCAP_PORT_TUNNELID_SET) |
+		BIT(FUNC_TUNNEL_ENCAP_PORT_TUNNELID_GET) |
+		BIT(FUNC_TUNNEL_DECAP_ENTRY_ADD) |
+		BIT(FUNC_TUNNEL_DECAP_ENTRY_GET) |
+		BIT(FUNC_TUNNEL_DECAP_ENTRY_GETNEXT) |
+		BIT(FUNC_TUNNEL_DECAP_ENTRY_DEL) |
+		BIT(FUNC_TUNNEL_DECAP_ENTRY_FLUSH) |
+		BIT(FUNC_TUNNEL_ENCAP_ENTRY_ADD) |
+		BIT(FUNC_TUNNEL_ENCAP_ENTRY_GET) |
+		BIT(FUNC_TUNNEL_ENCAP_ENTRY_GETNEXT) |
+		BIT(FUNC_TUNNEL_ENCAP_ENTRY_DEL) |
+		BIT(FUNC_TUNNEL_GLOBAL_CFG_SET) |
+		BIT(FUNC_TUNNEL_GLOBAL_CFG_GET) |
+		BIT(FUNC_TUNNEL_ENCAP_HEADER_CTRL_SET) |
+		BIT(FUNC_TUNNEL_ENCAP_HEADER_CTRL_GET) |
+		BIT(FUNC_TUNNEL_PORT_INTF_SET) |
+		BIT(FUNC_TUNNEL_PORT_INTF_GET) |
+		BIT(FUNC_TUNNEL_DECAP_ECN_SET) |
+		BIT(FUNC_TUNNEL_DECAP_ECN_GET) |
+		BIT(FUNC_TUNNEL_ENCAP_ECN_SET) |
+		BIT(FUNC_TUNNEL_ENCAP_ECN_GET);
+
+	p_adpt_api->adpt_tunnel_func_bitmap[1] = BIT(FUNC_TUNNEL_UDF_PROFILE_ENTRY_ADD % 32) |
+		BIT(FUNC_TUNNEL_UDF_PROFILE_ENTRY_DEL % 32) |
+		BIT(FUNC_TUNNEL_UDF_PROFILE_ENTRY_GETFIRST % 32) |
+		BIT(FUNC_TUNNEL_UDF_PROFILE_ENTRY_GETNEXT % 32) |
+		BIT(FUNC_TUNNEL_UDF_PROFILE_CFG_SET % 32) |
+		BIT(FUNC_TUNNEL_UDF_PROFILE_CFG_GET % 32) |
+		BIT(FUNC_TUNNEL_EXP_DECAP_SET % 32) |
+		BIT(FUNC_TUNNEL_EXP_DECAP_GET % 32) |
+		BIT(FUNC_TUNNEL_DECAP_KEY_SET % 32) |
+		BIT(FUNC_TUNNEL_DECAP_KEY_GET % 32) |
+		BIT(FUNC_TUNNEL_DECAP_EN_SET % 32) |
+		BIT(FUNC_TUNNEL_DECAP_EN_GET % 32) |
+		BIT(FUNC_TUNNEL_DECAP_ACTION_UPDATE % 32) |
+		BIT(FUNC_TUNNEL_DECAP_COUNTER_GET % 32);
 
 	return;
 }
@@ -2692,6 +2879,12 @@ static void adpt_appe_tunnel_func_unregister(a_uint32_t dev_id, adpt_api_t *p_ad
 	p_adpt_api->adpt_tunnel_encap_ecn_mode_get = NULL;
 	p_adpt_api->adpt_tunnel_exp_decap_set = NULL;
 	p_adpt_api->adpt_tunnel_exp_decap_get = NULL;
+	p_adpt_api->adpt_tunnel_decap_key_set = NULL;
+	p_adpt_api->adpt_tunnel_decap_key_get = NULL;
+	p_adpt_api->adpt_tunnel_decap_en_set = NULL;
+	p_adpt_api->adpt_tunnel_decap_en_get = NULL;
+	p_adpt_api->adpt_tunnel_decap_action_update = NULL;
+	p_adpt_api->adpt_tunnel_decap_counter_get = NULL;
 
 	return;
 }
@@ -2840,6 +3033,24 @@ adpt_appe_tunnel_init(a_uint32_t dev_id)
 	if (p_adpt_api->adpt_tunnel_func_bitmap[1] & BIT(FUNC_TUNNEL_EXP_DECAP_GET % 32))
 		p_adpt_api->adpt_tunnel_exp_decap_get=
 			adpt_appe_tunnel_exp_decap_get;
+	if (p_adpt_api->adpt_tunnel_func_bitmap[1] & BIT(FUNC_TUNNEL_DECAP_KEY_SET % 32))
+		p_adpt_api->adpt_tunnel_decap_key_set =
+			adpt_appe_tunnel_decap_key_set;
+	if (p_adpt_api->adpt_tunnel_func_bitmap[1] & BIT(FUNC_TUNNEL_DECAP_KEY_GET % 32))
+		p_adpt_api->adpt_tunnel_decap_key_get =
+			adpt_appe_tunnel_decap_key_get;
+	if (p_adpt_api->adpt_tunnel_func_bitmap[1] & BIT(FUNC_TUNNEL_DECAP_EN_SET % 32))
+		p_adpt_api->adpt_tunnel_decap_en_set =
+			adpt_appe_tunnel_decap_en_set;
+	if (p_adpt_api->adpt_tunnel_func_bitmap[1] & BIT(FUNC_TUNNEL_DECAP_EN_GET % 32))
+		p_adpt_api->adpt_tunnel_decap_en_get =
+			adpt_appe_tunnel_decap_en_get;
+	if (p_adpt_api->adpt_tunnel_func_bitmap[1] & BIT(FUNC_TUNNEL_DECAP_ACTION_UPDATE % 32))
+		p_adpt_api->adpt_tunnel_decap_action_update =
+			adpt_appe_tunnel_decap_action_update;
+	if (p_adpt_api->adpt_tunnel_func_bitmap[1] & BIT(FUNC_TUNNEL_DECAP_COUNTER_GET % 32))
+		p_adpt_api->adpt_tunnel_decap_counter_get =
+			adpt_appe_tunnel_decap_counter_get;
 
 	return SW_OK;
 }

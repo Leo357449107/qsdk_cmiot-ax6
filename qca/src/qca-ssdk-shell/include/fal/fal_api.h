@@ -1,5 +1,8 @@
 /*
  * Copyright (c) 2014-2019, 2021, The Linux Foundation. All rights reserved.
+ *
+ * Copyright (c) 2022, Qualcomm Innovation Center, Inc. All rights reserved.
+ *
  * Permission to use, copy, modify, and/or distribute this software for
  * any purpose with or without fee is hereby granted, provided that the
  * above copyright notice and this permission notice appear in all copies.
@@ -602,7 +605,9 @@ extern "C" {
     SW_API_DEF(SW_API_ACL_UDF_PROFILE_CFG_SET, fal_acl_udf_profile_cfg_set),\
     SW_API_DEF(SW_API_ACL_UDF_PROFILE_CFG_GET, fal_acl_udf_profile_cfg_get),\
     SW_API_DEF(SW_API_ACL_VPGROUP_SET, fal_acl_vpgroup_set),\
-    SW_API_DEF(SW_API_ACL_VPGROUP_GET, fal_acl_vpgroup_get),
+    SW_API_DEF(SW_API_ACL_VPGROUP_GET, fal_acl_vpgroup_get), \
+    SW_API_DEF(SW_API_ACL_MAC_ENTRY_SET, fal_acl_mac_entry_set), \
+    SW_API_DEF(SW_API_ACL_MAC_ENTRY_DUMP, fal_acl_mac_entry_dump),
 
 #define ACL_API_PARAM \
     SW_API_DESC(SW_API_ACL_LIST_CREAT) \
@@ -631,7 +636,9 @@ extern "C" {
     SW_API_DESC(SW_API_ACL_UDF_PROFILE_CFG_SET) \
     SW_API_DESC(SW_API_ACL_UDF_PROFILE_CFG_GET) \
     SW_API_DESC(SW_API_ACL_VPGROUP_SET) \
-    SW_API_DESC(SW_API_ACL_VPGROUP_GET)
+    SW_API_DESC(SW_API_ACL_VPGROUP_GET) \
+    SW_API_DESC(SW_API_ACL_MAC_ENTRY_SET) \
+    SW_API_DESC(SW_API_ACL_MAC_ENTRY_DUMP)
 #else
 #define ACL_API
 #define ACL_API_PARAM
@@ -1417,6 +1424,7 @@ extern "C" {
     SW_API_DEF(SW_API_FLOW_HOST_DEL, fal_flow_host_del), \
     SW_API_DEF(SW_API_FLOWENTRY_NEXT, fal_flow_entry_next), \
     SW_API_DEF(SW_API_FLOW_COUNTER_GET, fal_flow_counter_get), \
+    SW_API_DEF(SW_API_FLOW_COUNTER_CLEANUP, fal_flow_counter_cleanup), \
     SW_API_DEF(SW_API_FLOW_ENTRY_EN_SET, fal_flow_entry_en_set), \
     SW_API_DEF(SW_API_FLOW_ENTRY_EN_GET, fal_flow_entry_en_get), \
     SW_API_DEF(SW_API_FLOW_QOS_SET, fal_flow_qos_set), \
@@ -1440,6 +1448,7 @@ extern "C" {
     SW_API_DESC(SW_API_FLOWENTRY_NEXT) \
     SW_API_DESC(SW_API_FLOWENTRY_NEXT) \
     SW_API_DESC(SW_API_FLOW_COUNTER_GET) \
+    SW_API_DESC(SW_API_FLOW_COUNTER_CLEANUP) \
     SW_API_DESC(SW_API_FLOW_ENTRY_EN_SET) \
     SW_API_DESC(SW_API_FLOW_ENTRY_EN_GET) \
     SW_API_DESC(SW_API_FLOW_QOS_SET) \
@@ -2368,6 +2377,7 @@ extern "C" {
     SW_API_DEF(SW_API_SSDK_CFG, fal_ssdk_cfg), \
     SW_API_DEF(SW_API_MODULE_FUNC_CTRL_SET, fal_module_func_ctrl_set), \
     SW_API_DEF(SW_API_MODULE_FUNC_CTRL_GET, fal_module_func_ctrl_get), \
+    SW_API_DEF(SW_API_PPE_CAPACITY_GET, fal_ppe_capacity_get), \
     /*qca808x_start*/\
     PORTCONTROL_API \
 /*qca808x_end*/\
@@ -2427,6 +2437,8 @@ extern "C" {
     SW_PARAM_DEF(SW_API_MODULE_FUNC_CTRL_GET, SW_UINT32, 4, SW_PARAM_IN, "Dev ID"), \
     SW_PARAM_DEF(SW_API_MODULE_FUNC_CTRL_GET, SW_MODULE, 4, SW_PARAM_IN, "Module"), \
     SW_PARAM_DEF(SW_API_MODULE_FUNC_CTRL_GET, SW_FUNC_CTRL, sizeof(fal_func_ctrl_t), SW_PARAM_PTR|SW_PARAM_OUT, "Function bitmap"), \
+    SW_PARAM_DEF(SW_API_PPE_CAPACITY_GET, SW_UINT32, 4, SW_PARAM_IN, "Dev ID"), \
+    SW_PARAM_DEF(SW_API_PPE_CAPACITY_GET, SW_PPE_CAPACITY, sizeof(fal_ppe_tbl_caps_t), SW_PARAM_PTR|SW_PARAM_OUT, "PPE capacity"), \
     MIB_API_PARAM \
     LEAKY_API_PARAM \
     MISC_API_PARAM \

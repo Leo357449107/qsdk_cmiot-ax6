@@ -1,0 +1,428 @@
+Source-Makefile: target/linux/sunxi/Makefile
+Target: sunxi
+Target-Board: sunxi
+Target-Name: Allwinner A1x/A20/A3x
+Target-Arch: arm
+Target-Arch-Packages: arm_xscale
+Target-Features: arm_v7 display dt ext4 fpu gpio rtc squashfs usb
+Target-Depends: 
+Target-Optimization: -Os -pipe
+CPU-Type: xscale
+Linux-Version: 4.14.254
+Linux-Release: 1
+Linux-Kernel-Arch: arm
+Target-Description:
+
+@@
+Default-Packages: base-files libc libgcc busybox dropbear mtd uci opkg netifd fstools uclient-fetch logd urandom-seed urngd dnsmasq iptables ip6tables ppp ppp-mod-pppoe firewall odhcpd-ipv6only odhcp6c kmod-ipt-offload uboot-envtools partx-utils mkf2fs e2fsprogs 
+Target-Profile: Default
+Target-Profile-Priority: 1
+Target-Profile-Name: Default Profile (all drivers)
+Target-Profile-Packages: kmod-ata-core kmod-ata-sunxi kmod-brcmfmac kmod-rtc-sunxi kmod-rtl8192cu kmod-rtl8xxxu kmod-sun4i-emac rtl8188eu-firmware swconfig wpad-basic iwinfo
+Target-Profile-Description:
+  Default profile with package set compatible with most boards.
+@@
+
+Target: sunxi/cortexa8
+Target-Board: sunxi
+Target-Name: Allwinner A1x
+Target-Arch: arm
+Target-Arch-Packages: arm_cortex-a8_vfpv3
+Target-Features: arm_v7 display dt ext4 fpu gpio rtc squashfs usb
+Target-Depends: 
+Target-Optimization: -Os -pipe
+CPU-Type: cortex-a8+vfpv3
+Linux-Version: 4.14.254
+Linux-Release: 1
+Linux-Kernel-Arch: arm
+Target-Description:
+
+@@
+Default-Packages: base-files libc libgcc busybox dropbear mtd uci opkg netifd fstools uclient-fetch logd urandom-seed urngd dnsmasq iptables ip6tables ppp ppp-mod-pppoe firewall odhcpd-ipv6only odhcp6c kmod-ipt-offload uboot-envtools partx-utils mkf2fs e2fsprogs 
+Target-Profile: Default
+Target-Profile-Priority: 1
+Target-Profile-Name: Default Profile (all drivers)
+Target-Profile-Packages: kmod-ata-core kmod-ata-sunxi kmod-brcmfmac kmod-rtc-sunxi kmod-rtl8192cu kmod-rtl8xxxu kmod-sun4i-emac rtl8188eu-firmware swconfig wpad-basic iwinfo
+Target-Profile-Description:
+  Default profile with package set compatible with most boards.
+@@
+
+Target-Profile: DEVICE_sun4i-a10-olinuxino-lime
+Target-Profile-Name: Olimex A10-OLinuXino-LIME
+Target-Profile-Packages: kmod-ata-core kmod-ata-sunxi kmod-sun4i-emac kmod-rtc-sunxi 
+Target-Profile-hasImageMetadata: 1
+Target-Profile-SupportedDevices: olimex,a10-olinuxino-lime
+
+Target-Profile-Description:
+Build firmware images for Olimex A10-OLinuXino-LIME
+@@
+
+Target-Profile: DEVICE_sun5i-a13-olimex-som
+Target-Profile-Name: Olimex A13 SOM
+Target-Profile-Packages: kmod-rtl8192cu 
+Target-Profile-hasImageMetadata: 1
+Target-Profile-SupportedDevices: olimex,a13-olinuxino
+
+Target-Profile-Description:
+Build firmware images for Olimex A13 SOM
+@@
+
+Target-Profile: DEVICE_sun5i-a13-olinuxino
+Target-Profile-Name: Olimex A13-Olinuxino
+Target-Profile-Packages: kmod-rtl8192cu 
+Target-Profile-hasImageMetadata: 1
+Target-Profile-SupportedDevices: olimex,a13-olinuxino
+
+Target-Profile-Description:
+Build firmware images for Olimex A13-Olinuxino
+@@
+
+Target-Profile: DEVICE_sun4i-a10-cubieboard
+Target-Profile-Name: Cubietech Cubieboard
+Target-Profile-Packages: kmod-ata-core kmod-ata-sunxi kmod-sun4i-emac kmod-rtc-sunxi 
+Target-Profile-hasImageMetadata: 1
+Target-Profile-SupportedDevices: cubietech,a10-cubieboard
+
+Target-Profile-Description:
+Build firmware images for Cubietech Cubieboard
+@@
+
+Target-Profile: DEVICE_sun4i-a10-pcduino
+Target-Profile-Name: LinkSprite pcDuino
+Target-Profile-Packages: kmod-sun4i-emac kmod-rtc-sunxi kmod-rtl8192cu 
+Target-Profile-hasImageMetadata: 1
+Target-Profile-SupportedDevices: linksprite,a10-pcduino
+
+Target-Profile-Description:
+Build firmware images for LinkSprite pcDuino
+@@
+
+Target-Profile: DEVICE_sun4i-a10-marsboard
+Target-Profile-Name: HAOYU Electronics Marsboard A10
+Target-Profile-Packages: mod-ata-core kmod-ata-sunxi kmod-sun4i-emac kmod-rtc-sunxi sound-soc-sunxi 
+Target-Profile-hasImageMetadata: 1
+Target-Profile-SupportedDevices: marsboard,a10-marsboard
+
+Target-Profile-Description:
+Build firmware images for HAOYU Electronics Marsboard A10
+@@
+
+Target: sunxi/cortexa7
+Target-Board: sunxi
+Target-Name: Allwinner A20/A3x
+Target-Arch: arm
+Target-Arch-Packages: arm_cortex-a7_neon-vfpv4
+Target-Features: arm_v7 display dt ext4 fpu gpio rtc squashfs usb
+Target-Depends: 
+Target-Optimization: -Os -pipe
+CPU-Type: cortex-a7+neon-vfpv4
+Linux-Version: 4.14.254
+Linux-Release: 1
+Linux-Kernel-Arch: arm
+Target-Description:
+
+@@
+Default-Packages: base-files libc libgcc busybox dropbear mtd uci opkg netifd fstools uclient-fetch logd urandom-seed urngd dnsmasq iptables ip6tables ppp ppp-mod-pppoe firewall odhcpd-ipv6only odhcp6c kmod-ipt-offload uboot-envtools partx-utils mkf2fs e2fsprogs 
+Target-Profile: Default
+Target-Profile-Priority: 1
+Target-Profile-Name: Default Profile (all drivers)
+Target-Profile-Packages: kmod-ata-core kmod-ata-sunxi kmod-brcmfmac kmod-rtc-sunxi kmod-rtl8192cu kmod-rtl8xxxu kmod-sun4i-emac rtl8188eu-firmware swconfig wpad-basic iwinfo
+Target-Profile-Description:
+  Default profile with package set compatible with most boards.
+@@
+
+Target-Profile: DEVICE_sun7i-a20-olinuxino-lime
+Target-Profile-Name: Olimex A20-OLinuXino-LIME
+Target-Profile-Packages: kmod-ata-core kmod-ata-sunxi kmod-rtc-sunxi 
+Target-Profile-hasImageMetadata: 1
+Target-Profile-SupportedDevices: olimex,a20-olinuxino-lime
+
+Target-Profile-Description:
+Build firmware images for Olimex A20-OLinuXino-LIME
+@@
+
+Target-Profile: DEVICE_sun7i-a20-olinuxino-lime2
+Target-Profile-Name: Olimex A20-OLinuXino-LIME2
+Target-Profile-Packages: kmod-ata-core kmod-ata-sunxi kmod-rtc-sunxi kmod-usb-hid 
+Target-Profile-hasImageMetadata: 1
+Target-Profile-SupportedDevices: olimex,a20-olinuxino-lime2
+
+Target-Profile-Description:
+Build firmware images for Olimex A20-OLinuXino-LIME2
+@@
+
+Target-Profile: DEVICE_sun7i-a20-olinuxino-lime2-emmc
+Target-Profile-Name: Olimex A20-OLinuXino-LIME2-eMMC
+Target-Profile-Packages: kmod-ata-core kmod-ata-sunxi kmod-rtc-sunxi kmod-usb-hid 
+Target-Profile-hasImageMetadata: 1
+Target-Profile-SupportedDevices: olimex,a20-olinuxino-lime2-emmc
+
+Target-Profile-Description:
+Build firmware images for Olimex A20-OLinuXino-LIME2-eMMC
+@@
+
+Target-Profile: DEVICE_sun7i-a20-olinuxino-micro
+Target-Profile-Name: Olimex A20-Olinuxino Micro
+Target-Profile-Packages: kmod-ata-core kmod-ata-sunxi kmod-sun4i-emac kmod-rtc-sunxi 
+Target-Profile-hasImageMetadata: 1
+Target-Profile-SupportedDevices: olimex,a20-olinuxino-micro
+
+Target-Profile-Description:
+Build firmware images for Olimex A20-Olinuxino Micro
+@@
+
+Target-Profile: DEVICE_sun7i-a20-bananapi
+Target-Profile-Name: LeMaker Banana Pi
+Target-Profile-Packages: kmod-rtc-sunxi kmod-ata-core kmod-ata-sunxi 
+Target-Profile-hasImageMetadata: 1
+Target-Profile-SupportedDevices: lemaker,bananapi
+
+Target-Profile-Description:
+Build firmware images for LeMaker Banana Pi
+@@
+
+Target-Profile: DEVICE_sun7i-a20-bananapro
+Target-Profile-Name: LeMaker Banana Pro
+Target-Profile-Packages: kmod-rtc-sunxi kmod-ata-core kmod-ata-sunxi kmod-brcmfmac 
+Target-Profile-hasImageMetadata: 1
+Target-Profile-SupportedDevices: lemaker,bananapro
+
+Target-Profile-Description:
+Build firmware images for LeMaker Banana Pro
+@@
+
+Target-Profile: DEVICE_sun7i-a20-cubieboard2
+Target-Profile-Name: Cubietech Cubieboard2
+Target-Profile-Packages: kmod-ata-core kmod-ata-sunxi kmod-sun4i-emac kmod-rtc-sunxi 
+Target-Profile-hasImageMetadata: 1
+Target-Profile-SupportedDevices: cubietech,cubieboard2
+
+Target-Profile-Description:
+Build firmware images for Cubietech Cubieboard2
+@@
+
+Target-Profile: DEVICE_sun7i-a20-cubietruck
+Target-Profile-Name: Cubietech Cubietruck
+Target-Profile-Packages: kmod-ata-core kmod-ata-sunxi kmod-rtc-sunxi kmod-brcmfmac 
+Target-Profile-hasImageMetadata: 1
+Target-Profile-SupportedDevices: cubietech,cubietruck
+
+Target-Profile-Description:
+Build firmware images for Cubietech Cubietruck
+@@
+
+Target-Profile: DEVICE_sun7i-a20-lamobo-r1
+Target-Profile-Name: Lamobo R1
+Target-Profile-Packages: kmod-ata-sunxi kmod-rtl8192cu swconfig wpad-basic iwinfo
+Target-Profile-hasImageMetadata: 1
+Target-Profile-SupportedDevices: lamobo,lamobo-r1
+
+Target-Profile-Description:
+Build firmware images for Lamobo R1
+@@
+
+Target-Profile: DEVICE_sun6i-a31-m9
+Target-Profile-Name: Mele M9 top set box
+Target-Profile-Packages: kmod-sun4i-emac kmod-rtc-sunxi kmod-rtl8192cu 
+Target-Profile-hasImageMetadata: 1
+Target-Profile-SupportedDevices: mele,m9
+
+Target-Profile-Description:
+Build firmware images for Mele M9 top set box
+@@
+
+Target-Profile: DEVICE_sun8i-h2-plus-orangepi-zero
+Target-Profile-Name: Xunlong Orange Pi Zero
+Target-Profile-Packages: kmod-rtc-sunxi 
+Target-Profile-hasImageMetadata: 1
+Target-Profile-SupportedDevices: xunlong,orangepi-zero
+
+Target-Profile-Description:
+Build firmware images for Xunlong Orange Pi Zero
+@@
+
+Target-Profile: DEVICE_sun8i-h2-plus-orangepi-r1
+Target-Profile-Name: Xunlong Orange Pi R1
+Target-Profile-Packages: kmod-rtc-sunxi kmod-usb-net kmod-usb-net-rtl8152 
+Target-Profile-hasImageMetadata: 1
+Target-Profile-SupportedDevices: xunlong,orangepi-r1
+
+Target-Profile-Description:
+Build firmware images for Xunlong Orange Pi R1
+@@
+
+Target-Profile: DEVICE_sun8i-h3-bananapi-m2-plus
+Target-Profile-Name: Sinovoip Banana Pi M2 Plus
+Target-Profile-Packages: kmod-rtc-sunxi kmod-leds-gpio kmod-ledtrig-heartbeat kmod-brcmfmac brcmfmac-firmware-43430a0-sdio wpad-basic iwinfo
+Target-Profile-hasImageMetadata: 1
+Target-Profile-SupportedDevices: sinovoip,bananapi-m2-plus
+
+Target-Profile-Description:
+Build firmware images for Sinovoip Banana Pi M2 Plus
+@@
+
+Target-Profile: DEVICE_sun8i-h3-nanopi-m1-plus
+Target-Profile-Name: FriendlyArm NanoPi M1 Plus
+Target-Profile-Packages: kmod-rtc-sunxi kmod-leds-gpio kmod-ledtrig-heartbeat kmod-brcmfmac brcmfmac-firmware-43430-sdio wpad-basic iwinfo
+Target-Profile-hasImageMetadata: 1
+Target-Profile-SupportedDevices: friendlyarm,nanopi-m1-plus
+
+Target-Profile-Description:
+Build firmware images for FriendlyArm NanoPi M1 Plus
+@@
+
+Target-Profile: DEVICE_sun8i-h3-nanopi-neo
+Target-Profile-Name: FriendlyARM NanoPi NEO
+Target-Profile-Packages:  
+Target-Profile-hasImageMetadata: 1
+Target-Profile-SupportedDevices: friendlyarm,nanopi-neo
+
+Target-Profile-Description:
+Build firmware images for FriendlyARM NanoPi NEO
+@@
+
+Target-Profile: DEVICE_sun8i-h3-orangepi-one
+Target-Profile-Name: Xunlong Orange Pi One
+Target-Profile-Packages: kmod-rtc-sunxi 
+Target-Profile-hasImageMetadata: 1
+Target-Profile-SupportedDevices: xunlong,orangepi-one
+
+Target-Profile-Description:
+Build firmware images for Xunlong Orange Pi One
+@@
+
+Target-Profile: DEVICE_sun8i-h3-orangepi-pc
+Target-Profile-Name: Xunlong Orange Pi PC
+Target-Profile-Packages: kmod-rtc-sunxi kmod-gpio-button-hotplug 
+Target-Profile-hasImageMetadata: 1
+Target-Profile-SupportedDevices: xunlong,orangepi-pc
+
+Target-Profile-Description:
+Build firmware images for Xunlong Orange Pi PC
+@@
+
+Target-Profile: DEVICE_sun8i-h3-orangepi-pc-plus
+Target-Profile-Name: Xunlong Orange Pi PC Plus
+Target-Profile-Packages: kmod-rtc-sunxi kmod-gpio-button-hotplug 
+Target-Profile-hasImageMetadata: 1
+Target-Profile-SupportedDevices: xunlong,orangepi-pc-plus
+
+Target-Profile-Description:
+Build firmware images for Xunlong Orange Pi PC Plus
+@@
+
+Target-Profile: DEVICE_sun8i-h3-orangepi-plus
+Target-Profile-Name: Xunlong Orange Pi Plus
+Target-Profile-Packages: kmod-rtc-sunxi 
+Target-Profile-hasImageMetadata: 1
+Target-Profile-SupportedDevices: xunlong,orangepi-plus
+
+Target-Profile-Description:
+Build firmware images for Xunlong Orange Pi Plus
+@@
+
+Target-Profile: DEVICE_sun8i-h3-orangepi-2
+Target-Profile-Name: Xunlong Orange Pi 2
+Target-Profile-Packages: kmod-rtc-sunxi 
+Target-Profile-hasImageMetadata: 1
+Target-Profile-SupportedDevices: xunlong,orangepi-2
+
+Target-Profile-Description:
+Build firmware images for Xunlong Orange Pi 2
+@@
+
+Target-Profile: DEVICE_sun7i-a20-pcduino3
+Target-Profile-Name: LinkSprite pcDuino3
+Target-Profile-Packages: kmod-sun4i-emac kmod-rtc-sunxi kmod-ata-core kmod-ata-sunxi kmod-rtl8xxxu rtl8188eu-firmware 
+Target-Profile-hasImageMetadata: 1
+Target-Profile-SupportedDevices: linksprite,pcduino3
+
+Target-Profile-Description:
+Build firmware images for LinkSprite pcDuino3
+@@
+
+Target: sunxi/cortexa53
+Target-Board: sunxi
+Target-Name: Allwinner A64
+Target-Arch: aarch64
+Target-Arch-Packages: aarch64_cortex-a53
+Target-Features: arm_v7 display dt ext4 fpu gpio rtc squashfs usb
+Target-Depends: 
+Target-Optimization: -Os -pipe -march=armv8-a -mcpu=cortex-a53+crypto
+CPU-Type: cortex-a53
+Linux-Version: 4.14.254
+Linux-Release: 1
+Linux-Kernel-Arch: arm64
+Target-Description:
+
+@@
+Default-Packages: base-files libc libgcc busybox dropbear mtd uci opkg netifd fstools uclient-fetch logd urandom-seed urngd dnsmasq iptables ip6tables ppp ppp-mod-pppoe firewall odhcpd-ipv6only odhcp6c kmod-ipt-offload uboot-envtools partx-utils mkf2fs e2fsprogs 
+Target-Profile: Default
+Target-Profile-Priority: 1
+Target-Profile-Name: Default Profile (all drivers)
+Target-Profile-Packages: kmod-ata-core kmod-ata-sunxi kmod-brcmfmac kmod-rtc-sunxi kmod-rtl8192cu kmod-rtl8xxxu kmod-sun4i-emac rtl8188eu-firmware swconfig wpad-basic iwinfo
+Target-Profile-Description:
+  Default profile with package set compatible with most boards.
+@@
+
+Target-Profile: DEVICE_sun50i-h5-nanopi-neo-plus2
+Target-Profile-Name: Nanopi NEO Plus2 (H5)
+Target-Profile-Packages:  
+Target-Profile-hasImageMetadata: 1
+Target-Profile-SupportedDevices: nanopi-neo-plus2
+
+Target-Profile-Description:
+Build firmware images for Nanopi NEO Plus2 (H5)
+@@
+
+Target-Profile: DEVICE_sun50i-h5-nanopi-neo2
+Target-Profile-Name: Nanopi NEO2 (H5)
+Target-Profile-Packages:  
+Target-Profile-hasImageMetadata: 1
+Target-Profile-SupportedDevices: nanopi-neo2
+
+Target-Profile-Description:
+Build firmware images for Nanopi NEO2 (H5)
+@@
+
+Target-Profile: DEVICE_sun50i-a64-pine64-plus
+Target-Profile-Name: Pine64 Plus A64
+Target-Profile-Packages:  
+Target-Profile-hasImageMetadata: 1
+Target-Profile-SupportedDevices: pine64,pine64-plus
+
+Target-Profile-Description:
+Build firmware images for Pine64 Plus A64
+@@
+
+Target-Profile: DEVICE_sun50i-a64-sopine-baseboard
+Target-Profile-Name: Pine64 Sopine
+Target-Profile-Packages:  
+Target-Profile-hasImageMetadata: 1
+Target-Profile-SupportedDevices: pine64,sopine-baseboard
+
+Target-Profile-Description:
+Build firmware images for Pine64 Sopine
+@@
+
+Target-Profile: DEVICE_sun50i-h5-orangepi-zero-plus
+Target-Profile-Name: Xunlong Orange Pi Zero Plus
+Target-Profile-Packages:  
+Target-Profile-hasImageMetadata: 1
+Target-Profile-SupportedDevices: xunlong,orangepi-zero-plus
+
+Target-Profile-Description:
+Build firmware images for Xunlong Orange Pi Zero Plus
+@@
+
+Target-Profile: DEVICE_sun50i-h5-orangepi-pc2
+Target-Profile-Name: Xunlong Orange Pi PC2
+Target-Profile-Packages:  
+Target-Profile-hasImageMetadata: 1
+Target-Profile-SupportedDevices: xunlong,orangepi-pc2
+
+Target-Profile-Description:
+Build firmware images for Xunlong Orange Pi PC2
+@@
+
+

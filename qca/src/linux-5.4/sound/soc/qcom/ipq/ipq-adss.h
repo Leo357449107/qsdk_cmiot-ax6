@@ -455,7 +455,6 @@ struct ipq_configs {
 	struct ipq_regs_arr i2s0_fs_oe;
 	struct ipq_regs_arr i2s3_fs_oe;
 	struct ipq_regs_arr i2s_reset_val;
-	uint32_t spdif_enable;
 };
 
 /* ADSS APIs */
@@ -491,11 +490,6 @@ extern void ipq_config_sample_cnt_clear_type(uint32_t stereo_offset);
 extern int ipq_get_mbox_id(struct snd_pcm_substream *substream, int intf);
 extern int ipq_get_stereo_id(struct snd_pcm_substream *substream, int intf);
 extern u32 ipq_get_act_bit_width(u32 bit_width);
-extern void ipq_stereo_spdif_enable(uint32_t enable, uint32_t stereo_id);
-extern void ipq_stereo_spdif_pcmswap(uint32_t enable, uint32_t stereo_id);
-extern void ipq_spdifin_ctrl_spdif_en(uint32_t enable);
-extern void ipq_glb_spdif_out_en(uint32_t enable);
-extern void ipq_spdifin_cfg(void);
 extern void ipq_glb_tdm_ctrl_ch_num(uint32_t val, uint32_t dir);
 extern void ipq_glb_tdm_ctrl_sync_num(uint32_t val, uint32_t dir);
 extern void ipq_glb_tdm_ctrl_delay(uint32_t delay, uint32_t dir);

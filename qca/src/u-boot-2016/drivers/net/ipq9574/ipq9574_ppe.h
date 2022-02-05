@@ -77,14 +77,14 @@ struct ipo_rule_reg {
         uint32_t  fake_mac_header:1;
         uint32_t  range_en:1;
         uint32_t  inverse_en:1;
-        uint32_t  rule_type:4;
-        uint32_t  src_type:2;
-        uint32_t  src_0:3;
-        uint32_t  src_1:5;
+        uint32_t  rule_type:5;
+        uint32_t  src_type:3;
+        uint32_t  src_0:1;
+        uint32_t  src_1:7;
         uint32_t  pri:9;
         uint32_t  res_chain:1;
         uint32_t  post_routing_en:1;
-        uint32_t  _reserved0:16;
+        uint32_t  _reserved0:14;
 };
 
 union ipo_rule_reg_u {

@@ -123,7 +123,7 @@ ifeq ($(ARCH), arm)
 	endif
 	
 	ifeq ($(KVER),$(filter 4.9% 4.4% 5.4%,$(KVER)))
-		CPU_CFLAG= -DMODULE -nostdinc -D$(BOARD_NAME) -mlittle-endian -Wundef -Wstrict-prototypes -Wno-trigraphs -Werror -fno-strict-aliasing -fno-common -Wno-format-security -fno-delete-null-pointer-checks -O2 -fno-dwarf2-cfi-asm -mabi=aapcs-linux -mno-thumb-interwork -mfpu=vfp -funwind-tables -marm -D__LINUX_ARM_ARCH__=7 -march=armv7-a -msoft-float -Uarm -Wframe-larger-than=2048 -fno-stack-protector -Wno-unused-but-set-variable -fomit-frame-pointer -g -Wdeclaration-after-statement -Wno-pointer-sign -fno-strict-overflow -fconserve-stack -Werror=implicit-int -DCC_HAVE_ASM_GOTO    -D"KBUILD_STR(s)=\#s" -D"KBUILD_BASENAME=KBUILD_STR(mem)"
+		CPU_CFLAG= -DMODULE -nostdinc -D$(BOARD_NAME) -mlittle-endian -Wundef -Wstrict-prototypes -Wno-trigraphs -Werror -fno-strict-aliasing -fno-common -Wno-format-security -fno-delete-null-pointer-checks -Os -fno-dwarf2-cfi-asm -mabi=aapcs-linux -mno-thumb-interwork -mfpu=vfp -funwind-tables -marm -D__LINUX_ARM_ARCH__=7 -march=armv7-a -msoft-float -Uarm -Wframe-larger-than=2048 -fno-stack-protector -Wno-unused-but-set-variable -fomit-frame-pointer -g -Wdeclaration-after-statement -Wno-pointer-sign -fno-strict-overflow -fconserve-stack -Werror=implicit-int -DCC_HAVE_ASM_GOTO    -D"KBUILD_STR(s)=\#s" -D"KBUILD_BASENAME=KBUILD_STR(mem)"
 	endif
 	
 	ifeq ($(KVER),$(filter 3.18%,$(KVER)))
@@ -321,6 +321,7 @@ ifneq (, $(filter APPE HPPE CPPE ALL_CHIP, $(CHIP_TYPE)))
 	IN_SHAPER=TRUE
 	IN_POLICER=TRUE
 	IN_UNIPHY=TRUE
+	IN_NETLINK=TRUE
 endif
 
 ifneq (, $(filter MP, $(CHIP_TYPE)))

@@ -1,0 +1,34 @@
+Source-Makefile: package/network/services/lldpd/Makefile
+
+Package: lldpd
+Menu: 1
+Submenu: Routing and Redirection
+Version: 1.0.3-1
+Depends: +libc +GCC_LIBSSP:libssp +USE_GLIBC:librt +USE_GLIBC:libpthread +libevent2 +USE_GLIBC:libbsd +LLDPD_WITH_JSON:libjson-c +LLDPD_WITH_SNMP:libnetsnmp
+Conflicts: 
+Menu-Depends: 
+Provides: 
+Section: net
+Category: Network
+Repository: base
+Title: Link Layer Discovery Protocol daemon
+Maintainer: Stijn Tintel <stijn@linux-ipv6.be>
+Require-User: lldp=121:lldp=129
+Source: lldpd-1.0.3.tar.gz
+License: ISC
+Type: ipkg
+Description: 	LLDP (Link Layer Discovery Protocol) is an industry standard protocol designed
+	to supplant proprietary Link-Layer protocols such as
+	Extreme's EDP (Extreme Discovery Protocol) and
+	CDP (Cisco Discovery Protocol).
+	The goal of LLDP is to provide an inter-vendor compatible mechanism to deliver
+	Link-Layer notifications to adjacent network devices.
+https://vincentbernat.github.io/lldpd/
+Stijn Tintel <stijn@linux-ipv6.be>
+@@
+Config:
+
+source "package/network/services/lldpd/Config.in"
+@@
+
+

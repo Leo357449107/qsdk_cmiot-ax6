@@ -1,6 +1,6 @@
-From af5101e4035e7893a3a933f9e1b79c58def83ecf Mon Sep 17 00:00:00 2001
+From 57342b4c68d80754c3b6e1df4af1a46afc936a90 Mon Sep 17 00:00:00 2001
 From: Hari Chandrakanthan <quic_haric@quicinc.com>
-Date: Wed, 10 Nov 2021 16:11:12 +0530
+Date: Wed, 1 Dec 2021 21:27:36 +0530
 Subject: [PATCH] hostapd : Add support to awgn mitigation for 6Ghz
 
 when awgn interference is detected on operating channel,
@@ -31,19 +31,17 @@ Signed-off-by: Hari Chandrakanthan <quic_haric@quicinc.com>
  hostapd/Makefile                   |   1 +
  src/ap/Makefile                    |   1 +
  src/ap/drv_callbacks.c             |  13 ++
- src/ap/interference.c              | 371 +++++++++++++++++++++++++++++++++++++
+ src/ap/interference.c              | 387 +++++++++++++++++++++++++++++++++++++
  src/ap/interference.h              |  41 ++++
  src/drivers/driver.h               |  13 ++
  src/drivers/driver_common.c        |   1 +
  src/drivers/driver_nl80211_event.c |  30 +++
  src/drivers/nl80211_copy.h         |  13 ++
  wpa_supplicant/Makefile            |   1 +
- 10 files changed, 485 insertions(+)
+ 10 files changed, 501 insertions(+)
  create mode 100644 src/ap/interference.c
  create mode 100644 src/ap/interference.h
 
-diff --git a/hostapd/Makefile b/hostapd/Makefile
-index b52f39d..28706fe 100644
 --- a/hostapd/Makefile
 +++ b/hostapd/Makefile
 @@ -1186,6 +1186,7 @@ OBJS += ../src/ap/ap_list.o
@@ -54,8 +52,6 @@ index b52f39d..28706fe 100644
  CFLAGS += -DNEED_AP_MLME
  endif
  OBJS += ../src/ap/ieee802_11_ht.o
-diff --git a/src/ap/Makefile b/src/ap/Makefile
-index a1e9b7c..22a21d3 100644
 --- a/src/ap/Makefile
 +++ b/src/ap/Makefile
 @@ -36,6 +36,7 @@ LIB_OBJS= \
@@ -66,8 +62,6 @@ index a1e9b7c..22a21d3 100644
  	neighbor_db.o \
  	ndisc_snoop.o \
  	p2p_hostapd.o \
-diff --git a/src/ap/drv_callbacks.c b/src/ap/drv_callbacks.c
-index 63672ee..f8c7cb4 100644
 --- a/src/ap/drv_callbacks.c
 +++ b/src/ap/drv_callbacks.c
 @@ -43,6 +43,7 @@
@@ -78,7 +72,7 @@ index 63672ee..f8c7cb4 100644
  
  #ifdef CONFIG_FILS
  void hostapd_notify_assoc_fils_finish(struct hostapd_data *hapd,
-@@ -1685,6 +1686,13 @@ static void hostapd_event_dfs_radar_detected(struct hostapd_data *hapd,
+@@ -1685,6 +1686,13 @@ static void hostapd_event_dfs_radar_dete
  				   radar->cf1, radar->cf2);
  }
  
@@ -92,7 +86,7 @@ index 63672ee..f8c7cb4 100644
  
  static void hostapd_event_dfs_pre_cac_expired(struct hostapd_data *hapd,
  					      struct dfs_event *radar)
-@@ -2069,6 +2077,11 @@ void hostapd_wpa_event(void *ctx, enum wpa_event_type event,
+@@ -2069,6 +2077,11 @@ void hostapd_wpa_event(void *ctx, enum w
  			break;
  		hostapd_event_dfs_radar_detected(hapd, &data->dfs_event);
  		break;
@@ -104,12 +98,9 @@ index 63672ee..f8c7cb4 100644
  	case EVENT_DFS_PRE_CAC_EXPIRED:
  		if (!data)
  			break;
-diff --git a/src/ap/interference.c b/src/ap/interference.c
-new file mode 100644
-index 0000000..23e13b8
 --- /dev/null
 +++ b/src/ap/interference.c
-@@ -0,0 +1,371 @@
+@@ -0,0 +1,393 @@
 +/*
 + * AWGN - Additive white Gaussian Noise
 + * Copyright (c) 2002-2013, Jouni Malinen <j@w1.fi>
@@ -368,8 +359,14 @@ index 0000000..23e13b8
 +		   chan_width,
 +		   cf1, cf2, chan_bw_interference_bitmap);
 +
++	if (iface->conf->discard_6g_awgn_event) {
++		wpa_printf(MSG_DEBUG, "discard_6g_awgn_event set ignoring"
++			   "AWGN DETECT event from driver");
++		return 0;
++	}
++
 +	/* check whether interference has occurred in primary 20Mhz channel */
-+	if (chan_bw_interference_bitmap & SEG_PRI20)
++	if (!chan_bw_interference_bitmap || (chan_bw_interference_bitmap & SEG_PRI20))
 +		channel_switch = 1;
 +
 +	if (channel_switch) {
@@ -390,8 +387,24 @@ index 0000000..23e13b8
 +		intf_awgn_find_channel(iface, &chan_data, chan_idx, chan_width);
 +
 +		if (!chan_data) {
-+			wpa_printf(MSG_ERROR, "AWGN: no random channel found");
++			wpa_printf(MSG_ERROR, "AWGN: no random channel found, chan idx : %d",
++				   chan_idx);
 +			return 0;
++		}
++
++		if(chan_data->freq == freq) {
++			/* New random channel is same as operating channel
++			 * so choose another channel
++			 */
++			chan_data = NULL;
++			chan_idx = (chan_idx + 1) % num_available_chandefs;
++			intf_awgn_find_channel(iface, &chan_data, chan_idx, chan_width);
++			if (!chan_data) {
++				wpa_printf(MSG_ERROR,
++					   "AWGN: random channel not found, chan idx : %d",
++					   chan_idx);
++				return 0;
++			}
 +		}
 +
 +		wpa_printf(MSG_DEBUG, "AWGN: got random channel %d (%d)",
@@ -481,9 +494,6 @@ index 0000000..23e13b8
 +
 +	return 0;
 +}
-diff --git a/src/ap/interference.h b/src/ap/interference.h
-new file mode 100644
-index 0000000..047818c
 --- /dev/null
 +++ b/src/ap/interference.h
 @@ -0,0 +1,41 @@
@@ -528,8 +538,6 @@ index 0000000..047818c
 +			       int cf1, int cf2,
 +			       u32 chan_bw_interference_bitmap);
 +
-diff --git a/src/drivers/driver.h b/src/drivers/driver.h
-index bb161d3..c1a1a1f 100644
 --- a/src/drivers/driver.h
 +++ b/src/drivers/driver.h
 @@ -5264,6 +5264,7 @@ enum wpa_event_type {
@@ -559,11 +567,9 @@ index bb161d3..c1a1a1f 100644
  };
  
  /**
-diff --git a/src/drivers/driver_common.c b/src/drivers/driver_common.c
-index a63b4a5..5a8e93c 100644
 --- a/src/drivers/driver_common.c
 +++ b/src/drivers/driver_common.c
-@@ -95,6 +95,7 @@ const char * event_to_string(enum wpa_event_type event)
+@@ -95,6 +95,7 @@ const char * event_to_string(enum wpa_ev
  	E2S(CCA_STARTED_NOTIFY);
  	E2S(CCA_ABORTED_NOTIFY);
  	E2S(CCA_NOTIFY);
@@ -571,11 +577,9 @@ index a63b4a5..5a8e93c 100644
  	}
  
  	return "UNKNOWN";
-diff --git a/src/drivers/driver_nl80211_event.c b/src/drivers/driver_nl80211_event.c
-index 3c12d41..38a178e 100644
 --- a/src/drivers/driver_nl80211_event.c
 +++ b/src/drivers/driver_nl80211_event.c
-@@ -149,6 +149,7 @@ static const char * nl80211_command_to_string(enum nl80211_commands cmd)
+@@ -149,6 +149,7 @@ static const char * nl80211_command_to_s
  	C2S(NL80211_CMD_COLOR_CHANGE_ANNOUNCEMENT_STARTED)
  	C2S(NL80211_CMD_COLOR_CHANGE_ANNOUNCEMENT_ABORTED)
  	C2S(NL80211_CMD_COLOR_CHANGE_ANNOUNCEMENT_COMPLETED)
@@ -583,7 +587,7 @@ index 3c12d41..38a178e 100644
  	default:
  		return "NL80211_CMD_UNKNOWN";
  	}
-@@ -1821,6 +1822,32 @@ static void nl80211_radar_event(struct wpa_driver_nl80211_data *drv,
+@@ -1821,6 +1822,32 @@ static void nl80211_radar_event(struct w
  	}
  }
  
@@ -616,7 +620,7 @@ index 3c12d41..38a178e 100644
  
  static void nl80211_spurious_frame(struct i802_bss *bss, struct nlattr **tb,
  				   int wds)
-@@ -3077,6 +3104,9 @@ static void do_process_drv_event(struct i802_bss *bss, int cmd,
+@@ -3077,6 +3104,9 @@ static void do_process_drv_event(struct
  		mlme_event_color_change_announcement_completed(drv);
  		break;
  #endif
@@ -626,8 +630,6 @@ index 3c12d41..38a178e 100644
  	default:
  		wpa_dbg(drv->ctx, MSG_DEBUG, "nl80211: Ignored unknown event "
  			"(cmd=%d)", cmd);
-diff --git a/src/drivers/nl80211_copy.h b/src/drivers/nl80211_copy.h
-index 3362c6d..7985f7c 100644
 --- a/src/drivers/nl80211_copy.h
 +++ b/src/drivers/nl80211_copy.h
 @@ -1192,6 +1192,9 @@
@@ -671,8 +673,6 @@ index 3362c6d..7985f7c 100644
  	/* add attributes here, update the policy in nl80211.c */
  
  	__NL80211_ATTR_AFTER_LAST,
-diff --git a/wpa_supplicant/Makefile b/wpa_supplicant/Makefile
-index 2b08dcb..ef4fd2a 100644
 --- a/wpa_supplicant/Makefile
 +++ b/wpa_supplicant/Makefile
 @@ -964,6 +964,7 @@ OBJS += ../src/ap/ap_list.o
@@ -683,6 +683,34 @@ index 2b08dcb..ef4fd2a 100644
  CFLAGS += -DNEED_AP_MLME
  endif
  ifdef CONFIG_WPS
--- 
-2.7.4
-
+--- a/hostapd/config_file.c
++++ b/hostapd/config_file.c
+@@ -3536,6 +3536,8 @@ static int hostapd_config_fill(struct ho
+ 		bss->unsol_bcast_probe_resp_interval = val;
+ 	} else if (os_strcmp(buf, "he_co_locate") == 0) {
+ 		conf->he_co_locate = atoi(pos);
++	} else if (os_strcmp(buf, "discard_6g_awgn_event") == 0) {
++		conf->discard_6g_awgn_event = atoi(pos);
+ #endif /* CONFIG_IEEE80211AX */
+ 	} else if (os_strcmp(buf, "max_listen_interval") == 0) {
+ 		bss->max_listen_interval = atoi(pos);
+--- a/src/ap/ap_config.c
++++ b/src/ap/ap_config.c
+@@ -277,6 +277,7 @@ struct hostapd_config * hostapd_config_d
+ 	conf->he_6ghz_max_ampdu_len_exp = 7;
+ 	conf->he_6ghz_rx_ant_pat = 1;
+ 	conf->he_6ghz_tx_ant_pat = 1;
++	conf->discard_6g_awgn_event = 0;
+ #endif /* CONFIG_IEEE80211AX */
+ 
+ 	/* The third octet of the country string uses an ASCII space character
+--- a/src/ap/ap_config.h
++++ b/src/ap/ap_config.h
+@@ -1077,6 +1077,7 @@ struct hostapd_config {
+ 	u8 he_6ghz_rx_ant_pat;
+ 	u8 he_6ghz_tx_ant_pat;
+ 	bool he_co_locate;
++	bool discard_6g_awgn_event;
+ #define AP_TYPE_6GHZ_INDOOR_AP	0
+ #define AP_TYPE_6GHZ_STANDARD_POWER_AP	1
+ #define AP_TYPE_6GHZ_VERY_LOW_POWER_AP	2

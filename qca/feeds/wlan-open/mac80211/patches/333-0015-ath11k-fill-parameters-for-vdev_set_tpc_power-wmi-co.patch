@@ -13,11 +13,9 @@ Signed-off-by: Aditya Kumar Singh <quic_adisi@quicinc.com>
  drivers/net/wireless/ath/ath11k/mac.h |   3 +
  2 files changed, 279 insertions(+)
 
-diff --git a/drivers/net/wireless/ath/ath11k/mac.c b/drivers/net/wireless/ath/ath11k/mac.c
-index 2894b50..b75382d 100644
 --- a/drivers/net/wireless/ath/ath11k/mac.c
 +++ b/drivers/net/wireless/ath/ath11k/mac.c
-@@ -7876,6 +7876,282 @@ static u8 ath11k_mac_get_num_pwr_levels(struct cfg80211_chan_def *chan_def)
+@@ -8489,6 +8489,282 @@ static u8 ath11k_mac_get_num_pwr_levels(
  	return num_pwr_levels;
  }
  
@@ -266,7 +264,7 @@ index 2894b50..b75382d 100644
 +			ath11k_dbg(ab, ATH11K_DBG_MAC,
 +				   "eirp power : %d firmware report power : %d\n",
 +				   eirp_power, ar->max_allowed_tx_power);
-+			if (ar->max_allowed_tx_power)
++			if ((ar->max_allowed_tx_power) && (ab->hw_params.idle_ps))
 +				eirp_power = min_t(s8,
 +						   eirp_power,
 +						   ar->max_allowed_tx_power);
@@ -279,7 +277,7 @@ index 2894b50..b75382d 100644
 +			 * firmware updated ap tx power
 +			 * and max power derived from above mentioned parameters.
 +			 */
-+			if (ar->max_allowed_tx_power)
++			if ((ar->max_allowed_tx_power) && (ab->hw_params.idle_ps))
 +				max_tx_power[pwr_lvl_idx] =
 +					min_t(s8,
 +					      max_tx_power[pwr_lvl_idx],
@@ -300,11 +298,9 @@ index 2894b50..b75382d 100644
  static void ath11k_mac_parse_tx_pwr_env(struct ath11k *ar,
  					struct ieee80211_vif *vif,
  					struct ieee80211_chanctx_conf *ctx)
-diff --git a/drivers/net/wireless/ath/ath11k/mac.h b/drivers/net/wireless/ath/ath11k/mac.h
-index a9c6694..4adcf52 100644
 --- a/drivers/net/wireless/ath/ath11k/mac.h
 +++ b/drivers/net/wireless/ath/ath11k/mac.h
-@@ -167,5 +167,8 @@ enum hal_encrypt_type ath11k_dp_tx_get_encrypt_type(u32 cipher);
+@@ -167,6 +167,9 @@ enum hal_encrypt_type ath11k_dp_tx_get_e
  void ath11k_mac_bcn_tx_event(struct ath11k_vif *arvif);
  void ath11k_mac_handle_beacon(struct ath11k *ar, struct sk_buff *skb);
  void ath11k_mac_handle_beacon_miss(struct ath11k *ar, u32 vdev_id);
@@ -312,7 +308,5 @@ index a9c6694..4adcf52 100644
 +				  struct ieee80211_vif *vif,
 +				  struct ieee80211_chanctx_conf *ctx);
  bool ath11k_mac_sta_level_info(struct ath11k_vif *arvif, struct ieee80211_sta *sta);
- #endif
--- 
-2.7.4
-
+ void ath11k_mac_get_any_chandef_iter(struct ieee80211_hw *hw,
+ 				     struct ieee80211_chanctx_conf *conf,

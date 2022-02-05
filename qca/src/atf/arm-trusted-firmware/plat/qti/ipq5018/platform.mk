@@ -37,6 +37,11 @@ ENABLE_STACK_PROTECTOR := strong
 XBL_BOOT                       := 1
 $(eval $(call add_define,XBL_BOOT))
 
+#Used for Signed Board Debug
+#Set to 0 by Default
+SIGNED_BOOT_DBG                := 0
+$(eval $(call add_define,SIGNED_BOOT_DBG))
+
 #IPQ5018 Console Uart Prints
 #Set to 0 by Default to use Diag Ring Buffer
 QTI_UART_PRINT                       := 0

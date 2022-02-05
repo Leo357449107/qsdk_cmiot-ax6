@@ -17,7 +17,7 @@ PKG_SOURCE:=backports-$(PKG_VERSION)-$(LINUX_VERSION)-$(PKG_KERNEL_VERSION).tar.
 PKG_SUBDIR:=backports-$(PKG_VERSION)-$(LINUX_VERSION)-$(PKG_KERNEL_VERSION)
 PKG_RELEASE:=1
 
-PKG_BUILD_DIR:=$(KERNEL_BUILD_DIR)/$(PKG_SUBDIR)
+PKG_BUILD_DIR:=$(KERNEL_BUILD_DIR)/$(PKG_SUBDIR)-$(BUILD_VARIANT)/$(PKG_SUBDIR)
 PKG_BUILD_PARALLEL:=1
 
 PKG_DRIVERS = ath9k-common ath9k ath9k-htc ath10k ath11k ath
@@ -39,6 +39,7 @@ define KernelPackage/mac80211/Default
   SUBMENU:=$(WMENU)
   URL:=http://www.qca.qualcomm.com
   MAINTAINER:=Qualcomm Atheros
+  VARIANT:=default
 endef
 
 define KernelPackage/cfg80211
@@ -167,6 +168,20 @@ endef
 
 define KernelPackage/mac80211/description
 Generic IEEE 802.11 Networking Stack (mac80211)
+endef
+
+define KernelPackage/mac80211-nonss
+  $(call KernelPackage/mac80211/Default)
+  TITLE:=Linux 802.11 Wireless Networking Stack
+  DEPENDS+= @TARGET_ipq50xx +kmod-cfg80211 +hostapd-common
+  KCONFIG:=\
+	CONFIG_AVERAGE=y
+  FILES:= $(PKG_BUILD_DIR)/net/mac80211/mac80211.ko
+  VARIANT:=nonss
+endef
+
+define KernelPackage/mac80211i-nonss/description
+Generic IEEE 802.11 Networking Stack (mac80211) nonss
 endef
 
 PKG_LINUX_FIRMWARE_NAME:=linux-firmware
@@ -299,6 +314,18 @@ define KernelPackage/ath/description
  This module contains some common parts needed by QCA Wireless drivers.
 endef
 
+define KernelPackage/ath-nonss
+  $(call KernelPackage/mac80211/Default)
+  TITLE:=QCA common driver part
+  DEPENDS+= @PCI_SUPPORT||USB_SUPPORT||TARGET_ipq50xx +kmod-mac80211-nonss
+  FILES:=$(PKG_BUILD_DIR)/drivers/net/wireless/ath/ath.ko
+  VARIANT:=nonss
+endef
+
+define KernelPackage/ath-nonss/description
+ This module contains some common parts needed by QCA Wireless drivers.
+endef
+
 define KernelPackage/ath9k-common
   $(call KernelPackage/mac80211/Default)
   TITLE:=QCA 802.11n wireless devices (common code for ath9k and ath9k_htc)
@@ -372,6 +399,25 @@ define KernelPackage/ath11k
 endef
 
 define KernelPackage/ath11k/description
+This module adds support for wireless adapters based on
+QCA IEEE 802.11ax family of chipsets. For now only
+AHB is supported.
+endef
+
+define KernelPackage/ath11k-nonss
+  $(call KernelPackage/mac80211/Default)
+  TITLE:=QCA 802.11ax wireless cards support
+  URL:=http://wireless.kernel.org/en/users/Drivers/ath11k
+  DEPENDS+= +kmod-ath-nonss +@DRIVER_11N_SUPPORT +@DRIVER_11W_SUPPORT
+  FILES:= \
+	$(PKG_BUILD_DIR)/drivers/net/wireless/ath/ath11k/ath11k.ko \
+	$(PKG_BUILD_DIR)/drivers/net/wireless/ath/ath11k/ath11k_ahb.ko \
+	$(PKG_BUILD_DIR)/drivers/net/wireless/ath/ath11k/ath11k_pci.ko
+  AUTOLOAD:=$(call AutoProbe,ath11k ath11k_ahb ath11k_pci)
+  VARIANT:=nonss
+endef
+
+define KernelPackage/ath11k-nonss/description
 This module adds support for wireless adapters based on
 QCA IEEE 802.11ax family of chipsets. For now only
 AHB is supported.
@@ -470,7 +516,9 @@ config-y += ATH11K_MEM_PROFILE_512M
 endif
 
 ifneq ($(CONFIG_TARGET_ipq95xx), y)
+ifneq ($(BUILD_VARIANT), nonss)
 config-y += ATH11K_NSS_SUPPORT
+endif
 endif
 
 config-$(CONFIG_LEDS_TRIGGERS) += MAC80211_LEDS
@@ -593,11 +641,14 @@ endef
 
 $(eval $(call KernelPackage,cfg80211))
 $(eval $(call KernelPackage,mac80211))
+$(eval $(call KernelPackage,mac80211-nonss))
 $(eval $(call BuildPackage,mac80211-scripts))
 $(eval $(call KernelPackage,ath9k-common))
 $(eval $(call KernelPackage,ath9k))
 $(eval $(call KernelPackage,ath9k-htc))
 $(eval $(call KernelPackage,ath10k))
 $(eval $(call KernelPackage,ath11k))
+$(eval $(call KernelPackage,ath11k-nonss))
 $(eval $(call KernelPackage,ath))
+$(eval $(call KernelPackage,ath-nonss))
 $(eval $(call KernelPackage,wil6210))

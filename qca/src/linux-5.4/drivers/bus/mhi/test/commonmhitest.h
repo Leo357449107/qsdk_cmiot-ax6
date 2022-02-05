@@ -23,7 +23,7 @@
 #include <linux/msi.h>
 #include <linux/irq.h>
 
-#define MHI_MAX_DEVICE 2
+#define MHI_MAX_DEVICE 4
 
 /* MHI MMIO register mapping */
 #define PCI_INVALID_READ(val) (val == U32_MAX)

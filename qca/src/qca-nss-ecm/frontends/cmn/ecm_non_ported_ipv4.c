@@ -66,10 +66,11 @@
  */
 #define DEBUG_LEVEL ECM_NSS_NON_PORTED_IPV4_DEBUG_LEVEL
 
+#ifdef ECM_FRONT_END_NSS_ENABLE
 #include <nss_api_if.h>
-
-#ifdef ECM_INTERFACE_IPSEC_ENABLE
-#include "nss_ipsec_cmn.h"
+#endif
+#ifdef ECM_FRONT_END_SFE_ENABLE
+#include <sfe_api.h>
 #endif
 
 #include "ecm_types.h"
@@ -84,9 +85,16 @@
 #include "ecm_db.h"
 #include "ecm_classifier_default.h"
 #include "ecm_interface.h"
+#ifdef ECM_FRONT_END_NSS_ENABLE
 #include "ecm_nss_non_ported_ipv4.h"
 #include "ecm_nss_ipv4.h"
 #include "ecm_nss_common.h"
+#endif
+#ifdef ECM_FRONT_END_SFE_ENABLE
+#include "ecm_sfe_non_ported_ipv4.h"
+#include "ecm_sfe_ipv4.h"
+#include "ecm_sfe_common.h"
+#endif
 #include "ecm_front_end_common.h"
 #include "ecm_ipv4.h"
 #include "ecm_ae_classifier_public.h"
@@ -149,6 +157,11 @@ unsigned int ecm_non_ported_ipv4_process(struct net_device *out_dev, struct net_
 	dest_port = 0;
 	dest_port_nat = 0;
 
+	/*
+	 * We are not yet supporting PPPOE bridge for SFE.
+	 * TODO: Revisit when we want to add that support.
+	 */
+#ifdef ECM_FRONT_END_NSS_ENABLE
 	if (unlikely(!is_routed &&
 			(l2_encap_proto == ETH_P_PPP_SES) &&
 			(nss_pppoe_get_br_accel_mode() == NSS_PPPOE_BR_ACCEL_MODE_EN_3T))) {
@@ -169,6 +182,7 @@ unsigned int ecm_non_ported_ipv4_process(struct net_device *out_dev, struct net_
 		ecm_front_end_pull_l2_encap_header(skb, l2_encap_len);
 		pppoe_bridged = true;
 	}
+#endif
 
 	if(!ecm_non_ported_ipv4_is_protocol_supported(protocol)) {
 		DEBUG_TRACE("Unsupported non-ported protocol: %d, do not process.\n", protocol);
@@ -200,8 +214,8 @@ unsigned int ecm_non_ported_ipv4_process(struct net_device *out_dev, struct net_
 		struct ecm_db_iface_instance *from_nat_list[ECM_DB_IFACE_HEIRARCHY_MAX];
 		struct ecm_front_end_interface_construct_instance efeici;
 		enum ecm_front_end_type fe_type;
+		ecm_ae_classifier_result_t ae_result;
 		ecm_db_connection_defunct_callback_t defunct_callback;
-		struct ecm_ae_classifier_info ae_info;
 
 		DEBUG_INFO("New non-ported connection from " ECM_IP_ADDR_DOT_FMT ":%u to " ECM_IP_ADDR_DOT_FMT ":%u protocol: %d\n",
 				ECM_IP_ADDR_TO_DOT(ip_src_addr), src_port, ECM_IP_ADDR_TO_DOT(ip_dest_addr), dest_port, protocol);
@@ -225,22 +239,13 @@ unsigned int ecm_non_ported_ipv4_process(struct net_device *out_dev, struct net_
 		 * Connection must have a front end instance associated with it
 		 */
 		fe_type = ecm_front_end_type_get();
-		if (fe_type == ECM_FRONT_END_TYPE_HYBRID) {
-			ecm_ae_classifier_result_t ae_result;
+		switch (fe_type) {
+#if defined(ECM_FRONT_END_NSS_ENABLE) && defined(ECM_FRONT_END_SFE_ENABLE)
+		case ECM_FRONT_END_TYPE_HYBRID:
+		{
 			ecm_ae_classifier_get_t ae_get;
+			struct ecm_ae_classifier_info ae_info;
 
-			DEBUG_INFO("front end type is hybrid\n");
-
-			/*
-			 * Check the return type of the external callback.
-			 * 1. If NSS, allocate NSS ipv4 non-ported connection instance
-			 * 2. If NONE, allocate NSS ipv4 non-ported connection instance with can_accel flag is set to false.
-			 *    By doing this ECM will not ask again and again to the external module. If external module wants to
-			 *    accelerate this flow later, the flow needs to be defuncted first.
-			 * 3. If NOT_YET, the connection will not be allocated in the database and the next flow will be asked again
-			 *    to the external module.
-			 * 4. If any other type is returned, ASSERT.
-			 */
 			ecm_ae_classifier_select_info_fill(ip_src_addr, ip_dest_addr,
 							  src_port, dest_port, protocol, 4,
 							  is_routed, false,
@@ -251,24 +256,64 @@ unsigned int ecm_non_ported_ipv4_process(struct net_device *out_dev, struct net_
 			ae_result = ae_get(&ae_info);
 			rcu_read_unlock();
 
-			DEBUG_TRACE("ae_result is %d\n", ae_result);
-
-			defunct_callback = ecm_nss_non_ported_ipv4_connection_defunct_callback;
-			if (ae_result == ECM_AE_CLASSIFIER_RESULT_NSS) {
-				feci = (struct ecm_front_end_connection_instance *)ecm_nss_non_ported_ipv4_connection_instance_alloc(can_accel, protocol, &nci);
-			} else if (ae_result == ECM_AE_CLASSIFIER_RESULT_NONE) {
-				feci = (struct ecm_front_end_connection_instance *)ecm_nss_non_ported_ipv4_connection_instance_alloc(false, protocol, &nci);
-			} else if (ae_result == ECM_AE_CLASSIFIER_RESULT_NOT_YET) {
-				return NF_ACCEPT;
-			} else {
-				DEBUG_ASSERT(NULL, "unexpected ae_result: %d\n", ae_result);
-			}
-		} else if (fe_type == ECM_FRONT_END_TYPE_NSS) {
-			feci = (struct ecm_front_end_connection_instance *)ecm_nss_non_ported_ipv4_connection_instance_alloc(can_accel, protocol, &nci);
-			defunct_callback = ecm_nss_non_ported_ipv4_connection_defunct_callback;
-		} else {
+			DEBUG_TRACE("front end type hybrid, ae_result: %d\n", ae_result);
+			break;
+		}
+#endif
+#ifdef ECM_FRONT_END_NSS_ENABLE
+		case ECM_FRONT_END_TYPE_NSS:
+			ae_result = ECM_AE_CLASSIFIER_RESULT_NSS;
+			DEBUG_TRACE("front end type NSS, ae_result: %d\n", ae_result);
+			break;
+#endif
+#ifdef ECM_FRONT_END_SFE_ENABLE
+		case ECM_FRONT_END_TYPE_SFE:
+			ae_result = ECM_AE_CLASSIFIER_RESULT_SFE;
+			DEBUG_TRACE("front end type SFE, ae_result: %d\n", ae_result);
+			break;
+#endif
+		default:
 			DEBUG_WARN("front end type: %d is not supported\n", fe_type);
 			return NF_ACCEPT;
+		}
+
+		/*
+		 * Check the ae_result.
+		 * 1. If NSS, allocate NSS ipv4 non-ported connection instance
+		 * 2. If NONE, allocate NSS ipv4 non-ported connection instance with can_accel flag is set to false.
+		 *    By doing this ECM will not ask again and again to the external module. If external module wants to
+		 *    accelerate this flow later, the flow needs to be defuncted first.
+		 * 3. If NOT_YET, the connection will not be allocated in the database and the next flow will be asked again
+		 *    to the external module.
+		 * 4. If any other type is returned, ASSERT.
+		 */
+		switch (ae_result) {
+#ifdef ECM_FRONT_END_NSS_ENABLE
+		case ECM_AE_CLASSIFIER_RESULT_NSS:
+			if (!ecm_nss_feature_check(skb, ip_hdr)) {
+				DEBUG_WARN("Unsupported feature found for NSS acceleration\n");
+				goto fail_1;
+			}
+			defunct_callback = ecm_nss_non_ported_ipv4_connection_defunct_callback;
+			feci = (struct ecm_front_end_connection_instance *)ecm_nss_non_ported_ipv4_connection_instance_alloc(can_accel, protocol, &nci);
+			break;
+
+		case ECM_AE_CLASSIFIER_RESULT_NONE:
+			defunct_callback = ecm_nss_non_ported_ipv4_connection_defunct_callback;
+			feci = (struct ecm_front_end_connection_instance *)ecm_nss_non_ported_ipv4_connection_instance_alloc(false, protocol, &nci);
+			break;
+#endif
+#ifdef ECM_FRONT_END_SFE_ENABLE
+		case ECM_AE_CLASSIFIER_RESULT_SFE:
+			defunct_callback = ecm_sfe_non_ported_ipv4_connection_defunct_callback;
+			feci = (struct ecm_front_end_connection_instance *)ecm_sfe_non_ported_ipv4_connection_instance_alloc(can_accel, protocol, &nci);
+			break;
+#endif
+		case ECM_AE_CLASSIFIER_RESULT_NOT_YET:
+			return NF_ACCEPT;
+
+		default:
+			DEBUG_ASSERT(NULL, "unexpected ae_result: %d\n", ae_result);
 		}
 
 		if (!feci) {
@@ -518,20 +563,21 @@ done:
 		;
 	}
 
-#if defined(CONFIG_NET_CLS_ACT) && defined(ECM_CLASSIFIER_DSCP_IGS)
+#if defined(CONFIG_NET_CLS_ACT) && defined(ECM_CLASSIFIER_DSCP_IGS) && defined(ECM_FRONT_END_NSS_ENABLE)
 	/*
 	 * Check if IGS feature is enabled or not.
 	 */
 	if (unlikely(ecm_interface_igs_enabled)) {
-		bool ret;
 		feci = ecm_db_connection_front_end_get_and_ref(ci);
-		ret = ecm_nss_common_igs_acceleration_is_allowed(feci, skb);
-		feci->deref(feci);
-		if (!ret) {
-			DEBUG_WARN("%px: Acceleration denied.\n", ci);
-			ecm_db_connection_deref(ci);
-			return NF_ACCEPT;
+		if (feci->accel_engine == ECM_FRONT_END_ENGINE_NSS) {
+			if (!ecm_nss_common_igs_acceleration_is_allowed(feci, skb)) {
+				DEBUG_WARN("%px: Non-ported IPv4 IGS acceleration denied\n", ci);
+				feci->deref(feci);
+				ecm_db_connection_deref(ci);
+				return NF_ACCEPT;
+			}
 		}
+		feci->deref(feci);
 	}
 #endif
 
@@ -745,7 +791,7 @@ done:
 #ifdef ECM_INTERFACE_SIT_ENABLE
 #ifdef CONFIG_IPV6_SIT_6RD
 	/*
-	 * SIT tunnel acceleration needs create a rule to the nss firmware if the
+	 * SIT tunnel acceleration needs create a rule to the acceleration engine if the
 	 *	tunnel's dest ip address is empty,it will get dest ip and the embedded ipv6's dest ip
 	 *	address in the packet and send them to the nss firmware to accelerate the
 	 *	traffic on the tun6rd interface.
@@ -754,7 +800,18 @@ done:
 			&& prevalent_pr.accel_mode == ECM_CLASSIFIER_ACCELERATION_MODE_ACCEL) {
 		DEBUG_TRACE("%px: accel\n", ci);
 		feci = ecm_db_connection_front_end_get_and_ref(ci);
-		ecm_nss_non_ported_ipv4_sit_set_peer((struct ecm_nss_non_ported_ipv4_connection_instance *)feci, skb);
+#ifdef ECM_FRONT_END_NSS_ENABLE
+		if (feci->accel_engine == ECM_FRONT_END_ENGINE_NSS) {
+			ecm_nss_non_ported_ipv4_sit_set_peer((struct ecm_nss_non_ported_ipv4_connection_instance *)feci, skb);
+		}
+#endif
+
+#ifdef ECM_FRONT_END_SFE_ENABLE
+		if (feci->accel_engine == ECM_FRONT_END_ENGINE_SFE) {
+			ecm_sfe_non_ported_ipv4_sit_set_peer((struct ecm_sfe_non_ported_ipv4_connection_instance *)feci, skb);
+		}
+#endif
+
 		feci->deref(feci);
 	}
 #endif

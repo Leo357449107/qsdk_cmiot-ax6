@@ -48,7 +48,7 @@ Signed-off-by: Sathishkumar Muruganandam <murugana@codeaurora.org>
  static inline enum wme_ac ath11k_tid_to_ac(u32 tid)
  {
  	return (((tid == 0) || (tid == 3)) ? WME_AC_BE :
-@@ -280,6 +285,9 @@ struct ath11k_vif {
+@@ -283,6 +288,9 @@ struct ath11k_vif {
  	struct ath11k_mgmt_frame_stats mgmt_stats;
  	struct arvif_nss nss;
  	struct list_head ap_vlan_arvifs;
@@ -147,7 +147,7 @@ Signed-off-by: Sathishkumar Muruganandam <murugana@codeaurora.org>
  	const u8 *peer_addr;
  	int ret = 0;
  	u32 flags = 0;
-@@ -3854,17 +3909,36 @@ static int ath11k_mac_op_set_key(struct
+@@ -3854,17 +3909,38 @@ static int ath11k_mac_op_set_key(struct
  	if (key->keyidx > WMI_MAX_KEY_INDEX)
  		return -ENOSPC;
  
@@ -178,17 +178,19 @@ Signed-off-by: Sathishkumar Muruganandam <murugana@codeaurora.org>
 +			rcu_read_lock();
 +			arvif = ath11k_mac_get_ap_arvif_by_addr(ab, peer_addr);
 +			if (!arvif) {
++				rcu_read_unlock();
 +				ret = -EINVAL;
 +				goto exit;
 +			}
 +			ap_vlan_arvif->nss.ap_vif = arvif;
++			rcu_read_unlock();
 +		}
 +	}
 +
  	/* the peer should not disappear in mid-way (unless FW goes awry) since
  	 * we already hold conf_mutex. we just make sure its there now.
  	 */
-@@ -3903,6 +3977,74 @@ static int ath11k_mac_op_set_key(struct
+@@ -3903,6 +3979,74 @@ static int ath11k_mac_op_set_key(struct
  		goto exit;
  	}
  
@@ -263,7 +265,7 @@ Signed-off-by: Sathishkumar Muruganandam <murugana@codeaurora.org>
  	spin_lock_bh(&ab->base_lock);
  	peer = ath11k_peer_find(ab, arvif->vdev_id, peer_addr);
  
-@@ -3934,18 +4076,23 @@ static int ath11k_mac_op_set_key(struct
+@@ -3934,18 +4078,23 @@ static int ath11k_mac_op_set_key(struct
  			peer->mcast_keyidx = key->keyidx;
  			peer->sec_type_grp = ath11k_dp_tx_get_encrypt_type(key->cipher);
  		}
@@ -290,17 +292,7 @@ Signed-off-by: Sathishkumar Muruganandam <murugana@codeaurora.org>
  
  		switch (key->cipher) {
  		case WLAN_CIPHER_SUITE_TKIP:
-@@ -3966,6 +4113,9 @@ static int ath11k_mac_op_set_key(struct
- unlock:
- 	spin_unlock_bh(&ab->base_lock);
- exit:
-+	if (ap_vlan_arvif && !arsta)
-+		rcu_read_unlock();
-+
- 	mutex_unlock(&ar->conf_mutex);
- 	return ret;
- }
-@@ -4654,6 +4804,33 @@ exit:
+@@ -4714,6 +4863,33 @@ exit:
  	return ret;
  }
  
@@ -334,7 +326,7 @@ Signed-off-by: Sathishkumar Muruganandam <murugana@codeaurora.org>
  static int ath11k_mac_op_sta_state(struct ieee80211_hw *hw,
  				   struct ieee80211_vif *vif,
  				   struct ieee80211_sta *sta,
-@@ -4747,6 +4924,13 @@ static int ath11k_mac_op_sta_state(struc
+@@ -4807,6 +4983,13 @@ static int ath11k_mac_op_sta_state(struc
  			if (ret)
  				ath11k_warn(ar->ab, "Unable to authorize peer (%pM) vdev %d: %d\n",
  					    sta->addr, arvif->vdev_id, ret);
@@ -348,7 +340,7 @@ Signed-off-by: Sathishkumar Muruganandam <murugana@codeaurora.org>
  		}
  	} else if (old_state == IEEE80211_STA_ASSOC &&
  		   new_state == IEEE80211_STA_AUTH &&
-@@ -6292,6 +6476,20 @@ static int ath11k_mac_op_add_interface(s
+@@ -6352,6 +6535,20 @@ static int ath11k_mac_op_add_interface(s
  	arvif->vdev_id = bit;
  	arvif->vdev_subtype = WMI_VDEV_SUBTYPE_NONE;
  
@@ -369,7 +361,7 @@ Signed-off-by: Sathishkumar Muruganandam <murugana@codeaurora.org>
  	switch (vif->type) {
  	case NL80211_IFTYPE_UNSPECIFIED:
  	case NL80211_IFTYPE_STATION:
-@@ -6324,14 +6522,14 @@ static int ath11k_mac_op_add_interface(s
+@@ -6384,14 +6581,14 @@ static int ath11k_mac_op_add_interface(s
  	ret = ath11k_mac_setup_vdev_create_params(arvif, &vdev_param);
  	if (ret) {
  		ath11k_warn(ab, "failed to prepare vdev %d\n", ret);
@@ -386,7 +378,7 @@ Signed-off-by: Sathishkumar Muruganandam <murugana@codeaurora.org>
  	}
  	ar->num_created_vdevs++;
  	ath11k_dbg(ab, ATH11K_DBG_MAC, "vdev %pM created, vdev_id %d\n",
-@@ -6477,13 +6675,13 @@ err_peer_del:
+@@ -6540,13 +6737,13 @@ err_peer_del:
  		if (ret) {
  			ath11k_warn(ar->ab, "failed to delete peer vdev_id %d addr %pM\n",
  				    arvif->vdev_id, vif->addr);
@@ -402,7 +394,7 @@ Signed-off-by: Sathishkumar Muruganandam <murugana@codeaurora.org>
  
  		ar->num_peers--;
  	}
-@@ -6498,6 +6696,8 @@ err_vdev_del:
+@@ -6561,6 +6758,8 @@ err_vdev_del:
  	list_del(&arvif->list);
  	spin_unlock_bh(&ar->data_lock);
  
@@ -411,7 +403,7 @@ Signed-off-by: Sathishkumar Muruganandam <murugana@codeaurora.org>
  err:
  	mutex_unlock(&ar->conf_mutex);
  
-@@ -6601,6 +6801,7 @@ err_vdev_del:
+@@ -6664,6 +6863,7 @@ err_vdev_del:
  	list_del(&arvif->list);
  	spin_unlock_bh(&ar->data_lock);
  
@@ -419,7 +411,7 @@ Signed-off-by: Sathishkumar Muruganandam <murugana@codeaurora.org>
  	ath11k_peer_cleanup(ar, arvif->vdev_id);
  
  	idr_for_each(&ar->txmgmt_idr,
-@@ -8844,8 +9045,11 @@ static int __ath11k_mac_register(struct
+@@ -8902,8 +9102,11 @@ static int __ath11k_mac_register(struct
  		ieee80211_hw_set(ar->hw, SUPPORT_FAST_XMIT);
  	}
  

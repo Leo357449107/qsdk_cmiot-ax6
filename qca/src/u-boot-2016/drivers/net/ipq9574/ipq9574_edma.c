@@ -113,7 +113,6 @@ int ipq9574_edma_alloc_rx_buffer(struct ipq9574_edma_hw *ehw,
 	cons = reg_data & IPQ9574_EDMA_RXFILL_CONS_IDX_MASK;
 
 	while (1) {
-
 		counter = next;
 
 		if (++counter == rxfill_ring->count)
@@ -141,8 +140,8 @@ int ipq9574_edma_alloc_rx_buffer(struct ipq9574_edma_hw *ehw,
 		 * Save buffer size in RXFILL descriptor
 		 */
 		rxfill_desc->rdes1 |= (IPQ9574_EDMA_RX_BUFF_SIZE <<
-				      IPQ9574_EDMA_RXFILL_BUF_SIZE_SHIFT) &
-				      IPQ9574_EDMA_RXFILL_BUF_SIZE_MASK;
+				       IPQ9574_EDMA_RXFILL_BUF_SIZE_SHIFT) &
+				       IPQ9574_EDMA_RXFILL_BUF_SIZE_MASK;
 		num_alloc++;
 		next = counter;
 	}
@@ -159,6 +158,8 @@ int ipq9574_edma_alloc_rx_buffer(struct ipq9574_edma_hw *ehw,
 		 */
 		ipq9574_edma_reg_write(IPQ9574_EDMA_REG_RXFILL_PROD_IDX(
 					rxfill_ring->id), reg_data);
+
+		rxfill_ring->prod_idx = reg_data;
 
 		pr_debug("%s: num_alloc = %d\n", __func__, num_alloc);
 	}
@@ -272,13 +273,13 @@ uint32_t ipq9574_edma_clean_rx(struct ipq9574_edma_common_info *c_info,
 		/*
 		 * Check src_info from Rx Descriptor
 		 */
-		if (IPQ9574_EDMA_RXPH_SRC_INFO_TYPE_GET(rxdesc_desc->rdes4) ==
-				IPQ9574_EDMA_PREHDR_DSTINFO_PORTID_IND) {
-			src_port_num = rxdesc_desc->rdes4 &
-				IPQ9574_EDMA_PREHDR_PORTNUM_BITS;
+		src_port_num = IPQ9574_EDMA_RXDESC_SRC_INFO_GET(rxdesc_desc->rdes4);
+		if ((src_port_num & IPQ9574_EDMA_RXDESC_SRCINFO_TYPE_MASK) ==
+				IPQ9574_EDMA_RXDESC_SRCINFO_TYPE_PORTID) {
+			src_port_num &= IPQ9574_EDMA_RXDESC_PORTNUM_BITS;
 		} else {
 			pr_warn("WARN: src_info_type:0x%x. Drop skb:%p\n",
-				IPQ9574_EDMA_RXPH_SRC_INFO_TYPE_GET(rxdesc_desc->rdes4),
+				(src_port_num & IPQ9574_EDMA_RXDESC_SRCINFO_TYPE_MASK),
 				skb);
 			goto next_rx_desc;
 		}
@@ -348,7 +349,7 @@ static int ipq9574_edma_rx_complete(struct ipq9574_edma_common_info *c_info)
 	}
 
 	/*
-	 * Set RXDESC ring interrupt mask
+	 * Enable RX EDMA interrupt masks
 	 */
 	for (i = 0; i < ehw->rxdesc_rings; i++) {
 		rxdesc_ring = &ehw->rxdesc_ring[i];
@@ -358,23 +359,13 @@ static int ipq9574_edma_rx_complete(struct ipq9574_edma_common_info *c_info)
 	}
 
 	/*
-	 * Set TXCMPL ring interrupt mask
+	 * Enable TX EDMA interrupt masks
 	 */
 	for (i = 0; i < ehw->txcmpl_rings; i++) {
 		txcmpl_ring = &ehw->txcmpl_ring[i];
 		ipq9574_edma_reg_write(IPQ9574_EDMA_REG_TX_INT_MASK(
 					txcmpl_ring->id),
 					ehw->txcmpl_intr_mask);
-	}
-
-	/*
-	 * Set RXFILL ring interrupt mask
-	 */
-	for (i = 0; i < ehw->rxfill_rings; i++) {
-		rxfill_ring = &ehw->rxfill_ring[i];
-		ipq9574_edma_reg_write(IPQ9574_EDMA_REG_RXFILL_INT_MASK(
-					rxfill_ring->id),
-					ehw->rxfill_intr_mask);
 	}
 
 	/*
@@ -450,7 +441,19 @@ static int ipq9574_eth_snd(struct eth_device *dev, void *packet, int length)
 	 */
 	txdesc = IPQ9574_EDMA_TXDESC_DESC(txdesc_ring, hw_next_to_use);
 
+	txdesc->tdes1 = 0;
+	txdesc->tdes2 = 0;
+	txdesc->tdes3 = 0;
+	txdesc->tdes4 = 0;
+	txdesc->tdes5 = 0;
+	txdesc->tdes6 = 0;
+	txdesc->tdes7 = 0;
 	skb = (uchar *)txdesc->tdes0;
+
+	/*
+	 * Set SC BYPASS
+	 */
+	txdesc->tdes1 |= IPQ9574_EDMA_TXDESC_SERVICE_CODE_SET(IPQ9574_EDMA_SC_BYPASS);
 
 	pr_debug("%s: txdesc->tdes0 (buffer addr) = 0x%x length = %d \
 			prod_idx = %d cons_idx = %d\n",
@@ -464,9 +467,15 @@ static int ipq9574_eth_snd(struct eth_device *dev, void *packet, int length)
 #else
 	/*
 	 * Populate Tx dst info, port id is macid in dp_dev
+	 * We have separate netdev for each port in Kernel but that is not the
+	 * case in U-Boot.
+	 * This part needs to be fixed to support multiple ports in non bridged
+	 * mode during when all the ports are currently under same netdev.
+	 *
+	 * Currently mac port no. is fixed as 3 for the purpose of testing
 	 */
-	txdesc->tdes4 |= (((IPQ9574_EDMA_PREHDR_DSTINFO_PORTID_IND << 8) |
-			(IPQ9574_EDMA_MAC_PORT_NO & 0x0fff)) << 16);
+	txdesc->tdes4 |= (IPQ9574_EDMA_DST_PORT_TYPE_SET(IPQ9574_EDMA_DST_PORT_TYPE) |
+			  IPQ9574_EDMA_DST_PORT_ID_SET(IPQ9574_EDMA_MAC_PORT_NO));
 #endif
 
 	/*
@@ -600,11 +609,9 @@ static int ipq9574_edma_setup_ring_resources(struct ipq9574_edma_hw *ehw)
 {
 	struct ipq9574_edma_txcmpl_ring *txcmpl_ring;
 	struct ipq9574_edma_txdesc_ring *txdesc_ring;
-	struct ipq9574_edma_sec_txdesc_ring *sec_txdesc_ring;
 	struct ipq9574_edma_rxfill_ring *rxfill_ring;
 	struct ipq9574_edma_rxdesc_ring *rxdesc_ring;
-	struct ipq9574_edma_sec_rxdesc_ring *sec_rxdesc_ring;
-	struct ipq9574_edma_txdesc_desc *tx_desc;
+	struct ipq9574_edma_txdesc_desc *txdesc_desc;
 	struct ipq9574_edma_rxfill_desc *rxfill_desc;
 	int i, j, index;
 	void *tx_buf;
@@ -640,6 +647,9 @@ static int ipq9574_edma_setup_ring_resources(struct ipq9574_edma_hw *ehw)
 			return -ENOMEM;
 		}
 
+		/*
+		 * Allocate buffers for each of the desc
+		 */
 		for (j = 0; j < rxfill_ring->count; j++) {
 			rxfill_desc = IPQ9574_EDMA_RXFILL_DESC(rxfill_ring, j);
 			rxfill_desc->rdes0 = virt_to_phys(rx_buf);
@@ -650,26 +660,6 @@ static int ipq9574_edma_setup_ring_resources(struct ipq9574_edma_hw *ehw)
 			pr_debug("Ring %d: rxfill ring dis0 ptr = %p, rxfill ring dis0 dma = %u\n",
 				j, rxfill_desc, (unsigned int)rxfill_desc->rdes0);
 		}
-	}
-
-	/*
-	 * Allocate secondary RxDesc ring descriptors
-	 */
-	for (i = 0; i < ehw->sec_rxdesc_rings; i++) {
-		sec_rxdesc_ring = &ehw->sec_rxdesc_ring[i];
-		sec_rxdesc_ring->count = EDMA_RING_SIZE;
-		sec_rxdesc_ring->id = ehw->sec_rxdesc_ring_start + i;
-		sec_rxdesc_ring->desc = (void *)noncached_alloc(
-				IPQ9574_EDMA_RX_SEC_DESC_SIZE * sec_rxdesc_ring->count,
-				CONFIG_SYS_CACHELINE_SIZE);
-		if (sec_rxdesc_ring->desc == NULL) {
-			pr_info("%s: sec_rxdesc_ring->desc alloc error\n", __func__);
-			return -ENOMEM;
-		}
-		sec_rxdesc_ring->dma = virt_to_phys(sec_rxdesc_ring->desc);
-		pr_debug("sec rxdesc ring id = %d, sec rxdesc ring ptr = %p, sec rxdesc ring dma = %u\n",
-			sec_rxdesc_ring->id, sec_rxdesc_ring->desc, (unsigned int)
-			sec_rxdesc_ring->dma);
 	}
 
 	/*
@@ -685,7 +675,6 @@ static int ipq9574_edma_setup_ring_resources(struct ipq9574_edma_hw *ehw)
 		 * Number of fill rings are lesser than the descriptor rings
 		 * Share the fill rings across descriptor rings.
 		 */
-
 		index = ehw->rxfill_ring_start + (i % ehw->rxfill_rings);
 		rxdesc_ring->rxfill =
 			&ehw->rxfill_ring[index - ehw->rxfill_ring_start];
@@ -694,7 +683,6 @@ static int ipq9574_edma_setup_ring_resources(struct ipq9574_edma_hw *ehw)
 		rxdesc_ring->desc = (void *)noncached_alloc(
 				IPQ9574_EDMA_RXDESC_DESC_SIZE * rxdesc_ring->count,
 				CONFIG_SYS_CACHELINE_SIZE);
-
 		if (rxdesc_ring->desc == NULL) {
 			pr_info("%s: rxdesc_ring->desc alloc error\n", __func__);
 			return -ENOMEM;
@@ -703,47 +691,21 @@ static int ipq9574_edma_setup_ring_resources(struct ipq9574_edma_hw *ehw)
 		pr_debug("rxdesc ring id = %d, rxdesc ring ptr = %p, rxdesc ring dma = %u\n",
 			rxdesc_ring->id, rxdesc_ring->desc, (unsigned int)
 			rxdesc_ring->dma);
-	}
 
-	/*
-	 * Allocate TxCmpl ring descriptors
-	 */
-	for (i = 0; i < ehw->txcmpl_rings; i++) {
-		txcmpl_ring = &ehw->txcmpl_ring[i];
-		txcmpl_ring->count = EDMA_RING_SIZE;
-		txcmpl_ring->id = ehw->txcmpl_ring_start + i;
-		txcmpl_ring->desc = (void *)noncached_alloc(
-				IPQ9574_EDMA_TXCMPL_DESC_SIZE * txcmpl_ring->count,
+		/*
+		 * Allocate secondary Rx ring descriptors
+		 */
+		rxdesc_ring->sdesc = (void *)noncached_alloc(
+				IPQ9574_EDMA_RX_SEC_DESC_SIZE * rxdesc_ring->count,
 				CONFIG_SYS_CACHELINE_SIZE);
-
-		if (txcmpl_ring->desc == NULL) {
-			pr_info("%s: txcmpl_ring->desc alloc error\n", __func__);
+		if (rxdesc_ring->sdesc == NULL) {
+			pr_info("%s: rxdesc_ring->sdesc alloc error\n", __func__);
 			return -ENOMEM;
 		}
-		txcmpl_ring->dma = virt_to_phys(txcmpl_ring->desc);
-		pr_debug("txcmpl ring id = %d, txcmpl ring ptr = %p, txcmpl ring dma = %u\n",
-			txcmpl_ring->id, txcmpl_ring->desc, (unsigned int)
-			txcmpl_ring->dma);
-	}
-
-	/*
-	 * Allocate secondary TxDesc ring descriptors
-	 */
-	for (i = 0; i < ehw->sec_txdesc_rings; i++) {
-		sec_txdesc_ring = &ehw->sec_txdesc_ring[i];
-		sec_txdesc_ring->count = EDMA_RING_SIZE;
-		sec_txdesc_ring->id = ehw->sec_txdesc_ring_start + i;
-		sec_txdesc_ring->desc = (void *)noncached_alloc(
-				IPQ9574_EDMA_TX_SEC_DESC_SIZE * sec_txdesc_ring->count,
-				CONFIG_SYS_CACHELINE_SIZE);
-		if (sec_txdesc_ring->desc == NULL) {
-			pr_info("%s: sec_txdesc_ring->desc alloc error\n", __func__);
-			return -ENOMEM;
-		}
-		sec_txdesc_ring->dma = virt_to_phys(sec_txdesc_ring->desc);
-		pr_debug("sec txdesc ring id = %d, sec txdesc ring ptr = %p, sec txdesc ring dma = %u\n",
-			sec_txdesc_ring->id, sec_txdesc_ring->desc, (unsigned int)
-			sec_txdesc_ring->dma);
+		rxdesc_ring->sdma = virt_to_phys(rxdesc_ring->sdesc);
+		pr_debug("sec rxdesc ring id = %d, sec rxdesc ring ptr = %p, sec rxdesc ring dma = %u\n",
+			rxdesc_ring->id, rxdesc_ring->sdesc, (unsigned int)
+			rxdesc_ring->sdma);
 	}
 
 	/*
@@ -774,21 +736,60 @@ static int ipq9574_edma_setup_ring_resources(struct ipq9574_edma_hw *ehw)
 			return -ENOMEM;
 		}
 
+		/*
+		 * Allocate buffers for each of the desc
+		 */
 		for (j = 0; j < txdesc_ring->count; j++) {
-			tx_desc = IPQ9574_EDMA_TXDESC_DESC(txdesc_ring, j);
-			tx_desc->tdes0 = virt_to_phys(tx_buf);
-			tx_desc->tdes1 = 0;
-			tx_desc->tdes2 = 0;
-			tx_desc->tdes3 = 0;
-			tx_desc->tdes4 = 0;
-			tx_desc->tdes5 = 0;
-			tx_desc->tdes6 = 0;
-			tx_desc->tdes7 = 0;
+			txdesc_desc = IPQ9574_EDMA_TXDESC_DESC(txdesc_ring, j);
+			txdesc_desc->tdes0 = virt_to_phys(tx_buf);
+			txdesc_desc->tdes1 = 0;
+			txdesc_desc->tdes2 = 0;
+			txdesc_desc->tdes3 = 0;
+			txdesc_desc->tdes4 = 0;
+			txdesc_desc->tdes5 = 0;
+			txdesc_desc->tdes6 = 0;
+			txdesc_desc->tdes7 = 0;
 			tx_buf += IPQ9574_EDMA_TX_BUFF_SIZE;
 			pr_debug("Ring %d: txdesc ring dis0 ptr = %p, txdesc ring dis0 dma = %u\n",
-				j, tx_desc, (unsigned int)tx_desc->tdes0);
+				j, txdesc_desc, (unsigned int)txdesc_desc->tdes0);
 
 		}
+
+		/*
+		 * Allocate secondary Tx ring descriptors
+		 */
+		txdesc_ring->sdesc = (void *)noncached_alloc(
+				IPQ9574_EDMA_TX_SEC_DESC_SIZE * txdesc_ring->count,
+				CONFIG_SYS_CACHELINE_SIZE);
+		if (txdesc_ring->sdesc == NULL) {
+			pr_info("%s: txdesc_ring->sdesc alloc error\n", __func__);
+			return -ENOMEM;
+		}
+		txdesc_ring->sdma = virt_to_phys(txdesc_ring->sdesc);
+		pr_debug("txdesc sec desc ring id = %d, txdesc ring ptr = %p, txdesc ring dma = %u\n",
+			txdesc_ring->id, txdesc_ring->sdesc, (unsigned int)
+			txdesc_ring->sdma);
+	}
+
+	/*
+	 * Allocate TxCmpl ring descriptors
+	 */
+	for (i = 0; i < ehw->txcmpl_rings; i++) {
+		txcmpl_ring = &ehw->txcmpl_ring[i];
+		txcmpl_ring->count = EDMA_RING_SIZE;
+		txcmpl_ring->id = ehw->txcmpl_ring_start + i;
+		txcmpl_ring->desc = (void *)noncached_alloc(
+				IPQ9574_EDMA_TXCMPL_DESC_SIZE * txcmpl_ring->count,
+				CONFIG_SYS_CACHELINE_SIZE);
+
+		if (txcmpl_ring->desc == NULL) {
+			pr_info("%s: txcmpl_ring->desc alloc error\n", __func__);
+			return -ENOMEM;
+		}
+		txcmpl_ring->dma = virt_to_phys(txcmpl_ring->desc);
+		pr_debug("txcmpl ring id = %d, txcmpl ring ptr = %p, txcmpl ring dma = %u\n",
+			txcmpl_ring->id, txcmpl_ring->desc, (unsigned int)
+			txcmpl_ring->dma);
 	}
 
 	pr_info("%s: successfull\n", __func__);
@@ -807,13 +808,18 @@ static void ipq9574_edma_free_desc(struct ipq9574_edma_common_info *c_info)
 	struct ipq9574_edma_txdesc_ring *txdesc_ring;
 	struct ipq9574_edma_rxfill_ring *rxfill_ring;
 	struct ipq9574_edma_rxdesc_ring *rxdesc_ring;
-	struct ipq9574_edma_txdesc_desc *tx_desc;
+	struct ipq9574_edma_txdesc_desc *txdesc_desc;
+	struct ipq9574_edma_rxfill_desc *rxfill_desc;
 	int i;
 
 	for (i = 0; i < ehw->rxfill_rings; i++) {
 		rxfill_ring = &ehw->rxfill_ring[i];
-		if (rxfill_ring->desc)
+		if (rxfill_ring->desc) {
+			rxfill_desc = IPQ9574_EDMA_RXFILL_DESC(rxfill_ring, 0);
+			if (rxfill_desc->rdes0)
+				ipq9574_free_mem((void *)rxfill_desc->rdes0);
 			ipq9574_free_mem(rxfill_ring->desc);
+		}
 	}
 
 	for (i = 0; i < ehw->rxdesc_rings; i++) {
@@ -832,9 +838,9 @@ static void ipq9574_edma_free_desc(struct ipq9574_edma_common_info *c_info)
 	for (i = 0; i < ehw->txdesc_rings; i++) {
 		txdesc_ring = &ehw->txdesc_ring[i];
 		if (txdesc_ring->desc) {
-			tx_desc = IPQ9574_EDMA_TXDESC_DESC(txdesc_ring, 0);
-			if (tx_desc->tdes0)
-				ipq9574_free_mem((void *)tx_desc->tdes0);
+			txdesc_desc = IPQ9574_EDMA_TXDESC_DESC(txdesc_ring, 0);
+			if (txdesc_desc->tdes0)
+				ipq9574_free_mem((void *)txdesc_desc->tdes0);
 			ipq9574_free_mem(txdesc_ring->desc);
 		}
 	}
@@ -898,15 +904,15 @@ static void ipq9574_edma_disable_intr(struct ipq9574_edma_hw *ehw)
 	/*
 	 * Disable interrupts
 	 */
-	for (i = 0; i < IPQ9574_EDMA_MAX_TXCMPL_RINGS; i++)
-		ipq9574_edma_reg_write(IPQ9574_EDMA_REG_TX_INT_MASK(i), 0);
-
-	for (i = 0; i < IPQ9574_EDMA_MAX_RXFILL_RINGS; i++)
-		ipq9574_edma_reg_write(IPQ9574_EDMA_REG_RXFILL_INT_MASK(i), 0);
-
 	for (i = 0; i < IPQ9574_EDMA_MAX_RXDESC_RINGS; i++)
 		ipq9574_edma_reg_write(IPQ9574_EDMA_REG_RX_INT_CTRL(i), 0);
 
+	for (i = 0; i < IPQ9574_EDMA_MAX_TXCMPL_RINGS; i++)
+		ipq9574_edma_reg_write(IPQ9574_EDMA_REG_TX_INT_MASK(i), 0);
+
+	/*
+	 * Clear MISC interrupt mask
+	 */
 	ipq9574_edma_reg_write(IPQ9574_EDMA_REG_MISC_INT_MASK,
 				IPQ9574_EDMA_MASK_INT_DISABLE);
 }
@@ -1305,6 +1311,37 @@ static int ipq9574_edma_wr_macaddr(struct eth_device *dev)
 
 static void ipq9574_eth_halt(struct eth_device *dev)
 {
+	pr_debug("\n\n*****GMAC0 info*****\n");
+	pr_debug("GMAC0 RXPAUSE(0x3a001044):%x\n", readl(0x3a001044));
+	pr_debug("GMAC0 TXPAUSE(0x3a0010A4):%x\n", readl(0x3a0010A4));
+	pr_debug("GMAC0 RXGOODBYTE_L(0x3a001084):%x\n", readl(0x3a001084));
+	pr_debug("GMAC0 RXGOODBYTE_H(0x3a001088):%x\n", readl(0x3a001088));
+	pr_debug("GMAC0 RXBADBYTE_L(0x3a00108c):%x\n", readl(0x3a00108c));
+	pr_debug("GMAC0 RXBADBYTE_H(0x3a001090):%x\n", readl(0x3a001090));
+
+	pr_debug("\n\n*****GMAC1 info*****\n");
+	pr_debug("GMAC1 RXPAUSE(0x3a001244):%x\n", readl(0x3a001244));
+	pr_debug("GMAC1 TXPAUSE(0x3a0012A4):%x\n", readl(0x3a0012A4));
+	pr_debug("GMAC1 RXGOODBYTE_L(0x3a001284):%x\n", readl(0x3a001284));
+	pr_debug("GMAC1 RXGOODBYTE_H(0x3a001288):%x\n", readl(0x3a001288));
+	pr_debug("GMAC1 RXBADBYTE_L(0x3a00128c):%x\n", readl(0x3a00128c));
+	pr_debug("GMAC1 RXBADBYTE_H(0x3a001290):%x\n", readl(0x3a001290));
+
+	pr_debug("\n\n*****GMAC2 info*****\n");
+	pr_debug("GMAC2 RXPAUSE(0x3a001444):%x\n", readl(0x3a001444));
+	pr_debug("GMAC2 TXPAUSE(0x3a0014A4):%x\n", readl(0x3a0014A4));
+	pr_debug("GMAC2 RXGOODBYTE_L(0x3a001484):%x\n", readl(0x3a001484));
+	pr_debug("GMAC2 RXGOODBYTE_H(0x3a001488):%x\n", readl(0x3a001488));
+	pr_debug("GMAC2 RXBADBYTE_L(0x3a00148c):%x\n", readl(0x3a00148c));
+	pr_debug("GMAC2 RXBADBYTE_H(0x3a001490):%x\n", readl(0x3a001490));
+
+	pr_debug("\n\n*****GMAC3 info*****\n");
+	pr_debug("GMAC3 RXPAUSE(0x3a001644):%x\n", readl(0x3a001644));
+	pr_debug("GMAC3 TXPAUSE(0x3a0016A4):%x\n", readl(0x3a0016A4));
+	pr_debug("GMAC3 RXGOODBYTE_L(0x3a001684):%x\n", readl(0x3a001684));
+	pr_debug("GMAC3 RXGOODBYTE_H(0x3a001688):%x\n", readl(0x3a001688));
+	pr_debug("GMAC3 RXBADBYTE_L(0x3a00168c):%x\n", readl(0x3a00168c));
+	pr_debug("GMAC3 RXBADBYTE_H(0x3a001690):%x\n", readl(0x3a001690));
 	pr_info("%s: done\n", __func__);
 }
 
@@ -1313,10 +1350,6 @@ static void ipq9574_edma_set_ring_values(struct ipq9574_edma_hw *edma_hw)
 	edma_hw->txdesc_ring_start = IPQ9574_EDMA_TX_DESC_RING_START;
 	edma_hw->txdesc_rings = IPQ9574_EDMA_TX_DESC_RING_NOS;
 	edma_hw->txdesc_ring_end = IPQ9574_EDMA_TX_DESC_RING_SIZE;
-
-	edma_hw->sec_txdesc_ring_start = IPQ9574_EDMA_SEC_TX_DESC_RING_START;
-	edma_hw->sec_txdesc_rings = IPQ9574_EDMA_SEC_TX_DESC_RING_NOS;
-	edma_hw->sec_txdesc_ring_end = IPQ9574_EDMA_SEC_TX_DESC_RING_SIZE;
 
 	edma_hw->txcmpl_ring_start = IPQ9574_EDMA_TX_CMPL_RING_START;
 	edma_hw->txcmpl_rings = IPQ9574_EDMA_RX_FILL_RING_NOS;
@@ -1329,10 +1362,6 @@ static void ipq9574_edma_set_ring_values(struct ipq9574_edma_hw *edma_hw)
 	edma_hw->rxdesc_ring_start = IPQ9574_EDMA_RX_DESC_RING_START;
 	edma_hw->rxdesc_rings = IPQ9574_EDMA_RX_DESC_RING_NOS;
 	edma_hw->rxdesc_ring_end = IPQ9574_EDMA_RX_DESC_RING_SIZE;
-
-	edma_hw->sec_rxdesc_ring_start = IPQ9574_EDMA_SEC_RX_DESC_RING_START;
-	edma_hw->sec_rxdesc_rings = IPQ9574_EDMA_SEC_RX_DESC_RING_NOS;
-	edma_hw->sec_rxdesc_ring_end = IPQ9574_EDMA_SEC_RX_DESC_RING_SIZE;
 
 	pr_info("Num rings - TxDesc:%u (%u-%u) TxCmpl:%u (%u-%u)\n",
 		edma_hw->txdesc_rings, edma_hw->txdesc_ring_start,
@@ -1371,29 +1400,11 @@ static int ipq9574_edma_alloc_rings(struct ipq9574_edma_hw *ehw)
 		return -ENOMEM;
 	}
 
-	ehw->sec_rxdesc_ring = (void *)noncached_alloc((sizeof(
-				struct ipq9574_edma_sec_rxdesc_ring) *
-				ehw->sec_rxdesc_rings),
-				CONFIG_SYS_CACHELINE_SIZE);
-	if (!ehw->sec_rxdesc_ring) {
-		pr_info("%s: sec_rxdesc_ring alloc error\n", __func__);
-		return -ENOMEM;
-	}
-
 	ehw->txdesc_ring = (void *)noncached_alloc((sizeof(
 				struct ipq9574_edma_txdesc_ring) *
 				ehw->txdesc_rings),
 				CONFIG_SYS_CACHELINE_SIZE);
 	if (!ehw->txdesc_ring) {
-		pr_info("%s: txdesc_ring alloc error\n", __func__);
-		return -ENOMEM;
-	}
-
-	ehw->sec_txdesc_ring = (void *)noncached_alloc((sizeof(
-				struct ipq9574_edma_sec_txdesc_ring) *
-				ehw->sec_txdesc_rings),
-				CONFIG_SYS_CACHELINE_SIZE);
-	if (!ehw->sec_txdesc_ring) {
 		pr_info("%s: txdesc_ring alloc error\n", __func__);
 		return -ENOMEM;
 	}
@@ -1445,26 +1456,12 @@ static int ipq9574_edma_init_rings(struct ipq9574_edma_hw *ehw)
 }
 
 /*
- * ipq9574_edma_configure_sec_txdesc_ring()
- *	Configure one secondary TxDesc ring
- */
-static void ipq9574_edma_configure_sec_txdesc_ring(struct ipq9574_edma_hw *ehw,
-			  struct ipq9574_edma_sec_txdesc_ring *sec_txdesc_ring)
-{
-	ipq9574_edma_reg_write(IPQ9574_EDMA_REG_TXDESC_BA2(sec_txdesc_ring->id),
-			(uint32_t)(sec_txdesc_ring->dma & 0xffffffff));
-}
-
-/*
  * ipq9574_edma_configure_txdesc_ring()
  *	Configure one TxDesc ring
  */
 static void ipq9574_edma_configure_txdesc_ring(struct ipq9574_edma_hw *ehw,
 					struct ipq9574_edma_txdesc_ring *txdesc_ring)
 {
-	uint32_t data;
-	uint16_t hw_cons_idx;
-
 	/*
 	 * Configure TXDESC ring
 	 */
@@ -1472,24 +1469,17 @@ static void ipq9574_edma_configure_txdesc_ring(struct ipq9574_edma_hw *ehw,
 			(uint32_t)(txdesc_ring->dma &
 			IPQ9574_EDMA_RING_DMA_MASK));
 
+	ipq9574_edma_reg_write(IPQ9574_EDMA_REG_TXDESC_BA2(txdesc_ring->id),
+			(uint32_t)(txdesc_ring->sdma &
+			IPQ9574_EDMA_RING_DMA_MASK));
+
 	ipq9574_edma_reg_write(IPQ9574_EDMA_REG_TXDESC_RING_SIZE(
 			txdesc_ring->id), (uint32_t)(txdesc_ring->count &
 			IPQ9574_EDMA_TXDESC_RING_SIZE_MASK));
 
-	data = ipq9574_edma_reg_read(IPQ9574_EDMA_REG_TXDESC_CONS_IDX(
-				txdesc_ring->id));
-
-	data &= ~(IPQ9574_EDMA_TXDESC_CONS_IDX_MASK);
-	hw_cons_idx = data;
-
-	data = ipq9574_edma_reg_read(IPQ9574_EDMA_REG_TXDESC_PROD_IDX(
-					txdesc_ring->id));
-
-	data &= ~(IPQ9574_EDMA_TXDESC_PROD_IDX_MASK);
-	data |= hw_cons_idx & IPQ9574_EDMA_TXDESC_PROD_IDX_MASK;
-
 	ipq9574_edma_reg_write(IPQ9574_EDMA_REG_TXDESC_PROD_IDX(
-					txdesc_ring->id), data);
+					txdesc_ring->id),
+					IPQ9574_EDMA_TX_INITIAL_PROD_IDX);
 }
 
 /*
@@ -1499,6 +1489,8 @@ static void ipq9574_edma_configure_txdesc_ring(struct ipq9574_edma_hw *ehw,
 static void ipq9574_edma_configure_txcmpl_ring(struct ipq9574_edma_hw *ehw,
 					struct ipq9574_edma_txcmpl_ring *txcmpl_ring)
 {
+	uint32_t tx_mod_timer;
+
 	/*
 	 * Configure TxCmpl ring base address
 	 */
@@ -1516,20 +1508,20 @@ static void ipq9574_edma_configure_txcmpl_ring(struct ipq9574_edma_hw *ehw,
 	ipq9574_edma_reg_write(IPQ9574_EDMA_REG_TXCMPL_CTRL(txcmpl_ring->id),
 			IPQ9574_EDMA_TXCMPL_RETMODE_OPAQUE);
 
+	/*
+	 * Configure the default timer mitigation value
+	 */
+	tx_mod_timer = (IPQ9574_EDMA_REG_TX_MOD_TIMER(txcmpl_ring->id) &
+			IPQ9574_EDMA_TX_MOD_TIMER_INIT_MASK)
+			<< IPQ9574_EDMA_TX_MOD_TIMER_INIT_SHIFT;
+	ipq9574_edma_reg_write(IPQ9574_EDMA_REG_TX_MOD_TIMER(txcmpl_ring->id),
+			tx_mod_timer);
+
+	/*
+	 * Enable ring. Set ret mode to 'opaque'.
+	 */
 	ipq9574_edma_reg_write(IPQ9574_EDMA_REG_TX_INT_CTRL(txcmpl_ring->id),
-			0x2);
-}
-
-
-/*
- * ipq9574_edma_configure_sec_rxdesc_ring()
- *	Configure one secondary RxDesc ring
- */
-static void ipq9574_edma_configure_sec_rxdesc_ring(struct ipq9574_edma_hw *ehw,
-			  struct ipq9574_edma_sec_rxdesc_ring *sec_rxdesc_ring)
-{
-	ipq9574_edma_reg_write(IPQ9574_EDMA_REG_RXDESC_BA2(sec_rxdesc_ring->id),
-			(uint32_t)(sec_rxdesc_ring->dma & 0xffffffff));
+			IPQ9574_EDMA_TX_NE_INT_EN);
 }
 
 /*
@@ -1542,7 +1534,10 @@ static void ipq9574_edma_configure_rxdesc_ring(struct ipq9574_edma_hw *ehw,
 	uint32_t data;
 
 	ipq9574_edma_reg_write(IPQ9574_EDMA_REG_RXDESC_BA(rxdesc_ring->id),
-			(uint32_t)(rxdesc_ring->dma & 0xffffffff));
+			(uint32_t)(rxdesc_ring->dma & IPQ9574_EDMA_RING_DMA_MASK));
+
+	ipq9574_edma_reg_write(IPQ9574_EDMA_REG_RXDESC_BA2(rxdesc_ring->id),
+			(uint32_t)(rxdesc_ring->sdma & IPQ9574_EDMA_RING_DMA_MASK));
 
 	data = rxdesc_ring->count & IPQ9574_EDMA_RXDESC_RING_SIZE_MASK;
 	data |= (ehw->rx_payload_offset & IPQ9574_EDMA_RXDESC_PL_OFFSET_MASK) <<
@@ -1552,10 +1547,19 @@ static void ipq9574_edma_configure_rxdesc_ring(struct ipq9574_edma_hw *ehw,
 			rxdesc_ring->id), data);
 
 	/*
+	 * Configure the default timer mitigation value
+	 */
+	data = (IPQ9574_EDMA_REG_RX_MOD_TIMER(rxdesc_ring->id) &
+			IPQ9574_EDMA_RX_MOD_TIMER_INIT_MASK)
+			<< IPQ9574_EDMA_RX_MOD_TIMER_INIT_SHIFT;
+	ipq9574_edma_reg_write(IPQ9574_EDMA_REG_RX_MOD_TIMER(rxdesc_ring->id),
+			data);
+
+	/*
 	 * Enable ring. Set ret mode to 'opaque'.
 	 */
 	ipq9574_edma_reg_write(IPQ9574_EDMA_REG_RX_INT_CTRL(rxdesc_ring->id),
-			0x2);
+			       IPQ9574_EDMA_RX_NE_INT_EN);
 }
 
 /*
@@ -1591,12 +1595,6 @@ static void ipq9574_edma_configure_rings(struct ipq9574_edma_hw *ehw)
 		ipq9574_edma_configure_txdesc_ring(ehw, &ehw->txdesc_ring[i]);
 
 	/*
-	 * Configure secondary TXDESC ring
-	 */
-	for (i = 0; i < ehw->sec_txdesc_rings; i++)
-		ipq9574_edma_configure_sec_txdesc_ring(ehw, &ehw->sec_txdesc_ring[i]);
-
-	/*
 	 * Configure TXCMPL ring
 	 */
 	for (i = 0; i < ehw->txcmpl_rings; i++)
@@ -1613,12 +1611,6 @@ static void ipq9574_edma_configure_rings(struct ipq9574_edma_hw *ehw)
 	 */
 	for (i = 0; i < ehw->rxdesc_rings; i++)
 		ipq9574_edma_configure_rxdesc_ring(ehw, &ehw->rxdesc_ring[i]);
-
-	/*
-	 * Configure secondary RXDESC ring
-	 */
-	for (i = 0; i < ehw->rxdesc_rings; i++)
-		ipq9574_edma_configure_sec_rxdesc_ring(ehw, &ehw->sec_rxdesc_ring[i]);
 
 	pr_info("%s: successfull\n", __func__);
 }
@@ -1642,7 +1634,7 @@ void ipq9574_edma_hw_reset(void)
 int ipq9574_edma_hw_init(struct ipq9574_edma_hw *ehw)
 {
 	int ret, desc_index;
-	uint32_t i, reg;
+	uint32_t i, reg, ring_id;
 	volatile uint32_t data;
 
 	struct ipq9574_edma_rxdesc_ring *rxdesc_ring = NULL;
@@ -1657,8 +1649,7 @@ int ipq9574_edma_hw_init(struct ipq9574_edma_hw *ehw)
 	 */
 	ehw->rxfill_intr_mask = IPQ9574_EDMA_RXFILL_INT_MASK;
 	ehw->rxdesc_intr_mask = IPQ9574_EDMA_RXDESC_INT_MASK_PKT_INT;
-	ehw->txcmpl_intr_mask = IPQ9574_EDMA_TX_INT_MASK_PKT_INT |
-				IPQ9574_EDMA_TX_INT_MASK_UGT_INT;
+	ehw->txcmpl_intr_mask = IPQ9574_EDMA_TX_INT_MASK_PKT_INT;
 	ehw->misc_intr_mask = 0xff;
 	ehw->rx_payload_offset = 0x0;
 
@@ -1753,17 +1744,19 @@ int ipq9574_edma_hw_init(struct ipq9574_edma_hw *ehw)
 
 	/*
 	 * Set PPE QID to EDMA Rx ring mapping.
-	 * When coming up use only queue 0.
-	 * HOST EDMA rings.
-	 * Each entry can hold mapping for 8 PPE queues and entry size is
+	 * Each entry can hold mapping for 4 PPE queues and entry size is
 	 * 4 bytes
 	 */
-	desc_index = ehw->rxdesc_ring_start;
+	desc_index = (ehw->rxdesc_ring_start & 0x1F);
+
 	reg = IPQ9574_EDMA_QID2RID_TABLE_MEM(0);
-	data = 0;
-	data |= (desc_index & 0xF);
+	data = ((desc_index << 0) & 0xFF) |
+	       (((desc_index + 1) << 8) & 0xff00) |
+	       (((desc_index + 2) << 16) & 0xff0000) |
+	       (((desc_index + 3) << 24) & 0xff000000);
+
 	ipq9574_edma_reg_write(reg, data);
-	pr_debug("Configure QID2RID reg:0x%x to 0x%x\n", reg, data);
+	pr_debug("Configure QID2RID(0) reg:0x%x to 0x%x\n", reg, data);
 
 	/*
 	 * Set RXDESC2FILL_MAP_xx reg.
@@ -1775,31 +1768,27 @@ int ipq9574_edma_hw_init(struct ipq9574_edma_hw *ehw)
 	ipq9574_edma_reg_write(IPQ9574_EDMA_REG_RXDESC2FILL_MAP_1, 0);
 	ipq9574_edma_reg_write(IPQ9574_EDMA_REG_RXDESC2FILL_MAP_2, 0);
 
-	for (i = ehw->rxdesc_ring_start;
-			i < ehw->rxdesc_ring_end; i++) {
-		if ((i >= 0) && (i <= 9))
+	for (i = 0; i < ehw->rxdesc_rings; i++) {
+		rxdesc_ring = &ehw->rxdesc_ring[i];
+
+		ring_id = rxdesc_ring->id;
+		if ((ring_id >= 0) && (ring_id <= 9))
 			reg = IPQ9574_EDMA_REG_RXDESC2FILL_MAP_0;
-		else if ((i >= 10) && (i <= 19))
+		else if ((ring_id >= 10) && (ring_id <= 19))
 			reg = IPQ9574_EDMA_REG_RXDESC2FILL_MAP_1;
 		else
 			reg = IPQ9574_EDMA_REG_RXDESC2FILL_MAP_2;
 
-		rxdesc_ring = &ehw->rxdesc_ring[i - ehw->rxdesc_ring_start];
 
 		pr_debug("Configure RXDESC:%u to use RXFILL:%u\n",
-				rxdesc_ring->id, rxdesc_ring->rxfill->id);
+				ring_id, rxdesc_ring->rxfill->id);
 
 		/*
 		 * Set the Rx fill descriptor ring number in the mapping
 		 * register.
-		 * E.g. If (rxfill ring)rxdesc_ring->rxfill->id = 7, (rxdesc ring)i = 13.
-		 * 	reg = IPQ9574_EDMA_REG_RXDESC2FILL_MAP_1
-		 * 	data |= (rxdesc_ring->rxfill->id & 0x7) << ((i % 10) * 3);
-		 * 	data |= (0x7 << 9); - This sets 111 at 9th bit of
-		 * 	register IPQ9574_EDMA_REG_RXDESC2FILL_MAP_1
 		 */
 		data = ipq9574_edma_reg_read(reg);
-		data |= (rxdesc_ring->rxfill->id & 0x7) << ((i % 10) * 3);
+		data |= (rxdesc_ring->rxfill->id & 0x7) << ((ring_id % 10) * 3);
 		ipq9574_edma_reg_write(reg, data);
 	}
 
@@ -1809,6 +1798,23 @@ int ipq9574_edma_hw_init(struct ipq9574_edma_hw *ehw)
 		 ipq9574_edma_reg_read(IPQ9574_EDMA_REG_RXDESC2FILL_MAP_1));
 	pr_debug("EDMA_REG_RXDESC2FILL_MAP_2: 0x%x\n",
 		 ipq9574_edma_reg_read(IPQ9574_EDMA_REG_RXDESC2FILL_MAP_2));
+
+	/*
+	 * Configure DMA request priority, DMA read burst length,
+	 * and AXI write size.
+	 */
+	data = IPQ9574_EDMA_DMAR_BURST_LEN_SET(IPQ9574_EDMA_BURST_LEN_ENABLE)
+		| IPQ9574_EDMA_DMAR_REQ_PRI_SET(0)
+		| IPQ9574_EDMA_DMAR_TXDATA_OUTSTANDING_NUM_SET(31)
+		| IPQ9574_EDMA_DMAR_TXDESC_OUTSTANDING_NUM_SET(7)
+		| IPQ9574_EDMA_DMAR_RXFILL_OUTSTANDING_NUM_SET(7);
+	ipq9574_edma_reg_write(IPQ9574_EDMA_REG_DMAR_CTRL, data);
+
+	/*
+	 * Enable MISC interrupt mask
+	 */
+	ipq9574_edma_reg_write(IPQ9574_EDMA_REG_MISC_INT_MASK,
+				ehw->misc_intr_mask);
 
 	/*
 	 * Enable EDMA
@@ -1839,12 +1845,6 @@ int ipq9574_edma_hw_init(struct ipq9574_edma_hw *ehw)
 		data |= IPQ9574_EDMA_TXDESC_TX_EN;
 		ipq9574_edma_reg_write(IPQ9574_EDMA_REG_TXDESC_CTRL(i), data);
 	}
-
-	/*
-	 * Enable MISC interrupt
-	 */
-	ipq9574_edma_reg_write(IPQ9574_EDMA_REG_MISC_INT_MASK,
-				ehw->misc_intr_mask);
 
 	pr_info("%s: successfull\n", __func__);
 	return 0;

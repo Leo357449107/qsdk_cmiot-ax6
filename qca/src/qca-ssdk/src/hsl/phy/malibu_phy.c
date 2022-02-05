@@ -1,15 +1,18 @@
 /*
  * Copyright (c) 2015-2019, The Linux Foundation. All rights reserved.
- * Permission to use, copy, modify, and/or distribute this software for
- * any purpose with or without fee is hereby granted, provided that the
- * above copyright notice and this permission notice appear in all copies.
+ * Copyright (c) 2022 Qualcomm Innovation Center, Inc. All rights reserved.
+ *
+ * Permission to use, copy, modify, and/or distribute this software for any
+ * purpose with or without fee is hereby granted, provided that the above
+ * copyright notice and this permission notice appear in all copies.
+ *
  * THE SOFTWARE IS PROVIDED "AS IS" AND THE AUTHOR DISCLAIMS ALL WARRANTIES
  * WITH REGARD TO THIS SOFTWARE INCLUDING ALL IMPLIED WARRANTIES OF
  * MERCHANTABILITY AND FITNESS. IN NO EVENT SHALL THE AUTHOR BE LIABLE FOR
  * ANY SPECIAL, DIRECT, INDIRECT, OR CONSEQUENTIAL DAMAGES OR ANY DAMAGES
  * WHATSOEVER RESULTING FROM LOSS OF USE, DATA OR PROFITS, WHETHER IN AN
- * ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT
- * OF OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
+ * ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF
+ * OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
  */
 
 #include "sw.h"
@@ -2078,6 +2081,8 @@ malibu_phy_interface_set_mode(a_uint32_t dev_id, a_uint32_t phy_id, fal_port_int
 			MALIBU_PHY_CHIP_CONFIG, MALIBU_MODECTRL_DFLT);
 		malibu_phy_reg_write(dev_id, first_phy_addr + MALIBU_PHY_MAX_ADDR_INC,
 			MALIBU_PHY_CONTROL, MALIBU_MIICTRL_DFLT);
+		hsl_phy_phydev_autoneg_update(dev_id,
+			first_phy_addr + MALIBU_PHY_MAX_ADDR_INC, A_FALSE);
 	}
 
 	return SW_OK;
@@ -2109,20 +2114,26 @@ malibu_phy_interface_get_mode(a_uint32_t dev_id, a_uint32_t phy_id, fal_port_int
 		case MALIBU_PHY_PSGMII_BASET:
 			*interface_mode = PHY_PSGMII_BASET;
 			break;
-		case  MALIBU_PHY_PSGMII_BX1000:
-			*interface_mode = PHY_PSGMII_BX1000;
+		case MALIBU_PHY_PSGMII_BX1000:
+			if (phy_id == first_phy_addr + MALIBU_PHY_MAX_ADDR_INC)
+				*interface_mode = PHY_PSGMII_BX1000;
+			else
+				*interface_mode = PHY_PSGMII_BASET;
 			break;
 		case MALIBU_PHY_PSGMII_FX100:
-			*interface_mode = PHY_PSGMII_FX100;
+			if (phy_id == first_phy_addr + MALIBU_PHY_MAX_ADDR_INC)
+				*interface_mode = PHY_PSGMII_FX100;
+			else
+				*interface_mode = PHY_PSGMII_BASET;
 			break;
 		case MALIBU_PHY_PSGMII_AMDET:
 			if (copper_mode) {
-				*interface_mode = PHY_PSGMII_AMDET;
+				*interface_mode = PHY_PSGMII_BASET;
 			 } else {
 				if (phy_id == first_phy_addr + MALIBU_PHY_MAX_ADDR_INC)
 					*interface_mode = PHY_PSGMII_FIBER;
 				else
-					*interface_mode = PHY_PSGMII_AMDET;
+					*interface_mode = PHY_PSGMII_BASET;
 			 }
 			break;
 		case MALIBU_PHY_SGMII_BASET:
@@ -2148,7 +2159,7 @@ malibu_phy_interface_get_mode(a_uint32_t dev_id, a_uint32_t phy_id, fal_port_int
 sw_error_t
 malibu_phy_interface_get_mode_status(a_uint32_t dev_id, a_uint32_t phy_id, fal_port_interface_mode_t *interface_mode_status)
 {
-	a_uint16_t phy_data;
+	a_uint16_t phy_data, phy_mode, phy_mode_status;
 	a_uint16_t copper_mode;
 
 	if ((phy_id < first_phy_addr) ||
@@ -2159,38 +2170,45 @@ malibu_phy_interface_get_mode_status(a_uint32_t dev_id, a_uint32_t phy_id, fal_p
 	phy_data = malibu_phy_reg_read(dev_id,
 		first_phy_addr + MALIBU_PHY_MAX_ADDR_INC, MALIBU_PHY_CHIP_CONFIG);
 	copper_mode = ((phy_data & MALIBU_PHY_COPPER_MODE) >> 0xf);
-	phy_data &= 0x00f0;
-	phy_data = (phy_data >>4);
+	phy_mode = phy_data & 0x000f;
+	phy_mode_status = (phy_data & 0x00f0) >> 0x4;
 
-	switch (phy_data) {
-		case MALIBU_PHY_PSGMII_BASET:
+	if (phy_mode == MALIBU_PHY_PSGMII_AMDET) {
+		if (copper_mode) {
 			*interface_mode_status = PHY_PSGMII_BASET;
-			break;
-		case  MALIBU_PHY_PSGMII_BX1000:
-			*interface_mode_status = PHY_PSGMII_BX1000;
-			break;
-		case MALIBU_PHY_PSGMII_FX100:
-			*interface_mode_status = PHY_PSGMII_FX100;
-			break;
-		case MALIBU_PHY_PSGMII_AMDET:
-			if (copper_mode) {
+		} else {
+			if (phy_id == first_phy_addr + MALIBU_PHY_MAX_ADDR_INC)
+				*interface_mode_status = PHY_PSGMII_FIBER;
+			else
 				*interface_mode_status = PHY_PSGMII_BASET;
-			} else {
+		}
+	} else {
+		switch (phy_mode_status) {
+			case MALIBU_PHY_PSGMII_BASET:
+				*interface_mode_status = PHY_PSGMII_BASET;
+				break;
+			case MALIBU_PHY_PSGMII_BX1000:
 				if (phy_id == first_phy_addr + MALIBU_PHY_MAX_ADDR_INC)
-					*interface_mode_status = PHY_PSGMII_FIBER;
+					*interface_mode_status = PHY_PSGMII_BX1000;
 				else
 					*interface_mode_status = PHY_PSGMII_BASET;
-			}
-			break;
-		case MALIBU_PHY_SGMII_BASET:
-			if (phy_id == first_phy_addr + MALIBU_PHY_MAX_ADDR_INC)
-				*interface_mode_status = PHY_SGMII_BASET;
-			else
-				*interface_mode_status = PORT_QSGMII;
-			break;
-		default:
-			*interface_mode_status = PORT_INTERFACE_MODE_MAX;
-			break;
+				break;
+			case MALIBU_PHY_PSGMII_FX100:
+				if (phy_id == first_phy_addr + MALIBU_PHY_MAX_ADDR_INC)
+					*interface_mode_status = PHY_PSGMII_FX100;
+				else
+					*interface_mode_status = PHY_PSGMII_BASET;
+				break;
+			case MALIBU_PHY_SGMII_BASET:
+				if (phy_id == first_phy_addr + MALIBU_PHY_MAX_ADDR_INC)
+					*interface_mode_status = PHY_SGMII_BASET;
+				else
+					*interface_mode_status = PORT_QSGMII;
+				break;
+			default:
+				*interface_mode_status = PORT_INTERFACE_MODE_MAX;
+				break;
+		}
 	}
 
 	return SW_OK;

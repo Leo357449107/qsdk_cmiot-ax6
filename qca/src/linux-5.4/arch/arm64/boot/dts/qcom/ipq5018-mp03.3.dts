@@ -35,7 +35,7 @@
 
 	chosen {
 		bootargs = "console=ttyMSM0,115200,n8 rw init=/init";
-		bootargs-append = " swiotlb=1 coherent_pool=2M clk_ignore_unused";
+		bootargs-append = " swiotlb=1 coherent_pool=2M";
 		stdout-path = "serial0";
 	};
 
@@ -102,7 +102,7 @@
 	 * |        |              |                         |
 	 * +--------+--------------+-------------------------+
 	 * |        |              |                         |
-	 * |  MHI1  |  0x4F900000  |          16MB           |
+	 * |  MHI1  |  0x4F900000  |           9MB           |
 	 * |        |              |                         |
 	 * +--------+--------------+-------------------------+
 	 * |                                                 |
@@ -156,11 +156,13 @@
 			reg = <0x0 0x4E000000 0x0 0x01900000>;
 		};
 
+	#if defined(__CNSS2__)
 		mhi_region1: dma_pool1@4F900000 {
 			compatible = "shared-dma-pool";
 			no-map;
-			reg = <0x0 0x4F900000 0x0 0x01000000>;
+			reg = <0x0 0x4F900000 0x0 0x00900000>;
 		};
+	#endif
 	#elif __IPQ_MEM_PROFILE_512_MB__
 	/*                      512 MB Profile
 	 * +=========+==============+========================+
@@ -226,7 +228,7 @@
 	 * |        |              |                         |
 	 * +--------+--------------+-------------------------+
 	 * |        |              |                         |
-	 * |  MHI1  |  0x50F00000  |          16MB           |
+	 * |  MHI1  |  0x50F00000  |           9MB           |
 	 * |        |              |                         |
 	 * +--------+--------------+-------------------------+
 	 * |                                                 |
@@ -290,11 +292,13 @@
 			reg = <0x0 0x4E900000 0x0 0x02600000>;
 		};
 
+	#if defined(__CNSS2__)
 		mhi_region1: dma_pool1@50F00000 {
 			compatible = "shared-dma-pool";
 			no-map;
-			reg = <0x0 0x50F00000 0x0 0x01000000>;
+			reg = <0x0 0x50F00000 0x0 0x00900000>;
 		};
+	#endif
 	#else
 	/*                      1G Profile
 	 * +=========+==============+========================+
@@ -360,7 +364,7 @@
 	 * |        |              |                         |
 	 * +--------+--------------+-------------------------+
 	 * |        |              |                         |
-	 * |  MHI1  |  0x51E00000  |          16MB           |
+	 * |  MHI1  |  0x51E00000  |           9MB           |
 	 * |        |              |                         |
 	 * +--------+--------------+-------------------------+
 	 * |                                                 |
@@ -424,11 +428,13 @@
 			reg = <0x0 0x4E900000 0x0 0x03500000>;
 		};
 
+#if defined(__CNSS2__)
 		mhi_region1: dma_pool1@51e00000 {
 			compatible = "shared-dma-pool";
 			no-map;
-			reg = <0x0 0x51e00000 0x0 0x01000000>;
+			reg = <0x0 0x51E00000 0x0 0x00900000>;
 		};
+#endif
 	#endif
 	};
 
@@ -559,6 +565,26 @@
 			phy_addr = <0x1c>;
 			mdiobus = <&mdio1>;
 		};
+
+		pcm: pcm@0xA3C0000{
+			pinctrl-0 = <&audio_pins>;
+			pinctrl-names = "default";
+			status = "disabled";
+		};
+
+		gpio_keys {
+			compatible = "gpio-keys";
+			pinctrl-0 = <&button_pins>;
+			pinctrl-names = "default";
+
+			button@1 {
+				label = "wps";
+				linux,code = <KEY_WPS_BUTTON>;
+				gpios = <&tlmm 38 GPIO_ACTIVE_LOW>;
+				linux,input-type = <1>;
+				debounce-interval = <60>;
+			};
+		};
 	};
 
 	qcom,test@0 {
@@ -662,6 +688,66 @@
 			bias-disable;
 		};
 	};
+
+	audio_pins: audio_pinmux {
+		mux_1 {
+			pins = "gpio24";
+			function = "audio_rxbclk";
+			drive-strength = <8>;
+			bias-pull-down;
+		};
+
+		mux_2 {
+			pins = "gpio25";
+			function = "audio_rxfsync";
+			drive-strength = <8>;
+			bias-pull-down;
+		};
+
+		mux_3 {
+			pins = "gpio26";
+			function = "audio_rxd";
+			drive-strength = <8>;
+			bias-pull-down;
+		};
+
+		mux_4 {
+			pins = "gpio27";
+			function = "audio_txmclk";
+			drive-strength = <8>;
+			bias-pull-down;
+		};
+
+		mux_5 {
+			pins = "gpio28";
+			function = "audio_txbclk";
+			drive-strength = <8>;
+			bias-pull-down;
+		};
+
+		mux_6 {
+			pins = "gpio29";
+			function = "audio_txfsync";
+			drive-strength = <8>;
+			bias-pull-down;
+		};
+
+		mux_7 {
+			pins = "gpio30";
+			function = "audio_txd";
+			drive-strength = <8>;
+			bias-pull-down;
+		};
+	};
+
+	button_pins: button_pins {
+		wps_button {
+			pins = "gpio38";
+			function = "gpio";
+			drive-strength = <8>;
+			bias-pull-up;
+		};
+	};
 };
 
 &usb3 {
@@ -713,8 +799,9 @@
 		qrtr_instance_id = <0x21>;
 		#address-cells = <0x2>;
 		#size-cells = <0x2>;
+#if defined(__CNSS2__)
 		memory-region = <&mhi_region1>;
-#if !defined(__CNSS2__)
+#else
 		qrtr_node_id = <0x20>;
 		base-addr = <0x4CC00000>;
 		m3-dump-addr = <0x4E000000>;
@@ -809,6 +896,14 @@
 		qcom,smem-state-names = "shutdown",
 					"stop",
 					"spawn";
+	#ifdef __IPQ_MEM_PROFILE_256_MB__
+		memory-region = <&q6_ipq5018_data>, <&m3_dump>,
+				<&q6_etr_region>;
+	#else
+		memory-region = <&q6_ipq5018_data>, <&m3_dump>,
+				<&q6_etr_region>, <&q6_caldb_region>;
+	#endif
+
 	};
 
 	q6_wcss_pd2: remoteproc_pd2 {
@@ -830,6 +925,14 @@
 		qcom,smem-state-names = "shutdown",
 					"stop",
 					"spawn";
+	#ifdef __IPQ_MEM_PROFILE_256_MB__
+		memory-region = <&q6_qcn6122_data1>, <&m3_dump_qcn6122_1>,
+				<&q6_qcn6122_etr_1>;
+	#else
+		memory-region = <&q6_qcn6122_data1>, <&m3_dump_qcn6122_1>,
+				<&q6_qcn6122_etr_1>, <&q6_qcn6122_caldb_1>;
+	#endif
+
 	};
 };
 

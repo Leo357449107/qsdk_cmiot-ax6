@@ -1,0 +1,266 @@
+Source-Makefile: package/boot/uboot-layerscape/Makefile
+
+Package: u-boot-ls1012ardb
+Default: y if (TARGET_layerscape_armv8_64b_Default || TARGET_layerscape_armv8_64b_DEVICE_ls1012ardb || TARGET_DEVICE_layerscape_armv8_64b_DEVICE_ls1012ardb)
+Version: lsdk-1903-1
+Depends: +libc +GCC_LIBSSP:libssp +USE_GLIBC:librt +USE_GLIBC:libpthread @!IN_SDK @TARGET_layerscape_armv8_64b
+Conflicts: 
+Menu-Depends: 
+Provides: 
+Build-Variant: ls1012ardb
+Section: boot
+Category: Boot Loaders
+Title: U-Boot for NXP LS1012ARDB
+Maintainer: 
+Source: uboot-layerscape-lsdk-1903.tar.xz
+License: GPL-2.0 GPL-2.0+
+LicenseFiles: Licenses/README
+Type: bin
+Description: U-Boot for NXP LS1012ARDB
+http://www.denx.de/wiki/U-Boot
+
+@@
+
+
+Package: u-boot-ls1012afrwy
+Default: y if (TARGET_layerscape_armv8_64b_Default || TARGET_layerscape_armv8_64b_DEVICE_ls1012afrwy || TARGET_DEVICE_layerscape_armv8_64b_DEVICE_ls1012afrwy)
+Version: lsdk-1903-1
+Depends: +libc +GCC_LIBSSP:libssp +USE_GLIBC:librt +USE_GLIBC:libpthread @!IN_SDK @TARGET_layerscape_armv8_64b
+Conflicts: 
+Menu-Depends: 
+Provides: 
+Build-Variant: ls1012afrwy
+Section: boot
+Category: Boot Loaders
+Title: U-Boot for NXP LS1012AFRWY
+Maintainer: 
+Source: uboot-layerscape-lsdk-1903.tar.xz
+License: GPL-2.0 GPL-2.0+
+LicenseFiles: Licenses/README
+Type: bin
+Description: U-Boot for NXP LS1012AFRWY
+http://www.denx.de/wiki/U-Boot
+
+@@
+
+
+Package: u-boot-ls1043ardb
+Default: y if (TARGET_layerscape_armv8_64b_Default || TARGET_layerscape_armv8_64b_DEVICE_ls1043ardb || TARGET_DEVICE_layerscape_armv8_64b_DEVICE_ls1043ardb)
+Version: lsdk-1903-1
+Depends: +libc +GCC_LIBSSP:libssp +USE_GLIBC:librt +USE_GLIBC:libpthread @!IN_SDK @TARGET_layerscape_armv8_64b
+Conflicts: 
+Menu-Depends: 
+Provides: 
+Build-Variant: ls1043ardb
+Section: boot
+Category: Boot Loaders
+Title: U-Boot for NXP LS1043ARDB
+Maintainer: 
+Source: uboot-layerscape-lsdk-1903.tar.xz
+License: GPL-2.0 GPL-2.0+
+LicenseFiles: Licenses/README
+Type: bin
+Description: U-Boot for NXP LS1043ARDB
+http://www.denx.de/wiki/U-Boot
+
+@@
+
+
+Package: u-boot-ls1043ardb-sdboot
+Default: y if (TARGET_layerscape_armv8_64b_Default || TARGET_layerscape_armv8_64b_DEVICE_ls1043ardb-sdboot || TARGET_DEVICE_layerscape_armv8_64b_DEVICE_ls1043ardb-sdboot)
+Version: lsdk-1903-1
+Depends: +libc +GCC_LIBSSP:libssp +USE_GLIBC:librt +USE_GLIBC:libpthread @!IN_SDK @TARGET_layerscape_armv8_64b
+Conflicts: 
+Menu-Depends: 
+Provides: 
+Build-Variant: ls1043ardb-sdboot
+Section: boot
+Category: Boot Loaders
+Title: U-Boot for NXP LS1043ARDB SD Card Boot
+Maintainer: 
+Source: uboot-layerscape-lsdk-1903.tar.xz
+License: GPL-2.0 GPL-2.0+
+LicenseFiles: Licenses/README
+Type: bin
+Description: U-Boot for NXP LS1043ARDB SD Card Boot
+http://www.denx.de/wiki/U-Boot
+
+@@
+
+
+Package: u-boot-ls1046ardb
+Default: y if (TARGET_layerscape_armv8_64b_Default || TARGET_layerscape_armv8_64b_DEVICE_ls1046ardb || TARGET_DEVICE_layerscape_armv8_64b_DEVICE_ls1046ardb)
+Version: lsdk-1903-1
+Depends: +libc +GCC_LIBSSP:libssp +USE_GLIBC:librt +USE_GLIBC:libpthread @!IN_SDK @TARGET_layerscape_armv8_64b
+Conflicts: 
+Menu-Depends: 
+Provides: 
+Build-Variant: ls1046ardb
+Section: boot
+Category: Boot Loaders
+Title: U-Boot for NXP LS1046ARDB
+Maintainer: 
+Source: uboot-layerscape-lsdk-1903.tar.xz
+License: GPL-2.0 GPL-2.0+
+LicenseFiles: Licenses/README
+Type: bin
+Description: U-Boot for NXP LS1046ARDB
+http://www.denx.de/wiki/U-Boot
+
+@@
+
+
+Package: u-boot-ls1046ardb-sdboot
+Default: y if (TARGET_layerscape_armv8_64b_Default || TARGET_layerscape_armv8_64b_DEVICE_ls1046ardb-sdboot || TARGET_DEVICE_layerscape_armv8_64b_DEVICE_ls1046ardb-sdboot)
+Version: lsdk-1903-1
+Depends: +libc +GCC_LIBSSP:libssp +USE_GLIBC:librt +USE_GLIBC:libpthread @!IN_SDK @TARGET_layerscape_armv8_64b
+Conflicts: 
+Menu-Depends: 
+Provides: 
+Build-Variant: ls1046ardb-sdboot
+Section: boot
+Category: Boot Loaders
+Title: U-Boot for NXP LS1046ARDB SD Card Boot
+Maintainer: 
+Source: uboot-layerscape-lsdk-1903.tar.xz
+License: GPL-2.0 GPL-2.0+
+LicenseFiles: Licenses/README
+Type: bin
+Description: U-Boot for NXP LS1046ARDB SD Card Boot
+http://www.denx.de/wiki/U-Boot
+
+@@
+
+
+Package: u-boot-ls1088ardb
+Default: y if (TARGET_layerscape_armv8_64b_Default || TARGET_layerscape_armv8_64b_DEVICE_ls1088ardb || TARGET_DEVICE_layerscape_armv8_64b_DEVICE_ls1088ardb)
+Version: lsdk-1903-1
+Depends: +libc +GCC_LIBSSP:libssp +USE_GLIBC:librt +USE_GLIBC:libpthread @!IN_SDK @TARGET_layerscape_armv8_64b
+Conflicts: 
+Menu-Depends: 
+Provides: 
+Build-Variant: ls1088ardb
+Section: boot
+Category: Boot Loaders
+Title: U-Boot for NXP LS1088ARDB
+Maintainer: 
+Source: uboot-layerscape-lsdk-1903.tar.xz
+License: GPL-2.0 GPL-2.0+
+LicenseFiles: Licenses/README
+Type: bin
+Description: U-Boot for NXP LS1088ARDB
+http://www.denx.de/wiki/U-Boot
+
+@@
+
+
+Package: u-boot-ls1088ardb-sdboot
+Default: y if (TARGET_layerscape_armv8_64b_Default || TARGET_layerscape_armv8_64b_DEVICE_ls1088ardb-sdboot || TARGET_DEVICE_layerscape_armv8_64b_DEVICE_ls1088ardb-sdboot)
+Version: lsdk-1903-1
+Depends: +libc +GCC_LIBSSP:libssp +USE_GLIBC:librt +USE_GLIBC:libpthread @!IN_SDK @TARGET_layerscape_armv8_64b
+Conflicts: 
+Menu-Depends: 
+Provides: 
+Build-Variant: ls1088ardb-sdboot
+Section: boot
+Category: Boot Loaders
+Title: U-Boot for NXP LS1088ARDB SD Card Boot
+Maintainer: 
+Source: uboot-layerscape-lsdk-1903.tar.xz
+License: GPL-2.0 GPL-2.0+
+LicenseFiles: Licenses/README
+Type: bin
+Description: U-Boot for NXP LS1088ARDB SD Card Boot
+http://www.denx.de/wiki/U-Boot
+
+@@
+
+
+Package: u-boot-ls2088ardb
+Default: y if (TARGET_layerscape_armv8_64b_Default || TARGET_layerscape_armv8_64b_DEVICE_ls2088ardb || TARGET_DEVICE_layerscape_armv8_64b_DEVICE_ls2088ardb)
+Version: lsdk-1903-1
+Depends: +libc +GCC_LIBSSP:libssp +USE_GLIBC:librt +USE_GLIBC:libpthread @!IN_SDK @TARGET_layerscape_armv8_64b
+Conflicts: 
+Menu-Depends: 
+Provides: 
+Build-Variant: ls2088ardb
+Section: boot
+Category: Boot Loaders
+Title: U-Boot for NXP LS2088ARDB
+Maintainer: 
+Source: uboot-layerscape-lsdk-1903.tar.xz
+License: GPL-2.0 GPL-2.0+
+LicenseFiles: Licenses/README
+Type: bin
+Description: U-Boot for NXP LS2088ARDB
+http://www.denx.de/wiki/U-Boot
+
+@@
+
+
+Package: u-boot-ls1021atwr
+Default: y if (TARGET_layerscape_armv7_Default || TARGET_layerscape_armv7_DEVICE_ls1021atwr || TARGET_DEVICE_layerscape_armv7_DEVICE_ls1021atwr)
+Version: lsdk-1903-1
+Depends: +libc +GCC_LIBSSP:libssp +USE_GLIBC:librt +USE_GLIBC:libpthread @!IN_SDK @TARGET_layerscape_armv7
+Conflicts: 
+Menu-Depends: 
+Provides: 
+Build-Variant: ls1021atwr
+Section: boot
+Category: Boot Loaders
+Title: U-Boot for NXP LS1021ATWR
+Maintainer: 
+Source: uboot-layerscape-lsdk-1903.tar.xz
+License: GPL-2.0 GPL-2.0+
+LicenseFiles: Licenses/README
+Type: bin
+Description: U-Boot for NXP LS1021ATWR
+http://www.denx.de/wiki/U-Boot
+
+@@
+
+
+Package: u-boot-ls1021atwr-sdboot
+Default: y if (TARGET_layerscape_armv7_Default || TARGET_layerscape_armv7_DEVICE_ls1021atwr-sdboot || TARGET_DEVICE_layerscape_armv7_DEVICE_ls1021atwr-sdboot)
+Version: lsdk-1903-1
+Depends: +libc +GCC_LIBSSP:libssp +USE_GLIBC:librt +USE_GLIBC:libpthread @!IN_SDK @TARGET_layerscape_armv7
+Conflicts: 
+Menu-Depends: 
+Provides: 
+Build-Variant: ls1021atwr-sdboot
+Section: boot
+Category: Boot Loaders
+Title: U-Boot for NXP LS1021ATWR SD Card Boot
+Maintainer: 
+Source: uboot-layerscape-lsdk-1903.tar.xz
+License: GPL-2.0 GPL-2.0+
+LicenseFiles: Licenses/README
+Type: bin
+Description: U-Boot for NXP LS1021ATWR SD Card Boot
+http://www.denx.de/wiki/U-Boot
+
+@@
+
+
+Package: u-boot-ls1021aiot-sdboot
+Default: y if (TARGET_layerscape_armv7_Default || TARGET_layerscape_armv7_DEVICE_ls1021aiot-sdboot || TARGET_DEVICE_layerscape_armv7_DEVICE_ls1021aiot-sdboot)
+Version: lsdk-1903-1
+Depends: +libc +GCC_LIBSSP:libssp +USE_GLIBC:librt +USE_GLIBC:libpthread @!IN_SDK @TARGET_layerscape_armv7
+Conflicts: 
+Menu-Depends: 
+Provides: 
+Build-Variant: ls1021aiot-sdboot
+Section: boot
+Category: Boot Loaders
+Title: U-Boot for NXP LS1021AIOT SD Card Boot
+Maintainer: 
+Source: uboot-layerscape-lsdk-1903.tar.xz
+License: GPL-2.0 GPL-2.0+
+LicenseFiles: Licenses/README
+Type: bin
+Description: U-Boot for NXP LS1021AIOT SD Card Boot
+http://www.denx.de/wiki/U-Boot
+
+@@
+
+

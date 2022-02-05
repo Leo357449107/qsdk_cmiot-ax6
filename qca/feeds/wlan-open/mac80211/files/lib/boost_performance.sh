@@ -14,6 +14,7 @@
 # ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF
 # OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
 [ -e /lib/ipq806x.sh ] && . /lib/ipq806x.sh
+. /lib/functions.sh
 
 type ipq806x_board_name &>/dev/null  || ipq806x_board_name() {
         echo $(board_name) | sed 's/^\([^-]*-\)\{1\}//g'

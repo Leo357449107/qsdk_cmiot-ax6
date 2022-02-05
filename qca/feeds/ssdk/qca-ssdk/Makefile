@@ -8,14 +8,22 @@ PKG_BRANCH:=master
 PKG_RELEASE:=1
 
 ifeq ($(CONFIG_TARGET_ipq),y)
-  subtarget:=$(SUBTARGET)
+	subtarget:=$(SUBTARGET)
 else
-  subtarget:=$(CONFIG_TARGET_BOARD)
+	subtarget:=$(CONFIG_TARGET_BOARD)
+endif
+
+ifneq (, $(findstring _64, $(subtarget)))
+	hal_arch:=$(subst _64,,$(subtarget))
+else ifneq (, $(findstring _32, $(subtarget)))
+	hal_arch:=$(subst _32,,$(subtarget))
+else
+	hal_arch:=$(subtarget)
 endif
 
 include $(INCLUDE_DIR)/local-development.mk
 ifeq ($(DUMP)$(PKG_VERSION),)
-  PKG_VERSION:=$(shell git ls-remote $(PKG_SOURCE_URL) $(PKG_BRANCH) | cut -b -7)
+	PKG_VERSION:=$(shell git ls-remote $(PKG_SOURCE_URL) $(PKG_BRANCH) | cut -b -7)
 endif
 
 LOCAL_VARIANT=$(patsubst qca-ssdk-%,%,$(patsubst qca-ssdk-%,%,$(BUILD_VARIANT)))
@@ -36,7 +44,7 @@ $(call KernelPackage/qca-ssdk/default-nohnat)
   DEPENDS:=@!(TARGET_ipq_ipq40xx||TARGET_ipq40xx)||TARGET_ar71xx
   VARIANT:=nohnat
 
-  ifneq (, $(findstring $(subtarget), "ipq50xx" "ipq50xx_64"))
+  ifneq (, $(findstring $(hal_arch), "ipq50xx"))
     ifeq (, $(CONFIG_LOWMEM_FLASH))
       ifneq ($(LINUX_VERSION),$(filter 5.4%,$(LINUX_VERSION)))
       DEPENDS+=kmod-ipt-filter +kmod-ppp
@@ -93,21 +101,22 @@ ifeq ($(LOCAL_VARIANT),hnat)
     endif
 endif
 
-ifneq (, $(findstring $(subtarget), "ipq95xx" "ipq95xx_32"))
+ifneq (, $(findstring $(hal_arch), "ipq95xx"))
     QCASSDK_CONFIG_OPTS+= CHIP_TYPE=APPE
 endif
 
-ifneq (, $(findstring $(subtarget), "ipq60xx" "ipq60xx_64" "ipq807x" "ipq807x_64"))
+ifneq (, $(findstring $(hal_arch), "ipq60xx" "ipq807x" "ipq95xx"))
     QCASSDK_CONFIG_OPTS+= PTP_FEATURE=enable
 endif
 
 ifneq (, $(findstring $(CONFIG_KERNEL_IPQ_MEM_PROFILE), 256 512)$(CONFIG_LOWMEM_FLASH))
 	QCASSDK_CONFIG_OPTS+= MINI_SSDK=enable
-	ifneq (, $(findstring $(subtarget), "ipq807x" "ipq807x_64"))
+
+	ifneq (, $(findstring $(hal_arch), "ipq807x"))
 		QCASSDK_CONFIG_OPTS+= CHIP_TYPE=HPPE
-	else ifneq (, $(findstring $(subtarget), "ipq60xx" "ipq60xx_64"))
+	else ifneq (, $(findstring $(hal_arch), "ipq60xx"))
 		QCASSDK_CONFIG_OPTS+= CHIP_TYPE=CPPE
-	else ifneq (, $(findstring $(subtarget), "ipq50xx" "ipq50xx_64"))
+	else ifneq (, $(findstring $(hal_arch), "ipq50xx"))
 		QCASSDK_CONFIG_OPTS+= ISISC_ENABLE=enable
 		QCASSDK_CONFIG_OPTS+= CHIP_TYPE=MP
 
@@ -117,11 +126,12 @@ ifneq (, $(findstring $(CONFIG_KERNEL_IPQ_MEM_PROFILE), 256 512)$(CONFIG_LOWMEM_
 			endif
 		endif
 	endif
+
 	QCASSDK_CONFIG_OPTS+= PTP_FEATURE=disable
 endif
 
 ifeq ($(CONFIG_TARGET_ipq806x_QSDK_Standard),)
-    QCASSDK_CONFIG_OPTS+= HK_CHIP=enable
+	QCASSDK_CONFIG_OPTS+= HK_CHIP=enable
 endif
 
 define Build/InstallDev
@@ -143,6 +153,9 @@ define Build/InstallDev
 	fi
 	if [ -f $(PKG_BUILD_DIR)/include/init/ssdk_init.h ]; then \
 	$(CP) -rf $(PKG_BUILD_DIR)/include/init/ssdk_init.h $(1)/usr/include/qca-ssdk/init/; \
+	fi
+	if [ -f $(PKG_BUILD_DIR)/include/init/ssdk_netlink.h ]; then \
+	$(CP) -rf $(PKG_BUILD_DIR)/include/init/ssdk_netlink.h $(1)/usr/include/qca-ssdk/init/; \
 	fi
 	$(CP) -rf $(PKG_BUILD_DIR)/include/fal $(1)/usr/include/qca-ssdk
 	$(CP) -rf $(PKG_BUILD_DIR)/include/common/*.h $(1)/usr/include/qca-ssdk

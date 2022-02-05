@@ -30,7 +30,6 @@
 #include "ipq-adss.h"
 
 static void __iomem *adss_audio_local_base;
-void __iomem *adss_audio_spdifin_base;
 static struct reset_control *audio_blk_rst;
 static spinlock_t i2s_ctrl_lock;
 static spinlock_t tdm_ctrl_lock;
@@ -57,7 +56,6 @@ static struct ipq_configs ipq8074_cfgs = {
 		.reg = ADSS_GLB_I2S_RST_REG,
 		.mask = GLB_I2S_RESET_VAL_8074,
 	},
-	.spdif_enable = 0,
 };
 static struct ipq_configs *ipq_cfgs;
 
@@ -420,49 +418,6 @@ void ipq_pcm_clk_enable(void)
 }
 EXPORT_SYMBOL(ipq_pcm_clk_enable);
 
-void ipq_spdifin_ctrl_spdif_en(uint32_t enable)
-{
-	uint32_t reg_val;
-
-	reg_val = readl(adss_audio_spdifin_base + ADSS_SPDIFIN_SPDIF_CTRL_REG);
-
-	if (enable)
-		reg_val |= SPDIF_CTRL_SPDIF_ENABLE;
-	else
-		reg_val &= ~SPDIF_CTRL_SPDIF_ENABLE;
-
-	writel(reg_val, adss_audio_spdifin_base + ADSS_SPDIFIN_SPDIF_CTRL_REG);
-
-}
-EXPORT_SYMBOL(ipq_spdifin_ctrl_spdif_en);
-
-void ipq_spdifin_cfg(void)
-{
-	uint32_t reg_val;
-
-	reg_val = readl(adss_audio_spdifin_base + ADSS_SPDIFIN_SPDIF_CTRL_REG);
-	reg_val &= ~(SPDIF_CTRL_CHANNEL_MODE
-			| SPDIF_CTRL_VALIDITYCHECK
-			| SPDIF_CTRL_PARITYCHECK);
-	reg_val |= (SPDIF_CTRL_USE_FIFO_IF
-			| SPDIF_CTRL_SFR_ENABLE
-			| SPDIF_CTRL_FIFO_ENABLE);
-	writel(reg_val, adss_audio_spdifin_base + ADSS_SPDIFIN_SPDIF_CTRL_REG);
-}
-EXPORT_SYMBOL(ipq_spdifin_cfg);
-
-void ipq_glb_spdif_out_en(uint32_t enable)
-{
-	int32_t cfg;
-
-	cfg = readl(adss_audio_local_base + ADSS_GLB_AUDIO_MODE_REG);
-	cfg &= ~(GLB_AUDIO_MODE_SPDIF_OUT_OE);
-	if (enable)
-		cfg |= GLB_AUDIO_MODE_SPDIF_OUT_OE;
-	writel(cfg, adss_audio_local_base + ADSS_GLB_AUDIO_MODE_REG);
-}
-EXPORT_SYMBOL(ipq_glb_spdif_out_en);
-
 static const struct of_device_id ipq_audio_adss_id_table[] = {
 	{ .compatible = "qca,ipq8074-audio-adss", .data = &ipq8074_cfgs},
 	{},
@@ -506,14 +461,6 @@ static int ipq_audio_adss_probe(struct platform_device *pdev)
 	adss_audio_local_base = devm_ioremap_resource(&pdev->dev, res);
 	if (IS_ERR(adss_audio_local_base))
 		return PTR_ERR(adss_audio_local_base);
-
-	if (ipq_cfgs->spdif_enable == 1) {
-		res = platform_get_resource(pdev, IORESOURCE_MEM, 1);
-		adss_audio_spdifin_base =
-				devm_ioremap_resource(&pdev->dev, res);
-		if (IS_ERR(adss_audio_spdifin_base))
-			return PTR_ERR(adss_audio_spdifin_base);
-	}
 
 	audio_blk_rst = devm_reset_control_get(&pdev->dev, "blk_rst");
 	if (IS_ERR(audio_blk_rst))

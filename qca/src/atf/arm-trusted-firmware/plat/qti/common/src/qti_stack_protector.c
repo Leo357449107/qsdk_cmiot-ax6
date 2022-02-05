@@ -10,6 +10,8 @@
 #include <platform_def.h>
 #include <qtiseclib_interface.h>
 
+extern u_register_t __stack_chk_guard;
+
 u_register_t plat_get_stack_protector_canary(void)
 {
 	u_register_t random = 0x0;
@@ -20,4 +22,22 @@ u_register_t plat_get_stack_protector_canary(void)
 	assert(0x0 != random);
 
 	return random;
+}
+
+int qti_test_stack_protection(void)
+{
+  int ret = 0;
+  char a[16];
+  char *p;
+  int i;
+  p = (char *)&ret;
+  strlcpy(a, (p+4), 16);
+    for (i = 0; i < 50; i ++) {
+      if (!memcmp(p + i, (char *)&__stack_chk_guard, 8)) {
+        ret = 0;
+        return ret;
+      }
+    }
+    ret = -1;
+    return ret;
 }

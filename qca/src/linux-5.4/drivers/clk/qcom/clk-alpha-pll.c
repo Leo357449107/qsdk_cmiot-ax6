@@ -641,6 +641,78 @@ clk_alpha_pll_recalc_rate(struct clk_hw *hw, unsigned long parent_rate)
 	return alpha_pll_calc_rate(prate, l, a, alpha_width);
 }
 
+static int clk_alpha_pll_brammo_set_rate(struct clk_hw *hw, unsigned long rate,
+					 unsigned long prate)
+{
+	struct clk_alpha_pll *pll = to_clk_alpha_pll(hw);
+	u32 l, mode;
+	int ret;
+	u64 a;
+
+	rate = alpha_pll_round_rate(rate, prate, &l, &a, ALPHA_REG_BITWIDTH);
+
+	regmap_read(pll->clkr.regmap, PLL_MODE(pll), &mode);
+	regmap_write(pll->clkr.regmap, PLL_L_VAL(pll), l);
+
+	a <<= ALPHA_REG_BITWIDTH - ALPHA_BITWIDTH;
+
+	regmap_write(pll->clkr.regmap, PLL_ALPHA_VAL(pll), a);
+	regmap_write(pll->clkr.regmap, PLL_ALPHA_VAL_U(pll), a >> 32);
+	regmap_update_bits(pll->clkr.regmap, PLL_USER_CTL(pll),
+			   PLL_ALPHA_EN, PLL_ALPHA_EN);
+
+	if (!clk_hw_is_enabled(hw))
+		return 0;
+
+	regmap_update_bits(pll->clkr.regmap, PLL_MODE(pll), PLL_UPDATE,
+			   PLL_UPDATE);
+
+	/* Make sure PLL_UPDATE request goes through*/
+	mb();
+
+	/*
+	 * PLL will latch the new L, Alpha and freq control word.
+	 * PLL will respond by raising PLL_ACK_LATCH output when new programming
+	 * has been latched in and PLL is being updated. When
+	 * UPDATE_LOGIC_BYPASS bit is not set, PLL_UPDATE will be cleared
+	 * automatically by hardware when PLL_ACK_LATCH is asserted by PLL.
+	 */
+	if (!(mode & PLL_UPDATE_BYPASS))
+		return wait_for_pll_update(pll);
+
+	ret = wait_for_pll_update_ack_set(pll);
+	if (ret)
+		return ret;
+
+	regmap_update_bits(pll->clkr.regmap, PLL_MODE(pll), PLL_UPDATE, 0);
+
+	/* Make sure PLL_UPDATE request goes through*/
+	mb();
+
+	ret = wait_for_pll_update_ack_clear(pll);
+	if (ret)
+		return ret;
+
+	return 0;
+}
+
+static int
+clk_alpha_pll_brammo_determine_rate(struct clk_hw *hw,
+				    struct clk_rate_request *req)
+{
+	struct clk_alpha_pll *pll = to_clk_alpha_pll(hw);
+	u32 l, alpha_width;
+	u64 a;
+
+	alpha_width = (pll_alpha_width(pll) > 32) ?
+				ALPHA_REG_16BIT_WIDTH : ALPHA_REG_BITWIDTH;
+
+	req->rate = alpha_pll_round_rate(req->rate, req->best_parent_rate, &l,
+					 &a, alpha_width);
+
+	return 0;
+}
+
 
 static int __clk_alpha_pll_update_latch(struct clk_alpha_pll *pll)
 {
@@ -1067,6 +1139,16 @@ const struct clk_ops clk_alpha_pll_huayra_ops = {
 	.set_rate = alpha_pll_huayra_set_rate,
 };
 EXPORT_SYMBOL_GPL(clk_alpha_pll_huayra_ops);
+
+const struct clk_ops clk_alpha_pll_brammo_ops = {
+	.enable = clk_alpha_pll_enable,
+	.disable = clk_alpha_pll_disable,
+	.is_enabled = clk_alpha_pll_is_enabled,
+	.recalc_rate = clk_alpha_pll_recalc_rate,
+	.determine_rate = clk_alpha_pll_brammo_determine_rate,
+	.set_rate = clk_alpha_pll_brammo_set_rate,
+};
+EXPORT_SYMBOL_GPL(clk_alpha_pll_brammo_ops);
 
 const struct clk_ops clk_alpha_pll_hwfsm_ops = {
 	.enable = clk_alpha_pll_hwfsm_enable,

@@ -81,10 +81,6 @@ struct nss_gmac_hal_ops {
 	void (*txcsumoffload)(struct nss_gmac_hal_dev *, bool enabled);
 	void (*rxflowcontrol)(struct nss_gmac_hal_dev *, bool enabled);
 	void (*txflowcontrol)(struct nss_gmac_hal_dev *, bool enabled);
-	int32_t (*setspeed)(struct nss_gmac_hal_dev *, uint32_t);
-	uint32_t (*getspeed)(struct nss_gmac_hal_dev *);
-	void (*setduplex)(struct nss_gmac_hal_dev *, uint8_t);
-	uint8_t (*getduplex)(struct nss_gmac_hal_dev *);
 	int32_t (*getstats)(struct nss_gmac_hal_dev *);
 	int32_t (*setmaxframe)(struct nss_gmac_hal_dev *, uint32_t);
 	int32_t (*getmaxframe)(struct nss_gmac_hal_dev *);

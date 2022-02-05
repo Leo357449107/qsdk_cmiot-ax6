@@ -1,0 +1,24 @@
+Source-Makefile: package/boot/uboot-envtools/Makefile
+Build-Depends: fstools
+
+Package: uboot-envtools
+Submenu: Boot Loaders
+Version: 2018.03-3.1
+Depends: +libc +GCC_LIBSSP:libssp +USE_GLIBC:librt +USE_GLIBC:libpthread 
+Conflicts: 
+Menu-Depends: 
+Provides: 
+Section: utils
+Category: Utilities
+Title: read/modify U-Boot bootloader environment
+Maintainer: 
+Source: u-boot-2018.03.tar.xz
+License: GPL-2.0 GPL-2.0+
+LicenseFiles: Licenses/README
+Type: ipkg
+Description:  This package includes tools to read and modify U-Boot bootloader environment.
+http://www.denx.de/wiki/U-Boot
+
+@@
+
+

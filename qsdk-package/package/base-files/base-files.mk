@@ -27,6 +27,9 @@ ifneq (, $(findstring ipq, $(CONFIG_TARGET_BOARD)))
 	$(CP) $(BASEFILES_DIR)/files/* $(1)/
 	$(if $(CONFIG_LOWMEM_FLASH),$(foreach file, $(EXTRA_FILES), rm -rf $(1)/$(file);))
 endif
+ifeq (, $(findstring ipq95xx, $(CONFIG_TARGET_BOARD)))
+	rm -rf $(1)/sbin/gps_start
+endif
 endef
 
 Package/base-files/install += $(newline)$(base-files_install_append)

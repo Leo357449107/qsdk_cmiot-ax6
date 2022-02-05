@@ -22,6 +22,7 @@
 
 #include "edma_regs.h"
 #include "edma_data_plane.h"
+#include "nss_dp_dev.h"
 
 #define EDMA_HW_RESET_ID "edma_rst"
 
@@ -65,7 +66,7 @@ static void edma_cleanup_rxfill_ring_res(struct edma_hw *ehw,
 			phys_to_virt(rxfill_desc->buffer_addr);
 
 		dma_unmap_single(&pdev->dev, rxfill_desc->buffer_addr,
-					EDMA_RX_BUFF_SIZE, DMA_FROM_DEVICE);
+					ehw->rx_alloc_size, DMA_FROM_DEVICE);
 
 		/*
 		 * Get sk_buff and free it
@@ -170,7 +171,7 @@ static void edma_cleanup_rxdesc_ring_res(struct edma_hw *ehw,
 			phys_to_virt(rxdesc_desc->buffer_addr);
 
 		dma_unmap_single(&pdev->dev, rxdesc_desc->buffer_addr,
-					EDMA_RX_BUFF_SIZE, DMA_FROM_DEVICE);
+					ehw->rx_alloc_size, DMA_FROM_DEVICE);
 		store_idx = rxph->opaque;
 		skb = ehw->rx_skb_store[store_idx];
 		ehw->rx_skb_store[store_idx] = NULL;
@@ -755,6 +756,7 @@ int edma_hw_init(struct edma_hw *ehw)
 	ehw->rx_payload_offset = EDMA_RX_PREHDR_SIZE;
 	ehw->active = 0;
 	ehw->edma_initialized = false;
+	ehw->rx_alloc_size = dp_global_ctx.rx_buf_size;
 
 	/* Reset EDMA */
 	ret = edma_hw_reset(ehw);

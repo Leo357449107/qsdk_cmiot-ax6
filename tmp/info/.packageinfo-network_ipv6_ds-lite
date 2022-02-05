@@ -1,0 +1,23 @@
+Source-Makefile: package/network/ipv6/ds-lite/Makefile
+
+Package: ds-lite
+Version: 7-4
+Depends: +libc +GCC_LIBSSP:libssp +USE_GLIBC:librt +USE_GLIBC:libpthread @IPV6 +kmod-ip6-tunnel +resolveip
+Conflicts: 
+Menu-Depends: 
+Provides: 
+Section: net
+Category: Network
+Repository: base
+Title: Dual-Stack Lite (DS-Lite) configuration support
+Maintainer: Steven Barth <steven@midlink.org>
+Source: 
+License: GPL-2.0
+Type: ipkg
+Description: Provides support for Dual-Stack Lite in /etc/config/network.
+Refer to http://wiki.openwrt.org/doc/uci/network for
+configuration details.
+Steven Barth <steven@midlink.org>
+@@
+
+

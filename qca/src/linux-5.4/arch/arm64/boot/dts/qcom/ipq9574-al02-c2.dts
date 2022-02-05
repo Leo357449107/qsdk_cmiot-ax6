@@ -56,6 +56,10 @@
 			status = "disabled";
 		};
 
+		blsp1_uart3: serial@78b2000 {
+			status = "disabled";
+		};
+
 		sdcc1_ice: sdcc1ice@7808000 {
 			status = "ok";
 		};

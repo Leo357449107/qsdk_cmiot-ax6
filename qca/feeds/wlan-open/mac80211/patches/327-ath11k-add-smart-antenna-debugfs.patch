@@ -13,10 +13,8 @@ Signed-off-by: Maharaja Kennadyrajan <mkenna@codeaurora.org>
  5 files changed, 363 insertions(+), 1 deletion(-)
  create mode 100644 drivers/net/wireless/ath/ath11k/debug_smart_ant.c
 
-Index: backports-20210222_001-5.4.89-b157d2276/drivers/net/wireless/ath/ath11k/Makefile
-===================================================================
---- backports-20210222_001-5.4.89-b157d2276.orig/drivers/net/wireless/ath/ath11k/Makefile
-+++ backports-20210222_001-5.4.89-b157d2276/drivers/net/wireless/ath/ath11k/Makefile
+--- a/drivers/net/wireless/ath/ath11k/Makefile
++++ b/drivers/net/wireless/ath/ath11k/Makefile
 @@ -20,7 +20,7 @@ ath11k-y += core.o \
  	    wow.o \
  	    vendor.o
@@ -26,11 +24,9 @@ Index: backports-20210222_001-5.4.89-b157d2276/drivers/net/wireless/ath/ath11k/M
  ath11k-$(CPTCFG_NL80211_TESTMODE) += testmode.o
  ath11k-$(CPTCFG_ATH11K_TRACING) += trace.o
  ath11k-$(CONFIG_THERMAL) += thermal.o
-Index: backports-20210222_001-5.4.89-b157d2276/drivers/net/wireless/ath/ath11k/core.h
-===================================================================
---- backports-20210222_001-5.4.89-b157d2276.orig/drivers/net/wireless/ath/ath11k/core.h
-+++ backports-20210222_001-5.4.89-b157d2276/drivers/net/wireless/ath/ath11k/core.h
-@@ -587,6 +587,7 @@ struct ath11k_debug {
+--- a/drivers/net/wireless/ath/ath11k/core.h
++++ b/drivers/net/wireless/ath/ath11k/core.h
+@@ -592,6 +592,7 @@ struct ath11k_debug {
  	u32 wmi_ctrl_path_stats_tagid;
  	struct ath11k_db_module_debug *module_debug[WMI_DIRECT_BUF_MAX];
  	bool disable_dynamic_bw;
@@ -38,11 +34,9 @@ Index: backports-20210222_001-5.4.89-b157d2276/drivers/net/wireless/ath/ath11k/c
  };
  
  struct ath11k_per_peer_tx_stats {
-Index: backports-20210222_001-5.4.89-b157d2276/drivers/net/wireless/ath/ath11k/debug_smart_ant.c
-===================================================================
 --- /dev/null
-+++ backports-20210222_001-5.4.89-b157d2276/drivers/net/wireless/ath/ath11k/debug_smart_ant.c
-@@ -0,0 +1,367 @@
++++ b/drivers/net/wireless/ath/ath11k/debug_smart_ant.c
+@@ -0,0 +1,365 @@
 +// SPDX-License-Identifier: BSD-3-Clause-Clear
 +/*
 + * Copyright (c) 2015, 2021 The Linux Foundation. All rights reserved.
@@ -247,8 +241,6 @@ Index: backports-20210222_001-5.4.89-b157d2276/drivers/net/wireless/ath/ath11k/d
 +	if (!ret)
 +		ret = count;
 +
-+	ar->smart_ant_info.rx_antenna = rxant;
-+
 +	return ret;
 +}
 +
@@ -261,7 +253,7 @@ Index: backports-20210222_001-5.4.89-b157d2276/drivers/net/wireless/ath/ath11k/d
 +	int len = 0;
 +
 +	len = scnprintf(buf, sizeof(buf) - len, "%d\n",
-+			ar->smart_ant_info.rx_antenna);
++			ar->rx_antenna);
 +
 +	return simple_read_from_buffer(ubuf, count, ppos, buf, len);
 +}
@@ -410,11 +402,9 @@ Index: backports-20210222_001-5.4.89-b157d2276/drivers/net/wireless/ath/ath11k/d
 +			    ar->debug.debugfs_smartant, ar, &fops_sa_train_info_ops);
 +
 +}
-Index: backports-20210222_001-5.4.89-b157d2276/drivers/net/wireless/ath/ath11k/debugfs.c
-===================================================================
---- backports-20210222_001-5.4.89-b157d2276.orig/drivers/net/wireless/ath/ath11k/debugfs.c
-+++ backports-20210222_001-5.4.89-b157d2276/drivers/net/wireless/ath/ath11k/debugfs.c
-@@ -4321,6 +4321,7 @@ int ath11k_debugfs_register(struct ath11
+--- a/drivers/net/wireless/ath/ath11k/debugfs.c
++++ b/drivers/net/wireless/ath/ath11k/debugfs.c
+@@ -4327,6 +4327,7 @@ int ath11k_debugfs_register(struct ath11
  
  	ath11k_debugfs_fw_stats_init(ar);
  	ath11k_init_pktlog(ar);
@@ -422,10 +412,8 @@ Index: backports-20210222_001-5.4.89-b157d2276/drivers/net/wireless/ath/ath11k/d
  	init_completion(&ar->tpc_complete);
          init_completion(&ab->ani_ofdm_event);
          init_completion(&ab->ani_cck_event);
-Index: backports-20210222_001-5.4.89-b157d2276/drivers/net/wireless/ath/ath11k/debugfs.h
-===================================================================
---- backports-20210222_001-5.4.89-b157d2276.orig/drivers/net/wireless/ath/ath11k/debugfs.h
-+++ backports-20210222_001-5.4.89-b157d2276/drivers/net/wireless/ath/ath11k/debugfs.h
+--- a/drivers/net/wireless/ath/ath11k/debugfs.h
++++ b/drivers/net/wireless/ath/ath11k/debugfs.h
 @@ -239,6 +239,7 @@ void ath11k_debugfs_unregister(struct at
  void ath11k_debugfs_fw_stats_process(struct ath11k_base *ab, struct sk_buff *skb);
  

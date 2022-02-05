@@ -3,7 +3,7 @@
  *	Shortcut forwarding engine.
  *
  * Copyright (c) 2013-2016, The Linux Foundation. All rights reserved.
- * Copyright (c) 2021 Qualcomm Innovation Center, Inc. All rights reserved.
+ * Copyright (c) 2021-2022 Qualcomm Innovation Center, Inc. All rights reserved.
  *
  * Permission to use, copy, modify, and/or distribute this software for any
  * purpose with or without fee is hereby granted, provided that the above
@@ -17,6 +17,22 @@
  * ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF
  * OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
  */
+
+#ifndef __SFE_H
+#define __SFE_H
+
+/*
+ * Maximum number of accelerated IPv4 or IPv6 connections
+ */
+#if defined(SFE_MEM_PROFILE_LOW)
+#define SFE_MAX_CONNECTION_NUM 512
+#elif defined(SFE_MEM_PROFILE_MEDIUM)
+#define SFE_MAX_CONNECTION_NUM 2048
+#else
+#define SFE_MAX_CONNECTION_NUM 4096
+#endif
+
+#define SFE_L2_PARSE_FLAGS_PPPOE_INGRESS 0x01	/* Indicates presence of a valid PPPoE header */
 
 /*
  * IPv6 address structure
@@ -35,6 +51,17 @@ typedef enum sfe_sync_reason {
 	SFE_SYNC_REASON_FLUSH,	/* Sync is to flush a entry */
 	SFE_SYNC_REASON_DESTROY	/* Sync is to destroy a entry(requested by connection manager) */
 } sfe_sync_reason_t;
+
+/*
+ * Structure used to store L2 information
+ */
+struct sfe_l2_info {
+	u16 parse_flags;	/* Flags indicating L2.5 headers presence */
+	u16 l2_hdr_offset;	/* Offset of L2 header */
+	u16 l2_hdr_size;	/* L2 header size */
+	u16 pppoe_hdr_offset;	/* PPPOE header offset */
+	u16 protocol;		/* L3 Protocol */
+};
 
 /*
  * Structure used to sync connection stats/state back within the system.
@@ -108,27 +135,25 @@ typedef void (*sfe_sync_rule_callback_t)(struct sfe_connection_sync *);
 /*
  * IPv4 APIs used by connection manager
  */
-int sfe_ipv4_recv(struct net_device *dev, struct sk_buff *skb);
+int sfe_ipv4_recv(struct net_device *dev, struct sk_buff *skb, struct sfe_l2_info *l2_info, bool tun_outer);
 int sfe_ipv4_create_rule(struct sfe_ipv4_rule_create_msg *msg);
 void sfe_ipv4_destroy_rule(struct sfe_ipv4_rule_destroy_msg *msg);
 void sfe_ipv4_destroy_all_rules_for_dev(struct net_device *dev);
 void sfe_ipv4_register_sync_rule_callback(sfe_sync_rule_callback_t callback);
 void sfe_ipv4_update_rule(struct sfe_ipv4_rule_create_msg *msg);
-void sfe_ipv4_mark_rule(struct sfe_connection_mark *mark);
 
 #ifdef SFE_SUPPORT_IPV6
 /*
  * IPv6 APIs used by connection manager
  */
-int sfe_ipv6_recv(struct net_device *dev, struct sk_buff *skb);
+int sfe_ipv6_recv(struct net_device *dev, struct sk_buff *skb, struct sfe_l2_info *l2_info, bool tun_outer);
 int sfe_ipv6_create_rule(struct sfe_ipv6_rule_create_msg *msg);
 void sfe_ipv6_destroy_rule(struct sfe_ipv6_rule_destroy_msg *msg);
 void sfe_ipv6_destroy_all_rules_for_dev(struct net_device *dev);
 void sfe_ipv6_register_sync_rule_callback(sfe_sync_rule_callback_t callback);
 void sfe_ipv6_update_rule(struct sfe_ipv6_rule_create_msg *msg);
-void sfe_ipv6_mark_rule(struct sfe_connection_mark *mark);
 #else
-static inline int sfe_ipv6_recv(struct net_device *dev, struct sk_buff *skb)
+static inline int sfe_ipv6_recv(struct net_device *dev, struct sk_buff *skb, struct sfe_l2_info *l2_info, bool tun_outer)
 {
 	return 0;
 }
@@ -138,7 +163,7 @@ static inline int sfe_ipv6_create_rule(struct sfe_ipv6_rule_create_msg *msg)
 	return 0;
 }
 
-static inline void sfe_ipv6_destroy_rule(struct sfe_ipv6_rule_destroy_msg *msg);
+static inline void sfe_ipv6_destroy_rule(struct sfe_ipv6_rule_destroy_msg *msg)
 {
 	return;
 }
@@ -158,10 +183,6 @@ static inline void sfe_ipv6_update_rule(struct sfe_ipv6_rule_create_msg *msg)
 	return;
 }
 
-static inline void sfe_ipv6_mark_rule(struct sfe_connection_mark *mark)
-{
-	return;
-}
 #endif
 
 /*
@@ -199,5 +220,106 @@ static inline int sfe_addr_equal(sfe_ip_addr_t *a,
 	return is_v4 ? sfe_ipv4_addr_equal(a->ip, b->ip) : sfe_ipv6_addr_equal(a->ip6, b->ip6);
 }
 
+/*
+ * sfe_l2_parse_flag_set()
+ *	Set L2 parse flag
+ */
+static inline void sfe_l2_parse_flag_set(struct sfe_l2_info *l2_info, u16 flag)
+{
+	l2_info->parse_flags |= flag;
+}
+
+/*
+ * sfe_l2_parse_flag_get()
+ *	Get L2 parse flag
+ */
+static inline u16 sfe_l2_parse_flag_get(struct sfe_l2_info *l2_info)
+{
+	return l2_info->parse_flags;
+}
+
+/*
+ * sfe_l2_parse_flag_check()
+ *	Check L2 parse flag
+ */
+static inline bool sfe_l2_parse_flag_check(struct sfe_l2_info *l2_info, u16 flag)
+{
+	return !!(l2_info->parse_flags & flag);
+}
+
+/*
+ * sfe_l2_hdr_offset_get()
+ *	Get L2 header offset
+ */
+static inline u16 sfe_l2_hdr_offset_get(struct sfe_l2_info *l2_info)
+{
+	return l2_info->l2_hdr_offset;
+}
+
+/*
+ * sfe_l2_hdr_offset_set()
+ *	Set L2 header offset
+ */
+static inline void sfe_l2_hdr_offset_set(struct sfe_l2_info *l2_info, u16 offset)
+{
+	l2_info->l2_hdr_offset = offset;
+}
+
+/*
+ * sfe_l2_pppoe_hdr_offset_get()
+ *	Get L2 PPPoE header offset
+ */
+static inline u16 sfe_l2_pppoe_hdr_offset_get(struct sfe_l2_info *l2_info)
+{
+	return l2_info->pppoe_hdr_offset;
+}
+
+/*
+ * sfe_l2_pppoe_hdr_offset_set()
+ *	Set L2 PPPoE header offset
+ */
+static inline void sfe_l2_pppoe_hdr_offset_set(struct sfe_l2_info *l2_info, u16 offset)
+{
+	l2_info->pppoe_hdr_offset = offset;
+}
+
+/*
+ * sfe_l2_hdr_size_get()
+ *	Get L2 header size
+ */
+static inline u16 sfe_l2_hdr_size_get(struct sfe_l2_info *l2_info)
+{
+	return l2_info->l2_hdr_size;
+}
+
+/*
+ * sfe_l2_hdr_size_set()
+ *	Set L2 header size
+ */
+static inline void sfe_l2_hdr_size_set(struct sfe_l2_info *l2_info, u16 size)
+{
+	l2_info->l2_hdr_size = size;
+}
+
+/*
+ * sfe_l2_protocol_get()
+ *	Get L2 protocol
+ */
+static inline u16 sfe_l2_protocol_get(struct sfe_l2_info *l2_info)
+{
+	return l2_info->protocol;
+}
+
+/*
+ * sfe_l2_protocol_set()
+ *	Set L2 protocol
+ */
+static inline void sfe_l2_protocol_set(struct sfe_l2_info *l2_info, u16 proto)
+{
+	l2_info->protocol = proto;
+}
+
 int sfe_init_if(void);
 void sfe_exit_if(void);
+
+#endif /* __SFE_H */

@@ -1,0 +1,21 @@
+Source-Makefile: package/kernel/nat46/Makefile
+
+Package: kmod-nat46
+Submenu: Network Support
+Version: <LINUX_VERSION>+2020-06-26-1182f30785e4274913f01a8c3d7e1b5437ae3819-
+Depends: @IPV6 +kmod-nf-conntrack6
+Conflicts: 
+Menu-Depends: 
+Provides: 
+Section: kernel
+Category: Kernel modules
+Title: Stateless NAT46 translation kernel module
+Maintainer: Hans Dedecker <dedeckeh@gmail.com>
+Source: nat46-2020-06-26-1182f30785e4274913f01a8c3d7e1b5437ae3819.tar.xz
+License: GPL-2.0
+Type: ipkg
+Description: Stateless NAT46 translation kernel module
+Hans Dedecker <dedeckeh@gmail.com>
+@@
+
+

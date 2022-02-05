@@ -1424,6 +1424,17 @@ struct nss_wifili_rx_ctrl_stats {
 };
 
 /**
+ * nss_wifili_retry_ctrl_stats
+ *	Peer retry statistics.
+ */
+struct nss_wifili_retry_ctrl_stats {
+	uint32_t tx_failed_retry_count;		/**< Transmit failed retry count. */
+	uint32_t tx_retry_count;		/**< Transmit retry count. */
+	uint32_t tx_multiple_retry_count;	/**< Transmit multiple retry count. */
+	uint32_t rx_retry_count;		/**< Receive retry count. */
+};
+
+/**
  * nss_wifili_peer_ctrl_stats
  *	Wifili peer control statistics.
  */
@@ -1433,6 +1444,8 @@ struct nss_wifili_peer_ctrl_stats {
 				/**< Peer Tx control statistics. */
 	struct nss_wifili_rx_ctrl_stats rx;
 				/**< Peer Rx control statistics. */
+	struct nss_wifili_retry_ctrl_stats retry;
+				/**< Peer retry Statistics. */
 };
 
 /**

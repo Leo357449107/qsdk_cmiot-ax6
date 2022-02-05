@@ -1,0 +1,71 @@
+Source-Makefile: package/network/services/uhttpd/Makefile
+Build-Depends: ustream-ssl
+
+Package: uhttpd
+Submenu: Web Servers/Proxies
+Version: 2020-10-01-3abcc89103799aaa79870fffcd58ec4370815024-1
+Depends: +libc +GCC_LIBSSP:libssp +USE_GLIBC:librt +USE_GLIBC:libpthread +libubox +libblobmsg-json +libjson-script +libjson-c
+Conflicts: 
+Menu-Depends: 
+Provides: 
+Section: net
+Category: Network
+Repository: base
+Title: uHTTPd - tiny, single threaded HTTP server
+Maintainer: Felix Fietkau <nbd@nbd.name>
+Source: uhttpd-2020-10-01-3abcc89103799aaa79870fffcd58ec4370815024.tar.xz
+License: ISC
+Type: ipkg
+Description:  uHTTPd is a tiny single threaded HTTP server with TLS, CGI and Lua
+ support. It is intended as a drop-in replacement for the Busybox
+ HTTP daemon.
+Felix Fietkau <nbd@nbd.name>
+@@
+Config:
+
+  config uhttpd_lua
+    depends on PACKAGE_uhttpd-mod-lua
+    bool "Enable Integrated Lua interpreter"
+	default y
+@@
+
+Package: uhttpd-mod-lua
+Submenu: Web Servers/Proxies
+Version: 2020-10-01-3abcc89103799aaa79870fffcd58ec4370815024-1
+Depends: +libc +GCC_LIBSSP:libssp +USE_GLIBC:librt +USE_GLIBC:libpthread uhttpd +liblua
+Conflicts: 
+Menu-Depends: 
+Provides: 
+Section: net
+Category: Network
+Repository: base
+Title: uHTTPd - tiny, single threaded HTTP server (Lua plugin)
+Maintainer: Felix Fietkau <nbd@nbd.name>
+Source: uhttpd-2020-10-01-3abcc89103799aaa79870fffcd58ec4370815024.tar.xz
+License: ISC
+Type: ipkg
+Description:  The Lua plugin adds a CGI-like Lua runtime interface to uHTTPd.
+Felix Fietkau <nbd@nbd.name>
+@@
+
+Package: uhttpd-mod-ubus
+Submenu: Web Servers/Proxies
+Version: 2020-10-01-3abcc89103799aaa79870fffcd58ec4370815024-1
+Depends: +libc +GCC_LIBSSP:libssp +USE_GLIBC:librt +USE_GLIBC:libpthread uhttpd +libubus +libblobmsg-json
+Conflicts: 
+Menu-Depends: 
+Provides: 
+Section: net
+Category: Network
+Repository: base
+Title: uHTTPd - tiny, single threaded HTTP server (ubus plugin)
+Maintainer: Felix Fietkau <nbd@nbd.name>
+Source: uhttpd-2020-10-01-3abcc89103799aaa79870fffcd58ec4370815024.tar.xz
+License: ISC
+Type: ipkg
+Description:  The ubus plugin adds a HTTP/JSON RPC proxy for ubus and publishes the
+ session.* namespace and procedures.
+Felix Fietkau <nbd@nbd.name>
+@@
+
+

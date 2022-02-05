@@ -315,21 +315,20 @@ cmd_data_check_remark_entry(char *info, void *val, a_uint32_t size);
 #endif
 #endif
 #ifdef IN_IP
-#ifndef IN_IP_MINI
+#if !defined(IN_IP_MINI)
 sw_error_t
 cmd_data_check_default_route_entry(char *cmd_str, void * val, a_uint32_t size);
-
 sw_error_t
 cmd_data_check_host_route_entry(char *cmd_str, void * val, a_uint32_t size);
-
 sw_error_t
 cmd_data_check_ip4_rfs_entry(char *cmd_str, void * val, a_uint32_t size);
 sw_error_t
 cmd_data_check_ip6_rfs_entry(char *cmd_str, void * val, a_uint32_t size);
 sw_error_t
-cmd_data_check_arp_sg(char *cmd_str, void * val, a_uint32_t size);
-sw_error_t
 cmd_data_check_network_route(char *cmd_str, void * val, a_uint32_t size);
+#endif
+sw_error_t
+cmd_data_check_arp_sg(char *cmd_str, void * val, a_uint32_t size);
 sw_error_t
 cmd_data_check_intf(char *cmd_str, void * val, a_uint32_t size);
 sw_error_t
@@ -346,7 +345,6 @@ sw_error_t
 cmd_data_check_ip_mcmode(char *cmd_str, void * val, a_uint32_t size);
 sw_error_t
 cmd_data_check_ip_global(char *cmd_str, void * val, a_uint32_t size);
-#endif
 #endif
 #if defined(IN_IP) || defined(IN_NAT)
 sw_error_t
@@ -566,6 +564,10 @@ sw_error_t
 cmd_data_check_ecn_val(char *cmd_str, fal_tunnel_ecn_val_t *arg_val, a_uint32_t size);
 sw_error_t
 cmd_data_check_tunnel_global_cfg(char *info, fal_tunnel_global_cfg_t *val, a_uint32_t size);
+sw_error_t
+cmd_data_check_tunnel_type(char *cmd_str, fal_tunnel_type_t *arg_val, a_uint32_t size);
+sw_error_t
+cmd_data_check_tunnel_key(char *cmd_str, fal_tunnel_decap_key_t *arg_val, a_uint32_t size);
 #endif
 #if defined(IN_MAPT)
 sw_error_t

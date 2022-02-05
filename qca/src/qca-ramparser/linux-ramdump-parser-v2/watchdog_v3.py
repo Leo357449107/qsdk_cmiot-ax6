@@ -11,6 +11,7 @@
 
 import struct
 import re
+import os
 from print_out import print_out_str
 
 sysdbg_cpu64_register_names_default = [
@@ -121,6 +122,51 @@ sysdbg_cpu64_ctxt_regs_type_default = ''.join([
     'Q',  # __reserved8
 ])
 
+sysdbg_dcc_cpu64_register_names_default = [
+    ('pc', 'pc', True),
+    ('x0', 'x0', False),
+    ('x1', 'x1', False),
+    ('x2', 'x2', False),
+    ('x3', 'x3', False),
+    ('x4', 'x4', False),
+    ('x5', 'x5', False),
+    ('x6', 'x6', False),
+    ('x7', 'x7', False),
+    ('x8', 'x8', False),
+    ('x9', 'x9', False),
+    ('x10', 'x10', False),
+    ('x11', 'x11', False),
+    ('x12', 'x12', False),
+    ('x13', 'x13', False),
+    ('x14', 'x14', False),
+    ('x15', 'x15', False),
+    ('x16', 'x16', False),
+    ('x17', 'x17', False),
+    ('x18', 'x18', False),
+    ('x19', 'x19', False),
+    ('x20', 'x20', False),
+    ('x21', 'x21', False),
+    ('x22', 'x22', False),
+    ('x23', 'x23', False),
+    ('x24', 'x24', False),
+    ('x25', 'x25', False),
+    ('x26', 'x26', False),
+    ('x27', 'x27', False),
+    ('x28', 'x28', False),
+    ('x29', 'x29', False),
+    ('x30', 'x30', False),
+    ('SP_EL0', 'SP_EL0', False),
+    ('SP_EL1', 'SP_EL1', False),
+    ('SP_EL2', 'SP_EL2', False),
+    ('SP_EL3', 'SP_EL3', False),
+    ('DLR_EL0', 'DLR_EL0', False),
+    ('ELR_EL1', 'ELR_EL1', False),
+    ('ELR_EL2', 'ELR_EL2', False),
+    ('ELR_EL3', 'ELR_EL3', False),
+    ('ALT_PC_1', 'ALT_PC_1', False),
+    ('ALT_PC_2', 'ALT_PC_2', False),
+]
+
 sysdbg_cpu32_register_names_default = [
     ('r0', 'r0', False),
     ('r1', 'r1', False),
@@ -220,11 +266,13 @@ sysdbg_cpu32_ctxt_regs_type_default = ''.join([
 
 sysdbg_cpu64_register_names = {}
 sysdbg_cpu64_ctxt_regs_type = {}
+sysdbg_dcc_cpu64_register_names = {}
 sysdbg_cpu32_register_names = {}
 sysdbg_cpu32_ctxt_regs_type = {}
 
 sysdbg_cpu64_register_names['default'] = sysdbg_cpu64_register_names_default
 sysdbg_cpu64_ctxt_regs_type['default'] = sysdbg_cpu64_ctxt_regs_type_default
+sysdbg_dcc_cpu64_register_names['default'] = sysdbg_dcc_cpu64_register_names_default
 sysdbg_cpu32_register_names['default'] = sysdbg_cpu32_register_names_default
 sysdbg_cpu32_ctxt_regs_type['default'] = sysdbg_cpu32_ctxt_regs_type_default
 
@@ -246,11 +294,10 @@ v3sdi_cpu_dump_status = 0x10
 
 class TZCpuCtx_v3():
 
-    def __init__(self, version, regs_t, ramdump):
+    def __init__(self, version, regs_t, ramdump, register_name):
         i = 0
         self.regs = {}
         self.version = version
-        register_name = sysdbg_cpu64_register_names[self.version]
 
         if regs_t is not None:
             for r in regs_t:
@@ -289,6 +336,7 @@ class TZCpuCtx_v3():
 class TZRegDump_v3():
     def __init__(self):
         self.core_regs = []
+        self.core_scandump_regs = []
         self.core_up = []
         self.sec_regs = []
         self.version = 0
@@ -312,6 +360,7 @@ class TZRegDump_v3():
                 continue
             coren_regs = ram_dump.open_file('core{0}_regs.cmm'.format(i))
             print_out_str('core{0} regs non_secure:'.format(i))
+
             self.core_regs[i].print_regs(coren_regs, ram_dump)
             coren_regs.close()
             secn_regs = ram_dump.open_file('core{0}_regs_sec.cmm'.format(i))
@@ -346,21 +395,27 @@ class TZRegDump_v3():
             kernel_addr += self.struct_size
         print_out_str('======== End of entry/exit details of SGI and WDT interrupt ======\n')
 
-    def dump_core_pc(self, ram_dump):
+    def dump_core_pc(self, ram_dump, dcc_scan_dump=False):
+
+        if (dcc_scan_dump is not True):
+            core_regs = self.core_regs
+        else:
+            core_regs = self.core_scandump_regs
+
         for i in range(0, self.ncores):
-            if (self.core_up[i] !=1 ):
+            if (dcc_scan_dump is not True and self.core_up[i] !=1):
                 continue
 
             if ram_dump.arm64 == False or ram_dump.arm64 is None:
-                pc = self.core_regs[i].regs['pc']
-                lr = self.core_regs[i].regs['x18']
-                bt = self.core_regs[i].regs['x19']
-                fp = self.core_regs[i].regs['x11']
+                pc = core_regs[i].regs['pc']
+                lr = core_regs[i].regs['x18']
+                bt = core_regs[i].regs['x19']
+                fp = core_regs[i].regs['x11']
             else:
-                pc = self.core_regs[i].regs['pc']
-                lr = self.core_regs[i].regs['x30']
-                bt = self.core_regs[i].regs['x29']
-                fp = self.core_regs[i].regs['x29']
+                pc = core_regs[i].regs['pc']
+                lr = core_regs[i].regs['x30']
+                bt = core_regs[i].regs['x29']
+                fp = core_regs[i].regs['x29']
 
             a = ram_dump.unwind_lookup(pc)
             modname = None
@@ -404,17 +459,17 @@ class TZRegDump_v3():
             ram_dump.unwind.unwind_backtrace(bt, fp, pc, lr, '')
             print_out_str('')
 
-
     def init_regs(self, version, start_addr, end_addr, core, ram_dump):
         self.start_addr = start_addr
         self.end_addr = end_addr
         self.core = core
 
-        register_names = sysdbg_cpu64_register_names
         self.version = 'default'
+        register_name = sysdbg_cpu64_register_names[self.version]
         self.ncores = ram_dump.get_num_cpus()
         self.ramdump = ram_dump
 
+        # register_names = sysdbg_cpu64_register_names
         # uint32 status[4]; -- status fields
         # sdi_cpu_ctxt_regs_type cpu_regs; -- ctxt for all cpus
         # sdi_cpu_ctxt_regs_type __reserved3; -- secure ctxt
@@ -464,7 +519,7 @@ class TZRegDump_v3():
             reg_ctx = ram_dump.read_string(cpu_cntxt_start, sysdbg_cpu64_ctxt_regs_type[self.version], False)
             if reg_ctx is not None:
                 self.sc_regs.append(reg_ctx)
-                self.core_regs.append(TZCpuCtx_v3(self.version, self.sc_regs[i], ram_dump))
+                self.core_regs.append(TZCpuCtx_v3(self.version, self.sc_regs[i], ram_dump, register_name))
                 self.core_up.append(1)
             else:
                 print_out_str('Core {0} registers not available, may be core is down'.format(i))
@@ -472,9 +527,58 @@ class TZRegDump_v3():
 
             cpu_cntxt_start += struct.calcsize(sysdbg_cpu64_ctxt_regs_type[self.version])
             self.temp = ram_dump.read_string(cpu_cntxt_start, sysdbg_cpu64_ctxt_regs_type[self.version] , False)
-            self.sec_regs.append(TZCpuCtx_v3(self.version, self.temp, ram_dump))
+            self.sec_regs.append(TZCpuCtx_v3(self.version, self.temp, ram_dump, register_name))
 
             dump_data_type_addr += self.struct_size
             #print ('sc_regs =  {0}'.format(self.sc_regs))
             #print ("\n")
         return True
+
+    def init_dcc_scan_dump_regs(self, version, start_addr, end_addr, core, ram_dump):
+        self.start_addr = start_addr
+        self.end_addr = end_addr
+        self.core = core
+        self.ncores = ram_dump.get_num_cpus()
+        self.ramdump = ram_dump
+
+        self.version = 'default'
+        register_name = sysdbg_dcc_cpu64_register_names[self.version]
+
+        # DCC Scandump Input file path. File name format should be like below example.
+        # Example : core0.txt, core1.txt, core2.txt, core3.txt
+        outdir = self.ramdump.scan_dump_output
+
+        for i in range(0, self.ncores):
+            file_name = "core" + str(i) + ".txt";
+            file_path = os.path.join(outdir, file_name)
+            PCLRPattern = "PC Value is:"
+            address_pattern_64 = "[0-9a-fx]{10,18}"
+            address_pattern_32 = "[0-9a-fx]{8,10}"
+            digit = "[0-9]*"
+            pattern = "X\[" + digit + "\], X_index_value is: " + digit + " ;high 32bits value is: .*; low 32bits value is: .*"
+            array = []
+            with open(file_path, 'r') as Lines:
+                for partial in Lines:
+                        if (re.search(PCLRPattern, partial)):
+                                x = re.findall(address_pattern_64, partial)
+                                pc = x[0]
+                                pc = int(pc, 16)
+                                array.append(pc)
+                        elif (re.search(pattern, partial)):
+                                regx = re.findall("X\[(\d*)\]", partial)
+                                x = re.findall(address_pattern_32, partial)
+                                if not x:
+                                    highValue = lowValue = '00000000'
+                                else:
+                                    highValue, lowValue = x[0], x[1]
+                                    highValue = highValue.replace("0x", "")
+                                    lowValue = lowValue.replace("0x", "")
+
+                                if ram_dump.arm64 is None or ram_dump.arm64 == False:
+                                    address = lowValue
+                                else:
+                                    address = highValue + lowValue
+                                address = int(address, 16)
+                                array.append(address)
+            array = tuple(array)
+            self.core_scandump_regs.append(TZCpuCtx_v3(self.version, array, ram_dump, register_name))

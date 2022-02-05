@@ -116,7 +116,9 @@ extern void *cnss_ipc_log_long_context;
 					    wlfw_service_instance_id,	\
 					    ##__VA_ARGS__);		\
 		} else {						\
-			pr_err("cnss: DBG: " _fmt, ##__VA_ARGS__);	\
+			if (log_level >= CNSS_LOG_LEVEL_DEBUG)          \
+				pr_err("cnss: DBG: " _fmt,              \
+				       ##__VA_ARGS__);                  \
 		}							\
 	} while (0)
 

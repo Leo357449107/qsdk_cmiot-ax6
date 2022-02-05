@@ -530,6 +530,7 @@ fal_mib_port_flush_counters(a_uint32_t dev_id, fal_port_t port_id )
 
     FAL_API_LOCK;
     rv = _fal_mib_port_flush_counters(dev_id, port_id);
+    memset(&g_mibcounter[dev_id][port_id], 0, sizeof(fal_mib_counter_t));
     FAL_API_UNLOCK;
     return rv;
 }

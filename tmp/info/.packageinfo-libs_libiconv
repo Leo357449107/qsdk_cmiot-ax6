@@ -1,0 +1,23 @@
+Source-Makefile: package/libs/libiconv/Makefile
+Build-Types: host
+
+Package: libiconv
+Version: 8
+Depends: +libc +GCC_LIBSSP:libssp +USE_GLIBC:librt +USE_GLIBC:libpthread 
+Conflicts: 
+Menu-Depends: 
+Provides: 
+Section: libs
+Category: Libraries
+Repository: base
+Title: Tiny drop-in replacement for the GNU Character set conversion library
+Maintainer: Jo-Philipp Wich <jo@mein.io>
+Source: 
+License: LGPL-2.1
+LicenseFiles: LICENSE
+Type: ipkg
+Description: Tiny drop-in replacement for the GNU Character set conversion library
+Jo-Philipp Wich <jo@mein.io>
+@@
+
+

@@ -46,9 +46,16 @@ Signed-off-by: Hari Chandrakanthan <haric@codeaurora.org>
  drivers/net/wireless/ath/ath11k/mac.c         | 10 ++++
  8 files changed, 131 insertions(+), 10 deletions(-)
 
---- a/drivers/net/wireless/ath/ath11k/core.h
-+++ b/drivers/net/wireless/ath/ath11k/core.h
-@@ -292,6 +292,7 @@ struct ath11k_vif {
+Index: backports-20210222_001-5.4.89-b157d2276/drivers/net/wireless/ath/ath11k/core.h
+===================================================================
+--- backports-20210222_001-5.4.89-b157d2276.orig/drivers/net/wireless/ath/ath11k/core.h
++++ backports-20210222_001-5.4.89-b157d2276/drivers/net/wireless/ath/ath11k/core.h
+@@ -294,10 +294,12 @@ struct ath11k_vif {
+ 	struct dentry *amsdu_aggr_size;
+ 	struct dentry *wmi_ctrl_stat;
+ 	struct dentry *mac_filter;
++	struct dentry *wbm_tx_completion_stats;
+ 	struct ath11k_mgmt_frame_stats mgmt_stats;
  	/* protected by conf_mutex */
  	struct list_head mac_filters;
  	u32 mac_filter_count;
@@ -56,7 +63,7 @@ Signed-off-by: Hari Chandrakanthan <haric@codeaurora.org>
  	struct arvif_nss nss;
  	struct list_head ap_vlan_arvifs;
  	/* VLAN keyidx map required for Dynamic VLAN */
-@@ -399,6 +400,10 @@ struct ath11k_htt_data_stats {
+@@ -405,6 +407,10 @@ struct ath11k_htt_data_stats {
  	u64 ru_loc[ATH11K_COUNTER_TYPE_MAX][HAL_RX_RU_ALLOC_TYPE_MAX];
  };
  
@@ -67,7 +74,7 @@ Signed-off-by: Hari Chandrakanthan <haric@codeaurora.org>
  struct ath11k_htt_tx_stats {
  	struct ath11k_htt_data_stats stats[ATH11K_STATS_TYPE_MAX];
  	u64 tx_duration;
-@@ -473,6 +478,7 @@ struct ath11k_sta {
+@@ -479,6 +485,7 @@ struct ath11k_sta {
  	u32 ps_start_jiffies;
  	u8 peer_current_ps_valid;
  	u32 ps_total_duration;
@@ -75,9 +82,11 @@ Signed-off-by: Hari Chandrakanthan <haric@codeaurora.org>
  #ifdef CPTCFG_ATH11K_CFR
  	struct ath11k_per_peer_cfr_capture cfr_capture;
  #endif
---- a/drivers/net/wireless/ath/ath11k/debugfs.c
-+++ b/drivers/net/wireless/ath/ath11k/debugfs.c
-@@ -572,6 +572,79 @@ void ath11k_debugfs_wmi_ctrl_stats(struc
+Index: backports-20210222_001-5.4.89-b157d2276/drivers/net/wireless/ath/ath11k/debugfs.c
+===================================================================
+--- backports-20210222_001-5.4.89-b157d2276.orig/drivers/net/wireless/ath/ath11k/debugfs.c
++++ backports-20210222_001-5.4.89-b157d2276/drivers/net/wireless/ath/ath11k/debugfs.c
+@@ -574,6 +574,81 @@ void ath11k_debugfs_wmi_ctrl_stats(struc
  	init_completion(&arvif->ar->debug.wmi_ctrl_path_stats_rcvd);
  }
  
@@ -150,15 +159,19 @@ Signed-off-by: Hari Chandrakanthan <haric@codeaurora.org>
 +
 +void ath11k_debugfs_wbm_tx_comp_stats(struct ath11k_vif *arvif)
 +{
-+	debugfs_create_file("wbm_tx_completion_stats", S_IRUSR | S_IWUSR,
-+			    arvif->vif->debugfs_dir, arvif, &fops_wbm_tx_comp_stats);
++	arvif->wbm_tx_completion_stats =
++		debugfs_create_file("wbm_tx_completion_stats",
++				    S_IRUSR | S_IWUSR, arvif->vif->debugfs_dir,
++				    arvif, &fops_wbm_tx_comp_stats);
 +}
 +
  static ssize_t ath11k_write_ampdu_aggr_size(struct file *file,
  					    const char __user *ubuf,
  					    size_t count, loff_t *ppos)
---- a/drivers/net/wireless/ath/ath11k/debugfs.h
-+++ b/drivers/net/wireless/ath/ath11k/debugfs.h
+Index: backports-20210222_001-5.4.89-b157d2276/drivers/net/wireless/ath/ath11k/debugfs.h
+===================================================================
+--- backports-20210222_001-5.4.89-b157d2276.orig/drivers/net/wireless/ath/ath11k/debugfs.h
++++ backports-20210222_001-5.4.89-b157d2276/drivers/net/wireless/ath/ath11k/debugfs.h
 @@ -194,6 +194,7 @@ static void ath11k_debugfs_dbg_mac_filte
  }
  #endif
@@ -167,8 +180,10 @@ Signed-off-by: Hari Chandrakanthan <haric@codeaurora.org>
  void ath11k_debug_aggr_size_config_init(struct ath11k_vif *arvif);
  void ath11k_debugfs_wmi_ctrl_stats(struct ath11k_vif *arvif);
  void ath11k_wmi_crl_path_stats_list_free(struct list_head *head);
---- a/drivers/net/wireless/ath/ath11k/debugfs_sta.c
-+++ b/drivers/net/wireless/ath/ath11k/debugfs_sta.c
+Index: backports-20210222_001-5.4.89-b157d2276/drivers/net/wireless/ath/ath11k/debugfs_sta.c
+===================================================================
+--- backports-20210222_001-5.4.89-b157d2276.orig/drivers/net/wireless/ath/ath11k/debugfs_sta.c
++++ backports-20210222_001-5.4.89-b157d2276/drivers/net/wireless/ath/ath11k/debugfs_sta.c
 @@ -316,8 +316,15 @@ static ssize_t ath11k_dbg_sta_dump_tx_st
  	const int size = 2 * 4096;
  	char *buf, mu_group_id[MAX_MU_GROUP_LENGTH] = {0};
@@ -226,8 +241,10 @@ Signed-off-by: Hari Chandrakanthan <haric@codeaurora.org>
  #endif/* CPTCFG_ATH11K_CFR */
 +
  }
---- a/drivers/net/wireless/ath/ath11k/dp_rx.c
-+++ b/drivers/net/wireless/ath/ath11k/dp_rx.c
+Index: backports-20210222_001-5.4.89-b157d2276/drivers/net/wireless/ath/ath11k/dp_rx.c
+===================================================================
+--- backports-20210222_001-5.4.89-b157d2276.orig/drivers/net/wireless/ath/ath11k/dp_rx.c
++++ backports-20210222_001-5.4.89-b157d2276/drivers/net/wireless/ath/ath11k/dp_rx.c
 @@ -1652,8 +1652,7 @@ ath11k_update_per_peer_tx_stats(struct a
  		peer_stats->mu_grpid = mu_grpid;
  		peer_stats->mu_pos   = mu_pos;
@@ -238,9 +255,11 @@ Signed-off-by: Hari Chandrakanthan <haric@codeaurora.org>
  			ath11k_debugfs_sta_add_tx_stats(arsta, peer_stats, rate_idx);
  	}
  
---- a/drivers/net/wireless/ath/ath11k/dp_tx.c
-+++ b/drivers/net/wireless/ath/ath11k/dp_tx.c
-@@ -528,7 +528,8 @@ static void ath11k_dp_tx_cache_peer_stat
+Index: backports-20210222_001-5.4.89-b157d2276/drivers/net/wireless/ath/ath11k/dp_tx.c
+===================================================================
+--- backports-20210222_001-5.4.89-b157d2276.orig/drivers/net/wireless/ath/ath11k/dp_tx.c
++++ backports-20210222_001-5.4.89-b157d2276/drivers/net/wireless/ath/ath11k/dp_tx.c
+@@ -530,7 +530,8 @@ static void ath11k_dp_tx_cache_peer_stat
  
  static void ath11k_dp_tx_complete_msdu(struct ath11k *ar,
  				       struct sk_buff *msdu,
@@ -250,7 +269,7 @@ Signed-off-by: Hari Chandrakanthan <haric@codeaurora.org>
  {
  	struct ieee80211_tx_status status = { 0 };
  	struct ath11k_base *ab = ar->ab;
-@@ -536,8 +537,9 @@ static void ath11k_dp_tx_complete_msdu(s
+@@ -538,8 +539,9 @@ static void ath11k_dp_tx_complete_msdu(s
  	struct ath11k_skb_cb *skb_cb;
  	struct ath11k_peer *peer;
  	struct ath11k_sta *arsta;
@@ -261,7 +280,7 @@ Signed-off-by: Hari Chandrakanthan <haric@codeaurora.org>
  	u8 flags = 0;
  
  	if (unlikely(WARN_ON_ONCE(ts->buf_rel_source != HAL_WBM_REL_SRC_MODULE_TQM))) {
-@@ -578,6 +580,9 @@ static void ath11k_dp_tx_complete_msdu(s
+@@ -580,6 +582,9 @@ static void ath11k_dp_tx_complete_msdu(s
  	}
  
  	vif = skb_cb->vif;
@@ -271,7 +290,7 @@ Signed-off-by: Hari Chandrakanthan <haric@codeaurora.org>
  
  	info = IEEE80211_SKB_CB(msdu);
  	memset(&info->status, 0, sizeof(info->status));
-@@ -642,6 +647,11 @@ static void ath11k_dp_tx_complete_msdu(s
+@@ -644,6 +649,11 @@ static void ath11k_dp_tx_complete_msdu(s
  	rate = arsta->last_txrate;
  	status.rate = &rate;
  
@@ -283,7 +302,7 @@ Signed-off-by: Hari Chandrakanthan <haric@codeaurora.org>
  	spin_unlock_bh(&ab->base_lock);
  	rcu_read_unlock();
  
-@@ -710,11 +720,12 @@ void ath11k_dp_tx_completion_handler(str
+@@ -712,11 +722,12 @@ void ath11k_dp_tx_completion_handler(str
  	struct sk_buff *msdu;
  	struct hal_tx_status ts = { 0 };
  	struct dp_tx_ring *tx_ring = &dp->tx_ring[ring_id];
@@ -297,7 +316,7 @@ Signed-off-by: Hari Chandrakanthan <haric@codeaurora.org>
  
  	spin_lock_bh(&status_ring->lock);
  
-@@ -757,6 +768,9 @@ void ath11k_dp_tx_completion_handler(str
+@@ -759,6 +770,9 @@ void ath11k_dp_tx_completion_handler(str
  		mac_id = FIELD_GET(DP_TX_DESC_ID_MAC_ID, desc_id);
  		msdu_id = FIELD_GET(DP_TX_DESC_ID_MSDU_ID, desc_id);
  
@@ -307,7 +326,7 @@ Signed-off-by: Hari Chandrakanthan <haric@codeaurora.org>
  		if (unlikely(ts.buf_rel_source == HAL_WBM_REL_SRC_MODULE_FW)) {
  			ath11k_dp_tx_process_htt_tx_complete(ab,
  							     (void *)tx_status,
-@@ -781,7 +795,7 @@ void ath11k_dp_tx_completion_handler(str
+@@ -783,7 +797,7 @@ void ath11k_dp_tx_completion_handler(str
  		if (atomic_dec_and_test(&ar->dp.num_tx_pending))
  			wake_up(&ar->dp.tx_empty_waitq);
  
@@ -316,8 +335,10 @@ Signed-off-by: Hari Chandrakanthan <haric@codeaurora.org>
  	}
  }
  
---- a/drivers/net/wireless/ath/ath11k/hal_desc.h
-+++ b/drivers/net/wireless/ath/ath11k/hal_desc.h
+Index: backports-20210222_001-5.4.89-b157d2276/drivers/net/wireless/ath/ath11k/hal_desc.h
+===================================================================
+--- backports-20210222_001-5.4.89-b157d2276.orig/drivers/net/wireless/ath/ath11k/hal_desc.h
++++ backports-20210222_001-5.4.89-b157d2276/drivers/net/wireless/ath/ath11k/hal_desc.h
 @@ -1020,6 +1020,7 @@ enum hal_wbm_htt_tx_comp_status {
  	HAL_WBM_REL_HTT_TX_COMP_STATUS_REINJ,
  	HAL_WBM_REL_HTT_TX_COMP_STATUS_INSPECT,
@@ -326,9 +347,11 @@ Signed-off-by: Hari Chandrakanthan <haric@codeaurora.org>
  };
  
  struct hal_tcl_data_cmd {
---- a/drivers/net/wireless/ath/ath11k/mac.c
-+++ b/drivers/net/wireless/ath/ath11k/mac.c
-@@ -4950,6 +4950,11 @@ static int ath11k_mac_station_add(struct
+Index: backports-20210222_001-5.4.89-b157d2276/drivers/net/wireless/ath/ath11k/mac.c
+===================================================================
+--- backports-20210222_001-5.4.89-b157d2276.orig/drivers/net/wireless/ath/ath11k/mac.c
++++ backports-20210222_001-5.4.89-b157d2276/drivers/net/wireless/ath/ath11k/mac.c
+@@ -4956,6 +4956,11 @@ static int ath11k_mac_station_add(struct
  			ret = -ENOMEM;
  			goto free_peer;
  		}
@@ -340,7 +363,7 @@ Signed-off-by: Hari Chandrakanthan <haric@codeaurora.org>
  	}
  
  	if (ieee80211_vif_is_mesh(vif)) {
-@@ -4988,6 +4993,8 @@ static int ath11k_mac_station_add(struct
+@@ -4994,6 +4999,8 @@ static int ath11k_mac_station_add(struct
  free_tx_stats:
  	kfree(arsta->tx_stats);
  	arsta->tx_stats = NULL;
@@ -349,7 +372,7 @@ Signed-off-by: Hari Chandrakanthan <haric@codeaurora.org>
  free_peer:
  	ath11k_peer_delete(ar, arvif->vdev_id, sta->addr);
  free_rx_stats:
-@@ -5088,6 +5095,8 @@ static int ath11k_mac_op_sta_state(struc
+@@ -5093,6 +5100,8 @@ static int ath11k_mac_op_sta_state(struc
  
  		kfree(arsta->tx_stats);
  		arsta->tx_stats = NULL;
@@ -358,7 +381,7 @@ Signed-off-by: Hari Chandrakanthan <haric@codeaurora.org>
  		ret = ath11k_mac_ap_ps_recalc(ar);
  		if (ret)
  			ath11k_warn(ar->ab, "failed to send ap ps ret %d\n", ret);
-@@ -6764,6 +6773,7 @@ static int ath11k_mac_op_add_interface(s
+@@ -6769,6 +6778,7 @@ static int ath11k_mac_op_add_interface(s
  	}
  
  	ath11k_debugfs_dbg_mac_filter(arvif);
@@ -366,3 +389,14 @@ Signed-off-by: Hari Chandrakanthan <haric@codeaurora.org>
  
  	switch (vif->type) {
  	case NL80211_IFTYPE_UNSPECIFIED:
+@@ -7106,6 +7116,10 @@ err_vdev_del:
+ 	debugfs_remove(arvif->mac_filter);
+ 	arvif->mac_filter = NULL;
+ 
++	/* Remove the wbm tx compl stats file */
++	debugfs_remove(arvif->wbm_tx_completion_stats);
++	arvif->wbm_tx_completion_stats = NULL;
++
+ unlock:
+ 	mutex_unlock(&ar->conf_mutex);
+ }

@@ -1,0 +1,103 @@
+#!/bin/sh
+#
+#Copyright (c) 2021, Qualcomm Innovation Center, Inc. All rights reserved.
+#
+#Permission to use, copy, modify, and/or distribute this software for any
+#purpose with or without fee is hereby granted, provided that the above
+#copyright notice and this permission notice appear in all copies.
+#
+#THE SOFTWARE IS PROVIDED "AS IS" AND THE AUTHOR DISCLAIMS ALL WARRANTIES
+#WITH REGARD TO THIS SOFTWARE INCLUDING ALL IMPLIED WARRANTIES OF
+#MERCHANTABILITY AND FITNESS. IN NO EVENT SHALL THE AUTHOR BE LIABLE FOR
+#ANY SPECIAL, DIRECT, INDIRECT, OR CONSEQUENTIAL DAMAGES OR ANY DAMAGES
+#WHATSOEVER RESULTING FROM LOSS OF USE, DATA OR PROFITS, WHETHER IN AN
+#ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF
+#OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
+
+
+# GPS out of reset
+gps_start() {
+	reset_gpio_pin=$(cat /proc/device-tree/soc/pinctrl@1000000/gps_pins/gps_reset/pins | sed s/"gpio"//)
+	on_off_gpio_pin=$(cat /proc/device-tree/soc/pinctrl@1000000/gps_pins/gps_on_off/pins | sed s/"gpio"//)
+	[ -z "$reset_gpio_pin" -o -z "$on_off_gpio_pin" ] && { echo "ERROR: GPIO not available" > /dev/console ; return; }
+	gpio_base=$(cat /sys/class/gpio/gpiochip*/base | head -n1)
+	gpio_reset=$(( gpio_base + reset_gpio_pin ))
+	gpio_on_off=$(( gpio_base + on_off_gpio_pin ))
+
+	if [[ ! -e /sys/class/gpio/gpio$gpio_reset ]]; then
+		echo $gpio_reset > /sys/class/gpio/export
+		echo out > /sys/class/gpio/gpio$gpio_reset/direction
+		echo "Bringing GPS out of reset ...." > /dev/console
+		{ echo 0 > /sys/class/gpio/gpio$gpio_reset/value ; \
+			sleep 1; \
+			echo 1 > /sys/class/gpio/gpio$gpio_reset/value; \
+			sleep 1; }
+	fi
+
+	if [[ ! -e /sys/class/gpio/gpio$gpio_on_off ]]; then
+		echo $gpio_on_off > /sys/class/gpio/export
+		echo out > /sys/class/gpio/gpio$gpio_on_off/direction
+		{ echo 0 > /sys/class/gpio/gpio$gpio_on_off/value ; \
+			sleep 1; \
+			echo 1 > /sys/class/gpio/gpio$gpio_on_off/value; \
+			sleep 1;
+			echo "GPS Module Enabled...." > /dev/console; }
+	fi
+}
+
+while [ -n "$1" ]; do
+	case "$1" in
+		-h|--help) HELP=1; break;;
+		-*)
+			echo "Invalid option: $1"
+			ERROR=1;
+			break
+		;;
+		*)break;;
+	esac
+	shift
+done
+
+[ -n "$HELP" -o -n "$ERROR" ] && {
+	        cat <<EOF
+Usage: $0 [-h]
+gps_start options:
+	-h	print this help
+
+Example:
+gps_start
+EOF
+	# If we requested the help flag, then exit normally.
+	# Else, it's probably an error so report it as such.
+	[ -n "$HELP" ] && exit 0
+	exit 1
+}
+
+
+# Check if stty is installed
+which stty
+if [ $? -eq 0 ]; then
+echo "stty installed"
+else
+echo "ERROR: stty is not installed. Exiting.."
+exit 1
+fi
+
+# Check if gpsd is installed
+which gpsd
+if [ $? -eq 0 ]; then
+echo "GPSD installed"
+else
+echo "ERROR: GPSD is not installed. Exiting.."
+exit 1
+fi
+
+#Change baud rate to 4800:
+echo -e "\nSetting UART3 baud rate to 4800\n"
+stty -F /dev/ttyMSM2 4800
+
+gps_start
+echo -e "\nReading GPS data : \n"
+#cat /dev/ttyMSM2
+gpsd /dev/ttyMSM2
+gpspipe -r -n 20

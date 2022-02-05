@@ -1,0 +1,76 @@
+Source-Makefile: package/network/services/odhcpd/Makefile
+
+Package: odhcpd
+Version: 2020-05-03-49e4949c6dee4a7e528e9bc51e9813228c3c16d8-3
+Depends: +libc +GCC_LIBSSP:libssp +USE_GLIBC:librt +USE_GLIBC:libpthread +libubox +libuci +libubus +libnl-tiny
+Conflicts: 
+Menu-Depends: 
+Provides: 
+Build-Variant: full
+Section: net
+Category: Network
+Repository: base
+Title: OpenWrt DHCPv6(-PD)/RA Server & Relay and DHCPv4 server
+Maintainer: Hans Dedecker <dedeckeh@gmail.com>
+Source: odhcpd-2020-05-03-49e4949c6dee4a7e528e9bc51e9813228c3c16d8.tar.xz
+License: GPL-2.0
+Type: ipkg
+Description:   odhcpd is a daemon for serving and relaying IP management protocols to
+ configure clients and downstream routers. It tries to follow the RFC 6204
+ requirements for IPv6 home routers.
+
+ This is a variant providing server services for DHCPv4, RA, stateless and
+ stateful DHCPv6,  prefix delegation and can be used to relay RA, DHCPv6 and
+ NDP between routed (non-bridged) interfaces in case no delegated prefixes
+ are available.
+Hans Dedecker <dedeckeh@gmail.com>
+@@
+Config:
+
+menu "Configuration"
+	depends on PACKAGE_odhcpd
+
+config PACKAGE_odhcpd_full_ext_cer_id
+	int
+	default 0
+	prompt "CER-ID Extension ID (0 = disabled)"
+endmenu
+@@
+
+Package: odhcpd-ipv6only
+Version: 2020-05-03-49e4949c6dee4a7e528e9bc51e9813228c3c16d8-3
+Depends: +libc +GCC_LIBSSP:libssp +USE_GLIBC:librt +USE_GLIBC:libpthread +libubox +libuci +libubus +libnl-tiny @IPV6
+Conflicts: 
+Menu-Depends: 
+Provides: 
+Build-Variant: ipv6only
+Section: net
+Category: Network
+Repository: base
+Title: OpenWrt DHCPv6(-PD)/RA Server & Relay
+Maintainer: Hans Dedecker <dedeckeh@gmail.com>
+Source: odhcpd-2020-05-03-49e4949c6dee4a7e528e9bc51e9813228c3c16d8.tar.xz
+License: GPL-2.0
+Type: ipkg
+Description:   odhcpd is a daemon for serving and relaying IP management protocols to
+ configure clients and downstream routers. It tries to follow the RFC 6204
+ requirements for IPv6 home routers.
+
+ This is a variant providing server services for RA, stateless and stateful
+ DHCPv6,  prefix delegation and can be used to relay RA, DHCPv6 and NDP between
+ routed (non-bridged) interfaces in case no delegated prefixes are available.
+Hans Dedecker <dedeckeh@gmail.com>
+@@
+Config:
+
+menu "Configuration"
+	depends on PACKAGE_odhcpd-ipv6only
+
+config PACKAGE_odhcpd_ipv6only_ext_cer_id
+	int
+	default 0
+	prompt "CER-ID Extension ID (0 = disabled)"
+endmenu
+@@
+
+

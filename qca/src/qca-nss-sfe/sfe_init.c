@@ -29,6 +29,14 @@
 #include "sfe_ipv4.h"
 #include "sfe_ipv6.h"
 
+int max_ipv4_conn = SFE_MAX_CONNECTION_NUM;
+module_param(max_ipv4_conn, int, S_IRUGO);
+MODULE_PARM_DESC(max_ipv4_conn, "Max number of IPv4 connections");
+
+int max_ipv6_conn = SFE_MAX_CONNECTION_NUM;
+module_param(max_ipv6_conn, int, S_IRUGO);
+MODULE_PARM_DESC(max_ipv6_conn, "Max number of IPv6 connections");
+
 /*
  * sfe_init()
  *	Initialize SFE engine.

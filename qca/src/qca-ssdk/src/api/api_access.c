@@ -1,5 +1,8 @@
 /*
  * Copyright (c) 2012, 2017-2019, The Linux Foundation. All rights reserved.
+ *
+ * Copyright (c) 2022, Qualcomm Innovation Center, Inc. All rights reserved.
+ *
  * Permission to use, copy, modify, and/or distribute this software for
  * any purpose with or without fee is hereby granted, provided that the
  * above copyright notice and this permission notice appear in all copies.
@@ -61,6 +64,7 @@
 #endif
 #include "ref_vsi.h"
 #include "ref_vlan.h"
+#include "ref_acl.h"
 
 /*qca808x_start*/
 static sw_api_func_t sw_api_func[] = {

@@ -1463,6 +1463,89 @@ f1_phy_get_remote_loopback(a_uint32_t dev_id, a_uint32_t phy_id, a_bool_t * enab
 	return SW_OK;
 }
 
+/******************************************************************************
+*
+* f1_phy_set_mdix -
+*
+* set phy mdix configuraiton
+*/
+sw_error_t
+f1_phy_set_mdix(a_uint32_t dev_id, a_uint32_t phy_id,
+	fal_port_mdix_mode_t mode)
+{
+	a_uint16_t phy_data;
+	sw_error_t rv;
+
+	phy_data = f1_phy_reg_read(dev_id, phy_id, F1_PHY_SPEC_CONTROL);
+	PHY_RTN_ON_READ_ERROR(phy_data);
+
+	if(mode == PHY_MDIX_AUTO){
+		phy_data |= F1_PHY_MDIX_AUTO;
+	}else if(mode == PHY_MDIX_MDIX){
+		phy_data &= ~F1_PHY_MDIX_AUTO;
+		phy_data |= F1_PHY_MDIX;
+	}else if(mode == PHY_MDIX_MDI){
+		phy_data &= ~F1_PHY_MDIX_AUTO;
+	}else{
+		return SW_BAD_PARAM;
+	}
+
+	rv = f1_phy_reg_write(dev_id, phy_id, F1_PHY_SPEC_CONTROL, phy_data);
+	PHY_RTN_ON_ERROR(rv);
+
+	rv = f1_phy_reset(dev_id, phy_id);
+	return rv;
+}
+
+/******************************************************************************
+*
+* f1_phy_get_mdix
+*
+* get phy mdix configuration
+*/
+sw_error_t
+f1_phy_get_mdix(a_uint32_t dev_id, a_uint32_t phy_id,
+	fal_port_mdix_mode_t * mode)
+{
+	a_uint16_t phy_data;
+
+	phy_data = f1_phy_reg_read(dev_id, phy_id, F1_PHY_SPEC_CONTROL);
+	PHY_RTN_ON_READ_ERROR(phy_data);
+
+	if((phy_data & F1_PHY_MDIX_AUTO) == F1_PHY_MDIX_AUTO){
+		*mode = PHY_MDIX_AUTO;
+	}else if((phy_data & F1_PHY_MDIX) == F1_PHY_MDIX){
+		*mode = PHY_MDIX_MDIX;
+	}else{
+		*mode = PHY_MDIX_MDI;
+	}
+
+	return SW_OK;
+
+}
+
+/******************************************************************************
+*
+* f1_phy_get_mdix status
+*
+* get phy mdix status
+*/
+sw_error_t
+f1_phy_get_mdix_status(a_uint32_t dev_id, a_uint32_t phy_id,
+	fal_port_mdix_status_t * mode)
+{
+	a_uint16_t phy_data;
+
+	phy_data = f1_phy_reg_read(dev_id, phy_id, F1_PHY_SPEC_STATUS);
+	PHY_RTN_ON_READ_ERROR(phy_data);
+
+	*mode = (phy_data & F1_PHY_MDIX_STATUS) ? PHY_MDIX_STATUS_MDIX :
+		PHY_MDIX_STATUS_MDI;
+
+	return SW_OK;
+
+}
+
 static int f1_phy_api_ops_init(void)
 {
 	int ret;
@@ -1510,6 +1593,9 @@ static int f1_phy_api_ops_init(void)
 	f1_phy_api_ops->phy_intr_status_get = f1_phy_intr_status_get;
 	f1_phy_api_ops->phy_8023az_set = f1_phy_set_8023az;
 	f1_phy_api_ops->phy_8023az_get = f1_phy_get_8023az;
+	f1_phy_api_ops->phy_mdix_set = f1_phy_set_mdix;
+	f1_phy_api_ops->phy_mdix_get = f1_phy_get_mdix;
+	f1_phy_api_ops->phy_mdix_status_get = f1_phy_get_mdix_status;
 
 	ret = hsl_phy_api_ops_register(F1_PHY_CHIP, f1_phy_api_ops);
 

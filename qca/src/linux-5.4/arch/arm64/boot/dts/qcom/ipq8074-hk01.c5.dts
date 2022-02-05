@@ -501,11 +501,14 @@
 	pinctrl-0 = <&pcie_sdx_pins>, <&pcie_wake_pins>;
 	pinctrl-names = "default";
 	e911-gpio =  <&tlmm 33 GPIO_ACTIVE_HIGH>;
+	e911_x65-gpio =  <&tlmm 22 GPIO_ACTIVE_HIGH>;
 
 	interrupts-extended = <&tlmm 59 IRQ_TYPE_LEVEL_HIGH>,
-			      <&tlmm 33 IRQ_TYPE_LEVEL_HIGH>;
-	interrupt-names = "wake_gpio", "mdm2ap_e911";
+			      <&tlmm 33 IRQ_TYPE_LEVEL_HIGH>,
+			      <&tlmm 22 IRQ_TYPE_LEVEL_HIGH>;
+	interrupt-names = "wake_gpio", "mdm2ap_e911", "mdm2ap_e911_x65";
 
+	slot_id = <0>;
 	link_retries_count = <100>;
 
 	status = "ok";

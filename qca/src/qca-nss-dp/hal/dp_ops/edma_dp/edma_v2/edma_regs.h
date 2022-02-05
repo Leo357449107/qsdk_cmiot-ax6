@@ -1,6 +1,8 @@
 /*
  * Copyright (c) 2021, The Linux Foundation. All rights reserved.
  *
+ * Copyright (c) 2022 Qualcomm Innovation Center, Inc. All rights reserved.
+ *
  * Permission to use, copy, modify, and/or distribute this software for any
  * purpose with or without fee is hereby granted, provided that the above
  * copyright notice and this permission notice appear in all copies.
@@ -121,6 +123,8 @@
 #define EDMA_PORT_QUEUE_END		3
 #define EDMA_PORT_QUEUE_NUM		((EDMA_PORT_QUEUE_END) - (EDMA_PORT_QUEUE_START) + 1)
 #define EDMA_PORT_QUEUE_PER_CORE	((EDMA_PORT_QUEUE_NUM)/(CONFIG_NR_CPUS))
+#define EDMA_CPU_PORT_MC_QID_MIN	256
+#define EDMA_CPU_PORT_MC_QID_MAX	271
 #define EDMA_QID2RID_NUM_PER_REG	4
 #define EDMA_RSS_HASH_MAX		256
 #define EDMA_PORT_PROFILE_ID		0

@@ -1,0 +1,25 @@
+Source-Makefile: package/utils/mdadm/Makefile
+
+Package: mdadm
+Submenu: Disc
+Version: 4.1-2
+Depends: +libc +GCC_LIBSSP:libssp +USE_GLIBC:librt +USE_GLIBC:libpthread +libpthread +kmod-md-mod +kmod-md-raid0 +kmod-md-raid10 +kmod-md-raid1
+Conflicts: 
+Menu-Depends: 
+Provides: 
+Section: utils
+Category: Utilities
+Repository: base
+Title: A tool for managing Soft RAID under Linux
+Maintainer: Felix Fietkau <nbd@nbd.name>
+Source: mdadm-4.1.tar.xz
+Type: ipkg
+Description:  A tool for managing Linux Software RAID arrays.
+ RAID 0, 1 and 10 support included.
+ If you need RAID 4,5 or 6 functionality please
+ install kmod-md-raid456 .
+https://www.kernel.org/pub/linux/utils/raid/mdadm/
+Felix Fietkau <nbd@nbd.name>
+@@
+
+

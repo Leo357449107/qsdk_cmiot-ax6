@@ -14,6 +14,9 @@ Optional properties:
  - dload_warm_reset: set this property to 1 to retain IMEM data
    during warm reset. dload_status also should be set to 1 when
    setting this property to 1.
+ - qti,runtime-failsafe: indicate whether runtime failsafe feature is enabled.
+   This feature will be enabled in CDT, which will be read by SBL and passed
+   to uboot via smem. Uboot patches it and passes to kernel.
 
 Example for ipq40xx:
 

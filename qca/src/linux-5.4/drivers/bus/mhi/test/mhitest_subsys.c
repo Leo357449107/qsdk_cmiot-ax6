@@ -17,7 +17,8 @@
 #include <linux/device.h>
 #include <linux/sched.h>
 
-#define DEFAULT_FW_FILE_NAME	"qcn9000/amss.bin"
+#define QCN9000_DEFAULT_FW_FILE_NAME	"qcn9000/amss.bin"
+#define QCN9224_DEFAULT_FW_FILE_NAME	"qcn9224/amss.bin"
 
 int mhitest_ss_powerup(struct rproc *subsys_desc)
 {
@@ -37,8 +38,14 @@ int mhitest_ss_powerup(struct rproc *subsys_desc)
 		pr_mhitest2("temp->pci_Dev is NULL\n");
 		return -ENODEV;
 	}
-	snprintf(temp->fw_name, sizeof(temp->fw_name),
-						DEFAULT_FW_FILE_NAME);
+
+	if (temp->device_id == QCN92XX_DEVICE_ID)
+		snprintf(temp->fw_name, sizeof(temp->fw_name),
+					QCN9224_DEFAULT_FW_FILE_NAME);
+	else
+		snprintf(temp->fw_name, sizeof(temp->fw_name),
+					QCN9000_DEFAULT_FW_FILE_NAME);
+
 
 	ret = mhitest_prepare_pci_mhi_msi(temp);
 	if (ret) {
@@ -144,10 +151,17 @@ int mhitest_subsystem_register(struct mhitest_platform *mplat)
 	MHITEST_VERB("SS name :%s\n", mplat->mhitest_ss_desc_name);
 
 	MHITEST_VERB("Doing rproc alloc..\n");
-	mplat->subsys_handle = rproc_alloc(&mplat->plat_dev->dev,
-					  mplat->mhitest_ss_desc_name,
-					  &mhitest_rproc_ops,
-					  DEFAULT_FW_FILE_NAME, 0);
+
+	if (mplat->device_id == QCN92XX_DEVICE_ID)
+		mplat->subsys_handle = rproc_alloc(&mplat->plat_dev->dev,
+						  mplat->mhitest_ss_desc_name,
+						  &mhitest_rproc_ops,
+						  QCN9224_DEFAULT_FW_FILE_NAME, 0);
+	else
+		mplat->subsys_handle = rproc_alloc(&mplat->plat_dev->dev,
+						  mplat->mhitest_ss_desc_name,
+						  &mhitest_rproc_ops,
+						  QCN9000_DEFAULT_FW_FILE_NAME, 0);
 
 	if (!mplat->subsys_handle) {
 		MHITEST_ERR("rproc_alloc returned NULL..\n");

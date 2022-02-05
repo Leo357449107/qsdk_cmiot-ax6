@@ -95,51 +95,6 @@ static const char * const qcom_strings_priv_flags[] = {
 #define QCOM_PRIV_FLAGS_LEN ARRAY_SIZE(qcom_strings_priv_flags)
 
 /*
- * qcom_set_mac_speed()
- */
-static int32_t qcom_set_mac_speed(struct nss_gmac_hal_dev *nghd,
-				uint32_t mac_speed)
-{
-	struct net_device *netdev = nghd->netdev;
-
-	netdev_warn(netdev, "API deprecated\n");
-	return 0;
-}
-
-/*
- * qcom_get_mac_speed()
- */
-static uint32_t qcom_get_mac_speed(struct nss_gmac_hal_dev *nghd)
-{
-	struct net_device *netdev = nghd->netdev;
-
-	netdev_warn(netdev, "API deprecated\n");
-	return 0;
-}
-
-/*
- * qcom_set_duplex_mode()
- */
-static void qcom_set_duplex_mode(struct nss_gmac_hal_dev *nghd,
-				uint8_t duplex_mode)
-{
-	struct net_device *netdev = nghd->netdev;
-
-	netdev_warn(netdev, "This API deprecated\n");
-}
-
-/*
- * qcom_get_duplex_mode()
- */
-static uint8_t qcom_get_duplex_mode(struct nss_gmac_hal_dev *nghd)
-{
-	struct net_device *netdev = nghd->netdev;
-
-	netdev_warn(netdev, "API deprecated\n");
-	return 0;
-}
-
-/*
  * qcom_rx_flow_control()
  */
 static void qcom_rx_flow_control(struct nss_gmac_hal_dev *nghd, bool enabled)
@@ -342,11 +297,6 @@ static int32_t qcom_start(struct nss_gmac_hal_dev *nghd)
 {
 	qcom_set_full_duplex(nghd);
 
-	/* TODO: Read speed from dts */
-
-	if (qcom_set_mac_speed(nghd, SPEED_1000))
-		return -1;
-
 	qcom_tx_enable(nghd);
 	qcom_rx_enable(nghd);
 
@@ -504,10 +454,6 @@ struct nss_gmac_hal_ops qcom_gmac_ops = {
 	.getmacaddr = &qcom_get_mac_address,
 	.rxflowcontrol = &qcom_rx_flow_control,
 	.txflowcontrol = &qcom_tx_flow_control,
-	.setspeed = &qcom_set_mac_speed,
-	.getspeed = &qcom_get_mac_speed,
-	.setduplex = &qcom_set_duplex_mode,
-	.getduplex = &qcom_get_duplex_mode,
 	.getstats = &qcom_get_mib_stats,
 	.setmaxframe = &qcom_set_maxframe,
 	.getmaxframe = &qcom_get_maxframe,

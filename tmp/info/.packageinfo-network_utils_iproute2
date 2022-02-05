@@ -1,0 +1,188 @@
+Source-Makefile: package/network/utils/iproute2/Makefile
+Build-Depends: iptables !BUILD_NLS:libiconv !BUILD_NLS:gettext
+
+Package: ip-tiny
+Submenu: Routing and Redirection
+Version: 5.0.0-2.1
+Depends: +libc +GCC_LIBSSP:libssp +USE_GLIBC:librt +USE_GLIBC:libpthread +libnl-tiny +(PACKAGE_devlink||PACKAGE_rdma):libmnl
+Conflicts: 
+Menu-Depends: 
+Provides: ip
+Build-Variant: tiny
+Default-Variant: tiny
+Section: net
+Category: Network
+Repository: base
+Title: Routing control utility (Minimal)
+Maintainer: Russell Senior <russell@personaltelco.net>
+Source: iproute2-5.0.0.tar.xz
+License: GPL-2.0
+Type: ipkg
+Description: Routing control utility (Minimal)
+http://www.linuxfoundation.org/collaborate/workgroups/networking/iproute2
+Russell Senior <russell@personaltelco.net>
+@@
+
+Package: ip-full
+Submenu: Routing and Redirection
+Version: 5.0.0-2.1
+Depends: +libc +GCC_LIBSSP:libssp +USE_GLIBC:librt +USE_GLIBC:libpthread +libnl-tiny +libelf +(PACKAGE_devlink||PACKAGE_rdma):libmnl +libcap
+Conflicts: 
+Menu-Depends: 
+Provides: ip
+Build-Variant: full
+Section: net
+Category: Network
+Repository: base
+Title: Routing control utility (Full)
+Maintainer: Russell Senior <russell@personaltelco.net>
+Source: iproute2-5.0.0.tar.xz
+License: GPL-2.0
+Type: ipkg
+Description: Routing control utility (Full)
+http://www.linuxfoundation.org/collaborate/workgroups/networking/iproute2
+Russell Senior <russell@personaltelco.net>
+@@
+
+Package: tc
+Submenu: Routing and Redirection
+Version: 5.0.0-2.1
+Depends: +libc +GCC_LIBSSP:libssp +USE_GLIBC:librt +USE_GLIBC:libpthread +kmod-sched-core +libxtables +libelf +(PACKAGE_devlink||PACKAGE_rdma):libmnl +PACKAGE_ip-full:libcap
+Conflicts: 
+Menu-Depends: 
+Provides: tc
+Build-Variant: tc
+Section: net
+Category: Network
+Repository: base
+Title: Traffic control utility
+Maintainer: Russell Senior <russell@personaltelco.net>
+Source: iproute2-5.0.0.tar.xz
+License: GPL-2.0
+Type: ipkg
+Description: Traffic control utility
+http://www.linuxfoundation.org/collaborate/workgroups/networking/iproute2
+Russell Senior <russell@personaltelco.net>
+@@
+
+Package: genl
+Submenu: Routing and Redirection
+Version: 5.0.0-2.1
+Depends: +libc +GCC_LIBSSP:libssp +USE_GLIBC:librt +USE_GLIBC:libpthread +libnl-tiny +(PACKAGE_devlink||PACKAGE_rdma):libmnl +(PACKAGE_tc||PACKAGE_ip-full):libelf +PACKAGE_ip-full:libcap
+Conflicts: 
+Menu-Depends: 
+Provides: 
+Section: net
+Category: Network
+Repository: base
+Title: General netlink utility frontend
+Maintainer: Russell Senior <russell@personaltelco.net>
+Source: iproute2-5.0.0.tar.xz
+License: GPL-2.0
+Type: ipkg
+Description: General netlink utility frontend
+http://www.linuxfoundation.org/collaborate/workgroups/networking/iproute2
+Russell Senior <russell@personaltelco.net>
+@@
+
+Package: ip-bridge
+Submenu: Routing and Redirection
+Version: 5.0.0-2.1
+Depends: +libc +GCC_LIBSSP:libssp +USE_GLIBC:librt +USE_GLIBC:libpthread +libnl-tiny +(PACKAGE_devlink||PACKAGE_rdma):libmnl +(PACKAGE_tc||PACKAGE_ip-full):libelf +PACKAGE_ip-full:libcap
+Conflicts: 
+Menu-Depends: 
+Provides: 
+Section: net
+Category: Network
+Repository: base
+Title: Bridge configuration utility from iproute2
+Maintainer: Russell Senior <russell@personaltelco.net>
+Source: iproute2-5.0.0.tar.xz
+License: GPL-2.0
+Type: ipkg
+Description: Bridge configuration utility from iproute2
+http://www.linuxfoundation.org/collaborate/workgroups/networking/iproute2
+Russell Senior <russell@personaltelco.net>
+@@
+
+Package: ss
+Submenu: Routing and Redirection
+Version: 5.0.0-2.1
+Depends: +libc +GCC_LIBSSP:libssp +USE_GLIBC:librt +USE_GLIBC:libpthread +libnl-tiny +(PACKAGE_devlink||PACKAGE_rdma):libmnl +(PACKAGE_tc||PACKAGE_ip-full):libelf +PACKAGE_ip-full:libcap
+Conflicts: 
+Menu-Depends: 
+Provides: 
+Section: net
+Category: Network
+Repository: base
+Title: Socket statistics utility
+Maintainer: Russell Senior <russell@personaltelco.net>
+Source: iproute2-5.0.0.tar.xz
+License: GPL-2.0
+Type: ipkg
+Description: Socket statistics utility
+http://www.linuxfoundation.org/collaborate/workgroups/networking/iproute2
+Russell Senior <russell@personaltelco.net>
+@@
+
+Package: nstat
+Submenu: Routing and Redirection
+Version: 5.0.0-2.1
+Depends: +libc +GCC_LIBSSP:libssp +USE_GLIBC:librt +USE_GLIBC:libpthread +libnl-tiny +(PACKAGE_devlink||PACKAGE_rdma):libmnl +(PACKAGE_tc||PACKAGE_ip-full):libelf +PACKAGE_ip-full:libcap
+Conflicts: 
+Menu-Depends: 
+Provides: 
+Section: net
+Category: Network
+Repository: base
+Title: Network statistics utility
+Maintainer: Russell Senior <russell@personaltelco.net>
+Source: iproute2-5.0.0.tar.xz
+License: GPL-2.0
+Type: ipkg
+Description: Network statistics utility
+http://www.linuxfoundation.org/collaborate/workgroups/networking/iproute2
+Russell Senior <russell@personaltelco.net>
+@@
+
+Package: devlink
+Submenu: Routing and Redirection
+Version: 5.0.0-2.1
+Depends: +libc +GCC_LIBSSP:libssp +USE_GLIBC:librt +USE_GLIBC:libpthread +libmnl +(PACKAGE_tc||PACKAGE_ip-full):libelf +PACKAGE_ip-full:libcap
+Conflicts: 
+Menu-Depends: 
+Provides: 
+Section: net
+Category: Network
+Repository: base
+Title: Network devlink utility
+Maintainer: Russell Senior <russell@personaltelco.net>
+Source: iproute2-5.0.0.tar.xz
+License: GPL-2.0
+Type: ipkg
+Description: Network devlink utility
+http://www.linuxfoundation.org/collaborate/workgroups/networking/iproute2
+Russell Senior <russell@personaltelco.net>
+@@
+
+Package: rdma
+Submenu: Routing and Redirection
+Version: 5.0.0-2.1
+Depends: +libc +GCC_LIBSSP:libssp +USE_GLIBC:librt +USE_GLIBC:libpthread +libmnl +(PACKAGE_tc||PACKAGE_ip-full):libelf +PACKAGE_ip-full:libcap
+Conflicts: 
+Menu-Depends: 
+Provides: 
+Section: net
+Category: Network
+Repository: base
+Title: Network rdma utility
+Maintainer: Russell Senior <russell@personaltelco.net>
+Source: iproute2-5.0.0.tar.xz
+License: GPL-2.0
+Type: ipkg
+Description: Network rdma utility
+http://www.linuxfoundation.org/collaborate/workgroups/networking/iproute2
+Russell Senior <russell@personaltelco.net>
+@@
+
+

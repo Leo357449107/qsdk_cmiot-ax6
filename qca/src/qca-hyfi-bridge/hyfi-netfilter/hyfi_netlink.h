@@ -40,7 +40,7 @@ void hyfi_netlink_fini(void);
  * these values are set based on the backward compatibility
  * ==============================================================*/
 #define SON_PKG_NAME "son"
-#define SON_MAJOR_VERION    1
+#define SON_MAJOR_VERION    10
 #define SON_MINOR_VERION    0
 #define SON_COMPATIBILITY   0
 #define SON_SU_BUILD        0
@@ -51,7 +51,7 @@ void hyfi_netlink_fini(void);
  * these values are set based on the backward compatibility
  * ==============================================================*/
 #define MAP_PKG_NAME "easymesh"
-#define MAP_MAJOR_VERION    1
+#define MAP_MAJOR_VERION    10
 #define MAP_MINOR_VERION    0
 #define MAP_COMPATIBILITY   0
 #define MAP_SU_BUILD        0

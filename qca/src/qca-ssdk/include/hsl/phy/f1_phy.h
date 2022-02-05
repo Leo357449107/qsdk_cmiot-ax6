@@ -401,6 +401,10 @@ extern "C" {
 #define F1_INTR_STATUS_UP_CHANGE          0x0400
 #define F1_INTR_STATUS_DOWN_CHANGE        0x0800
 
+#define F1_PHY_MDIX                       0x0020
+#define F1_PHY_MDIX_AUTO                  0x0060
+#define F1_PHY_MDIX_STATUS                0x0040
+
     sw_error_t
     f1_phy_set_powersave(a_uint32_t dev_id, a_uint32_t phy_id, a_bool_t enable);
 

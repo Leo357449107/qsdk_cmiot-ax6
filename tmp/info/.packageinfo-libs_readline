@@ -1,0 +1,31 @@
+Source-Makefile: package/libs/readline/Makefile
+Build-Depends/host: ncurses/host
+Build-Types: host
+
+Package: libreadline
+Version: 8.0-1
+ABIVersion: 8
+Depends: +libc +GCC_LIBSSP:libssp +USE_GLIBC:librt +USE_GLIBC:libpthread +libncursesw
+Conflicts: 
+Menu-Depends: 
+Provides: 
+Section: libs
+Category: Libraries
+Repository: base
+Title: Command lines edition library
+Maintainer: 
+Source: readline-8.0.tar.gz
+License: GPL-3.0
+LicenseFiles: COPYING
+Type: ipkg
+Description: 	The Readline library provides a set of functions for use by applications
+	that allow users to edit command lines as they are typed in. Both Emacs
+	and vi editing modes are available. The Readline library includes
+	additional functions to maintain a list of previously-entered command
+	lines, to recall and perhaps reedit those lines, and perform csh-like
+	history expansion on previous commands.
+http://cnswww.cns.cwru.edu/php/chet/readline/rltop.html
+
+@@
+
+

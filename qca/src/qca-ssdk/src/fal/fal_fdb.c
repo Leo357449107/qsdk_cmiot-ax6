@@ -264,7 +264,6 @@ _fal_fdb_port_learning_ctrl_set(a_uint32_t dev_id, fal_port_t port_id, a_bool_t 
     return rv;
 }
 
-#ifndef IN_FDB_MINI
 static sw_error_t
 _fal_fdb_port_learning_ctrl_get(a_uint32_t dev_id, fal_port_t port_id, a_bool_t *enable, fal_fwd_cmd_t *cmd)
 {
@@ -279,7 +278,6 @@ _fal_fdb_port_learning_ctrl_get(a_uint32_t dev_id, fal_port_t port_id, a_bool_t 
     rv = p_api->adpt_fdb_port_newaddr_lrn_get(dev_id, port_id, enable, cmd);
     return rv;
 }
-#endif
 
 static sw_error_t
 _fal_fdb_port_stamove_ctrl_set(a_uint32_t dev_id, fal_port_t port_id, a_bool_t enable, fal_fwd_cmd_t cmd)
@@ -296,7 +294,6 @@ _fal_fdb_port_stamove_ctrl_set(a_uint32_t dev_id, fal_port_t port_id, a_bool_t e
     return rv;
 }
 
-#ifndef IN_FDB_MINI
 static sw_error_t
 _fal_fdb_port_stamove_ctrl_get(a_uint32_t dev_id, fal_port_t port_id, a_bool_t *enable, fal_fwd_cmd_t *cmd)
 {
@@ -311,7 +308,6 @@ _fal_fdb_port_stamove_ctrl_get(a_uint32_t dev_id, fal_port_t port_id, a_bool_t *
     rv = p_api->adpt_fdb_port_stamove_get(dev_id, port_id, enable, cmd);
     return rv;
 }
-#endif
 
 static sw_error_t
 _fal_fdb_aging_ctrl_set(a_uint32_t dev_id, a_bool_t enable)
@@ -541,7 +537,7 @@ _fal_fdb_entry_update_byport(a_uint32_t dev_id, fal_port_t old_port, fal_port_t 
     rv = p_api->fdb_transfer(dev_id, old_port, new_port, fid, option);
     return rv;
 }
-
+#endif
 static sw_error_t
 _fal_port_fdb_learn_limit_set(a_uint32_t dev_id, fal_port_t port_id,
                               a_bool_t enable, a_uint32_t cnt)
@@ -641,7 +637,7 @@ _fal_port_fdb_learn_exceed_cmd_get(a_uint32_t dev_id, fal_port_t port_id,
     rv = p_api->port_fdb_learn_exceed_cmd_get(dev_id, port_id, cmd);
     return rv;
 }
-
+#ifndef IN_FDB_MINI
 static sw_error_t
 _fal_fdb_learn_limit_set(a_uint32_t dev_id, a_bool_t enable, a_uint32_t cnt)
 {
@@ -919,6 +915,7 @@ _fal_fdb_port_learned_mac_counter_get(a_uint32_t dev_id, fal_port_t port_id,
     rv = p_api->adpt_port_fdb_learn_counter_get(dev_id, port_id, cnt);
     return rv;
 }
+#endif
 sw_error_t
 _fal_fdb_port_maclimit_ctrl_set(a_uint32_t dev_id, fal_port_t port_id, fal_maclimit_ctrl_t * maclimit_ctrl)
 {
@@ -947,7 +944,7 @@ _fal_fdb_port_maclimit_ctrl_get(a_uint32_t dev_id, fal_port_t port_id, fal_macli
     rv = p_api->adpt_fdb_port_maclimit_ctrl_get(dev_id, port_id, maclimit_ctrl);
     return rv;
 }
-#endif
+
 sw_error_t
 _fal_fdb_entry_del_byfid(a_uint32_t dev_id, a_uint16_t fid, a_uint32_t flag)
 {
@@ -1162,7 +1159,6 @@ fal_fdb_port_learning_ctrl_set(a_uint32_t dev_id, fal_port_t port_id, a_bool_t e
     return rv;
 }
 
-#ifndef IN_FDB_MINI
 /**
  * @brief Get dynamic address learning and forward command on a particular port.
  * @param[in] dev_id device id
@@ -1181,7 +1177,6 @@ fal_fdb_port_learning_ctrl_get(a_uint32_t dev_id, fal_port_t port_id, a_bool_t *
     FAL_API_UNLOCK;
     return rv;
 }
-#endif
 
 /**
  * @brief Set station move learning and forward command on a particular port.
@@ -1202,7 +1197,6 @@ fal_fdb_port_stamove_ctrl_set(a_uint32_t dev_id, fal_port_t port_id, a_bool_t en
     return rv;
 }
 
-#ifndef IN_FDB_MINI
 /**
  * @brief Get station move learning and forward command on a particular port.
  * @param[in] dev_id device id
@@ -1221,7 +1215,6 @@ fal_fdb_port_stamove_ctrl_get(a_uint32_t dev_id, fal_port_t port_id, a_bool_t *e
     FAL_API_UNLOCK;
     return rv;
 }
-#endif
 
 /**
  * @brief Set dynamic address aging status on particular device.
@@ -1415,7 +1408,7 @@ fal_fdb_entry_update_byport(a_uint32_t dev_id, fal_port_t old_port, fal_port_t n
     FAL_API_UNLOCK;
     return rv;
 }
-
+#endif
 /**
  * @brief Set dynamic address learning count limit on a particular port.
  * @param[in] dev_id device id
@@ -1493,7 +1486,7 @@ fal_port_fdb_learn_exceed_cmd_get(a_uint32_t dev_id, fal_port_t port_id,
     FAL_API_UNLOCK;
     return rv;
 }
-
+#ifndef IN_FDB_MINI
 /**
  * @brief Set dynamic address learning count limit on a particular device.
  * @param[in] dev_id device id
@@ -1802,6 +1795,7 @@ fal_fdb_port_learned_mac_counter_get(a_uint32_t dev_id, fal_port_t port_id,
     FAL_API_UNLOCK;
     return rv;
 }
+#endif
 sw_error_t
 fal_fdb_port_maclimit_ctrl_set(a_uint32_t dev_id, fal_port_t port_id, fal_maclimit_ctrl_t * maclimit_ctrl)
 {
@@ -1822,7 +1816,7 @@ fal_fdb_port_maclimit_ctrl_get(a_uint32_t dev_id, fal_port_t port_id, fal_maclim
     FAL_API_UNLOCK;
     return rv;
 }
-#endif
+
 sw_error_t
 fal_fdb_entry_del_byfid(a_uint32_t dev_id, a_uint16_t fid, a_uint32_t flag)
 {
@@ -1882,19 +1876,11 @@ fal_fdb_entry_del_byfid(a_uint32_t dev_id, a_uint16_t fid, a_uint32_t flag)
 
     EXPORT_SYMBOL(fal_fdb_entry_extend_getfirst);
 
-#ifndef IN_FDB_MINI
-
     EXPORT_SYMBOL(fal_fdb_port_learning_ctrl_get);
-
-#endif
 
     EXPORT_SYMBOL(fal_fdb_port_stamove_ctrl_set);
 
-#ifndef IN_FDB_MINI
-
     EXPORT_SYMBOL(fal_fdb_port_stamove_ctrl_get);
-
-#endif
 
     EXPORT_SYMBOL(fal_fdb_aging_ctrl_set);
 
@@ -1907,7 +1893,7 @@ fal_fdb_entry_del_byfid(a_uint32_t dev_id, a_uint16_t fid, a_uint32_t flag)
     EXPORT_SYMBOL(fal_fdb_aging_time_get);
 
     EXPORT_SYMBOL(fal_fdb_entry_update_byport);
-
+#endif
     EXPORT_SYMBOL(fal_port_fdb_learn_limit_set);
 
     EXPORT_SYMBOL(fal_port_fdb_learn_limit_get);
@@ -1915,16 +1901,14 @@ fal_fdb_entry_del_byfid(a_uint32_t dev_id, a_uint16_t fid, a_uint32_t flag)
     EXPORT_SYMBOL(fal_port_fdb_learn_exceed_cmd_set);
 
     EXPORT_SYMBOL(fal_port_fdb_learn_exceed_cmd_get);
-
+#ifndef IN_FDB_MINI
     EXPORT_SYMBOL(fal_fdb_port_add);
 
     EXPORT_SYMBOL(fal_fdb_port_del);
-
+#endif
     EXPORT_SYMBOL(fal_fdb_port_maclimit_ctrl_set);
 
     EXPORT_SYMBOL(fal_fdb_port_maclimit_ctrl_get);
-
-#endif
 
     EXPORT_SYMBOL(fal_fdb_entry_del_byfid);
 

@@ -179,6 +179,10 @@ if KERNEL_DEBUG_KMEMLEAK
 		bool "Default kmemleak to off"
 endif
 
+config KERNEL_DEBUG_MEM_USAGE
+	bool "Kernel Memory Tracer"
+	default n
+
 config KERNEL_FUNCTION_TRACER
 	bool "Function tracer"
 	depends on KERNEL_FTRACE

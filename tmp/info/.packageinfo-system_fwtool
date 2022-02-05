@@ -1,0 +1,21 @@
+Source-Makefile: package/system/fwtool/Makefile
+Build-Depends: fwtool/host
+Build-Types: host
+
+Package: fwtool
+Version: 2
+Depends: +libc +GCC_LIBSSP:libssp +USE_GLIBC:librt +USE_GLIBC:libpthread 
+Conflicts: 
+Menu-Depends: 
+Provides: 
+Section: utils
+Category: Base system
+Title: Utility for appending and extracting firmware metadata and signatures
+Maintainer: Felix Fietkau <nbd@nbd.name>
+Source: 
+Type: ipkg
+Description: Utility for appending and extracting firmware metadata and signatures
+Felix Fietkau <nbd@nbd.name>
+@@
+
+

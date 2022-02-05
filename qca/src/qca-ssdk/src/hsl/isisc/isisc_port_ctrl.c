@@ -1844,6 +1844,87 @@ _isisc_port_mac_loopback_get(a_uint32_t dev_id, fal_port_t port_id, a_bool_t *en
 
     return SW_OK;
 }
+
+static sw_error_t
+_isisc_port_mdix_set(a_uint32_t dev_id, fal_port_t port_id,
+    fal_port_mdix_mode_t mode)
+{
+    sw_error_t rv;
+    a_uint32_t phy_id = 0;
+    hsl_phy_ops_t *phy_drv;
+
+    HSL_DEV_ID_CHECK(dev_id);
+    if(A_TRUE != hsl_port_prop_check(dev_id, port_id, HSL_PP_PHY))
+    {
+        return SW_BAD_PARAM;
+    }
+
+    SW_RTN_ON_NULL(phy_drv = hsl_phy_api_ops_get(dev_id, port_id));
+    if (NULL == phy_drv->phy_mdix_set)
+        return SW_NOT_SUPPORTED;
+
+    rv = hsl_port_prop_get_phyid(dev_id, port_id, &phy_id);
+    SW_RTN_ON_ERROR(rv);
+
+    rv = phy_drv->phy_mdix_set(dev_id, phy_id, mode);
+
+    return rv;
+}
+
+static sw_error_t
+_isisc_port_mdix_get(a_uint32_t dev_id, fal_port_t port_id,
+    fal_port_mdix_mode_t * mode)
+{
+    sw_error_t rv;
+    a_uint32_t phy_id = 0;
+    hsl_phy_ops_t *phy_drv;
+
+    HSL_DEV_ID_CHECK(dev_id);
+
+    if(A_TRUE != hsl_port_prop_check(dev_id, port_id, HSL_PP_PHY))
+    {
+        return SW_BAD_PARAM;
+    }
+
+    SW_RTN_ON_NULL(phy_drv = hsl_phy_api_ops_get (dev_id, port_id));
+    if (NULL == phy_drv->phy_mdix_get)
+        return SW_NOT_SUPPORTED;
+
+    rv = hsl_port_prop_get_phyid(dev_id, port_id, &phy_id);
+    SW_RTN_ON_ERROR(rv);
+
+    rv = phy_drv->phy_mdix_get(dev_id, phy_id, mode);
+
+    return rv;
+}
+
+static sw_error_t
+_isisc_port_mdix_status_get(a_uint32_t dev_id, fal_port_t port_id,
+    fal_port_mdix_status_t * mode)
+{
+    sw_error_t rv;
+    a_uint32_t phy_id = 0;
+    hsl_phy_ops_t *phy_drv;
+
+    HSL_DEV_ID_CHECK(dev_id);
+
+    if(A_TRUE != hsl_port_prop_check(dev_id, port_id, HSL_PP_PHY))
+    {
+        return SW_BAD_PARAM;
+    }
+
+    SW_RTN_ON_NULL(phy_drv = hsl_phy_api_ops_get(dev_id, port_id));
+    if (NULL == phy_drv->phy_mdix_status_get)
+        return SW_NOT_SUPPORTED;
+
+    rv = hsl_port_prop_get_phyid(dev_id, port_id, &phy_id);
+    SW_RTN_ON_ERROR(rv);
+
+    rv = phy_drv->phy_mdix_status_get(dev_id, phy_id, mode);
+
+    return rv;
+}
+
 #endif
 /**
  * @brief Set duplex mode on a particular port.
@@ -2719,6 +2800,63 @@ isisc_port_mac_loopback_get(a_uint32_t dev_id, fal_port_t port_id, a_bool_t * en
     HSL_API_UNLOCK;
     return rv;
 }
+
+/**
+ * @brief Set mdix on a particular port.
+ * @param[in] dev_id device id
+ * @param[in] port_id port id
+ * @param[out] mode
+ * @return SW_OK or error code
+ */
+HSL_LOCAL sw_error_t
+isisc_port_mdix_set(a_uint32_t dev_id, a_uint32_t phy_id,
+    fal_port_mdix_mode_t mode)
+{
+    sw_error_t rv;
+
+    HSL_API_LOCK;
+    rv = _isisc_port_mdix_set(dev_id, phy_id, mode);
+    HSL_API_UNLOCK;
+    return rv;
+}
+
+/**
+ * @brief Get mdix configuration on a particular port.
+ * @param[in] dev_id device id
+ * @param[in] port_id port id
+ * @param[out] mode
+ * @return SW_OK or error code
+ */
+HSL_LOCAL sw_error_t
+isisc_port_mdix_get(a_uint32_t dev_id, fal_port_t port_id,
+    fal_port_mdix_mode_t * mode)
+{
+    sw_error_t rv;
+
+    HSL_API_LOCK;
+    rv = _isisc_port_mdix_get(dev_id, port_id, mode);
+    HSL_API_UNLOCK;
+    return rv;
+}
+
+/**
+ * @brief Get mdix status on a particular port.
+ * @param[in] dev_id device id
+ * @param[in] port_id port id
+ * @param[out] mode
+ * @return SW_OK or error code
+ */
+HSL_LOCAL sw_error_t
+isisc_port_mdix_status_get(a_uint32_t dev_id, fal_port_t port_id,
+    fal_port_mdix_status_t * mode)
+{
+    sw_error_t rv;
+
+    HSL_API_LOCK;
+    rv = _isisc_port_mdix_status_get(dev_id, port_id, mode);
+    HSL_API_UNLOCK;
+    return rv;
+}
 #endif
 sw_error_t
 isisc_port_ctrl_init(a_uint32_t dev_id)
@@ -2784,6 +2922,9 @@ isisc_port_ctrl_init(a_uint32_t dev_id)
         p_api->ports_link_status_get = isisc_ports_link_status_get;
         p_api->port_mac_loopback_set=isisc_port_mac_loopback_set;
         p_api->port_mac_loopback_get=isisc_port_mac_loopback_get;
+        p_api->port_mdix_set = isisc_port_mdix_set;
+        p_api->port_mdix_get = isisc_port_mdix_get;
+        p_api->port_mdix_status_get = isisc_port_mdix_status_get;
 #endif
     }
 #endif

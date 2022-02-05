@@ -1,0 +1,24 @@
+Source-Makefile: package/network/services/igmpproxy/Makefile
+
+Package: igmpproxy
+Submenu: Routing and Redirection
+Version: 0.2.1-4
+Depends: +libc +GCC_LIBSSP:libssp +USE_GLIBC:librt +USE_GLIBC:libpthread 
+Conflicts: 
+Menu-Depends: 
+Provides: 
+Section: net
+Category: Network
+Repository: base
+Title: Multicast Routing Daemon
+Maintainer: Felix Fietkau <nbd@nbd.name>
+Source: igmpproxy-0.2.1.tar.gz
+License: GPL-2.0+
+Type: ipkg
+Description: 	IGMPproxy is a simple dynamic Multicast Routing Daemon using
+	only IGMP signalling (Internet Group Management Protocol).
+http://sourceforge.net/projects/igmpproxy
+Felix Fietkau <nbd@nbd.name>
+@@
+
+

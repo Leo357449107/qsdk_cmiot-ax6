@@ -98,11 +98,9 @@
 			reg = <0x0 0x4ac00000 0x0 0x00400000>;
 		};
 
-#ifdef ENABLE_QSEECOM
 		tzapp:tzapp@4a400000 {	/* TZAPPS */
 			no-map;
 		};
-#endif
 
 		bt_region: bt@7000000 {
 			no-map;
@@ -216,11 +214,9 @@
 			reg = <0x0 0x4ac00000 0x0 0x00400000>;
 		};
 
-#ifdef ENABLE_QSEECOM
 		tzapp:tzapp@4a400000 {	/* TZAPPS */
 			no-map;
 		};
-#endif
 
 		bt_region: bt@7000000 {
 			no-map;
@@ -354,8 +350,8 @@
 				<&q6_caldb_region>;
 	#endif
 
-	/delete-node/ q6_wcss_pd1;
-	/delete-node/ q6_wcss_pd2;
+	/delete-node/ remoteproc_pd1@4ab000;
+	/delete-node/ remoteproc_pd2;
 };
 
 &wifi0 {
@@ -373,6 +369,7 @@
 &wifi1 {
 	/delete-property/ mem-region;
 	/delete-property/ qcom,multipd_arch;
+	/delete-property/ qcom,rproc;
 	status = "disabled";
 };
 

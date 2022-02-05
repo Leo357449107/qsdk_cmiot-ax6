@@ -157,7 +157,7 @@ Signed-off-by: Sriram R <srirrama@codeaurora.org>
  	ath11k_hif_irq_disable(ab);
  	ath11k_dp_pdev_free(ab);
  	ath11k_debugfs_pdev_destroy(ab);
-@@ -972,6 +991,10 @@ static int ath11k_core_reconfigure_on_cr
+@@ -966,6 +985,10 @@ static int ath11k_core_reconfigure_on_cr
  	int ret;
  
  	mutex_lock(&ab->core_lock);
@@ -165,10 +165,10 @@ Signed-off-by: Sriram R <srirrama@codeaurora.org>
 +	ath11k_nss_teardown(ab);
 +	ab->nss.enabled = false;
 +
- #ifdef CONFIG_QCOM_QMI_HELPERS
- 	/* Unregister the ssr notifier as we are not interested
- 	 * in receving these notifications after mac is unregistered.
-@@ -1193,6 +1216,10 @@ int ath11k_core_pre_init(struct ath11k_b
+ 	ath11k_thermal_unregister(ab);
+ 	ath11k_hif_irq_disable(ab);
+ 	ath11k_dp_pdev_free(ab);
+@@ -1180,6 +1203,10 @@ int ath11k_core_pre_init(struct ath11k_b
  		ath11k_err(ab, "failed to get hw params: %d\n", ret);
  		return ret;
  	}
@@ -179,14 +179,6 @@ Signed-off-by: Sriram R <srirrama@codeaurora.org>
  
  	return 0;
  }
-@@ -1207,7 +1234,6 @@ int ath11k_core_init(struct ath11k_base
- 		ath11k_err(ab, "failed to create soc core: %d\n", ret);
- 		return ret;
- 	}
--
- 	return 0;
- }
- EXPORT_SYMBOL(ath11k_core_init);
 --- a/drivers/net/wireless/ath/ath11k/core.h
 +++ b/drivers/net/wireless/ath/ath11k/core.h
 @@ -26,6 +26,7 @@
@@ -874,7 +866,7 @@ Signed-off-by: Sriram R <srirrama@codeaurora.org>
  	}
  
  	ar->debug.rx_filter = tlv_filter.rx_filter;
-@@ -1837,6 +1838,75 @@ static const struct file_operations fops
+@@ -1838,6 +1839,75 @@ static const struct file_operations fops
  	.open = simple_open
  };
  
@@ -950,7 +942,7 @@ Signed-off-by: Sriram R <srirrama@codeaurora.org>
  static int ath11k_get_tpc_ctl_mode(struct wmi_tpc_stats_event *tpc_stats,
  				   u32 pream_idx, int *mode)
  {
-@@ -2483,6 +2553,10 @@ int ath11k_debugfs_register(struct ath11
+@@ -2484,6 +2554,10 @@ int ath11k_debugfs_register(struct ath11
  	debugfs_create_file("tpc_stats_type", 0600, ar->debug.debugfs_pdev,
  			    ar, &fops_tpc_stats_type);
  

@@ -3,6 +3,7 @@
  * IPQ9574 DB-AL01-C1 board device tree source
  *
  * Copyright (c) 2020-2021 The Linux Foundation. All rights reserved.
+ * Copyright (c) 2022 Qualcomm Innovation Center, Inc. All rights reserved.
  */
 
 /dts-v1/;
@@ -126,6 +127,7 @@
 			qcom,id = <1>;
 			reg = <0x3a001000 0x200>;
 			qcom,mactype = <0>;
+			qcom,link-poll = <1>;
 			local-mac-address = [000000000000];
 			qcom,phy-mdio-addr = <16>;
 			phy-mode = "sgmii";
@@ -137,6 +139,7 @@
 			qcom,id = <2>;
 			reg = <0x3a001200 0x200>;
 			qcom,mactype = <0>;
+			qcom,link-poll = <1>;
 			local-mac-address = [000000000000];
 			qcom,phy-mdio-addr = <17>;
 			phy-mode = "sgmii";
@@ -148,6 +151,7 @@
 			qcom,id = <3>;
 			reg = <0x3a001400 0x200>;
 			qcom,mactype = <0>;
+			qcom,link-poll = <1>;
 			local-mac-address = [000000000000];
 			qcom,phy-mdio-addr = <18>;
 			phy-mode = "sgmii";
@@ -159,6 +163,7 @@
 			qcom,id = <4>;
 			reg = <0x3a001600 0x200>;
 			qcom,mactype = <0>;
+			qcom,link-poll = <1>;
 			local-mac-address = [000000000000];
 			qcom,phy-mdio-addr = <19>;
 			phy-mode = "sgmii";
@@ -170,6 +175,7 @@
 			qcom,id = <5>;
 			reg = <0x3a510000 0x4000>;
 			qcom,mactype = <1>;
+			qcom,link-poll = <1>;
 			local-mac-address = [000000000000];
 			qcom,phy-mdio-addr = <8>;
 			phy-mode = "sgmii";
@@ -181,6 +187,7 @@
 			qcom,id = <6>;
 			reg = <0x3a001a00 0x200>;
 			qcom,mactype = <0>;
+			qcom,link-poll = <1>;
 			local-mac-address = [000000000000];
 			qcom,phy-mdio-addr = <28>;
 			phy-mode = "sgmii";
@@ -270,7 +277,9 @@
 				qcom,mhi@2 {
 					reg = <0 0 0 0 0>;
 					qrtr_instance_id = <0x20>;
+#if defined(__CNSS2__)
 					memory-region = <&mhi_region0>;
+#endif
 				};
 			};
 		};
@@ -288,7 +297,9 @@
 				qcom,mhi@3 {
 					reg = <0 0 0 0 0>;
 					qrtr_instance_id = <0x21>;
+#if defined(__CNSS2__)
 					memory-region = <&mhi_region1>;
+#endif
 				};
 			};
 		};
@@ -380,6 +391,58 @@
 			phy_addr = <0x1c>;
 			mdiobus = <&mdio>;
 		};
+
+		/* EDMA host driver configuration for the board */
+		edma@3ab00000 {
+			qcom,txdesc-ring-start = <8>;		/* Tx desc ring start ID */
+			qcom,txdesc-rings = <24>;		/* Total number of Tx desc rings to be provisioned */
+			qcom,txcmpl-ring-start = <8>;		/* Tx complete ring start ID */
+			qcom,txcmpl-rings = <24>;		/* Total number of Tx complete rings to be provisioned */
+			qcom,rxfill-ring-start = <4>;		/* Rx fill ring start ID */
+			qcom,rxfill-rings = <4>;		/* Total number of Rx fill rings to be provisioned */
+			qcom,rxdesc-ring-start = <20>;		/* Rx desc ring start ID */
+			qcom,rxdesc-rings = <4>;		/* Total number of Rx desc rings to be provisioned */
+			qcom,tx-map-priority-level = <1>;	/* Tx priority level per port */
+			qcom,rx-map-priority-level = <1>;	/* Rx priority level per core */
+			qcom,txdesc-map = <8 9 10 11>,		/* Port0 per-core Tx ring map */
+					<12 13 14 15>,		/* Port1 per-core Tx ring map */
+					<16 17 18 19>,		/* Port2 per-core Tx ring map */
+					<20 21 22 23>,		/* Port3 per-core Tx ring map */
+					<24 25 26 27>,		/* Port4 per-core Tx ring map */
+					<28 29 30 31>;		/* Port5 per-core Tx ring map */
+			qcom,txdesc-fc-grp-map = <1 2 3 4 5 6>;	/* Per GMAC flow control group map */
+			qcom,rxfill-map = <4 5 6 7>;		/* Per-core Rx fill ring map */
+			qcom,rxdesc-map = <20 21 22 23>;	/* Per-core Rx desc ring map */
+			interrupts = <0 371 4>,			/* Tx complete ring id #8 IRQ info */
+				   <0 372 4>,			/* Tx complete ring id #9 IRQ info */
+				   <0 373 4>,			/* Tx complete ring id #10 IRQ info */
+				   <0 374 4>,			/* Tx complete ring id #11 IRQ info */
+				   <0 375 4>,			/* Tx complete ring id #12 IRQ info */
+				   <0 376 4>,			/* Tx complete ring id #13 IRQ info */
+				   <0 377 4>,			/* Tx complete ring id #14 IRQ info */
+				   <0 378 4>,			/* Tx complete ring id #15 IRQ info */
+				   <0 379 4>,			/* Tx complete ring id #16 IRQ info */
+				   <0 380 4>,			/* Tx complete ring id #17 IRQ info */
+				   <0 381 4>,			/* Tx complete ring id #18 IRQ info */
+				   <0 382 4>,			/* Tx complete ring id #19 IRQ info */
+				   <0 383 4>,			/* Tx complete ring id #20 IRQ info */
+				   <0 384 4>,			/* Tx complete ring id #21 IRQ info */
+				   <0 509 4>,			/* Tx complete ring id #22 IRQ info */
+				   <0 508 4>,			/* Tx complete ring id #23 IRQ info */
+				   <0 507 4>,			/* Tx complete ring id #24 IRQ info */
+				   <0 506 4>,			/* Tx complete ring id #25 IRQ info */
+				   <0 505 4>,			/* Tx complete ring id #26 IRQ info */
+				   <0 504 4>,			/* Tx complete ring id #27 IRQ info */
+				   <0 503 4>,			/* Tx complete ring id #28 IRQ info */
+				   <0 502 4>,			/* Tx complete ring id #29 IRQ info */
+				   <0 501 4>,			/* Tx complete ring id #30 IRQ info */
+				   <0 500 4>,			/* Tx complete ring id #31 IRQ info */
+				   <0 351 4>,			/* Rx desc ring id #20 IRQ info */
+				   <0 352 4>,			/* Rx desc ring id #21 IRQ info */
+				   <0 353 4>,			/* Rx desc ring id #22 IRQ info */
+				   <0 354 4>,			/* Rx desc ring id #23 IRQ info */
+				   <0 261 4>;			/* Misc error IRQ info */
+		};
 	};
 };
 
@@ -390,27 +453,28 @@
 &wifi1 {
 #if !defined(__IPQ_MEM_PROFILE_256_MB__)
 #ifdef __IPQ_MEM_PROFILE_512_MB__
-	/* QCN9000 tgt-mem-mode=1 layout - 38MB
+	/* QCN9000 tgt-mem-mode=1 layout - 26MB
 	 * +=========+==============+=========+
 	 * |  Region | Start Offset |   Size  |
 	 * +---------+--------------+---------+
-	 * | HREMOTE |  0x4DD00000  |   20MB  |
+	 * | HREMOTE |  0x4CF00000  |   12MB  |
 	 * +---------+--------------+---------+
-	 * | M3 Dump |  0x4F100000  |   1MB   |
+	 * | M3 Dump |  0x4DB00000  |   1MB   |
 	 * +---------+--------------+---------+
-	 * |   ETR   |  0x4F200000  |   1MB   |
+	 * |   ETR   |  0x4DC00000  |   1MB   |
 	 * +---------+--------------+---------+
-	 * |  Caldb  |  0x4F300000  |   8MB   |
+	 * |  Caldb  |  0x4DD00000  |   8MB   |
 	 * +---------+--------------+---------+
-	 * | Pageable|  0x4FB00000  |   8MB   |
+	 * | Pageable|  0x4E500000  |   4MB   |
 	 * +==================================+
 	 */
-	base-addr = <0x4DD00000>;
-	m3-dump-addr = <0x4F100000>;
-	etr-addr = <0x4F200000>;
-	caldb-addr = <0x4F300000>;
-	pageable-addr = <0x4FB00000>;
-	hremote-size = <0x1400000>;
+	base-addr = <0x4CF00000>;
+	m3-dump-addr = <0x4DB00000>;
+	etr-addr = <0x4DC00000>;
+	caldb-addr = <0x4DD00000>;
+	pageable-addr = <0x4E500000>;
+	hremote-size = <0xC00000>;
+	pageable-size = <0x400000>;
 	tgt-mem-mode = <0x1>;
 #else
 	/* QCN9000 tgt-mem-mode=0 layout - 53MB
@@ -434,10 +498,10 @@
 	caldb-addr = <0x50200000>;
 	pageable-addr = <0x50A00000>;
 	hremote-size = <0x2300000>;
+	pageable-size = <0x800000>;
 	tgt-mem-mode = <0x0>;
 #endif
 	hremote_node = <&qcn9000_pcie0>;
-	pageable-size = <0x800000>;
 	caldb-size = <0x800000>;
 	board_id = <0xa4>;
 	status = "ok";
@@ -447,27 +511,28 @@
 &wifi2 {
 #if !defined(__IPQ_MEM_PROFILE_256_MB__)
 #ifdef __IPQ_MEM_PROFILE_512_MB__
-	/* QCN9000 tgt-mem-mode=1 layout - 38MB
+	/* QCN9000 tgt-mem-mode=1 layout - 26MB
 	 * +=========+==============+=========+
 	 * |  Region | Start Offset |   Size  |
 	 * +---------+--------------+---------+
-	 * | HREMOTE |  0x50300000  |   20MB  |
+	 * | HREMOTE |  0x4E900000  |   12MB  |
 	 * +---------+--------------+---------+
-	 * | M3 Dump |  0x51700000  |   1MB   |
+	 * | M3 Dump |  0x4F500000  |   1MB   |
 	 * +---------+--------------+---------+
-	 * |   ETR   |  0x51800000  |   1MB   |
+	 * |   ETR   |  0x4F600000  |   1MB   |
 	 * +---------+--------------+---------+
-	 * |  Caldb  |  0x51900000  |   8MB   |
+	 * |  Caldb  |  0x4F700000  |   8MB   |
 	 * +---------+--------------+---------+
-	 * | Pageable|  0x52100000  |   8MB   |
+	 * | Pageable|  0x4FF00000  |   4MB   |
 	 * +==================================+
 	 */
-	base-addr = <0x50300000>;
-	m3-dump-addr = <0x51700000>;
-	etr-addr = <0x51800000>;
-	caldb-addr = <0x51900000>;
-	pageable-addr = <0x52100000>;
-	hremote-size = <0x1400000>;
+	base-addr = <0x4E900000>;
+	m3-dump-addr = <0x4F500000>;
+	etr-addr = <0x4F600000>;
+	caldb-addr = <0x4F700000>;
+	pageable-addr = <0x4FF00000>;
+	hremote-size = <0xC00000>;
+	pageable-size = <0x400000>;
 	tgt-mem-mode = <0x1>;
 #else
 	/* QCN9000 tgt-mem-mode=0 layout - 53MB
@@ -491,10 +556,10 @@
 	caldb-addr = <0x53700000>;
 	pageable-addr = <0x53F00000>;
 	hremote-size = <0x2300000>;
+	pageable-size = <0x800000>;
 	tgt-mem-mode = <0x0>;
 #endif
 	hremote_node = <&qcn9000_pcie1>;
-	pageable-size = <0x800000>;
 	caldb-size = <0x800000>;
 	board_id = <0xa3>;
 	status = "ok";

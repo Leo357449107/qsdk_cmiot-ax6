@@ -1,6 +1,8 @@
 /*
  * Copyright (c) 2020-2021, The Linux Foundation. All rights reserved.
  *
+ * Copyright (c) 2021-2022 Qualcomm Innovation Center, Inc. All rights reserved.
+ *
  * Permission to use, copy, modify, and/or distribute this software for any
  * purpose with or without fee is hereby granted, provided that the above
  * copyright notice and this permission notice appear in all copies.
@@ -77,6 +79,8 @@ static const struct syn_ethtool_stats syn_gstrings_stats[] = {
 	{"tx_dropped", SYN_STAT(tx_stats.tx_dropped)},
 	{"tx_ts_create_errors", SYN_STAT(tx_stats.tx_ts_create_errors)},
 	{"tx_desc_not_avail", SYN_STAT(tx_stats.tx_desc_not_avail)},
+	{"tx_nr_frags_pkts", SYN_STAT(tx_stats.tx_nr_frags_pkts)},
+	{"tx_fraglist_pkts", SYN_STAT(tx_stats.tx_fraglist_pkts)},
 	{"pmt_interrupts", SYN_STAT(hw_errs[0])},
 	{"mmc_interrupts", SYN_STAT(hw_errs[0]) + (1 * HW_ERR_SIZE)},
 	{"line_interface_interrupts", SYN_STAT(hw_errs[0]) + (2 * HW_ERR_SIZE)},
@@ -215,7 +219,6 @@ static void syn_clear_tx_flow_ctrl(struct nss_gmac_hal_dev *nghd)
 static void syn_rx_enable(struct nss_gmac_hal_dev *nghd)
 {
 	hal_set_reg_bits(nghd->mac_base, SYN_MAC_CONFIGURATION, SYN_MAC_RX);
-	hal_set_reg_bits(nghd->mac_base, SYN_MAC_FRAME_FILTER, SYN_MAC_FILTER_OFF);
 }
 
 /*
@@ -376,7 +379,6 @@ static void syn_multicast_enable(struct nss_gmac_hal_dev *nghd)
  */
 static void syn_promisc_enable(struct nss_gmac_hal_dev *nghd)
 {
-	hal_set_reg_bits(nghd->mac_base, SYN_MAC_FRAME_FILTER, SYN_MAC_FILTER_OFF);
 	hal_set_reg_bits(nghd->mac_base, SYN_MAC_FRAME_FILTER,
 				SYN_MAC_PROMISCUOUS_MODE_ON);
 }
@@ -447,63 +449,6 @@ static int32_t syn_set_max_frame_size(struct nss_gmac_hal_dev *nghd,
 
 	frame_sz = val + SYN_HAL_MTU_L2_OVERHEAD;
 	return fal_port_max_frame_size_set(0, nghd->mac_id, frame_sz);
-}
-
-/*
- * syn_set_mac_speed()
- */
-static int32_t syn_set_mac_speed(struct nss_gmac_hal_dev *nghd,
-							uint32_t mac_speed)
-{
-	struct net_device *netdev;
-	BUG_ON(nghd == NULL);
-
-	netdev = nghd->netdev;
-
-	netdev_warn(netdev, "API deprecated\n");
-	return 0;
-}
-
-/*
- * syn_get_mac_speed()
- */
-static uint32_t syn_get_mac_speed(struct nss_gmac_hal_dev *nghd)
-{
-	struct net_device *netdev;
-	BUG_ON(nghd == NULL);
-
-	netdev = nghd->netdev;
-
-	netdev_warn(netdev, "API deprecated\n");
-	return 0;
-}
-
-/*
- * syn_set_duplex_mode()
- */
-static void syn_set_duplex_mode(struct nss_gmac_hal_dev *nghd,
-							uint8_t duplex_mode)
-{
-	struct net_device *netdev;
-	BUG_ON(nghd == NULL);
-
-	netdev = nghd->netdev;
-
-	netdev_warn(netdev, "API deprecated\n");
-}
-
-/*
- * syn_get_duplex_mode()
- */
-static uint8_t syn_get_duplex_mode(struct nss_gmac_hal_dev *nghd)
-{
-	struct net_device *netdev;
-	BUG_ON(nghd == NULL);
-
-	netdev = nghd->netdev;
-
-	netdev_warn(netdev, "API deprecated\n");
-	return 0;
 }
 
 /*
@@ -935,10 +880,6 @@ struct nss_gmac_hal_ops syn_gmac_ops = {
 	.getmacaddr = &syn_get_mac_address,
 	.rxflowcontrol = &syn_rx_flow_control,
 	.txflowcontrol = &syn_tx_flow_control,
-	.setspeed = &syn_set_mac_speed,
-	.getspeed = &syn_get_mac_speed,
-	.setduplex = &syn_set_duplex_mode,
-	.getduplex = &syn_get_duplex_mode,
 	.setmaxframe = &syn_set_max_frame_size,
 	.getmaxframe = &syn_get_max_frame_size,
 	.getndostats = &syn_get_netdev_stats,

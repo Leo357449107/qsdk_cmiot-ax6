@@ -1,0 +1,21 @@
+Source-Makefile: package/utils/ugps/Makefile
+
+Package: ugps
+Version: 2019-06-25-cd7eabcd8c9d17dab3946002127a82ad2f9e68c2-3
+Depends: +libc +GCC_LIBSSP:libssp +USE_GLIBC:librt +USE_GLIBC:libpthread +libubox +libubus
+Conflicts: 
+Menu-Depends: 
+Provides: 
+Section: utils
+Category: Utilities
+Repository: base
+Title: OpenWrt GPS Daemon
+Maintainer: John Crispin <john@phrozen.org>
+Source: ugps-2019-06-25-cd7eabcd8c9d17dab3946002127a82ad2f9e68c2.tar.xz
+License: GPL-2.0+
+Type: ipkg
+Description: OpenWrt GPS Daemon
+John Crispin <john@phrozen.org>
+@@
+
+

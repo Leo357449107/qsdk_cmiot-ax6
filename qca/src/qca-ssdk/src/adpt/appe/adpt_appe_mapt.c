@@ -472,7 +472,15 @@ void adpt_appe_mapt_func_bitmap_init(a_uint32_t dev_id)
 	if(p_adpt_api == NULL)
 		return;
 
-	p_adpt_api->adpt_mapt_func_bitmap = 0;
+	p_adpt_api->adpt_mapt_func_bitmap = BIT(FUNC_MAPT_DECAP_CTRL_SET) |
+		BIT(FUNC_MAPT_DECAP_CTRL_GET) |
+		BIT(FUNC_MAPT_DECAP_RULE_ENTRY_SET) |
+		BIT(FUNC_MAPT_DECAP_RULE_ENTRY_GET) |
+		BIT(FUNC_MAPT_DECAP_RULE_ENTRY_DEL) |
+		BIT(FUNC_MAPT_DECAP_ENTRY_ADD) |
+		BIT(FUNC_MAPT_DECAP_ENTRY_DEL) |
+		BIT(FUNC_MAPT_DECAP_ENTRY_GETFIRST) |
+		BIT(FUNC_MAPT_DECAP_ENTRY_GETNEXT);
 
 	return;
 }

@@ -38,21 +38,20 @@
 #define IPQ9574_EDMA_START_GMACS	IPQ9574_NSS_DP_START_PHY_PORT
 #define IPQ9574_EDMA_MAX_GMACS		IPQ9574_NSS_DP_MAX_PHY_PORTS
 
-#define IPQ9574_EDMA_TX_BUFF_SIZE	1572
+#define IPQ9574_EDMA_TX_BUFF_SIZE	2048
 #define IPQ9574_EDMA_RX_BUFF_SIZE	2048
 
 /* Max number of rings of each type is defined with below macro */
 #define IPQ9574_EDMA_MAX_TXCMPL_RINGS	32	/* Max TxCmpl rings */
+#define IPQ9574_EDMA_MAX_TXDESC_RINGS	32	/* Max TxDesc rings */
 #define IPQ9574_EDMA_MAX_RXDESC_RINGS	24	/* Max RxDesc rings */
 #define IPQ9574_EDMA_MAX_RXFILL_RINGS	8	/* Max RxFill rings */
-#define IPQ9574_EDMA_MAX_TXDESC_RINGS	32	/* Max TxDesc rings */
 
 #define IPQ9574_EDMA_GET_DESC(R, i, type) (&(((type *)((R)->desc))[i]))
 #define IPQ9574_EDMA_RXFILL_DESC(R, i) 	IPQ9574_EDMA_GET_DESC(R, i, struct ipq9574_edma_rxfill_desc)
 #define IPQ9574_EDMA_RXDESC_DESC(R, i) 	IPQ9574_EDMA_GET_DESC(R, i, struct ipq9574_edma_rxdesc_desc)
 #define IPQ9574_EDMA_TXDESC_DESC(R, i) 	IPQ9574_EDMA_GET_DESC(R, i, struct ipq9574_edma_txdesc_desc)
 #define IPQ9574_EDMA_TXCMPL_DESC(R, i) 	IPQ9574_EDMA_GET_DESC(R, i, struct ipq9574_edma_txcmpl_desc)
-#define IPQ9574_EDMA_RXPH_SRC_INFO_TYPE_GET(rxph)	(((rxph & 0xffff) >> 8) & 0xf0)
 
 #define IPQ9574_EDMA_DEV		1
 #define IPQ9574_EDMA_TX_QUEUE		1
@@ -65,25 +64,15 @@
 #define IPQ9574_EDMA_TX_DESC_RING_SIZE	\
 (IPQ9574_EDMA_TX_DESC_RING_START + IPQ9574_EDMA_TX_DESC_RING_NOS)
 
-#define IPQ9574_EDMA_SEC_TX_DESC_RING_START	31
-#define IPQ9574_EDMA_SEC_TX_DESC_RING_NOS	1
-#define IPQ9574_EDMA_SEC_TX_DESC_RING_SIZE	\
-(IPQ9574_EDMA_SEC_TX_DESC_RING_START + IPQ9574_EDMA_SEC_TX_DESC_RING_NOS)
-
 #define IPQ9574_EDMA_TX_CMPL_RING_START	31
 #define IPQ9574_EDMA_TX_CMPL_RING_NOS	1
 #define IPQ9574_EDMA_TX_CMPL_RING_SIZE	\
 (IPQ9574_EDMA_TX_CMPL_RING_START + IPQ9574_EDMA_TX_CMPL_RING_NOS)
 
-#define IPQ9574_EDMA_RX_DESC_RING_START	15
+#define IPQ9574_EDMA_RX_DESC_RING_START	23
 #define IPQ9574_EDMA_RX_DESC_RING_NOS	1
 #define IPQ9574_EDMA_RX_DESC_RING_SIZE	\
 (IPQ9574_EDMA_RX_DESC_RING_START + IPQ9574_EDMA_RX_DESC_RING_NOS)
-
-#define IPQ9574_EDMA_SEC_RX_DESC_RING_START	15
-#define IPQ9574_EDMA_SEC_RX_DESC_RING_NOS	1
-#define IPQ9574_EDMA_SEC_RX_DESC_RING_SIZE	\
-(IPQ9574_EDMA_SEC_RX_DESC_RING_START + IPQ9574_EDMA_SEC_RX_DESC_RING_NOS)
 
 #define IPQ9574_EDMA_RX_FILL_RING_START	7
 #define IPQ9574_EDMA_RX_FILL_RING_NOS	1
@@ -96,129 +85,89 @@
  * RxDesc descriptor
  */
 struct ipq9574_edma_rxdesc_desc {
-	uint32_t rdes0;
-		/* buffer_address_lo */
-	uint32_t rdes1;
-		/* valid toggle, more, int_pri, drop_prec, reserved x 3,
-		 * tunnel_type, tunnel_term_ind, cpu_code_valid, known_ind,
-		 * wifi_qos_flag, wifi_qos, buffer_address_hi */
-	uint32_t rdes2;
-		/* opaque_lo */
-	uint32_t rdes3;
-		/* opaque_hi */
-	uint32_t rdes4;
-		/* dst_info, src_info */
-	uint32_t rdes5;
-		/* dspcp, pool_id, data_lengh */
-	uint32_t rdes6;
-		/* hash_value, hash_flag, l3_csum_status, l4_csum_status,
-		 * data_offset */
-	uint32_t rdes7;
-		/* l4_offset, l3_offset, pid, CVLAN flag, SVLAN flag, PPPOE flag
-		 * service_code */
-};
-
-/*
- * RxFill descriptor
- */
-struct ipq9574_edma_rxfill_desc {
-	uint32_t rdes0;
-		/* buffer_address_lo */
-	uint32_t rdes1;
-		/* buffer_size, reserved x 1, buffer_address_hi */
-	uint32_t rdes2;
-		/* opaque_lo */
-	uint32_t rdes3;
-		/* opaque_hu */
-};
-
-/*
- * TxDesc descriptor
- */
-struct ipq9574_edma_txdesc_desc {
-	uint32_t tdes0;
-		/* buffer_address_lo */
-	uint32_t tdes1;
-		/* reserved x 1, more, int_pri, drop_prec, reserved x 4,
-		 * buff_recycling, fake_mac_header,ptp_tag_flag, pri_valid,
-		 * buffer_address_high_bits_tbi, buffer_address_hi */
-	uint32_t tdes2;
-		/* opaque_lo */
-	uint32_t tdes3;
-		/* opaque_hi */
-	uint32_t tdes4;
-		/* dst_info, src_info */
-	uint32_t tdes5;
-		/* adv_offload_en, vlan_offload_en, frm_fmt_indication_en,
-		 * edit_offload_en, csum_mode, ip_csum_en, tso_en,  pool_id,
-		 * data_lengh */
-	uint32_t tdes6;
-		/* mss/hash_value/pip_tag, hash_flag, reserved x 2,
-		 * data_offset */
-	uint32_t tdes7;
-		/* l4_offset, l3_offset, reserved, prot_type, l2_type,
-		 * CVLAN flag, SVLAN flag, PPPOE flag, service_code */
-};
-
-/*
- * TxCmpl descriptor
- */
-struct ipq9574_edma_txcmpl_desc {
-	uint32_t tdes0;
-		/* buffer_address_lo */
-	uint32_t tdes1;
-		/* buffer_size, reserved x 1, buffer_address_hi */
-	uint32_t tdes2;
-		/* opaque_lo */
-	uint32_t tdes3;
-		/* opaque_hu */
+	uint32_t rdes0; /* Contains buffer address */
+	uint32_t rdes1; /* Contains more bit, priority bit, service code */
+	uint32_t rdes2; /* Contains opaque */
+	uint32_t rdes3; /* Contains opaque high bits */
+	uint32_t rdes4; /* Contains destination and source information */
+	uint32_t rdes5; /* Contains WiFi QoS, data length */
+	uint32_t rdes6; /* Contains hash value, check sum status */
+	uint32_t rdes7; /* Contains DSCP, packet offsets */
 };
 
 /*
  * EDMA Rx Secondary Descriptor
  */
 struct ipq9574_edma_rx_sec_desc {
-	uint32_t rx_sec0;
-	uint32_t rx_sec1;
-	uint32_t rx_sec2;
-	uint32_t rx_sec3;
-	uint32_t rx_sec4;
-	uint32_t rx_sec5;
-	uint32_t rx_sec6;
-	uint32_t rx_sec7;
+	uint32_t rx_sec0; /* Contains timestamp */
+	uint32_t rx_sec1; /* Contains secondary checksum status */
+	uint32_t rx_sec2; /* Contains QoS tag */
+	uint32_t rx_sec3; /* Contains flow index details */
+	uint32_t rx_sec4; /* Contains secondary packet offsets */
+	uint32_t rx_sec5; /* Contains multicast bit, checksum */
+	uint32_t rx_sec6; /* Contains SVLAN, CVLAN */
+	uint32_t rx_sec7; /* Contains secondary SVLAN, CVLAN */
+};
+
+/*
+ * RxFill descriptor
+ */
+struct ipq9574_edma_rxfill_desc {
+	uint32_t rdes0; /* Contains buffer address */
+	uint32_t rdes1; /* Contains buffer size */
+	uint32_t rdes2; /* Contains opaque */
+	uint32_t rdes3; /* Contains opaque high bits */
+};
+
+/*
+ * TxDesc descriptor
+ */
+struct ipq9574_edma_txdesc_desc {
+	uint32_t tdes0; /* Low 32-bit of buffer address */
+	uint32_t tdes1; /* Buffer recycling, PTP tag flag, PRI valid flag */
+	uint32_t tdes2; /* Low 32-bit of opaque value */
+	uint32_t tdes3; /* High 32-bit of opaque value */
+	uint32_t tdes4; /* Source/Destination port info */
+	uint32_t tdes5; /* VLAN offload, csum_mode, ip_csum_en, tso_en, data length */
+	uint32_t tdes6; /* MSS/hash_value/PTP tag, data offset */
+	uint32_t tdes7; /* L4/L3 offset, PROT type, L2 type, CVLAN/SVLAN tag, service code */
 };
 
 /*
  * EDMA Tx Secondary Descriptor
  */
 struct ipq9574_edma_tx_sec_desc {
-	uint32_t tx_sec0;
-	uint32_t tx_sec1;
-	uint32_t rx_sec2;
-	uint32_t rx_sec3;
-	uint32_t rx_sec4;
-	uint32_t rx_sec5;
-	uint32_t rx_sec6;
-	uint32_t rx_sec7;
+	uint32_t tx_sec0; /* Reserved */
+	uint32_t tx_sec1; /* Custom csum offset, payload offset, TTL/NAT action */
+	uint32_t rx_sec2; /* NAPT translated port, DSCP value, TTL value */
+	uint32_t rx_sec3; /* Flow index value and valid flag */
+	uint32_t rx_sec4; /* Reserved */
+	uint32_t rx_sec5; /* Reserved */
+	uint32_t rx_sec6; /* CVLAN/SVLAN command */
+	uint32_t rx_sec7; /* CVLAN/SVLAN tag value */
 };
 
 /*
- * secondary Tx descriptor ring
+ * TxCmpl descriptor
  */
-struct ipq9574_edma_sec_txdesc_ring {
-	uint32_t id;			/* TXDESC ring number */
-	void *desc;			/* descriptor ring virtual address */
-	dma_addr_t dma;			/* descriptor ring physical address */
-	uint16_t count;			/* number of descriptors */
+struct ipq9574_edma_txcmpl_desc {
+	uint32_t tdes0; /* Low 32-bit opaque value */
+	uint32_t tdes1; /* High 32-bit opaque value */
+	uint32_t tdes2; /* More fragment, transmit ring id, pool id */
+	uint32_t tdes3; /* Error indications */
 };
 
 /*
  * Tx descriptor ring
  */
 struct ipq9574_edma_txdesc_ring {
+	uint32_t prod_idx;		/* Producer index */
+	uint32_t avail_desc;		/* Number of available descriptor to process */
 	uint32_t id;			/* TXDESC ring number */
-	void *desc;			/* descriptor ring virtual address */
+	struct ipq9574_edma_txdesc_desc *desc;	/* descriptor ring virtual address */
 	dma_addr_t dma;			/* descriptor ring physical address */
+	struct ipq9574_edma_tx_sec_desc *sdesc; /* Secondary descriptor ring virtual addr */
+	dma_addr_t sdma;		/* Secondary descriptor ring physical address */
 	uint16_t count;			/* number of descriptors */
 };
 
@@ -226,10 +175,12 @@ struct ipq9574_edma_txdesc_ring {
  * TxCmpl ring
  */
 struct ipq9574_edma_txcmpl_ring {
+	uint32_t cons_idx;		/* Consumer index */
+	uint32_t avail_pkt;		/* Number of available packets to process */
+	struct ipq9574_edma_txcmpl_desc *desc; /* descriptor ring virtual address */
 	uint32_t id;			/* TXCMPL ring number */
-	void *desc;			/* descriptor ring virtual address */
 	dma_addr_t dma;			/* descriptor ring physical address */
-	uint16_t count;			/* number of descriptors in the ring */
+	uint32_t count;			/* Number of descriptors in the ring */
 };
 
 /*
@@ -237,19 +188,10 @@ struct ipq9574_edma_txcmpl_ring {
  */
 struct ipq9574_edma_rxfill_ring {
 	uint32_t id;			/* RXFILL ring number */
-	void *desc;			/* descriptor ring virtual address */
+	uint32_t count;			/* number of descriptors in the ring */
+	uint32_t prod_idx;		/* Ring producer index */
+	struct ipq9574_edma_rxfill_desc *desc;  /* descriptor ring virtual address */
 	dma_addr_t dma;			/* descriptor ring physical address */
-	uint16_t count;			/* number of descriptors in the ring */
-};
-
-/*
- * secondary RxDesc ring
- */
-struct ipq9574_edma_sec_rxdesc_ring {
-	uint32_t id;			/* RXDESC ring number */
-	void *desc;			/* descriptor ring virtual address */
-	dma_addr_t dma;			/* descriptor ring physical address */
-	uint16_t count;			/* number of descriptors in the ring */
 };
 
 /*
@@ -257,10 +199,13 @@ struct ipq9574_edma_sec_rxdesc_ring {
  */
 struct ipq9574_edma_rxdesc_ring {
 	uint32_t id;			/* RXDESC ring number */
+	uint32_t count;			/* number of descriptors in the ring */
+	uint32_t cons_idx;		/* Ring consumer index */
+	struct ipq9574_edma_rxdesc_desc *desc; /* Primary descriptor ring virtual addr */
+	struct ipq9574_edma_sec_rxdesc_ring *sdesc; /* Secondary desc ring VA */
 	struct ipq9574_edma_rxfill_ring *rxfill;	/* RXFILL ring used */
-	void *desc;			/* descriptor ring virtual address */
-	dma_addr_t dma;			/* descriptor ring physical address */
-	uint16_t count;			/* number of descriptors in the ring */
+	dma_addr_t dma;			/* Primary descriptor ring physical address */
+	dma_addr_t sdma;		/* Secondary descriptor ring physical address */
 };
 
 enum ipq9574_edma_tx {
@@ -292,17 +237,12 @@ struct ipq9574_edma_hw {
 	uint32_t flags; /* internal flags */
 	int active; /* status */
 	struct ipq9574_edma_txdesc_ring *txdesc_ring; /* Tx Descriptor Ring, SW is producer */
-	struct ipq9574_edma_sec_txdesc_ring *sec_txdesc_ring; /* secondary Tx Descriptor Ring, SW is producer */
 	struct ipq9574_edma_txcmpl_ring *txcmpl_ring; /* Tx Completion Ring, SW is consumer */
 	struct ipq9574_edma_rxdesc_ring *rxdesc_ring; /* Rx Descriptor Ring, SW is consumer */
-	struct ipq9574_edma_sec_rxdesc_ring *sec_rxdesc_ring; /* secondary Rx Descriptor Ring, SW is consumer */
 	struct ipq9574_edma_rxfill_ring *rxfill_ring; /* Rx Fill Ring, SW is producer */
 	uint32_t txdesc_rings; /* Number of TxDesc rings */
 	uint32_t txdesc_ring_start; /* Id of first TXDESC ring */
 	uint32_t txdesc_ring_end; /* Id of the last TXDESC ring */
-	uint32_t sec_txdesc_rings; /* Number of secondary TxDesc rings */
-	uint32_t sec_txdesc_ring_start; /* Id of first secondary TxDesc ring */
-	uint32_t sec_txdesc_ring_end; /* Id of last secondary TxDesc ring */
 	uint32_t txcmpl_rings; /* Number of TxCmpl rings */
 	uint32_t txcmpl_ring_start; /* Id of first TXCMPL ring */
 	uint32_t txcmpl_ring_end; /* Id of last TXCMPL ring */
@@ -312,9 +252,6 @@ struct ipq9574_edma_hw {
 	uint32_t rxdesc_rings; /* Number of RxDesc rings */
 	uint32_t rxdesc_ring_start; /* Id of first RxDesc ring */
 	uint32_t rxdesc_ring_end; /* Id of last RxDesc ring */
-	uint32_t sec_rxdesc_rings; /* Number of secondary RxDesc rings */
-	uint32_t sec_rxdesc_ring_start; /* Id of first secondary RxDesc ring */
-	uint32_t sec_rxdesc_ring_end; /* Id of last secondary RxDesc ring */
 	uint32_t tx_intr_mask; /* tx interrupt mask */
 	uint32_t rx_intr_mask; /* rx interrupt mask */
 	uint32_t rxfill_intr_mask; /* Rx fill ring interrupt mask */

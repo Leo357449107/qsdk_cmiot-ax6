@@ -1,0 +1,22 @@
+Source-Makefile: package/network/config/ltq-vdsl-app/Makefile
+Build-Depends: ltq-vdsl
+
+Package: ltq-vdsl-app
+Version: 4.17.18.6-2
+Depends: +libc +GCC_LIBSSP:libssp +USE_GLIBC:librt +USE_GLIBC:libpthread @TARGET_lantiq_xrx200 +libpthread +librt
+Conflicts: 
+Menu-Depends: 
+Provides: 
+Section: net
+Category: Network
+Title: Lantiq VDSL userland tool
+Maintainer: 
+Source: dsl_cpe_control_vrx-4.17.18.6.tar.gz
+License: BSD-2-Clause
+Type: ipkg
+Description:   Userland tool needed to control Lantiq VDSL CPE
+http://www.lantiq.com/
+
+@@
+
+

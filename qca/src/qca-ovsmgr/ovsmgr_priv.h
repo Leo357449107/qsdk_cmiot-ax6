@@ -107,6 +107,15 @@ struct ovsmgr_ctx {
 };
 
 /*
+ * ovsmgr_vlan_info
+ *	OVS VLAN information for a given port
+ */
+struct ovsmgr_vlan_info {
+	struct vlan_hdr vlan;	/* VLAN configuration for this port */
+	int ref_cnt;
+};
+
+/*
  * ovsmgr_dp_port
  *	Datapath port details
  */
@@ -114,7 +123,7 @@ struct ovsmgr_dp_port {
 	struct list_head node;				/* To add to port_list */
 	struct net_device *dev;				/* Port netdev  */
 	struct net_device *master_dev;			/* Master netdev */
-	struct vlan_hdr vlan[OVSMGR_PORT_VLAN_MAX_CNT];	/* VLAN configuration for this port */
+	struct ovsmgr_vlan_info vlan_info[OVSMGR_PORT_VLAN_MAX_CNT];	/* VLAN configuration for this port */
 	char master_name[IFNAMSIZ];			/* Master device name */
 	void *vport;					/* OVS datapath port context */
 	int vport_num;					/* OVS datapath port number */

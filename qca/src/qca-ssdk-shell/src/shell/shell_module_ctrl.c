@@ -356,6 +356,7 @@ static void cmd_data_print_flow_func_ctrl(fal_func_ctrl_t *p)
 		"FUNC_FLOW_GLOBAL_CFG_SET",
 		"FUNC_FLOW_ENTRY_NEXT",
 		"FUNC_FLOW_COUNTER_GET",
+		"FUNC_FLOW_COUNTER_CLEANUP",
 		"FUNC_FLOW_ENTRY_EN_SET",
 		"FUNC_FLOW_ENTRY_EN_GET",
 		"FUNC_FLOW_QOS_SET",

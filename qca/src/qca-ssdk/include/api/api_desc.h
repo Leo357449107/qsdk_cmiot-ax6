@@ -1,7 +1,7 @@
 /*
  * Copyright (c) 2012, 2015-2019, 2021, The Linux Foundation. All rights reserved.
  *
- * Copyright (c) 2021 Qualcomm Innovation Center, Inc. All rights reserved.
+ * Copyright (c) 2021-2022, Qualcomm Innovation Center, Inc. All rights reserved.
  *
  * Permission to use, copy, modify, and/or distribute this software for
  * any purpose with or without fee is hereby granted, provided that the
@@ -1675,6 +1675,14 @@ extern "C" {
 		    sizeof(fal_vport_type_t), SW_PARAM_IN, "vport_type "),\
     SW_PARAM_DEF(SW_API_ACL_VPGROUP_GET, SW_UINT32, \
 		    sizeof(a_uint32_t), SW_PARAM_PTR|SW_PARAM_OUT, "vpgroup_id"),
+
+#define SW_API_ACL_MAC_ENTRY_SET_DESC \
+    SW_PARAM_DEF(SW_API_ACL_MAC_ENTRY_SET, SW_UINT32, 4, SW_PARAM_IN, "Dev ID"), \
+    SW_PARAM_DEF(SW_API_ACL_MAC_ENTRY_SET, SW_ACL_MAC_ENTRY, \
+        sizeof(fal_acl_mac_entry_t), SW_PARAM_PTR|SW_PARAM_IN|SW_PARAM_OUT, "entry"),
+
+#define SW_API_ACL_MAC_ENTRY_DUMP_DESC \
+    SW_PARAM_DEF(SW_API_ACL_MAC_ENTRY_DUMP, SW_UINT32, 4, SW_PARAM_IN, "Dev ID"),
 
 #define SW_API_QOS_SCH_MODE_SET_DESC \
     SW_PARAM_DEF(SW_API_QOS_SCH_MODE_SET, SW_UINT32, 4, SW_PARAM_IN, "Dev ID"),\
@@ -3845,6 +3853,12 @@ extern "C" {
     SW_PARAM_DEF(SW_API_FLOW_COUNTER_GET, SW_ENTRY_COUNTER, \
 		    sizeof(fal_entry_counter_t), SW_PARAM_PTR|SW_PARAM_OUT, "Flow entry counter"),
 
+#define SW_API_FLOW_COUNTER_CLEANUP_DESC \
+    SW_PARAM_DEF(SW_API_FLOW_COUNTER_CLEANUP, SW_UINT32, \
+		    sizeof(a_uint32_t), SW_PARAM_IN, "Dev ID"),  \
+    SW_PARAM_DEF(SW_API_FLOW_COUNTER_CLEANUP, SW_UINT32, \
+		    sizeof(a_uint32_t), SW_PARAM_IN, "flow index"),
+
 #define SW_API_FLOW_ENTRY_EN_SET_DESC \
     SW_PARAM_DEF(SW_API_FLOW_ENTRY_EN_SET, SW_UINT32, \
 		    sizeof(a_uint32_t), SW_PARAM_IN, "Dev ID"),  \
@@ -5638,6 +5652,60 @@ extern "C" {
 	SW_PARAM_DEF(SW_API_TUNNEL_EXP_DECAP_SET, SW_ENABLE, \
 			sizeof(a_bool_t), \
 			SW_PARAM_PTR|SW_PARAM_IN, "decap exp fmt control"),
+
+#define SW_API_TUNNEL_DECAP_KEY_SET_DESC \
+	SW_PARAM_DEF(SW_API_TUNNEL_DECAP_KEY_SET, SW_UINT32, \
+			sizeof(a_uint32_t), SW_PARAM_IN, "Dev Id "),\
+	SW_PARAM_DEF(SW_API_TUNNEL_DECAP_KEY_SET, SW_TUNNEL_TYPE, \
+			sizeof(fal_tunnel_type_t), SW_PARAM_IN, "tunnel type"),\
+	SW_PARAM_DEF(SW_API_TUNNEL_DECAP_KEY_SET, SW_TUNNEL_KEY, \
+			sizeof(fal_tunnel_decap_key_t), \
+			SW_PARAM_PTR|SW_PARAM_IN, "decap key"),
+
+#define SW_API_TUNNEL_DECAP_KEY_GET_DESC \
+	SW_PARAM_DEF(SW_API_TUNNEL_DECAP_KEY_GET, SW_UINT32, \
+			sizeof(a_uint32_t), SW_PARAM_IN, "Dev Id "),\
+	SW_PARAM_DEF(SW_API_TUNNEL_DECAP_KEY_GET, SW_TUNNEL_TYPE, \
+			sizeof(fal_tunnel_type_t), SW_PARAM_IN, "tunnel type"),\
+	SW_PARAM_DEF(SW_API_TUNNEL_DECAP_KEY_GET, SW_TUNNEL_KEY, \
+			sizeof(fal_tunnel_decap_key_t), \
+			SW_PARAM_PTR|SW_PARAM_OUT, "decap key"),
+
+#define SW_API_TUNNEL_DECAP_EN_SET_DESC \
+	SW_PARAM_DEF(SW_API_TUNNEL_DECAP_EN_SET, SW_UINT32, \
+			sizeof(a_uint32_t), SW_PARAM_IN, "Dev Id "),\
+	SW_PARAM_DEF(SW_API_TUNNEL_DECAP_EN_SET, SW_UINT32, \
+			sizeof(a_uint32_t), SW_PARAM_IN, "tunnel index"),\
+	SW_PARAM_DEF(SW_API_TUNNEL_DECAP_EN_SET, SW_ENABLE, \
+			sizeof(a_bool_t), \
+			SW_PARAM_IN, "decap enable"),
+
+#define SW_API_TUNNEL_DECAP_EN_GET_DESC \
+	SW_PARAM_DEF(SW_API_TUNNEL_DECAP_EN_GET, SW_UINT32, \
+			sizeof(a_uint32_t), SW_PARAM_IN, "Dev Id "),\
+	SW_PARAM_DEF(SW_API_TUNNEL_DECAP_EN_GET, SW_UINT32, \
+			sizeof(a_uint32_t), SW_PARAM_IN, "tunnel index"),\
+	SW_PARAM_DEF(SW_API_TUNNEL_DECAP_EN_GET, SW_ENABLE, \
+			sizeof(a_bool_t), \
+			SW_PARAM_PTR|SW_PARAM_OUT, "decap enable"),
+
+#define SW_API_TUNNEL_DECAP_ACTION_UPDATE_DESC \
+	SW_PARAM_DEF(SW_API_TUNNEL_DECAP_ACTION_UPDATE, SW_UINT32, \
+			sizeof(a_uint32_t), SW_PARAM_IN, "Dev Id "),\
+	SW_PARAM_DEF(SW_API_TUNNEL_DECAP_ACTION_UPDATE, SW_UINT32, \
+			sizeof(a_uint32_t), SW_PARAM_IN, "tunnel index"),\
+	SW_PARAM_DEF(SW_API_TUNNEL_DECAP_ACTION_UPDATE, SW_TUNNEL_DECAP_ACTION, \
+			sizeof(fal_tunnel_action_t), \
+			SW_PARAM_PTR|SW_PARAM_IN, "decap action update"),
+
+#define SW_API_TUNNEL_DECAP_COUNTER_GET_DESC \
+	SW_PARAM_DEF(SW_API_TUNNEL_DECAP_COUNTER_GET, SW_UINT32, \
+			sizeof(a_uint32_t), SW_PARAM_IN, "Dev Id "),\
+	SW_PARAM_DEF(SW_API_TUNNEL_DECAP_COUNTER_GET, SW_UINT32, \
+			sizeof(a_uint32_t), SW_PARAM_IN, "tunnel index"),\
+	SW_PARAM_DEF(SW_API_TUNNEL_DECAP_COUNTER_GET, SW_ENTRY_COUNTER, \
+			sizeof(fal_entry_counter_t), \
+			SW_PARAM_PTR|SW_PARAM_OUT, "decap counter"),
 
 #define SW_API_VXLAN_ENTRY_ADD_DESC \
     SW_PARAM_DEF(SW_API_VXLAN_ENTRY_ADD, SW_UINT32, 4, SW_PARAM_IN, "Dev ID"), \

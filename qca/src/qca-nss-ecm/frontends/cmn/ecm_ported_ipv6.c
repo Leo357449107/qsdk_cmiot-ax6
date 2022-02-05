@@ -1,6 +1,8 @@
 /*
  **************************************************************************
  * Copyright (c) 2014-2021 The Linux Foundation. All rights reserved.
+ * Copyright (c) 2022 Qualcomm Innovation Center, Inc. All rights reserved.
+ *
  * Permission to use, copy, modify, and/or distribute this software for
  * any purpose with or without fee is hereby granted, provided that the
  * above copyright notice and this permission notice appear in all copies.
@@ -77,6 +79,10 @@
 #endif
 #endif
 
+#ifdef ECM_FRONT_END_SFE_ENABLE
+#include <sfe_api.h>
+#endif
+
 #include "ecm_types.h"
 #include "ecm_db_types.h"
 #include "ecm_state.h"
@@ -89,7 +95,10 @@
 #include "ecm_db.h"
 #include "ecm_classifier_default.h"
 #include "ecm_interface.h"
+#ifdef ECM_FRONT_END_SFE_ENABLE
 #include "ecm_sfe_ported_ipv6.h"
+#include "ecm_sfe_common.h"
+#endif
 #ifdef ECM_FRONT_END_NSS_ENABLE
 #include "ecm_nss_ported_ipv6.h"
 #include "ecm_nss_ipv6.h"
@@ -313,6 +322,7 @@ unsigned int ecm_ported_ipv6_process(struct net_device *out_dev,
 		struct ecm_front_end_interface_construct_instance efeici;
 		struct ecm_front_end_ovs_params ovs_params[ECM_DB_OBJ_DIR_MAX];
 		enum ecm_front_end_type fe_type;
+		ecm_ae_classifier_result_t ae_result;
 		ecm_db_connection_defunct_callback_t defunct_callback;
 
 		DEBUG_INFO("New Ported connection from " ECM_IP_ADDR_OCTAL_FMT ":%u to " ECM_IP_ADDR_OCTAL_FMT ":%u\n",
@@ -359,27 +369,9 @@ unsigned int ecm_ported_ipv6_process(struct net_device *out_dev,
 #if defined(ECM_FRONT_END_NSS_ENABLE) && defined(ECM_FRONT_END_SFE_ENABLE)
 		case ECM_FRONT_END_TYPE_HYBRID:
 		{
-			ecm_ae_classifier_result_t ae_result;
 			ecm_ae_classifier_get_t ae_get;
 			struct ecm_ae_classifier_info ae_info;
 
-			DEBUG_INFO("front end type is hybrid\n");
-
-			/*
-			 * Check the return type of the external callback.
-			 * 1. If NSS, allocate NSS ipv6 ported connection instance
-			 * 2. If SFE, allocate SFE ipv6 ported connection instance
-			 * 3. If NONE, allocate ported connection instance beased on the is_routed flag.
-			 *    If it is set allocate SFE ipv6 ported connection instance with can_accel flag is set to false, otherwise
-			 *    allocate NSS ipv6 ported connection instance with can_accel flag is set to false.
-			 *    By doing this ECM will not ask again and again to the external module. If external module wants to
-			 *    accelerate this flow later, the flow needs to be defuncted first.
-			 * 4. If NOT_YET, the connection will not be allocated in the database and the next flow will be asked again
-			 *    to the external module.
-			 * 5. If any other type is returned, ASSERT.
-			 *
-			 * As an example here, we accelerate the routed flows on SFE, bridge flows on NSS.
-			 */
 			ecm_ae_classifier_select_info_fill(ip_src_addr, ip_dest_addr,
 							  src_port, dest_port, protocol, 6,
 							  is_routed, false,
@@ -390,45 +382,79 @@ unsigned int ecm_ported_ipv6_process(struct net_device *out_dev,
 			ae_result = ae_get(&ae_info);
 			rcu_read_unlock();
 
-			DEBUG_TRACE("ae_result is %d\n", ae_result);
-
-			if (ae_result == ECM_AE_CLASSIFIER_RESULT_NSS) {
-				feci = (struct ecm_front_end_connection_instance *)ecm_nss_ported_ipv6_connection_instance_alloc(can_accel, protocol, &nci);
-				defunct_callback = ecm_nss_ported_ipv6_connection_defunct_callback;
-			} else if (ae_result == ECM_AE_CLASSIFIER_RESULT_SFE) {
-				feci = (struct ecm_front_end_connection_instance *)ecm_sfe_ported_ipv6_connection_instance_alloc(can_accel, protocol, &nci);
-				defunct_callback = ecm_sfe_ported_ipv6_connection_defunct_callback;
-			} else if (ae_result == ECM_AE_CLASSIFIER_RESULT_NONE) {
-				if (is_routed) {
-					feci = (struct ecm_front_end_connection_instance *)ecm_sfe_ported_ipv6_connection_instance_alloc(false, protocol, &nci);
-					defunct_callback = ecm_sfe_ported_ipv6_connection_defunct_callback;
-				} else {
-					feci = (struct ecm_front_end_connection_instance *)ecm_nss_ported_ipv6_connection_instance_alloc(false, protocol, &nci);
-					defunct_callback = ecm_nss_ported_ipv6_connection_defunct_callback;
-				}
-			} else if (ae_result == ECM_AE_CLASSIFIER_RESULT_NOT_YET) {
-				return NF_ACCEPT;
-			} else {
-				DEBUG_ASSERT(NULL, "unexpected ae_result: %d\n", ae_result);
-			}
+			DEBUG_TRACE("front end type hybrid, ae_result: %d\n", ae_result);
 			break;
 		}
 #endif
 #ifdef ECM_FRONT_END_NSS_ENABLE
 		case ECM_FRONT_END_TYPE_NSS:
-			feci = (struct ecm_front_end_connection_instance *)ecm_nss_ported_ipv6_connection_instance_alloc(can_accel, protocol, &nci);
-			defunct_callback = ecm_nss_ported_ipv6_connection_defunct_callback;
+			DEBUG_TRACE("front end type NSS, ae_result: %d\n", ae_result);
+			ae_result = ECM_AE_CLASSIFIER_RESULT_NSS;
 			break;
 #endif
 #ifdef ECM_FRONT_END_SFE_ENABLE
 		case ECM_FRONT_END_TYPE_SFE:
-			feci = (struct ecm_front_end_connection_instance *)ecm_sfe_ported_ipv6_connection_instance_alloc(can_accel, protocol, &nci);
-			defunct_callback = ecm_sfe_ported_ipv6_connection_defunct_callback;
+			DEBUG_TRACE("front end type SFE, ae_result: %d\n", ae_result);
+			ae_result = ECM_AE_CLASSIFIER_RESULT_SFE;
 			break;
 #endif
 		default:
 			DEBUG_WARN("front end type: %d is not supported\n", fe_type);
 			return NF_ACCEPT;
+		}
+
+		/*
+		 * Check the ae_result.
+		 * 1. If NSS, allocate NSS ipv6 ported connection instance
+		 * 2. If SFE, allocate SFE ipv6 ported connection instance
+		 * 3. If NONE, allocate ported connection instance beased on the is_routed flag.
+		 *    If it is set allocate SFE ipv6 ported connection instance with can_accel flag is set to false, otherwise
+		 *    allocate NSS ipv6 ported connection instance with can_accel flag is set to false.
+		 *    By doing this ECM will not ask again and again to the external module. If external module wants to
+		 *    accelerate this flow later, the flow needs to be defuncted first.
+		 * 4. If NOT_YET, the connection will not be allocated in the database and the next flow will be asked again
+		 *    to the external module.
+		 * 5. If any other type is returned, ASSERT.
+		 *
+		 * As an example here, we accelerate the routed flows on SFE, bridge flows on NSS.
+		 */
+		switch (ae_result) {
+#ifdef ECM_FRONT_END_NSS_ENABLE
+		case ECM_AE_CLASSIFIER_RESULT_NSS:
+			if (!ecm_nss_feature_check(skb, iph)) {
+				DEBUG_WARN("Unsupported feature found for NSS acceleration\n");
+				return NF_ACCEPT;
+			}
+			feci = (struct ecm_front_end_connection_instance *)ecm_nss_ported_ipv6_connection_instance_alloc(can_accel, protocol, &nci);
+			defunct_callback = ecm_nss_ported_ipv6_connection_defunct_callback;
+			break;
+#endif
+#ifdef ECM_FRONT_END_SFE_ENABLE
+		case ECM_AE_CLASSIFIER_RESULT_SFE:
+			if (!ecm_sfe_feature_check(skb, iph, is_routed)) {
+				DEBUG_WARN("Unsupported feature found for SFE acceleration\n");
+				return NF_ACCEPT;
+			}
+			feci = (struct ecm_front_end_connection_instance *)ecm_sfe_ported_ipv6_connection_instance_alloc(can_accel, protocol, &nci);
+			defunct_callback = ecm_sfe_ported_ipv6_connection_defunct_callback;
+			break;
+#endif
+#if defined(ECM_FRONT_END_NSS_ENABLE) && defined(ECM_FRONT_END_SFE_ENABLE)
+		case ECM_AE_CLASSIFIER_RESULT_NONE:
+			if (is_routed) {
+				feci = (struct ecm_front_end_connection_instance *)ecm_sfe_ported_ipv6_connection_instance_alloc(false, protocol, &nci);
+				defunct_callback = ecm_sfe_ported_ipv6_connection_defunct_callback;
+			} else {
+				feci = (struct ecm_front_end_connection_instance *)ecm_nss_ported_ipv6_connection_instance_alloc(false, protocol, &nci);
+				defunct_callback = ecm_nss_ported_ipv6_connection_defunct_callback;
+			}
+			break;
+#endif
+		case ECM_AE_CLASSIFIER_RESULT_NOT_YET:
+			return NF_ACCEPT;
+
+		default:
+			DEBUG_ASSERT(NULL, "unexpected ae_result: %d\n", ae_result);
 		}
 
 		if (!feci) {
@@ -635,21 +661,14 @@ done:
 	 * Check if IGS feature is enabled or not.
 	 */
 	if (unlikely(ecm_interface_igs_enabled)) {
-		bool ret;
 		feci = ecm_db_connection_front_end_get_and_ref(ci);
-		ret = ecm_nss_common_igs_acceleration_is_allowed(feci, skb);
-		if (!ret) {
-			DEBUG_WARN("%px: Acceleration denied.\n", ci);
-			feci->deref(feci);
-			ecm_db_connection_deref(ci);
-			return NF_ACCEPT;
-		}
-
-		if (feci->accel_engine == ECM_FRONT_END_ENGINE_SFE) {
-			DEBUG_WARN("%px: SFE doesn't support IGS.\n", ci);
-			feci->deref(feci);
-			ecm_db_connection_deref(ci);
-			return NF_ACCEPT;
+		if (feci->accel_engine == ECM_FRONT_END_ENGINE_NSS) {
+			if (!ecm_nss_common_igs_acceleration_is_allowed(feci, skb)) {
+				DEBUG_WARN("%px: IPv6 IGS acceleration denied\n", ci);
+				feci->deref(feci);
+				ecm_db_connection_deref(ci);
+				return NF_ACCEPT;
+			}
 		}
 		feci->deref(feci);
 	}

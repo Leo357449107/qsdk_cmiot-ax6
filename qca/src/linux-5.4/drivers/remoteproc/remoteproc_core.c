@@ -2315,16 +2315,16 @@ EXPORT_SYMBOL(rproc_unregister_subsys_notifier);
  */
 void rproc_subsys_notify(struct rproc *rproc, int event, bool atomic)
 {
-	struct notif_data data;
+	struct platform_device *pdev;
 
-	data.pdev = of_find_device_by_node(rproc->dev.parent->of_node);
+	pdev = of_find_device_by_node(rproc->dev.parent->of_node);
 	if (!atomic && (event == SUBSYS_AFTER_POWERUP))
 		msleep(100);
 
 	if (atomic)
-		atomic_notifier_call_chain(&rproc->atomic_nlist, event, &data);
+		atomic_notifier_call_chain(&rproc->atomic_nlist, event, pdev);
 	else
-		blocking_notifier_call_chain(&rproc->nlist, event, &data);
+		blocking_notifier_call_chain(&rproc->nlist, event, pdev);
 }
 /**
  * rproc_report_crash() - rproc crash reporter function

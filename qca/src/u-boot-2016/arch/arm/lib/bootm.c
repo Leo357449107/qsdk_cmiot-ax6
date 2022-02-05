@@ -33,6 +33,7 @@
 DECLARE_GLOBAL_DATA_PTR;
 
 static struct tag *params;
+extern unsigned ipq_runtime_fs_feature_enabled;
 
 static ulong get_sp(void)
 {
@@ -277,6 +278,21 @@ struct aarch64_hdr {
 /* Subcommand: GO */
 static void boot_jump_linux(bootm_headers_t *images, int flag)
 {
+#ifdef CONFIG_IPQ_RUNTIME_FAILSAFE
+	unsigned int cookie, ret;
+	if (ipq_runtime_fs_feature_enabled) {
+		cookie = ipq_read_tcsr_boot_misc();
+
+		cookie &= ~IPQ_FS_NONHLOS_BIT;
+		cookie |= IPQ_FS_HLOS_BIT;
+
+		fs_debug("\nFailsafe: %s: Clear NonHLOS bit and set HLOS bit\n", __func__);
+		ret = qca_scm_dload(cookie);
+		if (ret)
+			printf ("Error in setting HLOS failsafe bit\n");
+	}
+#endif
+
 #ifdef CONFIG_ARM64
 	void (*kernel_entry)(void *fdt_addr, void *res0, void *res1,
 			void *res2);

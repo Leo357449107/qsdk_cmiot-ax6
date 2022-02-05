@@ -1,5 +1,6 @@
 /*
  * Copyright (c) 2016-2019, The Linux Foundation. All rights reserved.
+ * Copyright (c) 2022, Qualcomm Innovation Center, Inc. All rights reserved.
  *
  * Permission to use, copy, modify, and/or distribute this software for any
  * purpose with or without fee is hereby granted, provided that the above
@@ -18,8 +19,9 @@
 / {
 	#ifdef __IPQ_MEM_PROFILE_256_MB__
 	MP_256;
-	#else
+	#elif __IPQ_MEM_PROFILE_512_MB__
 	MP_512;
+	#else
 	#endif
 
 	memory {
@@ -81,6 +83,10 @@
 		nss@40000000 {
 			no-map;
 			reg = <0x0 0x40000000 0x0 0x0800000>;
+		};
+
+		tzapp:tzapp@4a400000 {	/* TZAPPS */
+			no-map;
 		};
 
 		uboot@4a800000 {
@@ -163,6 +169,10 @@
 		nss@40000000 {
 			no-map;
 			reg = <0x0 0x40000000 0x0 0x01000000>;
+		};
+
+		tzapp:tzapp@4a400000 {	/* TZAPPS */
+			no-map;
 		};
 
 		uboot@4a800000 {

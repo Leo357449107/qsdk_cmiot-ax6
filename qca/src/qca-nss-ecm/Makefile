@@ -62,11 +62,11 @@ ecm-y := \
 ecm-$(ECM_IPV6_ENABLE) += frontends/ecm_front_end_ipv6.o
 ecm-$(ECM_IPV6_ENABLE) += frontends/cmn/ecm_ipv6.o
 ecm-$(ECM_IPV6_ENABLE) += frontends/cmn/ecm_ported_ipv6.o
-ifeq ($(ECM_FRONT_END_NSS_ENABLE), y)
 ecm-$(ECM_NON_PORTED_SUPPORT_ENABLE) += frontends/cmn/ecm_non_ported_ipv4.o
 ifeq ($(ECM_NON_PORTED_SUPPORT_ENABLE), y)
 ecm-$(ECM_IPV6_ENABLE) += frontends/cmn/ecm_non_ported_ipv6.o
 endif
+ifeq ($(ECM_FRONT_END_NSS_ENABLE), y)
 ecm-$(ECM_MULTICAST_ENABLE) += frontends/cmn/ecm_multicast_ipv4.o
 ifeq ($(ECM_IPV6_ENABLE), y)
 ecm-$(ECM_MULTICAST_ENABLE) += frontends/cmn/ecm_multicast_ipv6.o
@@ -147,9 +147,7 @@ ccflags-$(ECM_INTERFACE_GRE_TAP_ENABLE) += -DECM_INTERFACE_GRE_TAP_ENABLE
 # Define ECM_INTERFACE_GRE_TUN_ENABLE=y in order
 # to enable support for GRE TUN interface.
 # #############################################################################
-ifeq ($(ECM_FRONT_END_NSS_ENABLE), y)
 ccflags-$(ECM_INTERFACE_GRE_TUN_ENABLE) += -DECM_INTERFACE_GRE_TUN_ENABLE
-endif
 
 ifeq ($(ECM_IPV6_ENABLE), y)
 # #############################################################################
@@ -303,13 +301,23 @@ ccflags-$(ECM_CLASSIFIER_EMESH_ENABLE) += -DECM_CLASSIFIER_EMESH_ENABLE
 # #############################################################################
 # Define ECM_NON_PORTED_SUPPORT_ENABLE=y in order to enable non-ported protocol.
 # #############################################################################
+
+
 ifeq ($(ECM_FRONT_END_NSS_ENABLE), y)
 ecm-$(ECM_NON_PORTED_SUPPORT_ENABLE) += frontends/nss/ecm_nss_non_ported_ipv4.o
 ifeq ($(ECM_IPV6_ENABLE), y)
 ecm-$(ECM_NON_PORTED_SUPPORT_ENABLE) += frontends/nss/ecm_nss_non_ported_ipv6.o
 endif
-ccflags-$(ECM_NON_PORTED_SUPPORT_ENABLE) += -DECM_NON_PORTED_SUPPORT_ENABLE
 endif
+
+ifeq ($(ECM_FRONT_END_SFE_ENABLE), y)
+ecm-$(ECM_NON_PORTED_SUPPORT_ENABLE) += frontends/sfe/ecm_sfe_non_ported_ipv4.o
+ifeq ($(ECM_IPV6_ENABLE), y)
+ecm-$(ECM_NON_PORTED_SUPPORT_ENABLE) += frontends/sfe/ecm_sfe_non_ported_ipv6.o
+endif
+endif
+
+ccflags-$(ECM_NON_PORTED_SUPPORT_ENABLE) += -DECM_NON_PORTED_SUPPORT_ENABLE
 
 # #############################################################################
 # Define ECM_STATE_OUTPUT_ENABLE=y to support XML state output

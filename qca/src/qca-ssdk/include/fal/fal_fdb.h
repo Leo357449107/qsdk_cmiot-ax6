@@ -184,21 +184,18 @@ sw_error_t
     sw_error_t
     fal_fdb_port_learning_ctrl_set(a_uint32_t dev_id, fal_port_t port_id,
                                  a_bool_t enable, fal_fwd_cmd_t cmd);
-#ifndef IN_FDB_MINI
+
     sw_error_t
     fal_fdb_port_learning_ctrl_get(a_uint32_t dev_id, fal_port_t port_id,
                                  a_bool_t *enable, fal_fwd_cmd_t *cmd);
-#endif
 
     sw_error_t
     fal_fdb_port_stamove_ctrl_set(a_uint32_t dev_id, fal_port_t port_id,
                                  a_bool_t enable, fal_fwd_cmd_t cmd);
 
-#ifndef IN_FDB_MINI
     sw_error_t
     fal_fdb_port_stamove_ctrl_get(a_uint32_t dev_id, fal_port_t port_id,
                                  a_bool_t *enable, fal_fwd_cmd_t *cmd);
-#endif
 
     sw_error_t
     fal_fdb_aging_ctrl_set(a_uint32_t dev_id, a_bool_t enable);
@@ -243,7 +240,7 @@ sw_error_t
     sw_error_t
     fal_fdb_entry_update_byport(a_uint32_t dev_id, fal_port_t old_port, fal_port_t new_port,
                      a_uint32_t fid, fal_fdb_op_t * option);
-
+#endif
     sw_error_t
     fal_port_fdb_learn_limit_set(a_uint32_t dev_id, fal_port_t port_id,
                                  a_bool_t enable, a_uint32_t cnt);
@@ -260,7 +257,7 @@ sw_error_t
     sw_error_t
     fal_port_fdb_learn_exceed_cmd_get(a_uint32_t dev_id, fal_port_t port_id,
                                       fal_fwd_cmd_t * cmd);
-
+#ifndef IN_FDB_MINI
     sw_error_t
     fal_fdb_port_learned_mac_counter_get(a_uint32_t dev_id, fal_port_t port_id,
                                   a_uint32_t * cnt);
@@ -302,13 +299,12 @@ sw_error_t
 
     sw_error_t
     fal_fdb_port_del(a_uint32_t dev_id, a_uint32_t fid, fal_mac_addr_t * addr, fal_port_t port_id);
-
+#endif
     sw_error_t
     fal_fdb_port_maclimit_ctrl_set(a_uint32_t dev_id, fal_port_t port_id, fal_maclimit_ctrl_t * maclimit_ctrl);
 
     sw_error_t
     fal_fdb_port_maclimit_ctrl_get(a_uint32_t dev_id, fal_port_t port_id, fal_maclimit_ctrl_t * maclimit_ctrl);
-#endif
 
     sw_error_t
     fal_fdb_entry_del_byfid(a_uint32_t dev_id, a_uint16_t fid, a_uint32_t flag);

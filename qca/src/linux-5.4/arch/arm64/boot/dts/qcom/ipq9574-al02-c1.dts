@@ -3,6 +3,7 @@
  * IPQ9574 AL02-C1 board device tree source
  *
  * Copyright (c) 2020-2021 The Linux Foundation. All rights reserved.
+ * Copyright (c) 2022 Qualcomm Innovation Center, Inc. All rights reserved.
  */
 
 /dts-v1/;
@@ -25,6 +26,7 @@
 	aliases {
 		serial0 = &blsp1_uart2;
 		serial1 = &blsp1_uart4;
+		serial2 = &blsp1_uart3;
 		ethernet0 = "/soc/dp1";
 		ethernet1 = "/soc/dp2";
 		ethernet2 = "/soc/dp3";
@@ -40,6 +42,37 @@
 
 	soc {
 		pinctrl@1000000 {
+			pcie3_sdx_pins: pcie3_sdx_pinmux {
+				ap2mdm_err_ftl {
+					pins = "gpio44";
+					function = "gpio";
+					drive-strength = <8>;
+					bias-pull-down;
+				};
+
+				ap2mdm_status {
+					pins = "gpio42";
+					function = "gpio";
+					drive-strength = <8>;
+					bias-pull-up;
+					output-high;
+				};
+
+				mdm2ap_e911_status {
+					pins = "gpio43";
+					drive-strength = <8>;
+					bias-pull-down;
+				};
+
+			};
+
+			pcie3_wake_pins: pcie3_wake_gpio {
+				pins = "gpio33";
+				function = "pcie3_wake";
+				drive-strength = <8>;
+				bias-pull-up;
+			};
+
 			blsp1_uart2_pins: blsp1_uart2_pinmux {
 				pins = "gpio34", "gpio35";
 				function = "blsp2_uart";
@@ -47,12 +80,35 @@
 				bias-disable;
 			};
 
+			gps_pins: gps_pins {
+				blsp3_uart_pinmux {
+					pins = "gpio17", "gpio18";
+					function = "blsp3_uart";
+					drive-strength = <8>;
+					bias-disable;
+				};
+
+				gps_reset {
+					pins = "gpio21";
+					function = "gpio";
+					drive-strength = <8>;
+					bias-pull-down;
+				};
+
+				gps_on_off {
+					pins = "gpio7";
+					function = "gpio";
+					drive-strength = <8>;
+					bias-pull-down;
+				};
+			};
+
 			leds_pins: leds_pinmux {
 				led0_2g {
 					pins = "gpio64";
 					function = "gpio";
 					drive-strength = <8>;
-					bias-pull-down;
+					bias-pull-up;
 				};
 			};
 
@@ -156,6 +212,12 @@
 
 		blsp1_uart2: serial@78b1000 {
 			pinctrl-0 = <&blsp1_uart2_pins>;
+			pinctrl-names = "default";
+			status = "ok";
+		};
+
+		blsp1_uart3: serial@78b2000 {
+			pinctrl-0 = <&gps_pins>;
 			pinctrl-names = "default";
 			status = "ok";
 		};
@@ -316,7 +378,7 @@
 			pinctrl-names = "default";
 			led@64 {
 				label = "led0_2g";
-				gpios = <&tlmm 64 GPIO_ACTIVE_HIGH>;
+				gpios = <&tlmm 64 GPIO_ACTIVE_LOW>;
 				linux,default-trigger = "led_2g";
 				default-state = "off";
 			};
@@ -358,12 +420,22 @@
 #if defined(__CNSS2__)
 					memory-region = <&mhi_region0>;
 #endif
+#ifdef __IPQ_MEM_PROFILE_512_MB__
+					base-addr = <0x4CF00000>;
+					m3-dump-addr = <0x4DB00000>;
+					etr-addr = <0x4DC00000>;
+					qcom,caldb-addr = <0x4DD00000>;
+					pageable-addr = <0x4E500000>;
+					pageable-size = <0x400000>;
+
+#else
 					base-addr = <0x4DD00000>;
 					m3-dump-addr = <0x50000000>;
 					etr-addr = <0x50100000>;
 					qcom,caldb-addr = <0x50200000>;
 					pageable-addr = <0x50A00000>;
 					pageable-size = <0x800000>;
+#endif
 					caldb-size = <0x800000>;
 					qcom,board_id = <0xa4>;
 					status = "ok";
@@ -387,12 +459,21 @@
 #if defined(__CNSS2__)
 					memory-region = <&mhi_region1>;
 #endif
+#ifdef __IPQ_MEM_PROFILE_512_MB__
+					base-addr = <0x4E900000>;
+					m3-dump-addr = <0x4F500000>;
+					etr-addr = <0x4F600000>;
+					qcom,caldb-addr = <0x4F700000>;
+					pageable-addr = <0x4FF00000>;
+					pageable-size = <0x400000>;
+#else
 					base-addr = <0x51200000>;
 					m3-dump-addr = <0x53500000>;
 					etr-addr = <0x53600000>;
 					qcom,caldb-addr = <0x53700000>;
 					pageable-addr = <0x53F00000>;
 					pageable-size = <0x800000>;
+#endif
 					caldb-size = <0x800000>;
 					qcom,board_id = <0xa3>;
 					status = "ok";
@@ -494,6 +575,7 @@
 					<20 21 22 23>,		/* Port3 per-core Tx ring map */
 					<24 25 26 27>,		/* Port4 per-core Tx ring map */
 					<28 29 30 31>;		/* Port5 per-core Tx ring map */
+			qcom,txdesc-fc-grp-map = <1 2 3 4 5 6>;	/* Per GMAC flow control group map */
 			qcom,rxfill-map = <4 5 6 7>;		/* Per-core Rx fill ring map */
 			qcom,rxdesc-map = <20 21 22 23>;	/* Per-core Rx desc ring map */
 			interrupts = <0 371 4>,			/* Tx complete ring id #8 IRQ info */
@@ -531,33 +613,36 @@
 };
 
 &wifi0 {
+       // 1 below indicates GPIO is active low
+       led-gpio = <&tlmm 64 1>;
        status = "ok";
 };
 
 &wifi1 {
 #if !defined(__IPQ_MEM_PROFILE_256_MB__)
 #ifdef __IPQ_MEM_PROFILE_512_MB__
-	/* QCN9000 tgt-mem-mode=1 layout - 38MB
+	/* QCN9000 tgt-mem-mode=1 layout - 26MB
 	 * +=========+==============+=========+
 	 * |  Region | Start Offset |   Size  |
 	 * +---------+--------------+---------+
-	 * | HREMOTE |  0x4DD00000  |   20MB  |
+	 * | HREMOTE |  0x4CF00000  |   12MB  |
 	 * +---------+--------------+---------+
-	 * | M3 Dump |  0x4F100000  |   1MB   |
+	 * | M3 Dump |  0x4DB00000  |   1MB   |
 	 * +---------+--------------+---------+
-	 * |   ETR   |  0x4F200000  |   1MB   |
+	 * |   ETR   |  0x4DC00000  |   1MB   |
 	 * +---------+--------------+---------+
-	 * |  Caldb  |  0x4F300000  |   8MB   |
+	 * |  Caldb  |  0x4DD00000  |   8MB   |
 	 * +---------+--------------+---------+
-	 * | Pageable|  0x4FB00000  |   8MB   |
+	 * | Pageable|  0x4E500000  |   4MB   |
 	 * +==================================+
 	 */
-	base-addr = <0x4DD00000>;
-	m3-dump-addr = <0x4F100000>;
-	etr-addr = <0x4F200000>;
-	caldb-addr = <0x4F300000>;
-	pageable-addr = <0x4FB00000>;
-	hremote-size = <0x1400000>;
+	base-addr = <0x4CF00000>;
+	m3-dump-addr = <0x4DB00000>;
+	etr-addr = <0x4DC00000>;
+	caldb-addr = <0x4DD00000>;
+	pageable-addr = <0x4E500000>;
+	hremote-size = <0xC00000>;
+	pageable-size = <0x400000>;
 	tgt-mem-mode = <0x1>;
 #else
 	/* QCN9000 tgt-mem-mode=0 layout - 53MB
@@ -581,10 +666,10 @@
 	caldb-addr = <0x50200000>;
 	pageable-addr = <0x50A00000>;
 	hremote-size = <0x2300000>;
+	pageable-size = <0x800000>;
 	tgt-mem-mode = <0x0>;
 #endif
 	hremote_node = <&qcn9000_pcie0>;
-	pageable-size = <0x800000>;
 	caldb-size = <0x800000>;
 	board_id = <0xa4>;
 	status = "ok";
@@ -594,27 +679,28 @@
 &wifi2 {
 #if !defined(__IPQ_MEM_PROFILE_256_MB__)
 #ifdef __IPQ_MEM_PROFILE_512_MB__
-	/* QCN9000 tgt-mem-mode=1 layout - 38MB
+	/* QCN9000 tgt-mem-mode=1 layout - 26MB
 	 * +=========+==============+=========+
 	 * |  Region | Start Offset |   Size  |
 	 * +---------+--------------+---------+
-	 * | HREMOTE |  0x50300000  |   20MB  |
+	 * | HREMOTE |  0x4E900000  |   12MB  |
 	 * +---------+--------------+---------+
-	 * | M3 Dump |  0x51700000  |   1MB   |
+	 * | M3 Dump |  0x4F500000  |   1MB   |
 	 * +---------+--------------+---------+
-	 * |   ETR   |  0x51800000  |   1MB   |
+	 * |   ETR   |  0x4F600000  |   1MB   |
 	 * +---------+--------------+---------+
-	 * |  Caldb  |  0x51900000  |   8MB   |
+	 * |  Caldb  |  0x4F700000  |   8MB   |
 	 * +---------+--------------+---------+
-	 * | Pageable|  0x52100000  |   8MB   |
+	 * | Pageable|  0x4FF00000  |   4MB   |
 	 * +==================================+
 	 */
-	base-addr = <0x50300000>;
-	m3-dump-addr = <0x51700000>;
-	etr-addr = <0x51800000>;
-	caldb-addr = <0x51900000>;
-	pageable-addr = <0x52100000>;
-	hremote-size = <0x1400000>;
+	base-addr = <0x4E900000>;
+	m3-dump-addr = <0x4F500000>;
+	etr-addr = <0x4F600000>;
+	caldb-addr = <0x4F700000>;
+	pageable-addr = <0x4FF00000>;
+	hremote-size = <0xC00000>;
+	pageable-size = <0x400000>;
 	tgt-mem-mode = <0x1>;
 #else
 	/* QCN9000 tgt-mem-mode=0 layout - 53MB
@@ -638,10 +724,10 @@
 	caldb-addr = <0x53700000>;
 	pageable-addr = <0x53F00000>;
 	hremote-size = <0x2300000>;
+	pageable-size = <0x800000>;
 	tgt-mem-mode = <0x0>;
 #endif
 	hremote_node = <&qcn9000_pcie1>;
-	pageable-size = <0x800000>;
 	caldb-size = <0x800000>;
 	board_id = <0xa3>;
 	status = "ok";

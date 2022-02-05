@@ -138,7 +138,7 @@ Signed-off-by: Karthikeyan Kathirvel <kathirve@codeaurora.org>
  void ath11k_ce_rx_replenish_retry(struct timer_list *t);
 --- a/drivers/net/wireless/ath/ath11k/core.c
 +++ b/drivers/net/wireless/ath/ath11k/core.c
-@@ -430,6 +430,68 @@ static const struct ath11k_hw_params ath
+@@ -431,6 +431,68 @@ static const struct ath11k_hw_params ath
  		*/
  		.cfr_stream_buf_size = 16580,
   	},
@@ -217,7 +217,7 @@ Signed-off-by: Karthikeyan Kathirvel <kathirve@codeaurora.org>
  };
  
  enum ath11k_firmware_mode {
-@@ -1220,6 +1221,9 @@ extern const struct service_to_pipe ath1
+@@ -1239,6 +1240,9 @@ extern const struct service_to_pipe ath1
  extern const struct ce_pipe_config ath11k_target_ce_config_wlan_ipq5018[];
  extern const struct service_to_pipe ath11k_target_service_to_ce_map_wlan_ipq5018[];
  
@@ -245,7 +245,7 @@ Signed-off-by: Karthikeyan Kathirvel <kathirve@codeaurora.org>
  static void ath11k_hw_ipq8074_tx_mesh_enable(struct ath11k_base *ab,
  					     struct hal_tcl_data_cmd *tcl_cmd)
  {
-@@ -1333,6 +1342,58 @@ const struct ath11k_hw_ops qcn6122_ops =
+@@ -1329,6 +1338,58 @@ const struct ath11k_hw_ops qcn6122_ops =
  	.fill_cfr_hdr_info = ath11k_hw_qcn6122_fill_cfr_hdr_info,
  };
  
@@ -304,7 +304,7 @@ Signed-off-by: Karthikeyan Kathirvel <kathirve@codeaurora.org>
  #define ATH11K_TX_RING_MASK_0 0x1
  #define ATH11K_TX_RING_MASK_1 0x2
  #define ATH11K_TX_RING_MASK_2 0x4
-@@ -2276,6 +2337,108 @@ const struct ce_pipe_config ath11k_targe
+@@ -2272,6 +2333,108 @@ const struct ce_pipe_config ath11k_targe
  	},
  };
  
@@ -413,7 +413,7 @@ Signed-off-by: Karthikeyan Kathirvel <kathirve@codeaurora.org>
  /* Map from service/endpoint to Copy Engine for IPQ5018.
   * This table is derived from the CE TABLE, above.
   * It is passed to the Target at startup for use by firmware.
-@@ -2373,6 +2536,108 @@ const struct service_to_pipe ath11k_targ
+@@ -2369,6 +2532,108 @@ const struct service_to_pipe ath11k_targ
  
  	{ /* terminator entry */ }
  };
@@ -542,3 +542,24 @@ Signed-off-by: Karthikeyan Kathirvel <kathirve@codeaurora.org>
  
  extern const struct ath11k_hw_ring_mask ath11k_hw_ring_mask_ipq8074;
  extern const struct ath11k_hw_ring_mask ath11k_hw_ring_mask_qca6390;
+--- a/drivers/net/wireless/ath/ath11k/qmi.c
++++ b/drivers/net/wireless/ath/ath11k/qmi.c
+@@ -2830,8 +2830,16 @@ static int ath11k_qmi_assign_target_mem_
+ 			if (ath11k_host_ddr_addr) {
+ 				addr = ath11k_host_ddr_addr +
+ 					ATH11K_HOST_DDR_CALDB_OFFSET;
+-			} else if (of_property_read_u32(dev->of_node, "qcom,caldb-addr", &addr)) {
+-				ath11k_warn(ab, "qmi fail to get caldb-addr in dt\n");
++			} else {
++				if (!of_property_read_u32_array(dev->of_node,
++								"qcom,caldb-addr",
++								location,
++								ARRAY_SIZE(location)))
++					addr = location[ab->qmi.target_mem_mode];
++				else if (of_property_read_u32(dev->of_node,
++							      "qcom,caldb-addr",
++							      &addr))
++					ath11k_warn(ab, "qmi fail to get caldb-addr in dt\n");
+ 			}
+ 
+ 			if (!ab->enable_cold_boot_cal ||

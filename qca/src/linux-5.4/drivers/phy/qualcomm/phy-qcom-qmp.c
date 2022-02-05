@@ -1847,6 +1847,42 @@ static const struct qmp_phy_init_tbl ipq9574_usb3_pcs_tbl[] = {
 	QMP_PHY_INIT_CFG(QPHY_V3_PCS_TXDEEMPH_M3P5DB_V0,0x0f),
 };
 
+static const struct qmp_phy_init_tbl ipq6018_usb3_serdes_tbl[] = {
+	QMP_PHY_INIT_CFG(QSERDES_COM_SYSCLK_EN_SEL,0x1a),
+	QMP_PHY_INIT_CFG(QSERDES_COM_BIAS_EN_CLKBUFLR_EN,0x08),
+	QMP_PHY_INIT_CFG(QSERDES_COM_CLK_SELECT,0x30),
+	QMP_PHY_INIT_CFG(QSERDES_COM_BG_TRIM,0x0f),
+	QMP_PHY_INIT_CFG(QSERDES_RX_UCDR_FASTLOCK_FO_GAIN,0x0b),
+	QMP_PHY_INIT_CFG(QSERDES_COM_SVS_MODE_CLK_SEL,0x01),
+	QMP_PHY_INIT_CFG(QSERDES_COM_HSCLK_SEL,0x00),
+	QMP_PHY_INIT_CFG(QSERDES_COM_CMN_CONFIG,0x06),
+	QMP_PHY_INIT_CFG(QSERDES_COM_PLL_IVCO,0x0f),
+	QMP_PHY_INIT_CFG(QSERDES_COM_SYS_CLK_CTRL,0x06),
+	/* PLL and Loop filter settings */
+	QMP_PHY_INIT_CFG(QSERDES_COM_DEC_START_MODE0,0x68),
+	QMP_PHY_INIT_CFG(QSERDES_COM_DIV_FRAC_START1_MODE0,0xab),
+	QMP_PHY_INIT_CFG(QSERDES_COM_DIV_FRAC_START2_MODE0,0xaa),
+	QMP_PHY_INIT_CFG(QSERDES_COM_DIV_FRAC_START3_MODE0,0x02),
+	QMP_PHY_INIT_CFG(QSERDES_COM_CP_CTRL_MODE0,0x09),
+	QMP_PHY_INIT_CFG(QSERDES_COM_PLL_RCTRL_MODE0,0x16),
+	QMP_PHY_INIT_CFG(QSERDES_COM_PLL_CCTRL_MODE0,0x28),
+	QMP_PHY_INIT_CFG(QSERDES_COM_INTEGLOOP_GAIN0_MODE0,0xa0),
+	QMP_PHY_INIT_CFG(QSERDES_COM_LOCK_CMP1_MODE0,0xaa),
+	QMP_PHY_INIT_CFG(QSERDES_COM_LOCK_CMP2_MODE0,0x29),
+	QMP_PHY_INIT_CFG(QSERDES_COM_LOCK_CMP3_MODE0,0x00),
+	QMP_PHY_INIT_CFG(QSERDES_COM_CORE_CLK_EN,0x00),
+	QMP_PHY_INIT_CFG(QSERDES_COM_LOCK_CMP_CFG,0x00),
+	QMP_PHY_INIT_CFG(QSERDES_COM_VCO_TUNE_MAP,0x00),
+	QMP_PHY_INIT_CFG(QSERDES_COM_BG_TIMER,0x0a),
+	/* SSC settings */
+	QMP_PHY_INIT_CFG(QSERDES_COM_SSC_EN_CENTER,0x01),
+	QMP_PHY_INIT_CFG(QSERDES_COM_SSC_PER1,0x7d),
+	QMP_PHY_INIT_CFG(QSERDES_COM_SSC_PER2,0x01),
+	QMP_PHY_INIT_CFG(QSERDES_COM_SSC_ADJ_PER1,0x00),
+	QMP_PHY_INIT_CFG(QSERDES_COM_SSC_ADJ_PER2,0x00),
+	QMP_PHY_INIT_CFG(QSERDES_COM_SSC_STEP_SIZE1,0x0a),
+	QMP_PHY_INIT_CFG(QSERDES_COM_SSC_STEP_SIZE2,0x05),
+};
 
 static const struct qmp_phy_init_tbl ipq8074_usb3_serdes_tbl[] = {
 	QMP_PHY_INIT_CFG(QSERDES_COM_SYSCLK_EN_SEL,0x1a),
@@ -1942,6 +1978,30 @@ static const struct qmp_phy_cfg ipq9574_usb3phy_cfg = {
 	.rx_tbl_num		= ARRAY_SIZE(ipq9574_usb3_rx_tbl),
 	.pcs_tbl		= ipq9574_usb3_pcs_tbl,
 	.pcs_tbl_num		= ARRAY_SIZE(ipq9574_usb3_pcs_tbl),
+	.clk_list		= ipq8074_phy_clk_l,
+	.num_clks		= ARRAY_SIZE(ipq8074_phy_clk_l),
+	.reset_list		= ipq8074_usb3phy_reset_l,
+	.num_resets		= ARRAY_SIZE(ipq8074_usb3phy_reset_l),
+	.vreg_list		= qmp_phy_vreg_l,
+	.num_vregs		= ARRAY_SIZE(qmp_phy_vreg_l),
+	.regs			= usb3phy_regs_layout,
+
+	.start_ctrl		= SERDES_START | PCS_START,
+	.pwrdn_ctrl		= SW_PWRDN,
+};
+
+static const struct qmp_phy_cfg ipq6018_usb3phy_cfg = {
+	.type			= PHY_TYPE_USB3,
+	.nlanes			= 1,
+
+	.serdes_tbl		= ipq6018_usb3_serdes_tbl,
+	.serdes_tbl_num		= ARRAY_SIZE(ipq8074_usb3_serdes_tbl),
+	.tx_tbl			= ipq8074_usb3_tx_tbl,
+	.tx_tbl_num		= ARRAY_SIZE(ipq8074_usb3_tx_tbl),
+	.rx_tbl			= ipq8074_usb3_rx_tbl,
+	.rx_tbl_num		= ARRAY_SIZE(ipq8074_usb3_rx_tbl),
+	.pcs_tbl		= ipq8074_usb3_pcs_tbl,
+	.pcs_tbl_num		= ARRAY_SIZE(ipq8074_usb3_pcs_tbl),
 	.clk_list		= ipq8074_phy_clk_l,
 	.num_clks		= ARRAY_SIZE(ipq8074_phy_clk_l),
 	.reset_list		= ipq8074_usb3phy_reset_l,
@@ -2847,7 +2907,7 @@ static const struct of_device_id qcom_qmp_phy_of_match_table[] = {
 		.data = &ipq9574_gen3x2_pciephy_cfg,
 	}, {
 		.compatible = "qcom,ipq6018-qmp-usb3-phy",
-		.data = &ipq8074_usb3phy_cfg,
+		.data = &ipq6018_usb3phy_cfg,
 	}, {
 		.compatible = "qcom,ipq8074-qmp-usb3-phy",
 		.data = &ipq8074_usb3phy_cfg,

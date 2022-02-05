@@ -1,0 +1,19 @@
+Source-Makefile: target/linux/cns3xxx/Makefile
+Target: cns3xxx
+Target-Board: cns3xxx
+Target-Name: Cavium Networks Econa CNS3xxx
+Target-Arch: arm
+Target-Arch-Packages: arm_mpcore_vfp
+Target-Features: dt fpu gpio pci pcie rtc squashfs usb usbgadget
+Target-Depends: 
+Target-Optimization: -Os -pipe
+CPU-Type: mpcore+vfp
+Linux-Version: 4.14.254
+Linux-Release: 1
+Linux-Kernel-Arch: arm
+Target-Description:
+	Build images for Cavium Networks Econa CNS3xxx based boards,
+	eg. the Gateworks Laguna family
+@@
+Default-Packages: base-files libc libgcc busybox dropbear mtd uci opkg netifd fstools uclient-fetch logd urandom-seed urngd dnsmasq iptables ip6tables ppp ppp-mod-pppoe firewall odhcpd-ipv6only odhcp6c kmod-ipt-offload kmod-ath9k kmod-usb2 wpad-basic iwinfo
+

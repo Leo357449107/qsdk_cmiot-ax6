@@ -84,194 +84,28 @@ hppe_in_flow_host_tbl_op_set(
 		union in_flow_host_tbl_op_u *value);
 
 sw_error_t
-hppe_in_flow_tbl_op_data0_get(
+hppe_in_flow_tbl_op_data_get(
 		a_uint32_t dev_id,
-		union in_flow_tbl_op_data0_u *value);
+		a_uint32_t index,
+		a_uint32_t *value);
 
 sw_error_t
-hppe_in_flow_tbl_op_data0_set(
+hppe_in_flow_tbl_op_data_set(
 		a_uint32_t dev_id,
-		union in_flow_tbl_op_data0_u *value);
+		a_uint32_t index,
+		a_uint32_t value);
 
 sw_error_t
-hppe_in_flow_tbl_op_data1_get(
+hppe_flow_host_tbl_op_data_get(
 		a_uint32_t dev_id,
-		union in_flow_tbl_op_data1_u *value);
+		a_uint32_t index,
+		a_uint32_t *value);
 
 sw_error_t
-hppe_in_flow_tbl_op_data1_set(
+hppe_flow_host_tbl_op_data_set(
 		a_uint32_t dev_id,
-		union in_flow_tbl_op_data1_u *value);
-
-sw_error_t
-hppe_in_flow_tbl_op_data2_get(
-		a_uint32_t dev_id,
-		union in_flow_tbl_op_data2_u *value);
-
-sw_error_t
-hppe_in_flow_tbl_op_data2_set(
-		a_uint32_t dev_id,
-		union in_flow_tbl_op_data2_u *value);
-
-sw_error_t
-hppe_in_flow_tbl_op_data3_get(
-		a_uint32_t dev_id,
-		union in_flow_tbl_op_data3_u *value);
-
-sw_error_t
-hppe_in_flow_tbl_op_data3_set(
-		a_uint32_t dev_id,
-		union in_flow_tbl_op_data3_u *value);
-
-sw_error_t
-hppe_in_flow_tbl_op_data4_get(
-		a_uint32_t dev_id,
-		union in_flow_tbl_op_data4_u *value);
-
-sw_error_t
-hppe_in_flow_tbl_op_data4_set(
-		a_uint32_t dev_id,
-		union in_flow_tbl_op_data4_u *value);
-
-sw_error_t
-hppe_in_flow_tbl_op_data5_get(
-		a_uint32_t dev_id,
-		union in_flow_tbl_op_data5_u *value);
-
-sw_error_t
-hppe_in_flow_tbl_op_data5_set(
-		a_uint32_t dev_id,
-		union in_flow_tbl_op_data5_u *value);
-
-sw_error_t
-hppe_in_flow_tbl_op_data6_get(
-		a_uint32_t dev_id,
-		union in_flow_tbl_op_data6_u *value);
-
-sw_error_t
-hppe_in_flow_tbl_op_data6_set(
-		a_uint32_t dev_id,
-		union in_flow_tbl_op_data6_u *value);
-
-sw_error_t
-hppe_in_flow_tbl_op_data7_get(
-		a_uint32_t dev_id,
-		union in_flow_tbl_op_data7_u *value);
-
-sw_error_t
-hppe_in_flow_tbl_op_data7_set(
-		a_uint32_t dev_id,
-		union in_flow_tbl_op_data7_u *value);
-
-sw_error_t
-hppe_in_flow_tbl_op_data8_get(
-		a_uint32_t dev_id,
-		union in_flow_tbl_op_data8_u *value);
-
-sw_error_t
-hppe_in_flow_tbl_op_data8_set(
-		a_uint32_t dev_id,
-		union in_flow_tbl_op_data8_u *value);
-
-sw_error_t
-hppe_flow_host_tbl_op_data0_get(
-		a_uint32_t dev_id,
-		union flow_host_tbl_op_data0_u *value);
-
-sw_error_t
-hppe_flow_host_tbl_op_data0_set(
-		a_uint32_t dev_id,
-		union flow_host_tbl_op_data0_u *value);
-
-sw_error_t
-hppe_flow_host_tbl_op_data1_get(
-		a_uint32_t dev_id,
-		union flow_host_tbl_op_data1_u *value);
-
-sw_error_t
-hppe_flow_host_tbl_op_data1_set(
-		a_uint32_t dev_id,
-		union flow_host_tbl_op_data1_u *value);
-
-sw_error_t
-hppe_flow_host_tbl_op_data2_get(
-		a_uint32_t dev_id,
-		union flow_host_tbl_op_data2_u *value);
-
-sw_error_t
-hppe_flow_host_tbl_op_data2_set(
-		a_uint32_t dev_id,
-		union flow_host_tbl_op_data2_u *value);
-
-sw_error_t
-hppe_flow_host_tbl_op_data3_get(
-		a_uint32_t dev_id,
-		union flow_host_tbl_op_data3_u *value);
-
-sw_error_t
-hppe_flow_host_tbl_op_data3_set(
-		a_uint32_t dev_id,
-		union flow_host_tbl_op_data3_u *value);
-
-sw_error_t
-hppe_flow_host_tbl_op_data4_get(
-		a_uint32_t dev_id,
-		union flow_host_tbl_op_data4_u *value);
-
-sw_error_t
-hppe_flow_host_tbl_op_data4_set(
-		a_uint32_t dev_id,
-		union flow_host_tbl_op_data4_u *value);
-
-sw_error_t
-hppe_flow_host_tbl_op_data5_get(
-		a_uint32_t dev_id,
-		union flow_host_tbl_op_data5_u *value);
-
-sw_error_t
-hppe_flow_host_tbl_op_data5_set(
-		a_uint32_t dev_id,
-		union flow_host_tbl_op_data5_u *value);
-
-sw_error_t
-hppe_flow_host_tbl_op_data6_get(
-		a_uint32_t dev_id,
-		union flow_host_tbl_op_data6_u *value);
-
-sw_error_t
-hppe_flow_host_tbl_op_data6_set(
-		a_uint32_t dev_id,
-		union flow_host_tbl_op_data6_u *value);
-
-sw_error_t
-hppe_flow_host_tbl_op_data7_get(
-		a_uint32_t dev_id,
-		union flow_host_tbl_op_data7_u *value);
-
-sw_error_t
-hppe_flow_host_tbl_op_data7_set(
-		a_uint32_t dev_id,
-		union flow_host_tbl_op_data7_u *value);
-
-sw_error_t
-hppe_flow_host_tbl_op_data8_get(
-		a_uint32_t dev_id,
-		union flow_host_tbl_op_data8_u *value);
-
-sw_error_t
-hppe_flow_host_tbl_op_data8_set(
-		a_uint32_t dev_id,
-		union flow_host_tbl_op_data8_u *value);
-
-sw_error_t
-hppe_flow_host_tbl_op_data9_get(
-		a_uint32_t dev_id,
-		union flow_host_tbl_op_data9_u *value);
-
-sw_error_t
-hppe_flow_host_tbl_op_data9_set(
-		a_uint32_t dev_id,
-		union flow_host_tbl_op_data9_u *value);
+		a_uint32_t index,
+		a_uint32_t value);
 
 sw_error_t
 hppe_in_flow_tbl_op_rslt_get(
@@ -314,194 +148,28 @@ hppe_in_flow_host_tbl_rd_op_set(
 		union in_flow_host_tbl_rd_op_u *value);
 
 sw_error_t
-hppe_in_flow_tbl_rd_op_data0_get(
+hppe_in_flow_tbl_rd_op_data_get(
 		a_uint32_t dev_id,
-		union in_flow_tbl_rd_op_data0_u *value);
+		a_uint32_t index,
+		a_uint32_t *value);
 
 sw_error_t
-hppe_in_flow_tbl_rd_op_data0_set(
+hppe_in_flow_tbl_rd_op_data_set(
 		a_uint32_t dev_id,
-		union in_flow_tbl_rd_op_data0_u *value);
+		a_uint32_t index,
+		a_uint32_t value);
 
 sw_error_t
-hppe_in_flow_tbl_rd_op_data1_get(
+hppe_flow_host_tbl_rd_op_data_get(
 		a_uint32_t dev_id,
-		union in_flow_tbl_rd_op_data1_u *value);
+		a_uint32_t index,
+		a_uint32_t *value);
 
 sw_error_t
-hppe_in_flow_tbl_rd_op_data1_set(
+hppe_flow_host_tbl_rd_op_data_set(
 		a_uint32_t dev_id,
-		union in_flow_tbl_rd_op_data1_u *value);
-
-sw_error_t
-hppe_in_flow_tbl_rd_op_data2_get(
-		a_uint32_t dev_id,
-		union in_flow_tbl_rd_op_data2_u *value);
-
-sw_error_t
-hppe_in_flow_tbl_rd_op_data2_set(
-		a_uint32_t dev_id,
-		union in_flow_tbl_rd_op_data2_u *value);
-
-sw_error_t
-hppe_in_flow_tbl_rd_op_data3_get(
-		a_uint32_t dev_id,
-		union in_flow_tbl_rd_op_data3_u *value);
-
-sw_error_t
-hppe_in_flow_tbl_rd_op_data3_set(
-		a_uint32_t dev_id,
-		union in_flow_tbl_rd_op_data3_u *value);
-
-sw_error_t
-hppe_in_flow_tbl_rd_op_data4_get(
-		a_uint32_t dev_id,
-		union in_flow_tbl_rd_op_data4_u *value);
-
-sw_error_t
-hppe_in_flow_tbl_rd_op_data4_set(
-		a_uint32_t dev_id,
-		union in_flow_tbl_rd_op_data4_u *value);
-
-sw_error_t
-hppe_in_flow_tbl_rd_op_data5_get(
-		a_uint32_t dev_id,
-		union in_flow_tbl_rd_op_data5_u *value);
-
-sw_error_t
-hppe_in_flow_tbl_rd_op_data5_set(
-		a_uint32_t dev_id,
-		union in_flow_tbl_rd_op_data5_u *value);
-
-sw_error_t
-hppe_in_flow_tbl_rd_op_data6_get(
-		a_uint32_t dev_id,
-		union in_flow_tbl_rd_op_data6_u *value);
-
-sw_error_t
-hppe_in_flow_tbl_rd_op_data6_set(
-		a_uint32_t dev_id,
-		union in_flow_tbl_rd_op_data6_u *value);
-
-sw_error_t
-hppe_in_flow_tbl_rd_op_data7_get(
-		a_uint32_t dev_id,
-		union in_flow_tbl_rd_op_data7_u *value);
-
-sw_error_t
-hppe_in_flow_tbl_rd_op_data7_set(
-		a_uint32_t dev_id,
-		union in_flow_tbl_rd_op_data7_u *value);
-
-sw_error_t
-hppe_in_flow_tbl_rd_op_data8_get(
-		a_uint32_t dev_id,
-		union in_flow_tbl_rd_op_data8_u *value);
-
-sw_error_t
-hppe_in_flow_tbl_rd_op_data8_set(
-		a_uint32_t dev_id,
-		union in_flow_tbl_rd_op_data8_u *value);
-
-sw_error_t
-hppe_flow_host_tbl_rd_op_data0_get(
-		a_uint32_t dev_id,
-		union flow_host_tbl_rd_op_data0_u *value);
-
-sw_error_t
-hppe_flow_host_tbl_rd_op_data0_set(
-		a_uint32_t dev_id,
-		union flow_host_tbl_rd_op_data0_u *value);
-
-sw_error_t
-hppe_flow_host_tbl_rd_op_data1_get(
-		a_uint32_t dev_id,
-		union flow_host_tbl_rd_op_data1_u *value);
-
-sw_error_t
-hppe_flow_host_tbl_rd_op_data1_set(
-		a_uint32_t dev_id,
-		union flow_host_tbl_rd_op_data1_u *value);
-
-sw_error_t
-hppe_flow_host_tbl_rd_op_data2_get(
-		a_uint32_t dev_id,
-		union flow_host_tbl_rd_op_data2_u *value);
-
-sw_error_t
-hppe_flow_host_tbl_rd_op_data2_set(
-		a_uint32_t dev_id,
-		union flow_host_tbl_rd_op_data2_u *value);
-
-sw_error_t
-hppe_flow_host_tbl_rd_op_data3_get(
-		a_uint32_t dev_id,
-		union flow_host_tbl_rd_op_data3_u *value);
-
-sw_error_t
-hppe_flow_host_tbl_rd_op_data3_set(
-		a_uint32_t dev_id,
-		union flow_host_tbl_rd_op_data3_u *value);
-
-sw_error_t
-hppe_flow_host_tbl_rd_op_data4_get(
-		a_uint32_t dev_id,
-		union flow_host_tbl_rd_op_data4_u *value);
-
-sw_error_t
-hppe_flow_host_tbl_rd_op_data4_set(
-		a_uint32_t dev_id,
-		union flow_host_tbl_rd_op_data4_u *value);
-
-sw_error_t
-hppe_flow_host_tbl_rd_op_data5_get(
-		a_uint32_t dev_id,
-		union flow_host_tbl_rd_op_data5_u *value);
-
-sw_error_t
-hppe_flow_host_tbl_rd_op_data5_set(
-		a_uint32_t dev_id,
-		union flow_host_tbl_rd_op_data5_u *value);
-
-sw_error_t
-hppe_flow_host_tbl_rd_op_data6_get(
-		a_uint32_t dev_id,
-		union flow_host_tbl_rd_op_data6_u *value);
-
-sw_error_t
-hppe_flow_host_tbl_rd_op_data6_set(
-		a_uint32_t dev_id,
-		union flow_host_tbl_rd_op_data6_u *value);
-
-sw_error_t
-hppe_flow_host_tbl_rd_op_data7_get(
-		a_uint32_t dev_id,
-		union flow_host_tbl_rd_op_data7_u *value);
-
-sw_error_t
-hppe_flow_host_tbl_rd_op_data7_set(
-		a_uint32_t dev_id,
-		union flow_host_tbl_rd_op_data7_u *value);
-
-sw_error_t
-hppe_flow_host_tbl_rd_op_data8_get(
-		a_uint32_t dev_id,
-		union flow_host_tbl_rd_op_data8_u *value);
-
-sw_error_t
-hppe_flow_host_tbl_rd_op_data8_set(
-		a_uint32_t dev_id,
-		union flow_host_tbl_rd_op_data8_u *value);
-
-sw_error_t
-hppe_flow_host_tbl_rd_op_data9_get(
-		a_uint32_t dev_id,
-		union flow_host_tbl_rd_op_data9_u *value);
-
-sw_error_t
-hppe_flow_host_tbl_rd_op_data9_set(
-		a_uint32_t dev_id,
-		union flow_host_tbl_rd_op_data9_u *value);
+		a_uint32_t index,
+		a_uint32_t value);
 
 sw_error_t
 hppe_in_flow_tbl_rd_op_rslt_get(
@@ -524,195 +192,16 @@ hppe_flow_host_tbl_rd_op_rslt_set(
 		union flow_host_tbl_rd_op_rslt_u *value);
 
 sw_error_t
-hppe_in_flow_tbl_rd_rslt_data0_get(
+hppe_in_flow_tbl_rd_rslt_data_get(
 		a_uint32_t dev_id,
-		union in_flow_tbl_rd_rslt_data0_u *value);
+		a_uint32_t index,
+		a_uint32_t *value);
 
 sw_error_t
-hppe_in_flow_tbl_rd_rslt_data0_set(
+hppe_flow_host_tbl_rd_rslt_data_get(
 		a_uint32_t dev_id,
-		union in_flow_tbl_rd_rslt_data0_u *value);
-
-sw_error_t
-hppe_in_flow_tbl_rd_rslt_data1_get(
-		a_uint32_t dev_id,
-		union in_flow_tbl_rd_rslt_data1_u *value);
-
-sw_error_t
-hppe_in_flow_tbl_rd_rslt_data1_set(
-		a_uint32_t dev_id,
-		union in_flow_tbl_rd_rslt_data1_u *value);
-
-sw_error_t
-hppe_in_flow_tbl_rd_rslt_data2_get(
-		a_uint32_t dev_id,
-		union in_flow_tbl_rd_rslt_data2_u *value);
-
-sw_error_t
-hppe_in_flow_tbl_rd_rslt_data2_set(
-		a_uint32_t dev_id,
-		union in_flow_tbl_rd_rslt_data2_u *value);
-
-sw_error_t
-hppe_in_flow_tbl_rd_rslt_data3_get(
-		a_uint32_t dev_id,
-		union in_flow_tbl_rd_rslt_data3_u *value);
-
-sw_error_t
-hppe_in_flow_tbl_rd_rslt_data3_set(
-		a_uint32_t dev_id,
-		union in_flow_tbl_rd_rslt_data3_u *value);
-
-sw_error_t
-hppe_in_flow_tbl_rd_rslt_data4_get(
-		a_uint32_t dev_id,
-		union in_flow_tbl_rd_rslt_data4_u *value);
-
-sw_error_t
-hppe_in_flow_tbl_rd_rslt_data4_set(
-		a_uint32_t dev_id,
-		union in_flow_tbl_rd_rslt_data4_u *value);
-
-sw_error_t
-hppe_in_flow_tbl_rd_rslt_data5_get(
-		a_uint32_t dev_id,
-		union in_flow_tbl_rd_rslt_data5_u *value);
-
-sw_error_t
-hppe_in_flow_tbl_rd_rslt_data5_set(
-		a_uint32_t dev_id,
-		union in_flow_tbl_rd_rslt_data5_u *value);
-
-sw_error_t
-hppe_in_flow_tbl_rd_rslt_data6_get(
-		a_uint32_t dev_id,
-		union in_flow_tbl_rd_rslt_data6_u *value);
-
-sw_error_t
-hppe_in_flow_tbl_rd_rslt_data6_set(
-		a_uint32_t dev_id,
-		union in_flow_tbl_rd_rslt_data6_u *value);
-
-sw_error_t
-hppe_in_flow_tbl_rd_rslt_data7_get(
-		a_uint32_t dev_id,
-		union in_flow_tbl_rd_rslt_data7_u *value);
-
-sw_error_t
-hppe_in_flow_tbl_rd_rslt_data7_set(
-		a_uint32_t dev_id,
-		union in_flow_tbl_rd_rslt_data7_u *value);
-
-sw_error_t
-hppe_in_flow_tbl_rd_rslt_data8_get(
-		a_uint32_t dev_id,
-		union in_flow_tbl_rd_rslt_data8_u *value);
-
-sw_error_t
-hppe_in_flow_tbl_rd_rslt_data8_set(
-		a_uint32_t dev_id,
-		union in_flow_tbl_rd_rslt_data8_u *value);
-
-sw_error_t
-hppe_flow_host_tbl_rd_rslt_data0_get(
-		a_uint32_t dev_id,
-		union flow_host_tbl_rd_rslt_data0_u *value);
-
-sw_error_t
-hppe_flow_host_tbl_rd_rslt_data0_set(
-		a_uint32_t dev_id,
-		union flow_host_tbl_rd_rslt_data0_u *value);
-
-sw_error_t
-hppe_flow_host_tbl_rd_rslt_data1_get(
-		a_uint32_t dev_id,
-		union flow_host_tbl_rd_rslt_data1_u *value);
-
-sw_error_t
-hppe_flow_host_tbl_rd_rslt_data1_set(
-		a_uint32_t dev_id,
-		union flow_host_tbl_rd_rslt_data1_u *value);
-
-sw_error_t
-hppe_flow_host_tbl_rd_rslt_data2_get(
-		a_uint32_t dev_id,
-		union flow_host_tbl_rd_rslt_data2_u *value);
-
-sw_error_t
-hppe_flow_host_tbl_rd_rslt_data2_set(
-		a_uint32_t dev_id,
-		union flow_host_tbl_rd_rslt_data2_u *value);
-
-sw_error_t
-hppe_flow_host_tbl_rd_rslt_data3_get(
-		a_uint32_t dev_id,
-		union flow_host_tbl_rd_rslt_data3_u *value);
-
-sw_error_t
-hppe_flow_host_tbl_rd_rslt_data3_set(
-		a_uint32_t dev_id,
-		union flow_host_tbl_rd_rslt_data3_u *value);
-
-sw_error_t
-hppe_flow_host_tbl_rd_rslt_data4_get(
-		a_uint32_t dev_id,
-		union flow_host_tbl_rd_rslt_data4_u *value);
-
-sw_error_t
-hppe_flow_host_tbl_rd_rslt_data4_set(
-		a_uint32_t dev_id,
-		union flow_host_tbl_rd_rslt_data4_u *value);
-
-sw_error_t
-hppe_flow_host_tbl_rd_rslt_data5_get(
-		a_uint32_t dev_id,
-		union flow_host_tbl_rd_rslt_data5_u *value);
-
-sw_error_t
-hppe_flow_host_tbl_rd_rslt_data5_set(
-		a_uint32_t dev_id,
-		union flow_host_tbl_rd_rslt_data5_u *value);
-
-sw_error_t
-hppe_flow_host_tbl_rd_rslt_data6_get(
-		a_uint32_t dev_id,
-		union flow_host_tbl_rd_rslt_data6_u *value);
-
-sw_error_t
-hppe_flow_host_tbl_rd_rslt_data6_set(
-		a_uint32_t dev_id,
-		union flow_host_tbl_rd_rslt_data6_u *value);
-
-sw_error_t
-hppe_flow_host_tbl_rd_rslt_data7_get(
-		a_uint32_t dev_id,
-		union flow_host_tbl_rd_rslt_data7_u *value);
-
-sw_error_t
-hppe_flow_host_tbl_rd_rslt_data7_set(
-		a_uint32_t dev_id,
-		union flow_host_tbl_rd_rslt_data7_u *value);
-
-sw_error_t
-hppe_flow_host_tbl_rd_rslt_data8_get(
-		a_uint32_t dev_id,
-		union flow_host_tbl_rd_rslt_data8_u *value);
-
-sw_error_t
-hppe_flow_host_tbl_rd_rslt_data8_set(
-		a_uint32_t dev_id,
-		union flow_host_tbl_rd_rslt_data8_u *value);
-
-sw_error_t
-hppe_flow_host_tbl_rd_rslt_data9_get(
-		a_uint32_t dev_id,
-		union flow_host_tbl_rd_rslt_data9_u *value);
-
-sw_error_t
-hppe_flow_host_tbl_rd_rslt_data9_set(
-		a_uint32_t dev_id,
-		union flow_host_tbl_rd_rslt_data9_u *value);
-
+		a_uint32_t index,
+		a_uint32_t *value);
 sw_error_t
 hppe_in_flow_3tuple_tbl_get(
 		a_uint32_t dev_id,
@@ -773,6 +262,7 @@ hppe_eg_flow_tree_map_tbl_set(
 		a_uint32_t index,
 		union eg_flow_tree_map_tbl_u *value);
 
+#if 0
 sw_error_t
 hppe_flow_ctrl0_flow_hash_mode_0_get(
 		a_uint32_t dev_id,
@@ -1274,11 +764,6 @@ hppe_in_flow_tbl_op_rslt_cmd_id_set(
 		unsigned int value);
 
 sw_error_t
-hppe_flow_host_tbl_op_rslt_host_entry_index_get(
-		a_uint32_t dev_id,
-		unsigned int *value);
-
-sw_error_t
 hppe_flow_host_tbl_op_rslt_host_entry_index_set(
 		a_uint32_t dev_id,
 		unsigned int value);
@@ -1434,11 +919,6 @@ hppe_in_flow_tbl_rd_op_rslt_cmd_id_set(
 		unsigned int value);
 
 sw_error_t
-hppe_flow_host_tbl_rd_op_rslt_host_entry_index_get(
-		a_uint32_t dev_id,
-		unsigned int *value);
-
-sw_error_t
 hppe_flow_host_tbl_rd_op_rslt_host_entry_index_set(
 		a_uint32_t dev_id,
 		unsigned int value);
@@ -1478,6 +958,17 @@ hppe_in_flow_cnt_tbl_hit_pkt_counter_set(
 		a_uint32_t dev_id,
 		a_uint32_t index,
 		a_uint32_t value);
+#endif
+
+sw_error_t
+hppe_flow_host_tbl_op_rslt_host_entry_index_get(
+		a_uint32_t dev_id,
+		unsigned int *value);
+
+sw_error_t
+hppe_flow_host_tbl_rd_op_rslt_host_entry_index_get(
+		a_uint32_t dev_id,
+		unsigned int *value);
 
 sw_error_t
 hppe_flow_ipv4_5tuple_add(

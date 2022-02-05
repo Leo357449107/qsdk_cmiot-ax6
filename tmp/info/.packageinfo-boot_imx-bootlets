@@ -1,0 +1,20 @@
+Source-Makefile: package/boot/imx-bootlets/Makefile
+
+Package: imx-bootlets
+Version: 10.05.02
+Depends: +libc +GCC_LIBSSP:libssp +USE_GLIBC:librt +USE_GLIBC:libpthread @TARGET_mxs
+Conflicts: 
+Menu-Depends: 
+Provides: 
+Section: boot
+Category: Boot Loaders
+Repository: base
+Title: i.MX23/i.MX28 bootlets
+Maintainer: 
+Source: imx-bootlets-10.05.02.tar.gz
+Type: ipkg
+Description:  i.MX23/i.MX28 bootlets (for oLinuxino)
+
+@@
+
+

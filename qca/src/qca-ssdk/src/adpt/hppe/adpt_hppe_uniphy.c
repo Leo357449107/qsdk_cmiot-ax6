@@ -823,9 +823,15 @@ __adpt_hppe_uniphy_sgmii_mode_set(a_uint32_t dev_id, a_uint32_t uniphy_index, a_
 	mode = ssdk_dt_global_get_mac_mode(dev_id, uniphy_index);
 
 	ssdk_port = adpt_hppe_port_get_by_uniphy(dev_id, uniphy_index,channel);
-	if (A_TRUE == hsl_port_is_sfp(dev_id, ssdk_port)) {
-		uniphy_mode_ctrl.bf.newaddedfromhere_ch0_mode_ctrl_25m = 0;
+	if ((A_TRUE == hsl_port_is_sfp(dev_id, ssdk_port)) &&
+		(A_TRUE != ssdk_port_feature_get(dev_id, ssdk_port, PHY_F_SFP_SGMII))) {
+		uniphy_mode_ctrl.bf.newaddedfromhere_ch0_mode_ctrl_25m =
+			UNIPHY_1000BASE_X_MODE;
 		SSDK_DEBUG("port_id %d is a fiber port!\n", ssdk_port);
+	} else {
+		uniphy_mode_ctrl.bf.newaddedfromhere_ch0_mode_ctrl_25m =
+			UNIPHY_SGMII_MAC_MODE;
+		SSDK_DEBUG("port_id %d is a sfp sgmii or phy port!\n", ssdk_port);
 	}
 
 	uniphy_mode_ctrl.bf.newaddedfromhere_ch0_autoneg_mode =

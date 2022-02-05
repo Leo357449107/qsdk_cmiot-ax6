@@ -57,7 +57,7 @@ index b3cabd16f0cd..db8c56817532 100644
  	}
  
  	for (i = 0; i < rddm_img->entries; i++) {
-+		if (!fw_img->mhi_buf[i].buf)
++		if (!rddm_img->mhi_buf[i].buf)
 +			continue;
  		seg_sz = rddm_img->mhi_buf[i].len;
  		seg_info->len = PAGE_ALIGN(seg_sz);

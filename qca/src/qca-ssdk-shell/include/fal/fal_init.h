@@ -67,6 +67,20 @@ typedef struct
 	a_uint32_t bitmap[3];
 }fal_func_ctrl_t;
 
+typedef struct
+{
+	a_uint32_t flow_caps;
+	a_uint32_t host_caps;
+	a_uint32_t nexthop_caps;
+	a_uint32_t pub_ip_caps;
+	a_uint32_t vsi_caps;
+	a_uint32_t port_caps;
+	a_uint32_t l3_if_caps;
+	a_uint32_t my_mac_caps;
+	a_uint32_t queue_caps;
+	a_uint32_t service_code_caps;
+	a_uint32_t pppoe_session_caps;
+} fal_ppe_tbl_caps_t;
 
 sw_error_t fal_init(a_uint32_t dev_id, ssdk_init_cfg * cfg);
 sw_error_t fal_reset(a_uint32_t dev_id);
@@ -78,6 +92,8 @@ sw_error_t fal_module_func_ctrl_set(a_uint32_t dev_id,
 		a_uint32_t module, fal_func_ctrl_t *func_ctrl);
 sw_error_t fal_module_func_ctrl_get(a_uint32_t dev_id,
 		a_uint32_t module, fal_func_ctrl_t *func_ctrl);
+sw_error_t
+fal_ppe_capacity_get(a_uint32_t dev_id, fal_ppe_tbl_caps_t *ppe_capacity);
 /*qca808x_start*/
 #ifdef __cplusplus
 }

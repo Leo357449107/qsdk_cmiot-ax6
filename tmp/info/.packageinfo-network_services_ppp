@@ -1,0 +1,238 @@
+Source-Makefile: package/network/services/ppp/Makefile
+Build-Depends: libpcap
+
+Package: ppp
+Version: 2.4.7.git-2019-05-25-3
+Depends: +libc +GCC_LIBSSP:libssp +USE_GLIBC:librt +USE_GLIBC:libpthread +kmod-ppp
+Conflicts: 
+Menu-Depends: 
+Provides: 
+Build-Variant: default
+Section: net
+Category: Network
+Repository: base
+Title: PPP daemon
+Maintainer: Felix Fietkau <nbd@nbd.name>
+Source: ppp-2.4.7.git-2019-05-25.tar.xz
+License: BSD-4-Clause
+Type: ipkg
+Description: This package contains the PPP (Point-to-Point Protocol) daemon.
+https://ppp.samba.org/
+Felix Fietkau <nbd@nbd.name>
+@@
+
+Package: ppp-multilink
+Version: 2.4.7.git-2019-05-25-3
+Depends: +libc +GCC_LIBSSP:libssp +USE_GLIBC:librt +USE_GLIBC:libpthread +kmod-ppp
+Conflicts: 
+Menu-Depends: 
+Provides: 
+Build-Variant: multilink
+Section: net
+Category: Network
+Repository: base
+Title: PPP daemon (with multilink support)
+Maintainer: Felix Fietkau <nbd@nbd.name>
+Source: ppp-2.4.7.git-2019-05-25.tar.xz
+License: BSD-4-Clause
+Type: ipkg
+Description: PPP daemon (with multilink support)
+https://ppp.samba.org/
+Felix Fietkau <nbd@nbd.name>
+@@
+
+Package: ppp-mod-pppoa
+Version: 2.4.7.git-2019-05-25-3
+Depends: +libc +GCC_LIBSSP:libssp +USE_GLIBC:librt +USE_GLIBC:libpthread @(PACKAGE_ppp||PACKAGE_ppp-multilink) +linux-atm +kmod-pppoa
+Conflicts: 
+Menu-Depends: 
+Provides: 
+Section: net
+Category: Network
+Repository: base
+Title: PPPoA plugin
+Maintainer: Felix Fietkau <nbd@nbd.name>
+Source: ppp-2.4.7.git-2019-05-25.tar.xz
+License: BSD-4-Clause
+Type: ipkg
+Description: This package contains a PPPoA (PPP over ATM) plugin for ppp.
+https://ppp.samba.org/
+Felix Fietkau <nbd@nbd.name>
+@@
+
+Package: ppp-mod-pppoe
+Version: 2.4.7.git-2019-05-25-3
+Depends: +libc +GCC_LIBSSP:libssp +USE_GLIBC:librt +USE_GLIBC:libpthread @(PACKAGE_ppp||PACKAGE_ppp-multilink) +kmod-pppoe
+Conflicts: 
+Menu-Depends: 
+Provides: 
+Section: net
+Category: Network
+Repository: base
+Title: PPPoE plugin
+Maintainer: Felix Fietkau <nbd@nbd.name>
+Source: ppp-2.4.7.git-2019-05-25.tar.xz
+License: BSD-4-Clause
+Type: ipkg
+Description: This package contains a PPPoE (PPP over Ethernet) plugin for ppp.
+https://ppp.samba.org/
+Felix Fietkau <nbd@nbd.name>
+@@
+
+Package: ppp-mod-radius
+Version: 2.4.7.git-2019-05-25-3
+Depends: +libc +GCC_LIBSSP:libssp +USE_GLIBC:librt +USE_GLIBC:libpthread @(PACKAGE_ppp||PACKAGE_ppp-multilink)
+Conflicts: 
+Menu-Depends: 
+Provides: 
+Section: net
+Category: Network
+Repository: base
+Title: RADIUS plugin
+Maintainer: Felix Fietkau <nbd@nbd.name>
+Source: ppp-2.4.7.git-2019-05-25.tar.xz
+License: BSD-4-Clause
+Type: ipkg
+Description: This package contains a RADIUS (Remote Authentication Dial-In User Service)
+plugin for ppp.
+https://ppp.samba.org/
+Felix Fietkau <nbd@nbd.name>
+@@
+
+Package: ppp-mod-pppol2tp
+Version: 2.4.7.git-2019-05-25-3
+Depends: +libc +GCC_LIBSSP:libssp +USE_GLIBC:librt +USE_GLIBC:libpthread @(PACKAGE_ppp||PACKAGE_ppp-multilink) +kmod-pppol2tp
+Conflicts: 
+Menu-Depends: 
+Provides: 
+Section: net
+Category: Network
+Repository: base
+Title: PPPoL2TP plugin
+Maintainer: Felix Fietkau <nbd@nbd.name>
+Source: ppp-2.4.7.git-2019-05-25.tar.xz
+License: BSD-4-Clause
+Type: ipkg
+Description: This package contains a PPPoL2TP (PPP over L2TP) plugin for ppp.
+https://ppp.samba.org/
+Felix Fietkau <nbd@nbd.name>
+@@
+
+Package: ppp-mod-pptp
+Version: 2.4.7.git-2019-05-25-3
+Depends: +libc +GCC_LIBSSP:libssp +USE_GLIBC:librt +USE_GLIBC:libpthread @(PACKAGE_ppp||PACKAGE_ppp-multilink) +kmod-pptp +kmod-mppe +resolveip
+Conflicts: 
+Menu-Depends: 
+Provides: 
+Section: net
+Category: Network
+Repository: base
+Title: PPtP plugin
+Maintainer: Felix Fietkau <nbd@nbd.name>
+Source: ppp-2.4.7.git-2019-05-25.tar.xz
+License: BSD-4-Clause
+Type: ipkg
+Description: This package contains a PPtP plugin for ppp.
+https://ppp.samba.org/
+Felix Fietkau <nbd@nbd.name>
+@@
+
+Package: ppp-mod-passwordfd
+Version: 2.4.7.git-2019-05-25-3
+Depends: +libc +GCC_LIBSSP:libssp +USE_GLIBC:librt +USE_GLIBC:libpthread @(PACKAGE_ppp||PACKAGE_ppp-multilink)
+Conflicts: 
+Menu-Depends: 
+Provides: 
+Section: net
+Category: Network
+Repository: base
+Title: pap/chap secret from filedescriptor
+Maintainer: Felix Fietkau <nbd@nbd.name>
+Source: ppp-2.4.7.git-2019-05-25.tar.xz
+License: BSD-4-Clause
+Type: ipkg
+Description: This package allows to pass the PAP/CHAP secret from a filedescriptor.
+Eliminates the need for a secrets file.
+https://ppp.samba.org/
+Felix Fietkau <nbd@nbd.name>
+@@
+
+Package: chat
+Version: 2.4.7.git-2019-05-25-3
+Depends: +libc +GCC_LIBSSP:libssp +USE_GLIBC:librt +USE_GLIBC:libpthread 
+Conflicts: 
+Menu-Depends: 
+Provides: 
+Section: net
+Category: Network
+Repository: base
+Title: Establish conversation with a modem
+Maintainer: Felix Fietkau <nbd@nbd.name>
+Source: ppp-2.4.7.git-2019-05-25.tar.xz
+License: BSD-4-Clause
+Type: ipkg
+Description: This package contains an utility to establish conversation with other PPP servers
+(via a modem).
+https://ppp.samba.org/
+Felix Fietkau <nbd@nbd.name>
+@@
+
+Package: pppdump
+Version: 2.4.7.git-2019-05-25-3
+Depends: +libc +GCC_LIBSSP:libssp +USE_GLIBC:librt +USE_GLIBC:libpthread @(PACKAGE_ppp||PACKAGE_ppp-multilink)
+Conflicts: 
+Menu-Depends: 
+Provides: 
+Section: net
+Category: Network
+Repository: base
+Title: Read PPP record file
+Maintainer: Felix Fietkau <nbd@nbd.name>
+Source: ppp-2.4.7.git-2019-05-25.tar.xz
+License: BSD-4-Clause
+Type: ipkg
+Description: This package contains an utility to read PPP record file.
+https://ppp.samba.org/
+Felix Fietkau <nbd@nbd.name>
+@@
+
+Package: pppstats
+Version: 2.4.7.git-2019-05-25-3
+Depends: +libc +GCC_LIBSSP:libssp +USE_GLIBC:librt +USE_GLIBC:libpthread @(PACKAGE_ppp||PACKAGE_ppp-multilink)
+Conflicts: 
+Menu-Depends: 
+Provides: 
+Section: net
+Category: Network
+Repository: base
+Title: Report PPP statistics
+Maintainer: Felix Fietkau <nbd@nbd.name>
+Source: ppp-2.4.7.git-2019-05-25.tar.xz
+License: BSD-4-Clause
+Type: ipkg
+Description: This package contains an utility to report PPP statistics.
+https://ppp.samba.org/
+Felix Fietkau <nbd@nbd.name>
+@@
+
+Package: pppoe-discovery
+Version: 2.4.7.git-2019-05-25-3
+Depends: +libc +GCC_LIBSSP:libssp +USE_GLIBC:librt +USE_GLIBC:libpthread @(PACKAGE_ppp||PACKAGE_ppp-multilink) +ppp-mod-pppoe
+Conflicts: 
+Menu-Depends: 
+Provides: 
+Section: net
+Category: Network
+Repository: base
+Title: Perform a PPPoE-discovery process
+Maintainer: Felix Fietkau <nbd@nbd.name>
+Source: ppp-2.4.7.git-2019-05-25.tar.xz
+License: BSD-4-Clause
+Type: ipkg
+Description: This tool performs the same discovery process as pppoe, but does
+not initiate a session. Can be useful to debug pppoe.
+https://ppp.samba.org/
+Felix Fietkau <nbd@nbd.name>
+@@
+
+

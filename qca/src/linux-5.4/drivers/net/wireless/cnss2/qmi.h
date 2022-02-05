@@ -130,6 +130,12 @@ void cnss_unregister_ims_service(struct cnss_plat_data *plat_priv);
 int cnss_wlfw_m3_dump_upload_done_send_sync(struct cnss_plat_data *plat_priv,
 					    u32 pdev_id, int status);
 int cnss_wlfw_device_info_send_sync(struct cnss_plat_data *plat_priv);
+int cnss_wlfw_qdss_dnld_send_sync(struct cnss_plat_data *plat_priv);
+int cnss_wlfw_send_qdss_trace_mode_req(struct cnss_plat_data *plat_priv,
+				       enum wlfw_qdss_trace_mode_enum_v01 mode,
+				       u64 option);
+int cnss_wlfw_cal_report_req_send_sync(struct cnss_plat_data *plat_priv,
+				       u32 cal_file_download_size);
 #else
 #define QMI_WLFW_TIMEOUT_MS		10000
 
@@ -279,6 +285,27 @@ int cnss_wlfw_m3_dump_upload_done_send_sync(struct cnss_plat_data *plat_priv,
 
 static inline
 int cnss_wlfw_device_info_send_sync(struct cnss_plat_data *plat_priv)
+{
+	return 0;
+}
+
+static inline
+int cnss_wlfw_qdss_dnld_send_sync(struct cnss_plat_data *plat_priv)
+{
+	return 0;
+}
+
+static inline
+int cnss_wlfw_send_qdss_trace_mode_req(struct cnss_plat_data *plat_priv,
+				       enum wlfw_qdss_trace_mode_enum_v01 mode,
+				       u64 option)
+{
+	return 0;
+}
+
+static inline
+int cnss_wlfw_cal_report_req_send_sync(struct cnss_plat_data *plat_priv,
+				       u32 cal_file_download_size)
 {
 	return 0;
 }

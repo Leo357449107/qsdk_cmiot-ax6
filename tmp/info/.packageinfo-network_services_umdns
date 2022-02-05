@@ -1,0 +1,21 @@
+Source-Makefile: package/network/services/umdns/Makefile
+
+Package: umdns
+Version: 2020-04-25-cdac0460ba50dc45735f0be2e19a5a8efc3dafe1-1
+Depends: +libc +GCC_LIBSSP:libssp +USE_GLIBC:librt +USE_GLIBC:libpthread +libubox +libubus +libblobmsg-json
+Conflicts: 
+Menu-Depends: 
+Provides: 
+Section: net
+Category: Network
+Repository: base
+Title: OpenWrt Multicast DNS Daemon
+Maintainer: John Crispin <john@phrozen.org>
+Source: umdns-2020-04-25-cdac0460ba50dc45735f0be2e19a5a8efc3dafe1.tar.xz
+License: LGPL-2.1
+Type: ipkg
+Description: OpenWrt Multicast DNS Daemon
+John Crispin <john@phrozen.org>
+@@
+
+

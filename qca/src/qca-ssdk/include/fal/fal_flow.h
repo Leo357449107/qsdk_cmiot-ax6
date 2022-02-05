@@ -173,6 +173,7 @@ enum  {
 	FUNC_FLOW_GLOBAL_CFG_SET,
 	FUNC_FLOW_ENTRY_NEXT,
 	FUNC_FLOW_COUNTER_GET,
+	FUNC_FLOW_COUNTER_CLEANUP,
 	FUNC_FLOW_ENTRY_EN_SET,
 	FUNC_FLOW_ENTRY_EN_GET,
 	FUNC_FLOW_QOS_SET,
@@ -185,9 +186,11 @@ typedef struct {
 	a_uint32_t wifi_qos; /* wifi qos value, added for ipq95xx */
 } fal_flow_qos_t;
 
-#ifndef IN_FLOW_MINI
 sw_error_t
 fal_flow_counter_get(a_uint32_t dev_id, a_uint32_t flow_index, fal_entry_counter_t *flow_counter);
+
+sw_error_t
+fal_flow_counter_cleanup(a_uint32_t dev_id, a_uint32_t flow_index);
 
 sw_error_t
 fal_flow_entry_en_set(a_uint32_t dev_id, a_uint32_t flow_index, a_bool_t enable);
@@ -207,6 +210,7 @@ fal_flow_status_set(a_uint32_t dev_id, a_bool_t enable);
 sw_error_t
 fal_flow_status_get(a_uint32_t dev_id, a_bool_t *enable);
 
+#if !defined(IN_FLOW_MINI)
 sw_error_t
 fal_flow_age_timer_set(a_uint32_t dev_id, fal_flow_age_timer_t *age_timer);
 
@@ -228,7 +232,6 @@ fal_flow_mgmt_get(
 		fal_flow_direction_t dir,
 		fal_flow_mgmt_t *mgmt);
 
-#ifndef IN_FLOW_MINI
 sw_error_t
 fal_flow_entry_add(
 		a_uint32_t dev_id,
@@ -280,7 +283,6 @@ sw_error_t
 fal_flow_global_cfg_set(
 		a_uint32_t dev_id,
 		fal_flow_global_cfg_t *cfg);
-#endif
 
 #ifdef __cplusplus
 }

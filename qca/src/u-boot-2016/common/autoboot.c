@@ -15,10 +15,12 @@
 #include <post.h>
 #include <u-boot/sha256.h>
 #include <asm/arch-qca-common/qca_common.h>
+#include <asm/arch-qca-common/scm.h>
 
 DECLARE_GLOBAL_DATA_PTR;
 
 extern int do_dumpqca_minimal_data(const char *offset);
+extern unsigned ipq_runtime_fs_feature_enabled;
 
 #define MAX_DELAY_STOP_STR 32
 
@@ -225,6 +227,9 @@ static int abortboot_normal(int bootdelay)
 {
 	int abort = 0;
 	unsigned long ts;
+#ifdef CONFIG_IPQ_RUNTIME_FAILSAFE
+	unsigned int cookie, ret;
+#endif
 
 #ifdef CONFIG_MENUPROMPT
 	printf(CONFIG_MENUPROMPT);
@@ -255,6 +260,20 @@ static int abortboot_normal(int bootdelay)
 			if (tstc()) {	/* we got a key press	*/
 				abort  = 1;	/* don't auto boot	*/
 				bootdelay = 0;	/* no more delay	*/
+
+#ifdef CONFIG_IPQ_RUNTIME_FAILSAFE
+			if (ipq_runtime_fs_feature_enabled) {
+				cookie = ipq_read_tcsr_boot_misc();
+
+				cookie &= ~IPQ_FS_NONHLOS_BIT;
+
+				fs_debug("\nFailsafe: %s: Clear NonHLOS bit\n", __func__);
+				ret = qca_scm_dload(cookie);
+				if (ret)
+					printf ("Error in SCM to clear NonHLOS failsafe bit\n");
+			}
+#endif
+
 # ifdef CONFIG_MENUKEY
 				menukey = getc();
 # else

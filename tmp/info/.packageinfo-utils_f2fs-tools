@@ -1,0 +1,82 @@
+Source-Makefile: package/utils/f2fs-tools/Makefile
+
+Package: libf2fs
+Version: 1.12.0-3
+ABIVersion: 6
+Depends: +libc +GCC_LIBSSP:libssp +USE_GLIBC:librt +USE_GLIBC:libpthread +libuuid
+Conflicts: 
+Menu-Depends: 
+Provides: 
+Section: libs
+Category: Libraries
+Repository: base
+Title: Library for Flash-Friendly File System (F2FS) tools
+Maintainer: Felix Fietkau <nbd@nbd.name>
+Source: f2fs-tools-1.12.0.tar.gz
+License: GPL-2.0
+Type: ipkg
+Description: Library for Flash-Friendly File System (F2FS) tools
+Felix Fietkau <nbd@nbd.name>
+@@
+
+Package: mkf2fs
+Submenu: Filesystem
+Version: 1.12.0-3
+Depends: +libc +GCC_LIBSSP:libssp +USE_GLIBC:librt +USE_GLIBC:libpthread +libf2fs
+Conflicts: 
+Menu-Depends: 
+Provides: 
+Section: utils
+Category: Utilities
+Repository: base
+Title: Utility for creating a Flash-Friendly File System (F2FS)
+Maintainer: Felix Fietkau <nbd@nbd.name>
+Source: f2fs-tools-1.12.0.tar.gz
+License: GPL-2.0
+Type: ipkg
+Description: Utility for creating a Flash-Friendly File System (F2FS)
+http://git.kernel.org/cgit/linux/kernel/git/jaegeuk/f2fs-tools.git
+Felix Fietkau <nbd@nbd.name>
+@@
+
+Package: f2fsck
+Submenu: Filesystem
+Version: 1.12.0-3
+Depends: +libc +GCC_LIBSSP:libssp +USE_GLIBC:librt +USE_GLIBC:libpthread +libf2fs
+Conflicts: 
+Menu-Depends: 
+Provides: 
+Section: utils
+Category: Utilities
+Repository: base
+Title: Utility for checking/repairing a Flash-Friendly File System (F2FS)
+Maintainer: Felix Fietkau <nbd@nbd.name>
+Source: f2fs-tools-1.12.0.tar.gz
+License: GPL-2.0
+Type: ipkg
+Description: Utility for checking/repairing a Flash-Friendly File System (F2FS)
+http://git.kernel.org/cgit/linux/kernel/git/jaegeuk/f2fs-tools.git
+Felix Fietkau <nbd@nbd.name>
+@@
+
+Package: f2fs-tools
+Submenu: Filesystem
+Version: 1.12.0-3
+Depends: +libc +GCC_LIBSSP:libssp +USE_GLIBC:librt +USE_GLIBC:libpthread +libf2fs +mkf2fs +f2fsck
+Conflicts: 
+Menu-Depends: 
+Provides: 
+Section: utils
+Category: Utilities
+Repository: base
+Title: Tools for Flash-Friendly File System (F2FS)
+Maintainer: Felix Fietkau <nbd@nbd.name>
+Source: f2fs-tools-1.12.0.tar.gz
+License: GPL-2.0
+Type: ipkg
+Description: Tools for Flash-Friendly File System (F2FS)
+http://git.kernel.org/cgit/linux/kernel/git/jaegeuk/f2fs-tools.git
+Felix Fietkau <nbd@nbd.name>
+@@
+
+

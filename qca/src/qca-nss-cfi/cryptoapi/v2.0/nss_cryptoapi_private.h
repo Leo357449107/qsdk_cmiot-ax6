@@ -1,4 +1,5 @@
 /* Copyright (c) 2015-2020, The Linux Foundation. All rights reserved.
+ * Copyright (c) 2022 Qualcomm Innovation Center, Inc. All rights reserved.
  *
  * Permission to use, copy, modify, and/or distribute this software for any
  * purpose with or without fee is hereby granted, provided that the above
@@ -26,7 +27,7 @@
 
 #define NSS_CRYPTOAPI_DEBUGFS_MAX_NAME 64
 #define NSS_CRYPTOAPI_DEBUGFS_MAX_CTX_ENTRY 5
-#define NSS_CRYPTOAPI_DEBUGFS_MAX_STATS_ENTRY 6
+#define NSS_CRYPTOAPI_DEBUGFS_MAX_STATS_ENTRY 11
 #define NSS_CRYPTOAPI_MAGIC 0x7FED
 #define NSS_CRYPTOAPI_AHASH_MAGIC 0x7FEF
 #define NSS_CRYPTOAPI_HDR_POOL_SZ 1024
@@ -101,6 +102,7 @@ struct nss_cryptoapi_stats {
 	uint64_t failed_nomem;				/* Packets failing due to no memory */
 	uint64_t failed_req;				/* Packets failing due incorrect request */
 	uint64_t failed_align;				/* Packets failing alignment checks */
+	uint64_t failed_len;				/* Packets failing Supported length checks */
 	uint64_t error[NSS_CRYPTO_CMN_RESP_ERROR_MAX];	/* Other packet response errors */
 };
 

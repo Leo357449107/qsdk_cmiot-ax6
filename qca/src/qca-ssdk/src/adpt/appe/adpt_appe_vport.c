@@ -153,7 +153,10 @@ void adpt_appe_vport_func_bitmap_init(a_uint32_t dev_id)
 	if(p_adpt_api == NULL)
 		return;
 
-	p_adpt_api->adpt_vport_func_bitmap = 0;
+	p_adpt_api->adpt_vport_func_bitmap = BIT(FUNC_VPORT_PHYSICAL_PORT_SET) |
+		BIT(FUNC_VPORT_PHYSICAL_PORT_GET) |
+		BIT(FUNC_VPORT_STATE_CHECK_SET) |
+		BIT(FUNC_VPORT_STATE_CHECK_GET);
 
 	return;
 }

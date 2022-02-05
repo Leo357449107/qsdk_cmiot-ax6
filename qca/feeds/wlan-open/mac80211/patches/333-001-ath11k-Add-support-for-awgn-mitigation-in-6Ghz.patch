@@ -1,6 +1,6 @@
-From a75255403217765211dfb79dd0e8bff5c6ae331c Mon Sep 17 00:00:00 2001
+From 53f2c10cf048d3420bff7db90cb3bafaf6f7ac57 Mon Sep 17 00:00:00 2001
 From: Hari Chandrakanthan <quic_haric@quicinc.com>
-Date: Fri, 29 Oct 2021 19:00:22 +0530
+Date: Wed, 1 Dec 2021 12:19:02 +0530
 Subject: [PATCH] ath11k : Add support for awgn mitigation in 6Ghz
 
 AWGN - Additive white Gaussian Noise
@@ -29,17 +29,38 @@ support to update rx_channel is added
 
 Signed-off-by: Hari Chandrakanthan <quic_haric@quicinc.com>
 ---
- drivers/net/wireless/ath/ath11k/debugfs.c |  6 ++-
- drivers/net/wireless/ath/ath11k/mac.c     | 71 ++++++++++++++++++++++++++++++-
- drivers/net/wireless/ath/ath11k/wmi.c     | 18 +++-----
- drivers/net/wireless/ath/ath11k/wmi.h     |  2 +-
- 4 files changed, 83 insertions(+), 14 deletions(-)
+ drivers/net/wireless/ath/ath11k/core.h    |   4 ++
+ drivers/net/wireless/ath/ath11k/debugfs.c |   6 +-
+ drivers/net/wireless/ath/ath11k/mac.c     | 116 +++++++++++++++++++++++++++++-
+ drivers/net/wireless/ath/ath11k/mac.h     |   3 +
+ drivers/net/wireless/ath/ath11k/wmi.c     |  33 ++++++---
+ drivers/net/wireless/ath/ath11k/wmi.h     |   2 +-
+ 6 files changed, 151 insertions(+), 13 deletions(-)
 
-diff --git a/drivers/net/wireless/ath/ath11k/debugfs.c b/drivers/net/wireless/ath/ath11k/debugfs.c
-index d29e54b..3cb3bda 100644
+--- a/drivers/net/wireless/ath/ath11k/core.h
++++ b/drivers/net/wireless/ath/ath11k/core.h
+@@ -750,6 +750,7 @@ struct ath11k {
+ 	int max_num_peers;
+ 	u32 num_started_vdevs;
+ 	u32 num_created_vdevs;
++	u32 num_mesh_vdevs;
+ 	unsigned long long allocated_vdev_map;
+ 
+ 	struct idr txmgmt_idr;
+@@ -823,6 +824,10 @@ struct ath11k {
+ 
+ 	struct ath11k_smart_ant_info smart_ant_info;
+ 	u32 rx_antenna;
++
++	struct cfg80211_chan_def awgn_chandef;
++	u32 chan_bw_interference_bitmap;
++	bool awgn_intf_handling_in_prog;
+ };
+ 
+ struct ath11k_band_cap {
 --- a/drivers/net/wireless/ath/ath11k/debugfs.c
 +++ b/drivers/net/wireless/ath/ath11k/debugfs.c
-@@ -2388,6 +2388,7 @@ static ssize_t ath11k_write_simulate_awgn(struct file *file,
+@@ -2395,6 +2395,7 @@ static ssize_t ath11k_write_simulate_awg
  {
  	struct ath11k *ar = file->private_data;
  	int ret;
@@ -47,7 +68,7 @@ index d29e54b..3cb3bda 100644
  
  	mutex_lock(&ar->conf_mutex);
  	if (ar->state != ATH11K_STATE_ON) {
-@@ -2395,7 +2396,10 @@ static ssize_t ath11k_write_simulate_awgn(struct file *file,
+@@ -2402,7 +2403,10 @@ static ssize_t ath11k_write_simulate_awg
  		goto exit;
  	}
  
@@ -59,11 +80,61 @@ index d29e54b..3cb3bda 100644
  	if (ret)
  		goto exit;
  
-diff --git a/drivers/net/wireless/ath/ath11k/mac.c b/drivers/net/wireless/ath/ath11k/mac.c
-index bcf4839..bca5385 100644
 --- a/drivers/net/wireless/ath/ath11k/mac.c
 +++ b/drivers/net/wireless/ath/ath11k/mac.c
-@@ -7968,6 +7968,75 @@ ath11k_mac_change_chanctx_fill_iter(void *data, u8 *mac,
+@@ -886,7 +886,7 @@ void ath11k_mac_peer_cleanup_all(struct
+ 	ar->num_stations = 0;
+ }
+ 
+-static void
++void
+ ath11k_mac_get_any_chandef_iter(struct ieee80211_hw *hw,
+ 				struct ieee80211_chanctx_conf *conf,
+ 				void *data)
+@@ -6933,6 +6933,11 @@ static int ath11k_mac_op_start(struct ie
+ 	ar->num_peers = 0;
+ 	ar->allocated_vdev_map = 0;
+ 
++	spin_lock_bh(&ar->data_lock);
++	ar->awgn_intf_handling_in_prog = false;
++	ar->num_mesh_vdevs = 0;
++	spin_unlock_bh(&ar->data_lock);
++
+ 	/* Configure monitor status ring with default rx_filter to get rx status
+ 	 * such as rssi, rx_duration.
+ 	 */
+@@ -7009,6 +7014,10 @@ static void ath11k_mac_op_stop(struct ie
+ 	synchronize_rcu();
+ 
+ 	atomic_set(&ar->num_pending_mgmt_tx, 0);
++
++	spin_lock_bh(&ar->data_lock);
++	ar->awgn_intf_handling_in_prog = false;
++	spin_unlock_bh(&ar->data_lock);
+ }
+ 
+ static int
+@@ -7142,6 +7151,10 @@ static int ath11k_mac_vdev_delete(struct
+ 	ar->ab->free_vdev_map |= 1LL << (arvif->vdev_id);
+ 	ar->allocated_vdev_map &= ~(1LL << arvif->vdev_id);
+ 	ar->num_created_vdevs--;
++	spin_lock_bh(&ar->data_lock);
++	if (vif->type == NL80211_IFTYPE_MESH_POINT)
++		ar->num_mesh_vdevs--;
++	spin_unlock_bh(&ar->data_lock);
+ 
+ 	ath11k_dbg(ar->ab, ATH11K_DBG_MAC, "vdev %pM deleted, vdev_id %d\n",
+ 		   vif->addr, arvif->vdev_id);
+@@ -7294,6 +7307,8 @@ static int ath11k_mac_op_add_interface(s
+ 	ab->free_vdev_map &= ~(1LL << arvif->vdev_id);
+ 
+ 	spin_lock_bh(&ar->data_lock);
++	if (vif->type == NL80211_IFTYPE_MESH_POINT)
++		ar->num_mesh_vdevs++;
+ 	list_add(&arvif->list, &ar->arvifs);
+ 	spin_unlock_bh(&ar->data_lock);
+ 
+@@ -7995,6 +8010,75 @@ ath11k_mac_change_chanctx_fill_iter(void
  	arg->next_vif++;
  }
  
@@ -139,7 +210,23 @@ index bcf4839..bca5385 100644
  static void
  ath11k_mac_update_vif_chan(struct ath11k *ar,
  			   struct ieee80211_vif_chanctx_switch *vifs,
-@@ -8028,7 +8097,7 @@ ath11k_mac_update_vif_chan(struct ath11k *ar,
+@@ -8002,6 +8086,7 @@ ath11k_mac_update_vif_chan(struct ath11k
+ {
+ 	struct ath11k_base *ab = ar->ab;
+ 	struct ath11k_vif *arvif;
++	struct cfg80211_chan_def *chandef = NULL;
+ 	int ret;
+ 	int i;
+ 	bool monitor_vif = false;
+@@ -8049,13 +8134,15 @@ ath11k_mac_update_vif_chan(struct ath11k
+ 		}
+ 	}
+ 
++	chandef = &vifs[0].new_ctx->def;
++
+ 	/* All relevant vdevs are downed and associated channel resources
+ 	 * should be available for the channel switch now.
+ 	 */
  
  	ath11k_smart_ant_disable(arvif);
  
@@ -148,19 +235,76 @@ index bcf4839..bca5385 100644
  
  	for (i = 0; i < n_vifs; i++) {
  		struct vdev_up_params params = {0};
-diff --git a/drivers/net/wireless/ath/ath11k/wmi.c b/drivers/net/wireless/ath/ath11k/wmi.c
-index 4c95b96..d485bbe 100644
+@@ -8116,6 +8203,38 @@ ath11k_mac_update_vif_chan(struct ath11k
+ 		if (!ath11k_mac_monitor_stop(ar))
+ 			ath11k_mac_monitor_start(ar);
+ 	}
++
++	spin_lock_bh(&ar->data_lock);
++	if (ar->awgn_intf_handling_in_prog && chandef) {
++		if (!ar->chan_bw_interference_bitmap ||
++		    (ar->chan_bw_interference_bitmap & WMI_DCS_SEG_PRI20)) {
++			if (ar->awgn_chandef.chan->center_freq !=
++			    chandef->chan->center_freq) {
++				ar->awgn_intf_handling_in_prog = false;
++				ath11k_dbg(ab, ATH11K_DBG_MAC,
++					   "AWGN : channel switch completed\n");
++			} else {
++				ath11k_warn(ab, "AWGN : channel switch is not done, freq : %d\n",
++					    ar->awgn_chandef.chan->center_freq);
++			}
++		} else {
++			if ((ar->awgn_chandef.chan->center_freq ==
++			     chandef->chan->center_freq) &&
++			    (ar->awgn_chandef.width != chandef->width)) {
++				ath11k_dbg(ab, ATH11K_DBG_MAC,
++					   "AWGN : BW reduction is complete\n");
++				ar->awgn_intf_handling_in_prog = false;
++			} else {
++				ath11k_warn(ab, "AWGN : awgn_freq : %d chan_freq %d"
++					    " awgn_width %d chan_width %d\n",
++					    ar->awgn_chandef.chan->center_freq,
++					    chandef->chan->center_freq,
++					    ar->awgn_chandef.width,
++					    chandef->width);
++			}
++		}
++	}
++	spin_unlock_bh(&ar->data_lock);
+ }
+ 
+ static void
+--- a/drivers/net/wireless/ath/ath11k/mac.h
++++ b/drivers/net/wireless/ath/ath11k/mac.h
+@@ -168,4 +168,7 @@ void ath11k_mac_bcn_tx_event(struct ath1
+ void ath11k_mac_handle_beacon(struct ath11k *ar, struct sk_buff *skb);
+ void ath11k_mac_handle_beacon_miss(struct ath11k *ar, u32 vdev_id);
+ bool ath11k_mac_sta_level_info(struct ath11k_vif *arvif, struct ieee80211_sta *sta);
++void ath11k_mac_get_any_chandef_iter(struct ieee80211_hw *hw,
++				     struct ieee80211_chanctx_conf *conf,
++				     void *data);
+ #endif
 --- a/drivers/net/wireless/ath/ath11k/wmi.c
 +++ b/drivers/net/wireless/ath/ath11k/wmi.c
-@@ -8745,7 +8745,6 @@ ath11k_wmi_dcs_awgn_interference_event(struct ath11k_base *ab,
+@@ -8942,8 +8942,8 @@ ath11k_wmi_dcs_awgn_interference_event(s
+ {
  	const struct wmi_dcs_interference_ev *dcs_intf_ev;
  	struct wmi_dcs_awgn_info awgn_info = {};
++	struct cfg80211_chan_def *chandef = NULL;
  	struct ath11k *ar;
 -	struct ath11k_vif *arvif;
  	const struct wmi_tlv *tlv;
  	u16 tlv_tag;
  	u8 *ptr;
-@@ -8809,15 +8808,10 @@ ath11k_wmi_dcs_awgn_interference_event(struct ath11k_base *ab,
+@@ -9002,20 +9002,35 @@ ath11k_wmi_dcs_awgn_interference_event(s
+ 		goto exit;
+ 	}
+ 
++	if (ar->awgn_intf_handling_in_prog)
++		goto exit;
++
+ 	if (!ath11k_wmi_validate_dcs_awgn_info(ar, &awgn_info)) {
+ 		ath11k_warn(ab, "Invalid DCS AWGN TLV - Skipping event");
  		goto exit;
  	}
  
@@ -172,13 +316,28 @@ index 4c95b96..d485bbe 100644
 -		if (arvif->is_started && arvif->vdev_type == WMI_VDEV_TYPE_AP) {
 -			ieee80211_awgn_detected(arvif->vif);
 -		}
--	}
--
++	ieee80211_iter_chan_contexts_atomic(ar->hw, ath11k_mac_get_any_chandef_iter,
++					    &chandef);
++	if (!chandef) {
++		ath11k_warn(ab, "chandef is not available\n");
++		goto exit;
+ 	}
++	ar->awgn_chandef = *chandef;
++
 +	ieee80211_awgn_detected(ar->hw, awgn_info.chan_bw_interference_bitmap);
++
++	spin_lock_bh(&ar->data_lock);
++	/* Incase of mesh intf presence, dont set in prog as there will be no
++	   Channel/BW change happening. */
++	ar->awgn_intf_handling_in_prog = (ar->num_mesh_vdevs ? false : true);
++	ar->chan_bw_interference_bitmap = awgn_info.chan_bw_interference_bitmap;
++	spin_unlock_bh(&ar->data_lock);
+ 
++	ath11k_dbg(ab, ATH11K_DBG_WMI, "AWGN : Interference handling started\n");
  exit:
  	rcu_read_unlock();
  }
-@@ -10300,7 +10294,7 @@ int ath11k_wmi_simulate_radar(struct ath11k *ar)
+@@ -10498,7 +10513,7 @@ int ath11k_wmi_simulate_radar(struct ath
  }
  
  
@@ -187,7 +346,7 @@ index 4c95b96..d485bbe 100644
  {
  	struct ath11k_vif *arvif;
  	u32 awgn_args[WMI_AWGN_MAX_TEST_ARGS];
-@@ -10323,14 +10317,16 @@ int ath11k_wmi_simulate_awgn(struct ath11k *ar)
+@@ -10521,14 +10536,16 @@ int ath11k_wmi_simulate_awgn(struct ath1
  		return -EINVAL;
  
  	awgn_args[WMI_AWGN_TEST_AWGN_INT] = WMI_UNIT_TEST_AWGN_INTF_TYPE;
@@ -206,11 +365,9 @@ index 4c95b96..d485bbe 100644
  
  	return ath11k_wmi_send_unit_test_cmd(ar, wmi_ut, awgn_args);
  }
-diff --git a/drivers/net/wireless/ath/ath11k/wmi.h b/drivers/net/wireless/ath/ath11k/wmi.h
-index 85ef7c3..e7101f0 100644
 --- a/drivers/net/wireless/ath/ath11k/wmi.h
 +++ b/drivers/net/wireless/ath/ath11k/wmi.h
-@@ -6924,7 +6924,7 @@ void ath11k_wmi_fw_stats_fill(struct ath11k *ar,
+@@ -6947,7 +6947,7 @@ void ath11k_wmi_fw_stats_fill(struct ath
  			      struct ath11k_fw_stats *fw_stats, u32 stats_id,
  			      char *buf);
  int ath11k_wmi_simulate_radar(struct ath11k *ar);
@@ -219,6 +376,15 @@ index 85ef7c3..e7101f0 100644
  int ath11k_wmi_send_twt_enable_cmd(struct ath11k *ar, u32 pdev_id);
  int ath11k_wmi_send_twt_disable_cmd(struct ath11k *ar, u32 pdev_id);
  int ath11k_wmi_send_twt_add_dialog_cmd(struct ath11k *ar,
--- 
-2.7.4
-
+--- a/drivers/net/wireless/ath/ath11k/core.c
++++ b/drivers/net/wireless/ath/ath11k/core.c
+@@ -1397,6 +1397,9 @@ void ath11k_core_halt(struct ath11k *ar)
+ 
+ 	ar->num_created_vdevs = 0;
+ 	ar->allocated_vdev_map = 0;
++	spin_lock_bh(&ar->data_lock);
++	ar->num_mesh_vdevs = 0;
++	spin_unlock_bh(&ar->data_lock);
+ 
+ 	ath11k_mac_scan_finish(ar);
+ 	ath11k_mac_peer_cleanup_all(ar);

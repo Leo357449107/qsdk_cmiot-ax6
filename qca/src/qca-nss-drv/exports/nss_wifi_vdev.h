@@ -821,14 +821,14 @@ struct nss_wifi_vdev_ppdu_metadata {
  *	MPDU metadata.
  */
 struct nss_wifi_vdev_peer_mpdu_metadata {
-	uint16_t peer_id;               /* Corresponding peer ID. */
-	uint8_t tid;                    /* TID of the flow or MPDU queue. */
-	uint8_t msdu_info;              /* First or last MSDU information. */
-	uint32_t ppdu_id;               /* PPDU ID. */
-	uint32_t tsf;                   /* Timing synchronization function. */
-	uint8_t transmit_cnt;           /* Transmission count. */
-	uint8_t status;                 /* Frame acknowledged/failed. */
-	uint16_t reserved;		/* Reserved. */
+	uint16_t peer_id;               /**< Corresponding peer ID. */
+	uint8_t tid;                    /**< TID of the flow or MPDU queue. */
+	uint8_t msdu_info;              /**< First or last MSDU information. */
+	uint32_t ppdu_id;               /**< PPDU ID. */
+	uint32_t tsf;                   /**< Timing synchronization function. */
+	uint8_t transmit_cnt;           /**< Transmission count. */
+	uint8_t status;                 /**< Frame acknowledged/failed. */
+	uint16_t reserved;		/**< Reserved. */
 };
 
 /**

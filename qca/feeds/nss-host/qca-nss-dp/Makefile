@@ -42,6 +42,14 @@ else
 subtarget:=$(CONFIG_TARGET_BOARD)
 endif
 
+ifeq ($(CONFIG_KERNEL_IPQ_MEM_PROFILE),256)
+EXTRA_CFLAGS+= -DNSS_DP_MEM_PROFILE_LOW
+else ifeq ($(CONFIG_LOWMEM_FLASH),y)
+EXTRA_CFLAGS+= -DNSS_DP_MEM_PROFILE_LOW
+else ifeq ($(CONFIG_KERNEL_IPQ_MEM_PROFILE),512)
+EXTRA_CFLAGS+= -DNSS_DP_MEM_PROFILE_MEDIUM
+endif
+
 NSS_DP_HAL_DIR:=$(PKG_BUILD_DIR)/hal
 ifneq (, $(findstring _64, $(subtarget)))
 hal_arch:=$(subst _64,,$(subtarget))

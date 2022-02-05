@@ -72,7 +72,6 @@ adpt_hppe_ucast_hash_map_set(
 	return hppe_ucast_hash_map_tbl_set(dev_id, index, &ucast_hash_map_tbl);
 }
 
-#ifndef IN_QM_MINI
 sw_error_t
 adpt_hppe_ac_dynamic_threshold_get(
 		a_uint32_t dev_id,
@@ -144,6 +143,7 @@ adpt_hppe_ucast_queue_base_profile_get(
 	return SW_OK;
 }
 
+#if !defined(IN_QM_MINI)
 sw_error_t
 adpt_hppe_port_mcast_priority_class_get(
 		a_uint32_t dev_id,
@@ -269,7 +269,6 @@ adpt_hppe_ac_prealloc_buffer_set(
 	} else
 		return SW_FAIL;
 }
-#ifndef IN_QM_MINI
 sw_error_t
 adpt_hppe_ucast_default_hash_get(
 		a_uint32_t dev_id,
@@ -416,6 +415,7 @@ adpt_hppe_ac_prealloc_buffer_get(
 		return SW_FAIL;
 }
 
+#if !defined(IN_QM_MINI)
 sw_error_t
 adpt_hppe_port_mcast_priority_class_set(
 		a_uint32_t dev_id,
@@ -457,6 +457,7 @@ adpt_hppe_port_mcast_priority_class_set(
 
 	return rv;
 }
+#endif
 
 sw_error_t
 adpt_hppe_ucast_hash_map_get(
@@ -481,7 +482,6 @@ adpt_hppe_ucast_hash_map_get(
 	*queue_hash = ucast_hash_map_tbl.bf.hash;
 	return rv;
 }
-#endif
 
 sw_error_t
 adpt_hppe_ac_static_threshold_set(
@@ -589,7 +589,6 @@ adpt_hppe_ac_queue_group_set(
 	return rv;
 }
 
-#ifndef IN_QM_MINI
 sw_error_t
 adpt_hppe_ac_group_buffer_get(
 		a_uint32_t dev_id,
@@ -613,6 +612,7 @@ adpt_hppe_ac_group_buffer_get(
 	return SW_OK;
 }
 
+#if !defined(IN_QM_MINI)
 sw_error_t
 adpt_hppe_mcast_cpu_code_class_get(
 		a_uint32_t dev_id,
@@ -682,7 +682,6 @@ adpt_hppe_ac_ctrl_set(
 
 }
 
-#ifndef IN_QM_MINI
 sw_error_t
 adpt_hppe_ucast_priority_class_get(
 		a_uint32_t dev_id,
@@ -707,7 +706,6 @@ adpt_hppe_ucast_priority_class_get(
 	*class = ucast_priority_map_tbl.bf.class;
 	return rv;
 }
-#endif
 
 sw_error_t
 adpt_hppe_queue_flush(
@@ -806,7 +804,7 @@ adpt_hppe_queue_flush(
 	return SW_OK;
 }
 
-#ifndef IN_QM_MINI
+#if !defined(IN_QM_MINI)
 sw_error_t
 adpt_hppe_mcast_cpu_code_class_set(
 		a_uint32_t dev_id,
@@ -842,7 +840,6 @@ adpt_hppe_ucast_priority_class_set(
 	return hppe_ucast_priority_map_tbl_set(dev_id, index, &ucast_priority_map_tbl);
 }
 
-#ifndef IN_QM_MINI
 sw_error_t
 adpt_hppe_ac_static_threshold_get(
 		a_uint32_t dev_id,
@@ -910,7 +907,6 @@ adpt_hppe_ac_static_threshold_get(
 	} else
 		return SW_FAIL;
 }
-#endif
 
 sw_error_t
 adpt_hppe_ucast_queue_base_profile_set(
@@ -965,7 +961,6 @@ adpt_hppe_ac_group_buffer_set(
 	return hppe_ac_grp_cfg_tbl_set(dev_id, group_id, &ac_grp_cfg_tbl);;
 }
 
-#ifndef IN_QM_MINI
 static a_uint32_t
 adpt_hppe_mcast_queue_dropcnt_start_addr_get(a_uint32_t queue_id)
 {
@@ -1108,7 +1103,6 @@ adpt_hppe_queue_counter_ctrl_get(a_uint32_t dev_id, a_bool_t *cnt_en)
 
 	return SW_OK;
 }
-#endif
 
 sw_error_t
 adpt_hppe_queue_counter_ctrl_set(a_uint32_t dev_id, a_bool_t cnt_en)
@@ -1143,7 +1137,6 @@ adpt_hppe_qm_enqueue_ctrl_set(
 	return hppe_oq_enq_opr_tbl_set(dev_id, queue_id, &enq);
 }
 
-#ifndef IN_QM_MINI
 sw_error_t
 adpt_hppe_qm_enqueue_ctrl_get(
 		a_uint32_t dev_id,
@@ -1194,7 +1187,6 @@ adpt_hppe_qm_port_source_profile_get(
 	return hppe_mru_mtu_ctrl_tbl_src_profile_get(dev_id, index,
 				src_profile);
 }
-#endif
 
 void adpt_hppe_qm_func_bitmap_init(a_uint32_t dev_id)
 {
@@ -1317,15 +1309,23 @@ sw_error_t adpt_hppe_qm_init(a_uint32_t dev_id)
 		p_adpt_api->adpt_qm_enqueue_ctrl_set = adpt_hppe_qm_enqueue_ctrl_set;
 	if (p_adpt_api->adpt_qm_func_bitmap[0] & (1 << FUNC_UCAST_HASH_MAP_SET))
 		p_adpt_api->adpt_ucast_hash_map_set = adpt_hppe_ucast_hash_map_set;
-#ifndef IN_QM_MINI
 	if (p_adpt_api->adpt_qm_func_bitmap[0] & (1 << FUNC_AC_DYNAMIC_THRESHOLD_GET))
 		p_adpt_api->adpt_ac_dynamic_threshold_get = adpt_hppe_ac_dynamic_threshold_get;
 	if (p_adpt_api->adpt_qm_func_bitmap[0] & (1 << FUNC_UCAST_QUEUE_BASE_PROFILE_GET))
 		p_adpt_api->adpt_ucast_queue_base_profile_get =
 			adpt_hppe_ucast_queue_base_profile_get;
+#if !defined(IN_QM_MINI)
 	if (p_adpt_api->adpt_qm_func_bitmap[0] & (1 << FUNC_PORT_MCAST_PRIORITY_CLASS_GET))
 		p_adpt_api->adpt_port_mcast_priority_class_get =
 			adpt_hppe_port_mcast_priority_class_get;
+	if (p_adpt_api->adpt_qm_func_bitmap[0] & (1 << FUNC_PORT_MCAST_PRIORITY_CLASS_SET))
+		p_adpt_api->adpt_port_mcast_priority_class_set =
+			adpt_hppe_port_mcast_priority_class_set;
+	if (p_adpt_api->adpt_qm_func_bitmap[0] & (1 << FUNC_MCAST_CPU_CODE_CLASS_GET))
+		p_adpt_api->adpt_mcast_cpu_code_class_get = adpt_hppe_mcast_cpu_code_class_get;
+	if (p_adpt_api->adpt_qm_func_bitmap[0] & (1 << FUNC_MCAST_CPU_CODE_CLASS_SET))
+		p_adpt_api->adpt_mcast_cpu_code_class_set = adpt_hppe_mcast_cpu_code_class_set;
+#endif
 	if (p_adpt_api->adpt_qm_func_bitmap[0] & (1 << FUNC_UCAST_DEFAULT_HASH_GET))
 		p_adpt_api->adpt_ucast_default_hash_get = adpt_hppe_ucast_default_hash_get;
 	if (p_adpt_api->adpt_qm_func_bitmap[0] & (1 << FUNC_UCAST_DEFAULT_HASH_SET))
@@ -1336,23 +1336,14 @@ sw_error_t adpt_hppe_qm_init(a_uint32_t dev_id)
 		p_adpt_api->adpt_ac_ctrl_get = adpt_hppe_ac_ctrl_get;
 	if (p_adpt_api->adpt_qm_func_bitmap[0] & (1 << FUNC_AC_PREALLOC_BUFFER_GET))
 		p_adpt_api->adpt_ac_prealloc_buffer_get = adpt_hppe_ac_prealloc_buffer_get;
-	if (p_adpt_api->adpt_qm_func_bitmap[0] & (1 << FUNC_PORT_MCAST_PRIORITY_CLASS_SET))
-		p_adpt_api->adpt_port_mcast_priority_class_set =
-			adpt_hppe_port_mcast_priority_class_set;
 	if (p_adpt_api->adpt_qm_func_bitmap[0] & (1 << FUNC_UCAST_HASH_MAP_GET))
 		p_adpt_api->adpt_ucast_hash_map_get = adpt_hppe_ucast_hash_map_get;
 	if (p_adpt_api->adpt_qm_func_bitmap[0] & (1 << FUNC_AC_GROUP_BUFFER_GET))
 		p_adpt_api->adpt_ac_group_buffer_get = adpt_hppe_ac_group_buffer_get;
-	if (p_adpt_api->adpt_qm_func_bitmap[0] & (1 << FUNC_MCAST_CPU_CODE_CLASS_GET))
-		p_adpt_api->adpt_mcast_cpu_code_class_get = adpt_hppe_mcast_cpu_code_class_get;
 	if (p_adpt_api->adpt_qm_func_bitmap[0] & (1 << FUNC_UCAST_PRIORITY_CLASS_GET))
 		p_adpt_api->adpt_ucast_priority_class_get = adpt_hppe_ucast_priority_class_get;
-	if (p_adpt_api->adpt_qm_func_bitmap[0] & (1 << FUNC_MCAST_CPU_CODE_CLASS_SET))
-		p_adpt_api->adpt_mcast_cpu_code_class_set = adpt_hppe_mcast_cpu_code_class_set;
-#endif
 	if (p_adpt_api->adpt_qm_func_bitmap[0] & (1 << FUNC_UCAST_PRIORITY_CLASS_SET))
 		p_adpt_api->adpt_ucast_priority_class_set = adpt_hppe_ucast_priority_class_set;
-#ifndef IN_QM_MINI
 	if (p_adpt_api->adpt_qm_func_bitmap[0] & (1 << FUNC_AC_STATIC_THRESHOLD_GET))
 		p_adpt_api->adpt_ac_static_threshold_get = adpt_hppe_ac_static_threshold_get;
 	if (p_adpt_api->adpt_qm_func_bitmap[0] & (1 << FUNC_QUEUE_COUNTER_CLEANUP))
@@ -1361,17 +1352,14 @@ sw_error_t adpt_hppe_qm_init(a_uint32_t dev_id)
 		p_adpt_api->adpt_queue_counter_get = adpt_hppe_queue_counter_get;
 	if (p_adpt_api->adpt_qm_func_bitmap[0] & (1 << FUNC_QUEUE_COUNTER_CTRL_GET))
 		p_adpt_api->adpt_queue_counter_ctrl_get = adpt_hppe_queue_counter_ctrl_get;
-#endif
 	if (p_adpt_api->adpt_qm_func_bitmap[0] & (1 << FUNC_QUEUE_COUNTER_CTRL_SET))
 		p_adpt_api->adpt_queue_counter_ctrl_set = adpt_hppe_queue_counter_ctrl_set;
-#ifndef IN_QM_MINI
 	if (p_adpt_api->adpt_qm_func_bitmap[0] & (1 << FUNC_QM_ENQUEUE_CTRL_GET))
 		p_adpt_api->adpt_qm_enqueue_ctrl_get = adpt_hppe_qm_enqueue_ctrl_get;
 	if (p_adpt_api->adpt_qm_func_bitmap[0] & (1 << FUNC_QM_PORT_SRCPROFILE_GET))
 		p_adpt_api->adpt_qm_port_source_profile_get = adpt_hppe_qm_port_source_profile_get;
 	if (p_adpt_api->adpt_qm_func_bitmap[1] & (1 << (FUNC_QM_PORT_SRCPROFILE_SET % 32)))
 		p_adpt_api->adpt_qm_port_source_profile_set = adpt_hppe_qm_port_source_profile_set;
-#endif
 #if defined(APPE)
 	if (p_adpt_api->adpt_qm_func_bitmap[1] & (1 << (FUNC_QM_ENQUEUE_CFG_GET % 32)))
 		p_adpt_api->adpt_qm_enqueue_config_get = adpt_appe_qm_enqueue_config_get;

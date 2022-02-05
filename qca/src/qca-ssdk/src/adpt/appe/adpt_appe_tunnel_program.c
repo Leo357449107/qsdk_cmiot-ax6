@@ -914,7 +914,16 @@ void adpt_appe_tunnel_program_func_bitmap_init(a_uint32_t dev_id)
 		return;
 	}
 
-	p_adpt_api->adpt_tunnel_program_func_bitmap = 0;
+	p_adpt_api->adpt_tunnel_program_func_bitmap = ((1<<FUNC_TUNNEL_PROGRAM_ENTRY_ADD) |
+						(1<<FUNC_TUNNEL_PROGRAM_ENTRY_DEL) |
+						(1<<FUNC_TUNNEL_PROGRAM_ENTRY_GETFIRST) |
+						(1<<FUNC_TUNNEL_PROGRAM_ENTRY_GETNEXT) |
+						(1<<FUNC_TUNNEL_PROGRAM_CFG_SET) |
+						(1<<FUNC_TUNNEL_PROGRAM_CFG_GET) |
+						(1<<FUNC_TUNNEL_PROGRAM_UDF_ADD) |
+						(1<<FUNC_TUNNEL_PROGRAM_UDF_DEL) |
+						(1<<FUNC_TUNNEL_PROGRAM_UDF_GETFIRST) |
+						(1<<FUNC_TUNNEL_PROGRAM_UDF_GETNEXT));
 	return;
 }
 

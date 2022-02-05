@@ -32,6 +32,16 @@
 #include <linux/pinctrl/consumer.h>
 #include "ipq-adss.h"
 
+SND_SOC_DAILINK_DEFS(i2s,
+	DAILINK_COMP_ARRAY(COMP_CPU("qca-i2s-dai")),
+	DAILINK_COMP_ARRAY(COMP_CODEC("qca_codec.0-0012", "qca-i2s-codec-dai")),
+	DAILINK_COMP_ARRAY(COMP_PLATFORM("7709000.qca-pcm-i2s")));
+
+SND_SOC_DAILINK_DEFS(tdm,
+	DAILINK_COMP_ARRAY(COMP_CPU("qca-tdm-dai")),
+	DAILINK_COMP_ARRAY(COMP_CODEC("qca_codec.0-0012", "qca-tdm-codec-dai")),
+	DAILINK_COMP_ARRAY(COMP_PLATFORM("7709000.qca-pcm-tdm")));
+
 static struct snd_soc_dai_link ipq8074_snd_dai[] = {
 	{
 		.name		= "IPQ Media1",
@@ -39,10 +49,12 @@ static struct snd_soc_dai_link ipq8074_snd_dai[] = {
 		.dai_fmt = (SND_SOC_DAIFMT_I2S |
 				SND_SOC_DAIFMT_NB_NF |
 				SND_SOC_DAIFMT_CBS_CFS),
+		SND_SOC_DAILINK_REG(i2s),
 	},
 	{
 		.name		= "IPQ Media2",
 		.stream_name	= "TDM",
+		SND_SOC_DAILINK_REG(tdm),
 	},
 };
 

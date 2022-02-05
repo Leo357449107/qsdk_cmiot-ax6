@@ -175,10 +175,10 @@ Signed-off-by: Sowmiya Sree Elavalagan <ssreeela@codeaurora.org>
  
  	/* Configure CE irqs */
  	for (i = 0; i < ab->hw_params.ce_count; i++) {
-@@ -643,25 +735,67 @@ static const struct ath11k_hif_ops ath11
- 	.map_service_to_pipe = ath11k_ahb_map_service_to_pipe,
- 	.power_down = ath11k_ahb_power_down,
- 	.power_up = ath11k_ahb_power_up,
+@@ -664,25 +756,71 @@ static const struct ath11k_hif_ops ath11
+ 	.ssr_notifier_reg = ath11k_ahb_ssr_notifier_reg,
+ 	.ssr_notifier_unreg = ath11k_ahb_ssr_notifier_unreg,
+ #endif
 +	.free_irq = ath11k_ahb_free_irq,
 +	.config_irq = ath11k_ahb_config_irq,
 +};
@@ -203,6 +203,10 @@ Signed-off-by: Sowmiya Sree Elavalagan <ssreeela@codeaurora.org>
 +	 * to be removed in future
 +	 */
 +	.config_static_window = ath11k_pci_config_static_window,
++#ifdef CONFIG_QCOM_QMI_HELPERS
++	.ssr_notifier_reg = ath11k_ahb_ssr_notifier_reg,
++	.ssr_notifier_unreg = ath11k_ahb_ssr_notifier_unreg,
++#endif
 +	.free_irq = ath11k_internal_pci_free_irq,
 +	.config_irq = ath11k_config_irq_internal_pci,
 +	.get_msi_irq = ath11k_pci_get_qgic_msi_irq,
@@ -251,7 +255,7 @@ Signed-off-by: Sowmiya Sree Elavalagan <ssreeela@codeaurora.org>
  	ab_ahb->tgt_rproc = prproc;
  
  	return 0;
-@@ -675,6 +809,7 @@ static int ath11k_ahb_probe(struct platf
+@@ -696,6 +834,7 @@ static int ath11k_ahb_probe(struct platf
  	struct resource *mem_res;
  	void __iomem *mem;
  	int ret;
@@ -259,7 +263,7 @@ Signed-off-by: Sowmiya Sree Elavalagan <ssreeela@codeaurora.org>
  	u32 hw_mode_id;
  
  	of_id = of_match_device(ath11k_ahb_of_match, &pdev->dev);
-@@ -683,18 +818,7 @@ static int ath11k_ahb_probe(struct platf
+@@ -704,18 +843,7 @@ static int ath11k_ahb_probe(struct platf
  		return -EINVAL;
  	}
  
@@ -279,7 +283,7 @@ Signed-off-by: Sowmiya Sree Elavalagan <ssreeela@codeaurora.org>
  	ret = dma_set_mask_and_coherent(&pdev->dev, DMA_BIT_MASK(32));
  	if (ret) {
  		dev_err(&pdev->dev, "failed to set 32-bit consistent dma\n");
-@@ -713,25 +837,45 @@ static int ath11k_ahb_probe(struct platf
+@@ -734,25 +862,45 @@ static int ath11k_ahb_probe(struct platf
  	ab->pdev = pdev;
  	ab->hw_rev = (enum ath11k_hw_rev)of_id->data;
  	ab->fw_mode = ATH11K_FIRMWARE_MODE_NORMAL;
@@ -340,7 +344,7 @@ Signed-off-by: Sowmiya Sree Elavalagan <ssreeela@codeaurora.org>
  	}
  
  	ret = ath11k_core_pre_init(ab);
-@@ -762,7 +906,7 @@ static int ath11k_ahb_probe(struct platf
+@@ -783,7 +931,7 @@ static int ath11k_ahb_probe(struct platf
  		goto err_ce_free;
  	}
  
@@ -349,7 +353,7 @@ Signed-off-by: Sowmiya Sree Elavalagan <ssreeela@codeaurora.org>
  	if (ret) {
  		ath11k_err(ab, "failed to configure irq: %d\n", ret);
  		goto err_ce_free;
-@@ -817,7 +961,7 @@ static int ath11k_ahb_remove(struct plat
+@@ -838,7 +986,7 @@ static int ath11k_ahb_remove(struct plat
  
  	ath11k_core_deinit(ab);
  qmi_fail:
@@ -371,7 +375,7 @@ Signed-off-by: Sowmiya Sree Elavalagan <ssreeela@codeaurora.org>
  
 --- a/drivers/net/wireless/ath/ath11k/core.c
 +++ b/drivers/net/wireless/ath/ath11k/core.c
-@@ -287,7 +287,57 @@ static const struct ath11k_hw_params ath
+@@ -288,7 +288,57 @@ static const struct ath11k_hw_params ath
  		.reo_dest_ring_map_shift = HAL_IPQ5018_REO_DEST_RING_CTRL_HASH_RING_SHIFT,
  		.ce_fwlog_enable = true,
  		.fwmem_mode_change = false,
@@ -439,7 +443,7 @@ Signed-off-by: Sowmiya Sree Elavalagan <ssreeela@codeaurora.org>
  };
  
  enum ath11k_firmware_mode {
-@@ -794,6 +795,14 @@ struct ath11k_num_vdevs_peers {
+@@ -797,6 +798,14 @@ struct ath11k_num_vdevs_peers {
  	u32 num_peers;
  };
  
@@ -454,7 +458,7 @@ Signed-off-by: Sowmiya Sree Elavalagan <ssreeela@codeaurora.org>
  /* Master structure to hold the hw data which may be used in core module */
  struct ath11k_base {
  	enum ath11k_hw_rev hw_rev;
-@@ -907,6 +916,8 @@ struct ath11k_base {
+@@ -910,6 +919,8 @@ struct ath11k_base {
  	u32 ce_remap_base_addr;
  	atomic_t num_max_allowed;
  	struct ath11k_num_vdevs_peers *num_vdevs_peers;
@@ -475,9 +479,9 @@ Signed-off-by: Sowmiya Sree Elavalagan <ssreeela@codeaurora.org>
  /* SW2TCL(x) R0 ring configuration address */
 --- a/drivers/net/wireless/ath/ath11k/hif.h
 +++ b/drivers/net/wireless/ath/ath11k/hif.h
-@@ -30,6 +30,10 @@ struct ath11k_hif_ops {
- 	void (*ce_irq_disable)(struct ath11k_base *ab);
- 	void (*get_ce_msi_idx)(struct ath11k_base *ab, u32 ce_id, u32 *msi_idx);
+@@ -34,6 +34,10 @@ struct ath11k_hif_ops {
+ 	void (*ssr_notifier_unreg)(struct ath11k_base *ab);
+ #endif
  	u32 (*get_window_offset)(struct ath11k_base *ab, u32 offset);
 +	void (*config_static_window)(struct ath11k_base *ab);
 +	int (*config_irq)(struct ath11k_base *ab);
@@ -486,10 +490,10 @@ Signed-off-by: Sowmiya Sree Elavalagan <ssreeela@codeaurora.org>
  };
  
  static inline void ath11k_hif_ce_irq_enable(struct ath11k_base *ab)
-@@ -143,4 +147,33 @@ static inline void ath11k_get_ce_msi_idx
- 	else
- 		*msi_data_idx = ce_id;
+@@ -165,4 +169,33 @@ static inline void ath11k_hif_ssr_notifi
+ 	ab->hif.ops->ssr_notifier_unreg(ab);
  }
+ #endif
 +
 +static inline void ath11k_hif_config_static_window(struct ath11k_base *ab)
 +{
@@ -1806,7 +1810,7 @@ Signed-off-by: Sowmiya Sree Elavalagan <ssreeela@codeaurora.org>
  #define QMI_WLANFW_BDF_DOWNLOAD_RESP_V01		0x0025
 --- a/drivers/net/wireless/ath/ath11k/debugfs.c
 +++ b/drivers/net/wireless/ath/ath11k/debugfs.c
-@@ -1510,7 +1510,12 @@ int ath11k_debugfs_soc_create(struct ath
+@@ -1514,7 +1514,12 @@ int ath11k_debugfs_soc_create(struct ath
  		return 0;
  
  	if (ab->hif.bus == ATH11K_BUS_AHB) {

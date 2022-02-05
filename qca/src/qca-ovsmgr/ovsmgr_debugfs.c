@@ -42,6 +42,7 @@ static char *port_type[__OVS_VPORT_TYPE_MAX] = {
 static void ovsmgr_debugfs_dp_info_show(struct ovsmgr_dp *nod, struct seq_file *m)
 {
 	struct ovsmgr_dp_port *nodp;
+	uint8_t i = 0;
 
 	seq_printf(m, "Datapath Dev : %s \n", nod->dev->name);
 	seq_printf(m, "datapath instance : %px\n", nod->dp);
@@ -54,6 +55,12 @@ static void ovsmgr_debugfs_dp_info_show(struct ovsmgr_dp *nod, struct seq_file *
 		seq_printf(m, "\tinstance : %px\n", nodp->vport);
 		seq_printf(m, "\tport number : %d\n", nodp->vport_num);
 		seq_printf(m, "\tport type : %s\n", port_type[nodp->vport_type]);
+		for (i = 0; i < OVSMGR_PORT_VLAN_MAX_CNT; i++) {
+			if (nodp->vlan_info[i].vlan.h_vlan_TCI) {
+				seq_printf(m, "\tPort VLAN TCI : %d\n", nodp->vlan_info[i].vlan.h_vlan_TCI);
+				seq_printf(m, "\tPort VLAN ref count : %d\n", nodp->vlan_info[i].ref_cnt);
+			}
+		}
 	}
 }
 

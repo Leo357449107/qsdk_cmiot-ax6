@@ -1,0 +1,52 @@
+Source-Makefile: target/linux/samsung/Makefile
+Target: samsung
+Target-Board: samsung
+Target-Name: Samsung s3c24xx/s5pv210
+Target-Arch: arm
+Target-Arch-Packages: arm_xscale
+Target-Features: 
+Target-Depends: 
+Target-Optimization: -Os -pipe
+CPU-Type: xscale
+Linux-Version: 4.14.254
+Linux-Release: 1
+Linux-Kernel-Arch: arm
+Target-Description:
+	Build firmware images for Samsung s3c24xx/s5pv210 based boards.
+@@
+Default-Packages: base-files libc libgcc busybox dropbear mtd uci opkg netifd fstools uclient-fetch logd urandom-seed urngd dnsmasq iptables ip6tables ppp ppp-mod-pppoe firewall odhcpd-ipv6only odhcp6c kmod-ipt-offload 
+Target: samsung/s5pv210
+Target-Board: samsung
+Target-Name: s5pv210 based boards
+Target-Arch: arm
+Target-Arch-Packages: arm_cortex-a8_neon
+Target-Features: arm_v7 dt fpu gpio
+Target-Depends: 
+Target-Optimization: -Os -pipe
+CPU-Type: cortex-a8+neon
+Linux-Version: 4.14.254
+Linux-Release: 1
+Linux-Kernel-Arch: arm
+Target-Description:
+	Build firmware images for Samsung s5pv210 based boards.
+@@
+Default-Packages: base-files libc libgcc busybox dropbear mtd uci opkg netifd fstools uclient-fetch logd urandom-seed urngd dnsmasq iptables ip6tables ppp ppp-mod-pppoe firewall odhcpd-ipv6only odhcp6c kmod-ipt-offload 
+Target-Profile: Default
+Target-Profile-Priority: 1
+Target-Profile-Name: Default Profile (all drivers)
+Target-Profile-Packages:  
+Target-Profile-Description:
+  Default profile with package set compatible with most boards.
+@@
+
+Target-Profile: DEVICE_tq210
+Target-Profile-Name: TQ210
+Target-Profile-Packages:  
+Target-Profile-hasImageMetadata: 0
+Target-Profile-SupportedDevices: 
+
+Target-Profile-Description:
+Build firmware images for TQ210
+@@
+
+

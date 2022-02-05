@@ -47,9 +47,20 @@
 	INTR_PROP_DESC(QTISECLIB_INT_ID_XPU_NON_SEC, GIC_HIGHEST_SEC_PRIORITY, grp, \
 			GIC_INTR_CFG_EDGE)
 
+#if QTI_9574_PLATFORM
+#define PLAT_QTI_G1S_IRQ_PROPS_ALDER(grp) \
+	INTR_PROP_DESC(QTISECLIB_INT_ID_AGGNOC_NOC_ERROR, GIC_HIGHEST_SEC_PRIORITY, \
+		grp, GIC_INTR_CFG_EDGE), \
+
+#endif
+
+
 /* Array of o be configured by the gic driver */
 static const interrupt_prop_t qti_interrupt_props[] = {
-	PLAT_QTI_G1S_IRQ_PROPS(GICV2_INTR_GROUP0)
+	PLAT_QTI_G1S_IRQ_PROPS(GICV2_INTR_GROUP0),
+#if QTI_9574_PLATFORM
+	PLAT_QTI_G1S_IRQ_PROPS_ALDER(GICV2_INTR_GROUP0)
+#endif
 };
 
 static unsigned int target_mask_array[PLATFORM_CORE_COUNT];

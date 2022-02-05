@@ -763,6 +763,13 @@ static int setup_reloc(void)
 	return 0;
 }
 
+#ifdef CONFIG_OF_BOARD_FIXUP
+static int fix_fdt(void)
+{
+	return board_fix_fdt((void *)gd->fdt_blob);
+}
+#endif
+
 /* ARM calls relocate_code from its crt0.S */
 #if !defined(CONFIG_ARM) && !defined(CONFIG_SANDBOX)
 
@@ -1026,6 +1033,9 @@ static init_fnc_t init_sequence_f[] = {
 	display_new_sp,
 #ifdef CONFIG_SYS_EXTBDINFO
 	setup_board_extra,
+#endif
+#ifdef CONFIG_OF_BOARD_FIXUP
+	fix_fdt,
 #endif
 	INIT_FUNC_WATCHDOG_RESET
 	reloc_fdt,

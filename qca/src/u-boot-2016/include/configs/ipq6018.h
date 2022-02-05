@@ -291,6 +291,19 @@ extern loff_t board_env_size;
 
 #ifdef CONFIG_OF_BOARD_SETUP
 #define DLOAD_DISABLE		0x1
+
+#ifdef CONFIG_IPQ_RUNTIME_FAILSAFE
+#define CONFIG_HW_WATCHDOG
+#define IPQ_FS_NONHLOS_BIT              (1 << 9)
+#define IPQ_FS_HLOS_BIT                 (1 << 10)
+#endif
+
+#ifdef CONFIG_IPQ_RUNTIME_FAILSAFE_DEBUG
+#define fs_debug(fmt, args...) printf(fmt, ##args);
+#else
+#define fs_debug(fmt, args...)
+#endif
+
 /*
  * Below Configs need to be updated after enabling reset_crashdump
  * Included now to avoid build failure

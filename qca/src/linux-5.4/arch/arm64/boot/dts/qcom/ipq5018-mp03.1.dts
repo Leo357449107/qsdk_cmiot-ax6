@@ -35,7 +35,7 @@
 
 	chosen {
 		bootargs = "console=ttyMSM0,115200,n8 rw init=/init";
-		bootargs-append = " swiotlb=1 coherent_pool=2M clk_ignore_unused";
+		bootargs-append = " swiotlb=1 coherent_pool=2M";
 		stdout-path = "serial0";
 	};
 
@@ -88,11 +88,11 @@
 	 * | QDSS   | 0x4C800000   |          1MB            |
 	 * +--------+--------------+-------------------------+
 	 * |        |              |                         |
-	 * |QCN9000 |  0x4C900000  |          25MB           |
+	 * |QCN9000 |  0x4C900000  |          17MB           |
 	 * |        |              |                         |
 	 * +--------+--------------+-------------------------+
 	 * |        |              |                         |
-	 * |  MHI1  |  0x4E200000  |          16MB           |
+	 * |  MHI1  |  0x4DA00000  |           9MB           |
 	 * |        |              |                         |
 	 * +--------+--------------+-------------------------+
 	 * |                                                 |
@@ -117,14 +117,16 @@
 
 		qcn9000_pcie0: qcn9000_pcie0@4c900000 {
 			no-map;
-			reg = <0x0 0x4C900000 0x0 0x01900000>;
+			reg = <0x0 0x4C900000 0x0 0x01100000>;
 		};
 
-		mhi_region1: dma_pool1@4e200000 {
+	#if defined(__CNSS2__)
+		mhi_region1: dma_pool1@4da00000 {
 			compatible = "shared-dma-pool";
 			no-map;
-			reg = <0x0 0x4e200000 0x0 0x01000000>;
+			reg = <0x0 0x4DA00000 0x0 0x00900000>;
 		};
+	#endif
 	#elif __IPQ_MEM_PROFILE_512_MB__
 	/*                      512 MB Profile
 	 * +=========+==============+========================+
@@ -178,7 +180,7 @@
 	 * |        |              |                         |
 	 * +--------+--------------+-------------------------+
 	 * |        |              |                         |
-	 * |  MHI1  |  0x4F200000  |          16MB           |
+	 * |  MHI1  |  0x4F200000  |           9MB           |
 	 * |        |              |                         |
 	 * +--------+--------------+-------------------------+
 	 * |                                                 |
@@ -211,11 +213,13 @@
 			reg = <0x0 0x4CC00000 0x0 0x02600000>;
 		};
 
+	#if defined(__CNSS2__)
 		mhi_region1: dma_pool1@4f200000 {
 			compatible = "shared-dma-pool";
 			no-map;
-			reg = <0x0 0x4f200000 0x0 0x01000000>;
+			reg = <0x0 0x4f200000 0x0 0x00900000>;
 		};
+	#endif
 	#else
 	/*                      1G Profile
 	 * +=========+==============+========================+
@@ -269,7 +273,7 @@
 	 * |        |              |                         |
 	 * +--------+--------------+-------------------------+
 	 * |        |              |                         |
-	 * |  MHI1  |  0x50100000  |          16MB           |
+	 * |  MHI1  |  0x50100000  |           9MB           |
 	 * |        |              |                         |
 	 * +--------+--------------+-------------------------+
 	 * |                                                 |
@@ -302,11 +306,13 @@
 			reg = <0x0 0x4CC00000 0x0 0x03500000>;
 		};
 
+	#if defined(__CNSS2__)
 		mhi_region1: dma_pool1@50100000 {
 			compatible = "shared-dma-pool";
 			no-map;
-			reg = <0x0 0x50100000 0x0 0x01000000>;
+			reg = <0x0 0x50100000 0x0 0x00900000>;
 		};
+	#endif
 	#endif
 	};
 
@@ -489,6 +495,12 @@
 		rpm_etm0 {
 			status = "disabled";
 		};
+
+		pcm: pcm@0xA3C0000{
+			pinctrl-0 = <&audio_pins>;
+			pinctrl-names = "default";
+			status = "disabled";
+		};
 	};
 
 	qcom,test@0 {
@@ -592,6 +604,82 @@
 			bias-disable;
 		};
 	};
+
+	button_pins: button_pins {
+		wps_button {
+			pins = "gpio38";
+			function = "gpio";
+			drive-strength = <8>;
+			bias-pull-up;
+		};
+	};
+
+	audio_pins: audio_pinmux {
+		mux_1 {
+			pins = "gpio24";
+			function = "audio_rxbclk";
+			drive-strength = <8>;
+			bias-pull-down;
+		};
+
+		mux_2 {
+			pins = "gpio25";
+			function = "audio_rxfsync";
+			drive-strength = <8>;
+			bias-pull-down;
+		};
+
+		mux_3 {
+			pins = "gpio26";
+			function = "audio_rxd";
+			drive-strength = <8>;
+			bias-pull-down;
+		};
+
+		mux_4 {
+			pins = "gpio27";
+			function = "audio_txmclk";
+			drive-strength = <8>;
+			bias-pull-down;
+		};
+
+		mux_5 {
+			pins = "gpio28";
+			function = "audio_txbclk";
+			drive-strength = <8>;
+			bias-pull-down;
+		};
+
+		mux_6 {
+			pins = "gpio29";
+			function = "audio_txfsync";
+			drive-strength = <8>;
+			bias-pull-down;
+		};
+
+		mux_7 {
+			pins = "gpio30";
+			function = "audio_txd";
+			drive-strength = <8>;
+			bias-pull-down;
+		};
+	};
+};
+
+&soc {
+	gpio_keys {
+		compatible = "gpio-keys";
+		pinctrl-0 = <&button_pins>;
+		pinctrl-names = "default";
+
+		button@1 {
+			label = "wps";
+			linux,code = <KEY_WPS_BUTTON>;
+			gpios = <&tlmm 38 GPIO_ACTIVE_LOW>;
+			linux,input-type = <1>;
+			debounce-interval = <60>;
+		};
+	};
 };
 
 &usb3 {
@@ -678,8 +766,9 @@
 		qrtr_instance_id = <0x20>;
 		#address-cells = <0x2>;
 		#size-cells = <0x2>;
+#if defined(__CNSS2__)
 		memory-region = <&mhi_region1>;
-#if !defined(__CNSS2__)
+#else
 		base-addr = <0x4CC00000>;
 		m3-dump-addr = <0x4E000000>;
 		etr-addr = <0x4E100000>;
@@ -711,25 +800,26 @@
 	 * +=========+==============+=========+
 	 * |  Region | Start Offset |   Size  |
 	 * +---------+--------------+---------+
-	 * | HREMOTE |  0x4C900000  |   15MB  |
+	 * | HREMOTE |  0x4C900000  |   11MB  |
 	 * +---------+--------------+---------+
-	 * | M3 Dump |  0x4D800000  |   1MB   |
+	 * | M3 Dump |  0x4D400000  |   1MB   |
 	 * +---------+--------------+---------+
-	 * |   ETR   |  0x4D900000  |   1MB   |
+	 * |   ETR   |  0x4D500000  |   1MB   |
 	 * +---------+--------------+---------+
-	 * | Pageable|  0x4DA00000  |   8MB   |
+	 * | Pageable|  0x4D600000  |   4MB   |
 	 * +==================================+
 	 */
 	base-addr = <0x4C900000>;
-	m3-dump-addr = <0x4D800000>;
-	etr-addr = <0x4D900000>;
+	m3-dump-addr = <0x4D400000>;
+	etr-addr = <0x4D500000>;
 	caldb-addr = <0>;
-	pageable-addr = <0x4DA00000>;
+	pageable-addr = <0x4D600000>;
 	caldb-size = <0>;
-	hremote-size = <0xF00000>;
+	hremote-size = <0xB00000>;
 	tgt-mem-mode = <0x2>;
+	pageable-size = <0x400000>;
 #elif __IPQ_MEM_PROFILE_512_MB__
-	/* QCN9000 tgt-mem-mode=1 layout - 30MB
+	/* QCN9000 tgt-mem-mode=1 layout - 38MB
 	 * +=========+==============+=========+
 	 * |  Region | Start Offset |   Size  |
 	 * +---------+--------------+---------+
@@ -752,8 +842,9 @@
 	caldb-size = <0x800000>;
 	hremote-size = <0x1400000>;
 	tgt-mem-mode = <0x1>;
+	pageable-size = <0x800000>;
 #else
-	/* QCN9000 tgt-mem-mode=0 layout - 45MB
+	/* QCN9000 tgt-mem-mode=0 layout - 53MB
 	 * +=========+==============+=========+
 	 * |  Region | Start Offset |   Size  |
 	 * +---------+--------------+---------+
@@ -776,7 +867,7 @@
 	hremote-size = <0x2300000>;
 	caldb-size = <0x800000>;
 	tgt-mem-mode = <0x0>;
-#endif
 	pageable-size = <0x800000>;
-        status = "ok";
+#endif
+	status = "ok";
 };

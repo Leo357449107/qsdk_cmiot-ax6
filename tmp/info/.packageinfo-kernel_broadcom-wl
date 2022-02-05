@@ -1,0 +1,98 @@
+Source-Makefile: package/kernel/broadcom-wl/Makefile
+
+Package: kmod-brcm-wl
+Submenu: Proprietary BCM43xx WiFi driver
+Submenu-Depends: (TARGET_brcm47xx||TARGET_brcm63xx)
+Version: <LINUX_VERSION>+5.10.56.27.3-9
+Depends: @(TARGET_brcm47xx||TARGET_brcm63xx) +wireless-tools
+Conflicts: 
+Menu-Depends: 
+Provides: 
+Section: kernel
+Category: Kernel modules
+Title: Kernel driver for BCM43xx chipsets (normal version)
+Maintainer: 
+Source: broadcom-wl-5.10.56.27.3_.tar.bz2
+Type: ipkg
+Description:  This package contains the proprietary wireless driver for the Broadcom 
+ BCM43xx chipset.
+
+@@
+
+Package: kmod-brcm-wl-mini
+Submenu: Proprietary BCM43xx WiFi driver
+Submenu-Depends: (TARGET_brcm47xx||TARGET_brcm63xx)
+Version: <LINUX_VERSION>+5.10.56.27.3-9
+Depends: @(TARGET_brcm47xx||TARGET_brcm63xx) +wireless-tools
+Conflicts: 
+Menu-Depends: 
+Provides: 
+Section: kernel
+Category: Kernel modules
+Title: Kernel driver for BCM43xx chipsets (Legacy version)
+Maintainer: 
+Source: broadcom-wl-5.10.56.27.3_.tar.bz2
+Type: ipkg
+Description:  This package contains the proprietary wireless driver for the Broadcom 
+ BCM43xx chipset.
+
+@@
+
+Package: wlc
+Submenu: Proprietary BCM43xx WiFi driver
+Submenu-Depends: (TARGET_brcm47xx||TARGET_brcm63xx)
+Version: 5.10.56.27.3-9
+Depends: +libc +GCC_LIBSSP:libssp +USE_GLIBC:librt +USE_GLIBC:libpthread @(PACKAGE_kmod-brcm-wl||PACKAGE_kmod-brcm-wl-mini)
+Conflicts: 
+Menu-Depends: 
+Provides: 
+Section: kernel
+Category: Kernel modules
+Title: wl driver setup utility
+Maintainer: 
+Source: broadcom-wl-5.10.56.27.3_.tar.bz2
+Type: ipkg
+Description:  This package contains an utility for initializing the proprietary Broadcom 
+ wl driver.
+
+@@
+
+Package: wl
+Submenu: Proprietary BCM43xx WiFi driver
+Submenu-Depends: (TARGET_brcm47xx||TARGET_brcm63xx)
+Version: 5.10.56.27.3-9
+Depends: +libc +GCC_LIBSSP:libssp +USE_GLIBC:librt +USE_GLIBC:libpthread @(PACKAGE_kmod-brcm-wl||PACKAGE_kmod-brcm-wl-mini)
+Conflicts: 
+Menu-Depends: 
+Provides: 
+Section: kernel
+Category: Kernel modules
+Title: Proprietary Broadcom wl driver config utility
+Maintainer: 
+Source: broadcom-wl-5.10.56.27.3_.tar.bz2
+Type: ipkg
+Description:  This package contains the proprietary utility (wl) for configuring the 
+ proprietary Broadcom wl driver.
+
+@@
+
+Package: nas
+Submenu: Proprietary BCM43xx WiFi driver
+Submenu-Depends: (TARGET_brcm47xx||TARGET_brcm63xx)
+Version: 5.10.56.27.3-9
+Depends: +libc +GCC_LIBSSP:libssp +USE_GLIBC:librt +USE_GLIBC:libpthread @(PACKAGE_kmod-brcm-wl||PACKAGE_kmod-brcm-wl-mini)
+Conflicts: 
+Menu-Depends: 
+Provides: 
+Section: kernel
+Category: Kernel modules
+Title: Proprietary Broadcom WPA/WPA2 authenticator
+Maintainer: 
+Source: broadcom-wl-5.10.56.27.3_.tar.bz2
+Type: ipkg
+Description:  This package contains the proprietary WPA/WPA2 authenticator (nas) for the 
+ proprietary Broadcom wl driver.
+
+@@
+
+

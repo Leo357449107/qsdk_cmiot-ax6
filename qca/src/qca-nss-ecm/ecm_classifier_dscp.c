@@ -208,10 +208,12 @@ static void ecm_classifier_dscp_fill_info(struct ecm_classifier_dscp_instance *c
 {
 	if (sender == ECM_TRACKER_SENDER_TYPE_SRC) {
 		cdscpi->process_response.flow_qos_tag = skb->priority;
+		cdscpi->process_response.flow_mark = skb->mark;
 		cdscpi->process_response.flow_dscp = ip_hdr->ds >> XT_DSCP_SHIFT;
 		cdscpi->packet_seen[ECM_CONN_DIR_FLOW] = true;
 	} else {
 		cdscpi->process_response.return_qos_tag = skb->priority;
+		cdscpi->process_response.return_mark = skb->mark;
 		cdscpi->process_response.return_dscp = ip_hdr->ds >> XT_DSCP_SHIFT;
 		cdscpi->packet_seen[ECM_CONN_DIR_RETURN] = true;
 	}
@@ -358,11 +360,15 @@ static void ecm_classifier_dscp_process(struct ecm_classifier_instance *aci, ecm
 				((sender == ECM_TRACKER_SENDER_TYPE_DEST) && (IP_CT_DIR_REPLY == CTINFO2DIR(ctinfo)))) {
 				cdscpi->process_response.flow_qos_tag = dscpcte->flow_priority;
 				cdscpi->process_response.return_qos_tag = dscpcte->reply_priority;
+				cdscpi->process_response.flow_mark = dscpcte->flow_mark;
+				cdscpi->process_response.return_mark = dscpcte->reply_mark;
 				cdscpi->process_response.flow_dscp = dscpcte->flow_dscp;
 				cdscpi->process_response.return_dscp = dscpcte->reply_dscp;
 			} else {
 				cdscpi->process_response.flow_qos_tag = dscpcte->reply_priority;
 				cdscpi->process_response.return_qos_tag = dscpcte->flow_priority;
+				cdscpi->process_response.flow_mark = dscpcte->reply_mark;
+				cdscpi->process_response.return_mark = dscpcte->flow_mark;
 				cdscpi->process_response.flow_dscp = dscpcte->reply_dscp;
 				cdscpi->process_response.return_dscp = dscpcte->flow_dscp;
 			}
@@ -448,6 +454,7 @@ static void ecm_classifier_dscp_process(struct ecm_classifier_instance *aci, ecm
 		 */
 		if (sender == ECM_TRACKER_SENDER_TYPE_SRC) {
 			cdscpi->process_response.flow_qos_tag = skb->priority;
+			cdscpi->process_response.flow_mark = skb->mark;
 			cdscpi->process_response.flow_dscp = ip_hdr->ds >> XT_DSCP_SHIFT;
 
 			/*
@@ -459,12 +466,17 @@ static void ecm_classifier_dscp_process(struct ecm_classifier_instance *aci, ecm
 				cdscpi->process_response.return_qos_tag = skb->priority;
 			}
 
+			if (cdscpi->process_response.return_mark == 0) {
+				cdscpi->process_response.return_mark = skb->mark;
+			}
+
 			if (cdscpi->process_response.return_dscp == 0) {
 				cdscpi->process_response.return_dscp = ip_hdr->ds >> XT_DSCP_SHIFT;
 			}
 
 		} else {
 			cdscpi->process_response.return_qos_tag = skb->priority;
+			cdscpi->process_response.return_mark = skb->mark;
 			cdscpi->process_response.return_dscp = ip_hdr->ds >> XT_DSCP_SHIFT;
 
 			/*
@@ -476,6 +488,10 @@ static void ecm_classifier_dscp_process(struct ecm_classifier_instance *aci, ecm
 				cdscpi->process_response.flow_qos_tag = skb->priority;
 			}
 
+			if (cdscpi->process_response.flow_mark == 0) {
+				cdscpi->process_response.flow_mark = skb->mark;
+			}
+
 			if (cdscpi->process_response.flow_dscp == 0) {
 				cdscpi->process_response.flow_dscp = ip_hdr->ds >> XT_DSCP_SHIFT;
 			}
@@ -483,6 +499,7 @@ static void ecm_classifier_dscp_process(struct ecm_classifier_instance *aci, ecm
 	}
 done:
 	cdscpi->process_response.process_actions |= ECM_CLASSIFIER_PROCESS_ACTION_QOS_TAG;
+	cdscpi->process_response.process_actions |= ECM_CLASSIFIER_PROCESS_ACTION_MARK;
 
 #ifdef ECM_CLASSIFIER_DSCP_IGS
 	/*

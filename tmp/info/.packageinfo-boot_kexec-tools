@@ -1,0 +1,64 @@
+Source-Makefile: package/boot/kexec-tools/Makefile
+
+Package: kexec-tools
+Version: 2.0.16-2
+Depends: +libc +GCC_LIBSSP:libssp +USE_GLIBC:librt +USE_GLIBC:libpthread +kexec
+Conflicts: 
+Menu-Depends: 
+Provides: 
+Section: utils
+Category: Utilities
+Repository: base
+Title: kexec-tools transition meta package
+Maintainer: Florian Fainelli <florian@openwrt.org>
+Source: kexec-tools-2.0.16.tar.xz
+Type: ipkg
+Description:  kexec is a set of system calls that allows you to load
+ another kernel from the currently executing Linux kernel.
+ The kexec utility allows to load and boot another kernel.
+http://kernel.org/pub/linux/kernel/people/horms/kexec-tools/
+Florian Fainelli <florian@openwrt.org>
+@@
+
+Package: kexec
+Version: 2.0.16-2
+Depends: +libc +GCC_LIBSSP:libssp +USE_GLIBC:librt +USE_GLIBC:libpthread @(armeb||arm||i386||x86_64||powerpc64||mipsel||mips) +KEXEC_ZLIB:zlib +KEXEC_LZMA:liblzma @KERNEL_KEXEC
+Conflicts: 
+Menu-Depends: 
+Provides: 
+Section: utils
+Category: Utilities
+Repository: base
+Title: Kernel boots kernel
+Maintainer: Florian Fainelli <florian@openwrt.org>
+Source: kexec-tools-2.0.16.tar.xz
+Type: ipkg
+Description:  The kexec utility allows to load and boot another kernel.
+http://kernel.org/pub/linux/kernel/people/horms/kexec-tools/
+Florian Fainelli <florian@openwrt.org>
+@@
+Config:
+
+	source "package/boot/kexec-tools/Config.in"
+@@
+
+Package: kdump
+Version: 2.0.16-2
+Depends: +libc +GCC_LIBSSP:libssp +USE_GLIBC:librt +USE_GLIBC:libpthread +kexec @(i386||x86_64||arm) @KERNEL_CRASH_DUMP
+Conflicts: 
+Menu-Depends: 
+Provides: 
+Section: utils
+Category: Utilities
+Repository: base
+Title: Kernel crash analysis
+Maintainer: Florian Fainelli <florian@openwrt.org>
+Source: kexec-tools-2.0.16.tar.xz
+Type: ipkg
+Description:  The kdump package allows to automatically boot into a
+ special kernel for analyzing kernel crashes using kdump.
+http://kernel.org/pub/linux/kernel/people/horms/kexec-tools/
+Florian Fainelli <florian@openwrt.org>
+@@
+
+

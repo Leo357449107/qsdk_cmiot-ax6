@@ -1,0 +1,160 @@
+Source-Makefile: package/libs/openssl/Makefile
+
+Package: libopenssl
+Menu: 1
+Submenu: SSL
+Version: 1.1.1l-1
+ABIVersion: 1.1
+Depends: +libc +GCC_LIBSSP:libssp +USE_GLIBC:librt +USE_GLIBC:libpthread +OPENSSL_WITH_COMPRESSION:zlib +OPENSSL_ENGINE_BUILTIN_AFALG:kmod-crypto-user +OPENSSL_ENGINE_BUILTIN_DEVCRYPTO:kmod-cryptodev +OPENSSL_ENGINE_BUILTIN_PADLOCK:kmod-crypto-hw-padlock
+Conflicts: 
+Menu-Depends: 
+Provides: 
+Section: libs
+Category: Libraries
+Repository: base
+Title: Open source SSL toolkit (libraries)
+Maintainer: Eneas U de Queiroz <cotequeiroz@gmail.com>
+Source: openssl-1.1.1l.tar.gz
+License: OpenSSL
+LicenseFiles: LICENSE
+Type: ipkg
+Description: The OpenSSL Project is a collaborative effort to develop a robust,
+commercial-grade, full-featured, and Open Source toolkit implementing the
+Transport Layer Security (TLS) protocol as well as a full-strength
+general-purpose cryptography library.
+This package contains the OpenSSL shared libraries, needed by other programs.
+http://www.openssl.org/
+Eneas U de Queiroz <cotequeiroz@gmail.com>
+@@
+Config:
+
+source "package/libs/openssl/Config.in"
+@@
+
+Package: libopenssl-conf
+Submenu: SSL
+Version: 1.1.1l-1
+Depends: +libc +GCC_LIBSSP:libssp +USE_GLIBC:librt +USE_GLIBC:libpthread libopenssl
+Conflicts: 
+Menu-Depends: 
+Provides: 
+Section: libs
+Category: Libraries
+Repository: base
+Title: /etc/ssl/openssl.cnf config file
+Maintainer: Eneas U de Queiroz <cotequeiroz@gmail.com>
+Source: openssl-1.1.1l.tar.gz
+License: OpenSSL
+LicenseFiles: LICENSE
+Type: ipkg
+Description: The OpenSSL Project is a collaborative effort to develop a robust,
+commercial-grade, full-featured, and Open Source toolkit implementing the
+Transport Layer Security (TLS) protocol as well as a full-strength
+general-purpose cryptography library.
+This package installs the OpenSSL configuration file /etc/ssl/openssl.cnf.
+http://www.openssl.org/
+Eneas U de Queiroz <cotequeiroz@gmail.com>
+@@
+
+Package: libopenssl-afalg
+Submenu: SSL
+Version: 1.1.1l-1
+Depends: +libc +GCC_LIBSSP:libssp +USE_GLIBC:librt +USE_GLIBC:libpthread libopenssl @OPENSSL_ENGINE @KERNEL_AIO +PACKAGE_libopenssl-afalg:kmod-crypto-user +libopenssl-conf @!OPENSSL_ENGINE_BUILTIN
+Conflicts: 
+Menu-Depends: 
+Provides: 
+Section: libs
+Category: Libraries
+Repository: base
+Title: AFALG hardware acceleration engine
+Maintainer: Eneas U de Queiroz <cotequeiroz@gmail.com>
+Source: openssl-1.1.1l.tar.gz
+License: OpenSSL
+LicenseFiles: LICENSE
+Type: ipkg
+Description: This package adds an engine that enables hardware acceleration
+through the AF_ALG kernel interface.
+To use it, you need to configure the engine in /etc/ssl/openssl.cnf
+See https://www.openssl.org/docs/man1.1.1/man5/config.html#Engine-Configuration-Module
+and https://openwrt.org/docs/techref/hardware/cryptographic.hardware.accelerators
+The engine_id is "afalg"
+http://www.openssl.org/
+Eneas U de Queiroz <cotequeiroz@gmail.com>
+@@
+
+Package: libopenssl-devcrypto
+Submenu: SSL
+Version: 1.1.1l-1
+Depends: +libc +GCC_LIBSSP:libssp +USE_GLIBC:librt +USE_GLIBC:libpthread libopenssl @OPENSSL_ENGINE +PACKAGE_libopenssl-devcrypto:kmod-cryptodev +libopenssl-conf @!OPENSSL_ENGINE_BUILTIN
+Conflicts: 
+Menu-Depends: 
+Provides: 
+Section: libs
+Category: Libraries
+Repository: base
+Title: /dev/crypto hardware acceleration engine
+Maintainer: Eneas U de Queiroz <cotequeiroz@gmail.com>
+Source: openssl-1.1.1l.tar.gz
+License: OpenSSL
+LicenseFiles: LICENSE
+Type: ipkg
+Description: This package adds an engine that enables hardware acceleration
+through the /dev/crypto kernel interface.
+To use it, you need to configure the engine in /etc/ssl/openssl.cnf
+See https://www.openssl.org/docs/man1.1.1/man5/config.html#Engine-Configuration-Module
+and https://openwrt.org/docs/techref/hardware/cryptographic.hardware.accelerators
+The engine_id is "devcrypto"
+http://www.openssl.org/
+Eneas U de Queiroz <cotequeiroz@gmail.com>
+@@
+
+Package: libopenssl-padlock
+Submenu: SSL
+Version: 1.1.1l-1
+Depends: +libc +GCC_LIBSSP:libssp +USE_GLIBC:librt +USE_GLIBC:libpthread libopenssl @OPENSSL_ENGINE @TARGET_x86 +PACKAGE_libopenssl-padlock:kmod-crypto-hw-padlock +libopenssl-conf @!OPENSSL_ENGINE_BUILTIN
+Conflicts: 
+Menu-Depends: 
+Provides: 
+Section: libs
+Category: Libraries
+Repository: base
+Title: VIA Padlock hardware acceleration engine
+Maintainer: Eneas U de Queiroz <cotequeiroz@gmail.com>
+Source: openssl-1.1.1l.tar.gz
+License: OpenSSL
+LicenseFiles: LICENSE
+Type: ipkg
+Description: This package adds an engine that enables VIA Padlock hardware acceleration.
+To use it, you need to configure it in /etc/ssl/openssl.cnf.
+See https://www.openssl.org/docs/man1.1.1/man5/config.html#Engine-Configuration-Module
+and https://openwrt.org/docs/techref/hardware/cryptographic.hardware.accelerators
+The engine_id is "padlock"
+http://www.openssl.org/
+Eneas U de Queiroz <cotequeiroz@gmail.com>
+@@
+
+Package: openssl-util
+Version: 1.1.1l-1
+Depends: +libc +GCC_LIBSSP:libssp +USE_GLIBC:librt +USE_GLIBC:libpthread +libopenssl +libopenssl-conf
+Conflicts: 
+Menu-Depends: 
+Provides: 
+Section: utils
+Category: Utilities
+Repository: base
+Title: Open source SSL toolkit (utility)
+Maintainer: Eneas U de Queiroz <cotequeiroz@gmail.com>
+Source: openssl-1.1.1l.tar.gz
+License: OpenSSL
+LicenseFiles: LICENSE
+Type: ipkg
+Description: The OpenSSL Project is a collaborative effort to develop a robust,
+commercial-grade, full-featured, and Open Source toolkit implementing the
+Transport Layer Security (TLS) protocol as well as a full-strength
+general-purpose cryptography library.
+This package contains the OpenSSL command-line utility.
+http://www.openssl.org/
+Eneas U de Queiroz <cotequeiroz@gmail.com>
+@@
+
+

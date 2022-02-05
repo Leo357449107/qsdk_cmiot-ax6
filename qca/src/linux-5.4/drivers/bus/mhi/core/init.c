@@ -23,13 +23,14 @@
 static DEFINE_IDA(mhi_controller_ida);
 
 const char * const mhi_ee_str[MHI_EE_MAX] = {
-	[MHI_EE_PBL] = "PBL",
-	[MHI_EE_SBL] = "SBL",
-	[MHI_EE_AMSS] = "AMSS",
-	[MHI_EE_RDDM] = "RDDM",
-	[MHI_EE_WFW] = "WFW",
-	[MHI_EE_PTHRU] = "PASS THRU",
-	[MHI_EE_EDL] = "EDL",
+	[MHI_EE_PBL] = "PRIMARY BOOTLOADER",
+	[MHI_EE_SBL] = "SECONDARY BOOTLOADER",
+	[MHI_EE_AMSS] = "MISSION MODE",
+	[MHI_EE_RDDM] = "RAMDUMP DOWNLOAD MODE",
+	[MHI_EE_WFW] = "WLAN FIRMWARE",
+	[MHI_EE_PTHRU] = "PASS THROUGH",
+	[MHI_EE_EDL] = "EMERGENCY DOWNLOAD",
+	[MHI_EE_FP] = "FLASH PROGRAMMER",
 	[MHI_EE_DISABLE_TRANSITION] = "DISABLE",
 	[MHI_EE_NOT_SUPPORTED] = "NOT SUPPORTED",
 };
@@ -38,8 +39,9 @@ const char * const dev_state_tran_str[DEV_ST_TRANSITION_MAX] = {
 	[DEV_ST_TRANSITION_PBL] = "PBL",
 	[DEV_ST_TRANSITION_READY] = "READY",
 	[DEV_ST_TRANSITION_SBL] = "SBL",
-	[DEV_ST_TRANSITION_MISSION_MODE] = "MISSION_MODE",
-	[DEV_ST_TRANSITION_SYS_ERR] = "SYS_ERR",
+	[DEV_ST_TRANSITION_MISSION_MODE] = "MISSION MODE",
+	[DEV_ST_TRANSITION_FP] = "FLASH PROGRAMMER",
+	[DEV_ST_TRANSITION_SYS_ERR] = "SYS ERROR",
 	[DEV_ST_TRANSITION_DISABLE] = "DISABLE",
 };
 
@@ -50,24 +52,24 @@ const char * const mhi_state_str[MHI_STATE_MAX] = {
 	[MHI_STATE_M1] = "M1",
 	[MHI_STATE_M2] = "M2",
 	[MHI_STATE_M3] = "M3",
-	[MHI_STATE_M3_FAST] = "M3_FAST",
+	[MHI_STATE_M3_FAST] = "M3 FAST",
 	[MHI_STATE_BHI] = "BHI",
-	[MHI_STATE_SYS_ERR] = "SYS_ERR",
+	[MHI_STATE_SYS_ERR] = "SYS ERROR",
 };
 
 static const char * const mhi_pm_state_str[] = {
 	[MHI_PM_STATE_DISABLE] = "DISABLE",
-	[MHI_PM_STATE_POR] = "POR",
+	[MHI_PM_STATE_POR] = "POWER ON RESET",
 	[MHI_PM_STATE_M0] = "M0",
 	[MHI_PM_STATE_M2] = "M2",
 	[MHI_PM_STATE_M3_ENTER] = "M?->M3",
 	[MHI_PM_STATE_M3] = "M3",
 	[MHI_PM_STATE_M3_EXIT] = "M3->M0",
-	[MHI_PM_STATE_FW_DL_ERR] = "FW DL Error",
-	[MHI_PM_STATE_SYS_ERR_DETECT] = "SYS_ERR Detect",
-	[MHI_PM_STATE_SYS_ERR_PROCESS] = "SYS_ERR Process",
+	[MHI_PM_STATE_FW_DL_ERR] = "Firmware Download Error",
+	[MHI_PM_STATE_SYS_ERR_DETECT] = "SYS ERROR Detect",
+	[MHI_PM_STATE_SYS_ERR_PROCESS] = "SYS ERROR Process",
 	[MHI_PM_STATE_SHUTDOWN_PROCESS] = "SHUTDOWN Process",
-	[MHI_PM_STATE_LD_ERR_FATAL_DETECT] = "LD or Error Fatal Detect",
+	[MHI_PM_STATE_LD_ERR_FATAL_DETECT] = "Linkdown or Error Fatal Detect",
 };
 
 const char *to_mhi_pm_state_str(enum mhi_pm_state state)
@@ -504,6 +506,7 @@ int mhi_init_mmio(struct mhi_controller *mhi_cntrl)
 
 	/* Setup wake db */
 	mhi_cntrl->wake_db = base + val + (8 * MHI_DEV_WAKE_DB);
+	mhi_cntrl->edl_db = base + val + (8 * MHI_EDL_DB);
 	mhi_write_reg(mhi_cntrl, mhi_cntrl->wake_db, 4, 0);
 	mhi_write_reg(mhi_cntrl, mhi_cntrl->wake_db, 0, 0);
 	mhi_cntrl->wake_set = false;
@@ -979,6 +982,16 @@ int mhi_register_controller(struct mhi_controller *mhi_cntrl,
 		dev_err(mhi_cntrl->cntrl_dev, "mhi coherent pool is not reserved");
 	}
 
+	if (of_find_property(mhi_cntrl->cntrl_dev->of_node,
+			"qti,disable-rddm-prealloc", NULL)) {
+		mhi_cntrl->disable_rddm_prealloc = 1;
+
+		ret = of_property_read_u32(mhi_cntrl->cntrl_dev->of_node,
+			   "qti,rddm-seg-len", &mhi_cntrl->rddm_seg_len);
+		if (ret)
+			dev_err(mhi_cntrl->cntrl_dev, "Failed to read rddm segment len \n");
+	}
+
 	mhi_dev->dev_type = MHI_DEVICE_CONTROLLER;
 	mhi_dev->mhi_cntrl = mhi_cntrl;
 	dev_set_name(&mhi_dev->dev, "mhi%d", mhi_cntrl->index);
@@ -1075,8 +1088,10 @@ int mhi_prepare_for_power_up(struct mhi_controller *mhi_cntrl)
 	 * Allocate RDDM table if specified, this table is for debugging purpose
 	 */
 	if (mhi_cntrl->rddm_size) {
-		mhi_alloc_bhie_table(mhi_cntrl, &mhi_cntrl->rddm_image,
-				     mhi_cntrl->rddm_size, false);
+		if (!mhi_cntrl->disable_rddm_prealloc) {
+			mhi_alloc_bhie_table(mhi_cntrl, &mhi_cntrl->rddm_image,
+					     mhi_cntrl->rddm_size, false);
+		}
 
 		/*
 		 * This controller supports RDDM, so we need to manually clear

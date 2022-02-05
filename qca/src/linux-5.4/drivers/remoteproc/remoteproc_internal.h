@@ -24,10 +24,6 @@ struct rproc_debug_trace {
 	struct rproc_mem_entry trace_mem;
 };
 
-struct notif_data {
-	struct platform_device *pdev;
-};
-
 /* from remoteproc_core.c */
 void rproc_release(struct kref *kref);
 irqreturn_t rproc_vq_interrupt(struct rproc *rproc, int vq_id);

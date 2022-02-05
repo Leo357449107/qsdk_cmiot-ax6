@@ -11,7 +11,7 @@
 OUTPUT_FORMAT(PLATFORM_LINKER_FORMAT)
 OUTPUT_ARCH(PLATFORM_LINKER_ARCH)
 ENTRY(bl31_entrypoint)
-#if QTI_6018_PLATFORM || QTI_5018_PLATFORM
+#if QTI_6018_PLATFORM || QTI_5018_PLATFORM || QTI_9574_PLATFORM
 ENTRY(bl31_entrypoint_qti)
 #endif
 
@@ -26,7 +26,7 @@ MEMORY {
 
 SECTIONS
 {
-#if QTI_6018_PLATFORM
+#if QTI_6018_PLATFORM || QTI_9574_PLATFORM
 
     shared_imem_ro (QTI_SHARED_IMEM_RO_BASE) : {
 	   . = ALIGN(PAGE_SIZE);
@@ -321,7 +321,7 @@ SECTIONS
     } >RAM
 #endif
 
-#if QTI_6018_PLATFORM || QTI_5018_PLATFORM
+#if QTI_6018_PLATFORM || QTI_5018_PLATFORM || QTI_9574_PLATFORM
       /****************************************************************
    *  TZOS Diag
    *  Attrib.: RW, PXN=1, Uncacheable, PL1
@@ -332,8 +332,16 @@ SECTIONS
       . = . + QTI_DIAG_RG_SIZE;
      __DIAG_REGION_END__ = .;
     } >RAM
-
 #endif
+
+#if QTI_5018_PLATFORM || QTI_9574_PLATFORM
+    pil . : {
+     __PIL_REGION_START__ = .;
+      . = . + QTI_PIL_RG_SIZE;
+     __PIL_REGION_END__ = .;
+    } >RAM
+#endif
+
     /*
      * Define a linker symbol to mark end of the RW memory area for this
      * image.

@@ -72,6 +72,10 @@
  */
 #define XIP_VIRT_ADDR(physaddr)  (MODULES_VADDR + ((physaddr) & 0x000fffff))
 
+#define FDT_FIXED_BASE		UL(0xff800000)
+#define FDT_FIXED_SIZE		(2 * SECTION_SIZE)
+#define FDT_VIRT_BASE(physbase)	((void *)(FDT_FIXED_BASE | (physbase) % SECTION_SIZE))
+
 #if !defined(CONFIG_SMP) && !defined(CONFIG_ARM_LPAE)
 /*
  * Allow 16MB-aligned ioremap pages
@@ -112,6 +116,7 @@ extern unsigned long vectors_base;
 #define MODULES_VADDR		PAGE_OFFSET
 
 #define XIP_VIRT_ADDR(physaddr)  (physaddr)
+#define FDT_VIRT_BASE(physbase)  ((void *)(physbase))
 
 #endif /* !CONFIG_MMU */
 
@@ -144,21 +149,6 @@ extern unsigned long vectors_base;
  * PLAT_PHYS_OFFSET and not PHYS_OFFSET.
  */
 #define PLAT_PHYS_OFFSET	UL(CONFIG_PHYS_OFFSET)
-
-#ifdef CONFIG_XIP_KERNEL
-/*
- * When referencing data in RAM from the XIP region in a relative manner
- * with the MMU off, we need the relative offset between the two physical
- * addresses.  The macro below achieves this, which is:
- *    __pa(v_data) - __xip_pa(v_text)
- */
-#define PHYS_RELATIVE(v_data, v_text) \
-	(((v_data) - PAGE_OFFSET + PLAT_PHYS_OFFSET) - \
-	 ((v_text) - XIP_VIRT_ADDR(CONFIG_XIP_PHYS_ADDR) + \
-          CONFIG_XIP_PHYS_ADDR))
-#else
-#define PHYS_RELATIVE(v_data, v_text) ((v_data) - (v_text))
-#endif
 
 #ifndef __ASSEMBLY__
 

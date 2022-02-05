@@ -16,7 +16,7 @@
 #define UART_BASE       0x078B1000
 #endif
 
-#if QTI_5018_PLATFORM
+#if QTI_5018_PLATFORM || QTI_9574_PLATFORM
 #define UART_BASE       0x078AF000
 #endif
 

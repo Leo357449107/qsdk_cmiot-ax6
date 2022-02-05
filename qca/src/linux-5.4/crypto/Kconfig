@@ -260,6 +260,13 @@ config CRYPTO_NO_ZERO_LEN_HASH
 	help
 	  Disable support for zero data length cases
 
+config CRYPTO_NO_AES_CTR_UNEVEN_DATA_LEN_SUPPORT
+	bool "Disable support for uneven data length test cases"
+	default y
+	depends on CRYPTO_TEST
+	help
+	  Disable support for uneven data length cases
+
 config CRYPTO_NO_AES_XTS_ZERO_KEY_SUPPORT
 	bool "Disable support for zero key test cases"
 	default y
@@ -299,12 +306,12 @@ config CRYPTO_DH
 
 config CRYPTO_ECC
 	tristate
+	select CRYPTO_RNG_DEFAULT
 
 config CRYPTO_ECDH
 	tristate "ECDH algorithm"
 	select CRYPTO_ECC
 	select CRYPTO_KPP
-	select CRYPTO_RNG_DEFAULT
 	help
 	  Generic implementation of the ECDH algorithm
 

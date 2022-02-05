@@ -38,6 +38,11 @@
 #define EDMA_MAX_RXFILL_RINGS		8	/* Max RxFill rings */
 #define EDMA_RX_MAX_PRIORITY_LEVEL	1
 
+#define EDMA_RX_PID_IPV4_MAX		0x3
+#define EDMA_RX_PID_IPV6		0x4
+#define EDMA_RX_PID_IS_IPV4(pid)	(!((pid) & (~EDMA_RX_PID_IPV4_MAX)))
+#define EDMA_RX_PID_IS_IPV6(pid)	(!(!((pid) & EDMA_RX_PID_IPV6)))
+
 #define EDMA_RXDESC_BUFFER_ADDR_GET(desc)	((uint32_t)((desc)->word0))
 #define EDMA_RXDESC_OPAQUE_GET(desc)		((uintptr_t)((uint64_t)((desc)->word2) | \
 						((uint64_t)((desc)->word3) << 0x20)))
@@ -57,6 +62,7 @@
 #define EDMA_RXDESC_L4CSUM_STATUS_GET(desc)	(((desc)->word6) & \
 						EDMA_RXDESC_L4CSUM_STATUS_MASK)
 #define EDMA_RXDESC_SERVICE_CODE_GET(desc)	(((desc)->word7) & 0x1FF)
+#define EDMA_RXDESC_PID_GET(desc)		(((desc)->word7) & 0x7000) >> 0x0C
 
 #define EDMA_RXFILL_BUF_SIZE_MASK		0xFFFF
 #define EDMA_RXFILL_BUF_SIZE_SHIFT		16
@@ -125,6 +131,7 @@ struct edma_rxfill_ring {
 	uint32_t ring_id;		/* RXFILL ring number */
 	uint32_t count;			/* number of descriptors in the ring */
 	uint32_t prod_idx;		/* Ring producer index */
+	uint32_t alloc_size;		/* Buffer size to allocate */
 	struct edma_rxfill_desc *desc;	/* descriptor ring virtual address */
 	dma_addr_t dma;			/* descriptor ring physical address */
 };

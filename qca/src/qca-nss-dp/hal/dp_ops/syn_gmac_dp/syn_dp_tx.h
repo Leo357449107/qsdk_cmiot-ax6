@@ -29,6 +29,8 @@
 struct syn_dp_tx_buf {
 	struct sk_buff *skb;	/* Buffer pointer populated to Tx dma desc */
 	uint32_t len;		/* Length of the buffer provided to descriptor */
+	size_t shinfo_addr_virt;	/* Buffer address to prefetch the shinfo
+						during Tx complete*/
 	uint32_t desc_count;	/* Number of descriptors used by the skb */
 };
 
@@ -50,6 +52,11 @@ struct syn_dp_info_tx {
 					/* GMAC driver Tx statistics */
 	struct net_device *netdev;	/* Net-device corresponding to the GMAC */
 	struct device *dev;		/* Platform device corresponding to the GMAC */
+	struct sk_buff *skb_free_list[SYN_DP_NAPI_BUDGET_TX];
+					/* Array to hold SKBs before free during Tx completion */
+	size_t shinfo_addr_virt[SYN_DP_NAPI_BUDGET_TX];
+					/* Array to hold SKB end pointer to be
+						prefetched during Tx completion */
 };
 
 /*

@@ -1,6 +1,7 @@
 /*
  **************************************************************************
  * Copyright (c) 2014-2021 The Linux Foundation.  All rights reserved.
+ * Copyright (c) 2022 Qualcomm Innovation Center, Inc. All rights reserved.
  * Permission to use, copy, modify, and/or distribute this software for
  * any purpose with or without fee is hereby granted, provided that the
  * above copyright notice and this permission notice appear in all copies.
@@ -25,10 +26,12 @@
 #include <linux/debugfs.h>
 #include <linux/pkt_sched.h>
 #include <linux/string.h>
+#include <net/ip_tunnels.h>
 #include <net/route.h>
 #include <net/ip.h>
 #include <net/tcp.h>
 #include <net/addrconf.h>
+#include <net/xfrm.h>
 #include <asm/unaligned.h>
 #include <asm/uaccess.h>	/* for put_user */
 #include <net/ipv6.h>
@@ -39,6 +42,7 @@
 #include <linux/ppp_defs.h>
 #include <linux/mroute.h>
 
+#include <net/ip6_tunnel.h>
 #include <linux/inetdevice.h>
 #include <linux/if_arp.h>
 #include <linux/netfilter_ipv4.h>
@@ -72,10 +76,6 @@
  */
 #define DEBUG_LEVEL ECM_NSS_IPV4_DEBUG_LEVEL
 
-#ifdef ECM_FRONT_END_NSS_ENABLE
-#include <nss_api_if.h>
-#endif
-
 #include "ecm_types.h"
 #include "ecm_db_types.h"
 #include "ecm_state.h"
@@ -90,16 +90,6 @@
 #include "ecm_classifier_nl.h"
 #endif
 #include "ecm_interface.h"
-#ifdef ECM_FRONT_END_NSS_ENABLE
-#include "ecm_nss_ported_ipv4.h"
-#ifdef ECM_MULTICAST_ENABLE
-#include "ecm_nss_multicast_ipv4.h"
-#endif
-#ifdef ECM_NON_PORTED_SUPPORT_ENABLE
-#include "ecm_nss_non_ported_ipv4.h"
-#endif
-#include "ecm_nss_common.h"
-#endif
 #include "ecm_front_end_common.h"
 #include "ecm_front_end_ipv4.h"
 #ifdef ECM_INTERFACE_OVS_BRIDGE_ENABLE
@@ -1007,60 +997,10 @@ unsigned int ecm_ipv4_ip_process(struct net_device *out_dev, struct net_device *
 		return NF_ACCEPT;
 	}
 
-#ifdef ECM_FRONT_END_NSS_ENABLE
-	/*
-	 * If the DSCP value of the packet maps to the NOT accel action type,
-	 * do not accelerate the packet and let it go through the
-	 * slow path.
-	 *
-	 * TODO: What if SFE is selected in hybrid mode? Can we do this check after the accel
-	 * engine decision?
-	 */
-	if (likely(ecm_front_end_is_feature_supported(ECM_FE_FEATURE_DSCP_ACTION))) {
-		if (ip_hdr.protocol == IPPROTO_UDP) {
-			uint8_t action = nss_ipv4_dscp_action_get(ip_hdr.dscp);
-			if (action == NSS_IPV4_DSCP_MAP_ACTION_DONT_ACCEL) {
-				DEBUG_TRACE("dscp: %d maps to action not accel type, skip acceleration\n", ip_hdr.dscp);
-				return NF_ACCEPT;
-			}
-		}
-	}
-#endif
 	if (ip_hdr.fragmented) {
 		DEBUG_TRACE("skb %px is fragmented\n", skb);
 		return NF_ACCEPT;
 	}
-
-#ifdef ECM_FRONT_END_NSS_ENABLE
-	if (ecm_nss_common_is_xfrm_flow(skb, &ip_hdr)) {
-#ifdef ECM_XFRM_ENABLE
-		struct net_device *ipsec_dev;
-		int32_t interface_type;
-
-		if (!ecm_front_end_is_feature_supported(ECM_FE_FEATURE_XFRM)) {
-			DEBUG_TRACE("%px xfrm flow is not supported on selected frontend\n", skb);
-			return NF_ACCEPT;
-		}
-
-		/* Check if the transformation for this flow
-		 * is done by NSS. If yes, then only try to accelerate.
-		 *
-		 * TODO: What if SFE is selected in hybrid mode? We are sure SFE will not be selected
-		 * for the non-ported flows in hybrid mode. Is this still needed to be checked after the
-		 * accel engine decision?
-		 */
-		ipsec_dev = ecm_interface_get_and_hold_ipsec_tun_netdev(NULL, skb, &interface_type);
-		if (!ipsec_dev) {
-			DEBUG_TRACE("%px xfrm flow not managed by NSS; skip it\n", skb);
-			return NF_ACCEPT;
-		}
-		dev_put(ipsec_dev);
-#else
-		DEBUG_TRACE("%px xfrm flow, but accel is disabled; skip it\n", skb);
-		return NF_ACCEPT;
-#endif
-	}
-#endif
 
 	/*
 	 * Extract information, if we have conntrack then use that info as far as we can.
@@ -1075,6 +1015,14 @@ unsigned int ecm_ipv4_ip_process(struct net_device *out_dev, struct net_device *
 		reply_tuple.dst.u3.ip = orig_tuple.src.u3.ip;
 		sender = ECM_TRACKER_SENDER_TYPE_SRC;
 	} else {
+		/*
+		 * Do not process the packet, if the conntrack is in dying state.
+		 */
+		if (unlikely(test_bit(IPS_DYING_BIT, &ct->status))) {
+			DEBUG_WARN("%px: ct: %px is in dying state\n", skb, ct);
+			return NF_ACCEPT;
+		}
+
 		/*
 		 * Fake untracked conntrack objects were removed on 4.12 kernel version
 		 * and onwards.
@@ -1880,6 +1828,96 @@ static struct nf_hook_ops ecm_ipv4_netfilter_bridge_hooks[] __read_mostly = {
 	},
 };
 
+#ifdef ECM_INTERFACE_OVS_BRIDGE_ENABLE
+/*
+ * ecm_ipv4_ovs_dp_process()
+ *      Process OVS IPv4 bridged packets.
+ */
+unsigned int ecm_ipv4_ovs_dp_process(struct sk_buff *skb, struct net_device *out)
+{
+	struct ethhdr *skb_eth_hdr;
+	bool can_accel = true;
+	struct net_device *in;
+
+	/*
+	 * If operations have stopped then do not process packets
+	 */
+	spin_lock_bh(&ecm_ipv4_lock);
+	if (unlikely(ecm_front_end_ipv4_stopped)) {
+		spin_unlock_bh(&ecm_ipv4_lock);
+		DEBUG_TRACE("Front end stopped\n");
+		return 1;
+	}
+	spin_unlock_bh(&ecm_ipv4_lock);
+
+	/*
+	 * Don't process broadcast.
+	 */
+	if (skb->pkt_type == PACKET_BROADCAST) {
+		DEBUG_TRACE("Broadcast, ignoring: %px\n", skb);
+		return 1;
+	}
+
+	/*
+	 * Don't process multicast packet if frontend does not support it
+	 */
+	if (skb->pkt_type == PACKET_MULTICAST) {
+		if (!ecm_front_end_is_feature_supported(ECM_FE_FEATURE_MULTICAST)) {
+			DEBUG_TRACE("Frontend does not support mcast, ignoring: %px\n", skb);
+			return 1;
+		}
+	}
+
+	if (skb->protocol != ntohs(ETH_P_IP)) {
+		DEBUG_WARN("%px: Wrong skb protocol: %d", skb, skb->protocol);
+		return 1;
+	}
+
+	skb_eth_hdr = eth_hdr(skb);
+	if (!skb_eth_hdr) {
+		DEBUG_WARN("%px: Not Eth\n", skb);
+		return 1;
+	}
+
+	in = dev_get_by_index(&init_net, skb->skb_iif);
+	if (!in) {
+		DEBUG_WARN("%px: No in device\n", skb);
+		return 1;
+	}
+
+	DEBUG_TRACE("%px: in: %s out: %s skb->protocol: %x\n", skb, in->name, out->name, skb->protocol);
+
+	if (netif_is_ovs_master(in)) {
+		if (!ecm_mac_addr_equal(skb_eth_hdr->h_dest, in->dev_addr)) {
+			DEBUG_TRACE("%px: in is bridge and mac address equals to packet dest, flow is routed, ignore \n", skb);
+			dev_put(in);
+			return 1;
+		}
+	}
+
+	if (netif_is_ovs_master(out)) {
+		if (!ecm_mac_addr_equal(skb_eth_hdr->h_source, out->dev_addr)) {
+			DEBUG_TRACE("%px: out is bridge and mac address equals to packet source, flow is routed, ignore \n", skb);
+			dev_put(in);
+			return 1;
+		}
+	}
+
+	ecm_ipv4_ip_process((struct net_device *)out, in,
+			skb_eth_hdr->h_source, skb_eth_hdr->h_dest, can_accel, false, false, skb, ETH_P_IP);
+
+	dev_put(in);
+
+	return 0;
+}
+
+static struct ovsmgr_dp_hook_ops ecm_ipv4_dp_hooks = {
+	.protocol = 4,
+	.hook_num = OVSMGR_DP_HOOK_POST_FLOW_PROC,
+	.hook = ecm_ipv4_ovs_dp_process,
+};
+#endif
+
 /*
  * ecm_ipv4_init()
  */
@@ -1929,6 +1967,16 @@ int ecm_ipv4_init(struct dentry *dentry)
 			goto nf_register_failed_2;
 		}
 	}
+
+	/*
+	 * Register OVS bridge DP hookup when AE frontend supports bridge processing
+	 */
+#ifdef ECM_INTERFACE_OVS_BRIDGE_ENABLE
+	if (ecm_front_end_is_feature_supported(ECM_FE_FEATURE_OVS_BRIDGE)) {
+		ovsmgr_dp_hook_register(&ecm_ipv4_dp_hooks);
+	}
+#endif
+
 	return 0;
 
 nf_register_failed_2:
@@ -1977,6 +2025,16 @@ void ecm_ipv4_exit(void)
 #else
 	nf_unregister_net_hooks(&init_net, ecm_ipv4_netfilter_routing_hooks, ARRAY_SIZE(ecm_ipv4_netfilter_routing_hooks));
 #endif
+
+	/*
+	 * Unregister OVS bridge DP hook
+	 */
+#ifdef ECM_INTERFACE_OVS_BRIDGE_ENABLE
+	if (ecm_front_end_is_feature_supported(ECM_FE_FEATURE_OVS_BRIDGE)) {
+		ovsmgr_dp_hook_unregister(&ecm_ipv4_dp_hooks);
+	}
+#endif
+
 	ecm_sfe_ipv4_exit();
 #ifdef ECM_FRONT_END_NSS_ENABLE
 	ecm_nss_ipv4_exit();

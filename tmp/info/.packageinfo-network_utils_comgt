@@ -1,0 +1,60 @@
+Source-Makefile: package/network/utils/comgt/Makefile
+
+Package: comgt
+Submenu: WWAN
+Version: 0.32-33
+Depends: +libc +GCC_LIBSSP:libssp +USE_GLIBC:librt +USE_GLIBC:libpthread +chat
+Conflicts: 
+Menu-Depends: 
+Provides: 
+Section: net
+Category: Network
+Title: Option/Vodafone 3G/GPRS control tool
+Maintainer: Felix Fietkau <nbd@nbd.name>
+Source: comgt.0.32.tgz
+License: GPL-2.0+
+Type: ipkg
+Description:  comgt is a scripting language interpreter useful for establishing 
+ communications on serial lines and through PCMCIA modems as well as GPRS 
+ and 3G datacards.
+http://manpages.ubuntu.com/manpages/trusty/man1/comgt.1.html
+Felix Fietkau <nbd@nbd.name>
+@@
+
+Package: comgt-directip
+Submenu: WWAN
+Version: 0.32-33
+Depends: +libc +GCC_LIBSSP:libssp +USE_GLIBC:librt +USE_GLIBC:libpthread +comgt +kmod-usb-serial +kmod-usb-serial-sierrawireless +kmod-usb-net +kmod-usb-net-sierrawireless
+Conflicts: 
+Menu-Depends: 
+Provides: 
+Section: net
+Category: Network
+Title: Sierra Wireless Direct-IP support
+Maintainer: Felix Fietkau <nbd@nbd.name>
+Source: comgt.0.32.tgz
+License: GPL-2.0+
+Type: ipkg
+Description: Sierra Wireless Direct-IP support
+Felix Fietkau <nbd@nbd.name>
+@@
+
+Package: comgt-ncm
+Submenu: WWAN
+Version: 0.32-33
+Depends: +libc +GCC_LIBSSP:libssp +USE_GLIBC:librt +USE_GLIBC:libpthread +comgt +wwan +kmod-usb-serial-option +kmod-usb-net-huawei-cdc-ncm
+Conflicts: 
+Menu-Depends: 
+Provides: 
+Section: net
+Category: Network
+Title:  NCM 3G/4G Support
+Maintainer: Felix Fietkau <nbd@nbd.name>
+Source: comgt.0.32.tgz
+License: GPL-2.0+
+Type: ipkg
+Description:  NCM 3G/4G Support
+Felix Fietkau <nbd@nbd.name>
+@@
+
+

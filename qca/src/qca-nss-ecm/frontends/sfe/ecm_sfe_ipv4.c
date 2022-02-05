@@ -290,6 +290,12 @@ static void ecm_sfe_ipv4_stats_sync_callback(void *app_data, struct sfe_ipv4_msg
 		 * As packets have been accelerated we have seen some action.
 		 */
 		feci->action_seen(feci);
+
+		/*
+		 * Update interface stats
+		 */
+		ecm_interface_stats_update(ci, sync->flow_tx_packet_count, sync->flow_tx_byte_count, sync->flow_rx_packet_count,
+				sync->flow_rx_byte_count, sync->return_tx_packet_count, sync->return_tx_byte_count, sync->return_rx_packet_count, sync->return_rx_byte_count);
 	}
 
 	switch(sync->reason) {

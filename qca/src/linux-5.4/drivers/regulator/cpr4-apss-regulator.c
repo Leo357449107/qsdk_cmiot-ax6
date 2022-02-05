@@ -726,7 +726,7 @@ static int cpr4_ipq807x_apss_calculate_open_loop_voltages(
 	}
 
 	rc = cpr3_determine_part_type(vreg,
-			fuse_volt[CPR4_IPQ807x_APSS_FUSE_CORNER_STURBO]);
+			  fuse_volt[vreg->fuse_corner_count - 1]);
 	if (rc) {
 		cpr3_err(vreg, "fused part type detection failed failed, rc=%d\n",
 			rc);

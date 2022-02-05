@@ -36,13 +36,11 @@ static bool breakpadDumpCallback(const google_breakpad::MinidumpDescriptor& desc
 
 void breakpad_ExceptionHandler(ApplnCallback applnCallback)
 {
-    printf("\t\t\t\t *******Entering breakpad_ExceptionHandler*******\n");
     static google_breakpad::ExceptionHandler* exceptHandler = NULL;
     if (exceptHandler)
     {
-        printf("Handler is not NULL");
+        fprintf(stderr, "Handler is not NULL");
         return;
     }
     exceptHandler = new google_breakpad::ExceptionHandler(google_breakpad::MinidumpDescriptor("/tmp"), NULL, breakpadDumpCallback, (void*)applnCallback, true, -1);
-    printf("\t\t\t\t *******Exiting breakpad_ExceptionHandler*******\n");
 }

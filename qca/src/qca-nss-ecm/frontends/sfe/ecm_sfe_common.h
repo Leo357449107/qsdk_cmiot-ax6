@@ -1,6 +1,6 @@
 /*
  * Copyright (c) 2015, 2018, The Linux Foundation. All rights reserved.
- * Copyright (c) 2021 Qualcomm Innovation Center, Inc. All rights reserved.
+ * Copyright (c) 2021-2022 Qualcomm Innovation Center, Inc. All rights reserved.
  *
  * Permission to use, copy, modify, and/or distribute this software for any
  * purpose with or without fee is hereby granted, provided that the above
@@ -51,6 +51,27 @@ enum ecm_sfe_ipsec_state {
 		ipaddrt[2] = ntohl(sfe6[1]); \
 		ipaddrt[3] = ntohl(sfe6[0]); \
 	}
+
+/*
+ * Common information
+ */
+struct ecm_sfe_common_fe_info {
+	uint32_t from_stats_bitmap;	/* Bitmap of L2 features enabled for from direction */
+	uint32_t to_stats_bitmap;	/* Bitmap of L2 features enabled for to direction */
+};
+
+/*
+ * ecm_sfe_feature_check()
+ *	Check some specific features for SFE acceleration
+ */
+static inline bool ecm_sfe_feature_check(struct sk_buff *skb, struct ecm_tracker_ip_header *ip_hdr, bool is_routed)
+{
+	if (!is_routed && !sfe_is_l2_feature_enabled()) {
+		return false;
+	}
+
+	return true;
+}
 
 /*
  * ecm_sfe_common_get_interface_number_by_dev()
@@ -120,3 +141,9 @@ static inline int32_t ecm_sfe_common_get_interface_type(struct ecm_front_end_con
 
 bool ecm_sfe_ipv4_is_conn_limit_reached(void);
 bool ecm_sfe_ipv6_is_conn_limit_reached(void);
+
+bool ecm_sfe_common_is_l2_iface_supported(ecm_db_iface_type_t ii_type, int cur_heirarchy_index, int first_heirarchy_index);
+
+void ecm_sfe_common_init_fe_info(struct ecm_sfe_common_fe_info *info);
+uint32_t ecm_sfe_common_get_stats_bitmap(struct ecm_sfe_common_fe_info *fe_info, ecm_db_obj_dir_t dir);
+void ecm_sfe_common_set_stats_bitmap(struct ecm_sfe_common_fe_info *fe_info, ecm_db_obj_dir_t dir, uint8_t bit);

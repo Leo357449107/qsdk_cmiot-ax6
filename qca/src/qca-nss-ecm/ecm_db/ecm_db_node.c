@@ -538,6 +538,7 @@ void ecm_db_node_add(struct ecm_db_node_instance *ni, struct ecm_db_iface_instan
 	/*
 	 * Insert into the hash chain
 	 */
+	ni->hash_prev = NULL;
 	ni->hash_next = ecm_db_node_table[hash_index];
 	if (ecm_db_node_table[hash_index]) {
 		ecm_db_node_table[hash_index]->hash_prev = ni;

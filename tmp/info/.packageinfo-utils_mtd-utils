@@ -1,0 +1,40 @@
+Source-Makefile: package/utils/mtd-utils/Makefile
+Build-Depends: util-linux lzo zlib
+
+Package: ubi-utils
+Version: 2.1.1-1
+Depends: +libc +GCC_LIBSSP:libssp +USE_GLIBC:librt +USE_GLIBC:libpthread @NAND_SUPPORT
+Conflicts: 
+Menu-Depends: 
+Provides: 
+Section: utils
+Category: Utilities
+Title: Utilities for ubi info/debug
+Maintainer: John Crispin <john@phrozen.org>
+Source: mtd-utils-2.1.1.tar.bz2
+License: GPLv2
+Type: ipkg
+Description:   Utilities for manipulating memory technology devices.
+http://www.linux-mtd.infradead.org/
+John Crispin <john@phrozen.org>
+@@
+
+Package: nand-utils
+Version: 2.1.1-1
+Depends: +libc +GCC_LIBSSP:libssp +USE_GLIBC:librt +USE_GLIBC:libpthread @NAND_SUPPORT +zlib +zlib +zlib
+Conflicts: 
+Menu-Depends: 
+Provides: 
+Section: utils
+Category: Utilities
+Title: Utilities for nand flash erase/read/write/test 
+Maintainer: John Crispin <john@phrozen.org>
+Source: mtd-utils-2.1.1.tar.bz2
+License: GPLv2
+Type: ipkg
+Description:   Utilities for NAND devices.
+http://www.linux-mtd.infradead.org/
+John Crispin <john@phrozen.org>
+@@
+
+

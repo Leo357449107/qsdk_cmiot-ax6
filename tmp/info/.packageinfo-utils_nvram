@@ -1,0 +1,20 @@
+Source-Makefile: package/utils/nvram/Makefile
+
+Package: nvram
+Version: 10
+Depends: +libc +GCC_LIBSSP:libssp +USE_GLIBC:librt +USE_GLIBC:libpthread @(TARGET_brcm47xx||TARGET_bcm53xx||TARGET_ar71xx||TARGET_ath79)
+Conflicts: 
+Menu-Depends: 
+Provides: 
+Section: utils
+Category: Base system
+Title: Userspace port of the Broadcom NVRAM manipulation tool
+Maintainer: Jo-Philipp Wich <xm@subsignal.org>
+Source: 
+Type: ipkg
+Description:  This package contains an utility to manipulate NVRAM on Broadcom based devices.
+ It works on bcm47xx (Linux 2.6) without using the kernel api.
+Jo-Philipp Wich <xm@subsignal.org>
+@@
+
+

@@ -1,0 +1,50 @@
+Source-Makefile: target/linux/armvirt/Makefile
+Target: armvirt
+Target-Board: armvirt
+Target-Name: QEMU ARM Virtual Machine
+Target-Arch: 
+Target-Arch-Packages: 
+Target-Features: cpiogz dt ext4 fpu gpio pci ramdisk rtc squashfs targz usb virtio
+Target-Depends: 
+Target-Optimization: -Os -pipe
+CPU-Type: 
+Linux-Version: 4.14.254
+Linux-Release: 1
+Linux-Kernel-Arch: arm64
+Target-Description:
+
+@@
+Default-Packages: base-files libc libgcc busybox dropbear mtd uci opkg netifd fstools uclient-fetch logd urandom-seed urngd dnsmasq iptables ip6tables ppp ppp-mod-pppoe firewall odhcpd-ipv6only odhcp6c kmod-ipt-offload 
+Target: armvirt/32
+Target-Board: armvirt
+Target-Name: QEMU ARM Virtual Machine (cortex-a15)
+Target-Arch: arm
+Target-Arch-Packages: arm_cortex-a15_neon-vfpv4
+Target-Features: arm_v7 cpiogz dt ext4 fpu gpio pci ramdisk rtc squashfs targz usb virtio
+Target-Depends: 
+Target-Optimization: -Os -pipe
+CPU-Type: cortex-a15+neon-vfpv4
+Linux-Version: 4.14.254
+Linux-Release: 1
+Linux-Kernel-Arch: arm
+Target-Description:
+  Build images for QEMU ARM Virtual Machine (cortex-a15)
+@@
+Default-Packages: base-files libc libgcc busybox dropbear mtd uci opkg netifd fstools uclient-fetch logd urandom-seed urngd dnsmasq iptables ip6tables ppp ppp-mod-pppoe firewall odhcpd-ipv6only odhcp6c kmod-ipt-offload 
+Target: armvirt/64
+Target-Board: armvirt
+Target-Name: ARMv8 multiplatform
+Target-Arch: aarch64
+Target-Arch-Packages: aarch64_generic
+Target-Features: cpiogz display dt ext4 fpu gpio pci ramdisk rtc squashfs targz usb virtio
+Target-Depends: 
+Target-Optimization: -Os -pipe -mcpu=generic
+CPU-Type: generic
+Linux-Version: 4.14.254
+Linux-Release: 1
+Linux-Kernel-Arch: arm64
+Target-Description:
+	Build multi-platform images for the ARMv8 instruction set architecture
+@@
+Default-Packages: base-files libc libgcc busybox dropbear mtd uci opkg netifd fstools uclient-fetch logd urandom-seed urngd dnsmasq iptables ip6tables ppp ppp-mod-pppoe firewall odhcpd-ipv6only odhcp6c kmod-ipt-offload 
+

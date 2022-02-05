@@ -1,0 +1,107 @@
+Source-Makefile: package/network/services/dnsmasq/Makefile
+
+Package: dnsmasq
+Version: 2.80-16.3
+Depends: +libc +GCC_LIBSSP:libssp +USE_GLIBC:librt +USE_GLIBC:libpthread +libubus
+Conflicts: 
+Menu-Depends: 
+Provides: 
+Build-Variant: nodhcpv6
+Section: net
+Category: Base system
+Repository: base
+Title: DNS and DHCP server
+Maintainer: 
+Require-User: dnsmasq=453:dnsmasq=453
+Source: dnsmasq-2.80.tar.xz
+License: GPL-2.0
+LicenseFiles: COPYING
+Type: ipkg
+Description:   It is intended to provide coupled DNS and DHCP service to a LAN.
+http://www.thekelleys.org.uk/dnsmasq/
+
+@@
+
+Package: dnsmasq-dhcpv6
+Version: 2.80-16.3
+Depends: +libc +GCC_LIBSSP:libssp +USE_GLIBC:librt +USE_GLIBC:libpthread +libubus @IPV6
+Conflicts: 
+Menu-Depends: 
+Provides: dnsmasq
+Build-Variant: dhcpv6
+Section: net
+Category: Base system
+Repository: base
+Title: DNS and DHCP server (with DHCPv6 support)
+Maintainer: 
+Require-User: dnsmasq=453:dnsmasq=453
+Source: dnsmasq-2.80.tar.xz
+License: GPL-2.0
+LicenseFiles: COPYING
+Type: ipkg
+Description:   It is intended to provide coupled DNS and DHCP service to a LAN.
+
+This is a variant with DHCPv6 support
+http://www.thekelleys.org.uk/dnsmasq/
+
+@@
+
+Package: dnsmasq-full
+Version: 2.80-16.3
+Depends: +libc +GCC_LIBSSP:libssp +USE_GLIBC:librt +USE_GLIBC:libpthread +libubus +PACKAGE_dnsmasq_full_dnssec:libnettle +PACKAGE_dnsmasq_full_ipset:kmod-ipt-ipset +PACKAGE_dnsmasq_full_conntrack:libnetfilter-conntrack
+Conflicts: 
+Menu-Depends: 
+Provides: dnsmasq
+Build-Variant: full
+Section: net
+Category: Base system
+Repository: base
+Title: DNS and DHCP server (with DNSSEC, DHCPv6, Auth DNS, IPset, Conntrack, NO_ID enabled by default)
+Maintainer: 
+Require-User: dnsmasq=453:dnsmasq=453
+Source: dnsmasq-2.80.tar.xz
+License: GPL-2.0
+LicenseFiles: COPYING
+Type: ipkg
+Description:   It is intended to provide coupled DNS and DHCP service to a LAN.
+
+This is a fully configurable variant with DHCPv4, DHCPv6, DNSSEC, Authoritative DNS
+and IPset, Conntrack support & NO_ID enabled by default.
+http://www.thekelleys.org.uk/dnsmasq/
+
+@@
+Config:
+
+	if PACKAGE_dnsmasq-full
+	config PACKAGE_dnsmasq_full_dhcp
+		bool "Build with DHCP support."
+		default y
+	config PACKAGE_dnsmasq_full_dhcpv6
+		bool "Build with DHCPv6 support."
+		depends on IPV6 && PACKAGE_dnsmasq_full_dhcp
+		default y
+	config PACKAGE_dnsmasq_full_dnssec
+		bool "Build with DNSSEC support."
+		default y
+	config PACKAGE_dnsmasq_full_auth
+		bool "Build with the facility to act as an authoritative DNS server."
+		default y
+	config PACKAGE_dnsmasq_full_ipset
+		bool "Build with IPset support."
+		default y
+	config PACKAGE_dnsmasq_full_conntrack
+		bool "Build with Conntrack support."
+		default y
+	config PACKAGE_dnsmasq_full_noid
+		bool "Build with NO_ID. (hide *.bind pseudo domain)"
+		default y
+	config PACKAGE_dnsmasq_full_broken_rtc
+		bool "Build with HAVE_BROKEN_RTC."
+		default n
+	config PACKAGE_dnsmasq_full_tftp
+		bool "Build with TFTP server support."
+		default y
+	endif
+@@
+
+

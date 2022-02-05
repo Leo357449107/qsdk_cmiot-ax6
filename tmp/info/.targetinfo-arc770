@@ -1,0 +1,41 @@
+Source-Makefile: target/linux/arc770/Makefile
+Target: arc770
+Target-Board: arc770
+Target-Name: Synopsys DesignWare ARC 770D
+Target-Arch: arc
+Target-Arch-Packages: arc_arc700
+Target-Features: dt gpio usb
+Target-Depends: 
+Target-Optimization: -Os -pipe -matomic -mcpu=arc700
+CPU-Type: arc700
+Linux-Version: 4.14.254
+Linux-Release: 1
+Linux-Kernel-Arch: arc
+Target-Description:
+	Synopsys DesignWare boards
+@@
+Default-Packages: base-files libc libgcc busybox dropbear mtd uci opkg netifd fstools uclient-fetch logd urandom-seed urngd  
+Target: arc770/generic
+Target-Board: arc770
+Target-Name: Generic
+Target-Arch: arc
+Target-Arch-Packages: arc_arc700
+Target-Features: dt ext4 gpio ramdisk usb
+Target-Depends: 
+Target-Optimization: -Os -pipe -matomic -mcpu=arc700
+CPU-Type: arc700
+Linux-Version: 4.14.254
+Linux-Release: 1
+Linux-Kernel-Arch: arc
+Target-Description:
+	Build firmware images for generic ARC 770D based boards.
+@@
+Default-Packages: base-files libc libgcc busybox dropbear mtd uci opkg netifd fstools uclient-fetch logd urandom-seed urngd  
+Target-Profile: Default
+Target-Profile-Name: Default Profile (all drivers)
+Target-Profile-Packages: kmod-usb-core kmod-usb-ohci kmod-usb2 kmod-ath9k-htc wpad-basic iwinfo
+Target-Profile-Description:
+	Default package set compatible with most boards.
+@@
+
+

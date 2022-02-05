@@ -1,0 +1,62 @@
+From d6e52c4ef2bb8e915cae088564c412583f1794c9 Mon Sep 17 00:00:00 2001
+From: P Praneesh <quic_ppranees@quicinc.com>
+Date: Fri, 21 Jan 2022 09:44:15 +0530
+Subject: [PATCH] mesh: enable more 160MHz channels in 6GHz
+
+Current 160MHz implementation supports mesh bringup in limited channels.
+Allow all the 6GHz 80MHz channels to support 160MHz if the secondary 80MHz
+is available.
+
+Ex: User can bringup 160MHz in 49th channel (primary 80MHz) based on 33rd
+channel(secondary 80MHz) availablity.
+
+Signed-off-by: P Praneesh <quic_ppranees@quicinc.com>
+---
+ wpa_supplicant/wpa_supplicant.c | 21 ++++++++++++++++++---
+ 1 file changed, 18 insertions(+), 3 deletions(-)
+
+diff --git a/wpa_supplicant/wpa_supplicant.c b/wpa_supplicant/wpa_supplicant.c
+index ada5c61..e526940 100644
+--- a/wpa_supplicant/wpa_supplicant.c
++++ b/wpa_supplicant/wpa_supplicant.c
+@@ -2458,7 +2458,8 @@ void ibss_mesh_setup_freq(struct wpa_supplicant *wpa_s,
+ 	unsigned int bw80[] = { 5180, 5260, 5500, 5580, 5660, 5745, 5825, 5955,
+ 				6035, 6115, 6195, 6275, 6355, 6435, 6515,
+ 				6595, 6675, 6755, 6835, 6915, 6995 };
+-	unsigned int bw160[] = { 5745, 5955, 6115, 6275, 6435, 6595, 6755, 6915 };
++	unsigned int bw160[] = { 5745, 5825, 5955, 6035, 6115, 6195, 6275, 6355,
++				 6435, 6515, 6595, 6675, 6755, 6835, 6915, 6995 };
+ 	struct hostapd_channel_data *pri_chan = NULL, *sec_chan = NULL;
+ 	u8 channel;
+ 	int i, chan_idx, ht40 = -1, res, obss_scan = 1;
+@@ -2715,11 +2716,25 @@ skip_to_6ghz:
+ 				 */
+ 				int channel = freq->channel + 16;
+ 
+-				if (!ibss_mesh_is_80mhz_avail(channel, mode))
++				seg0 = freq->channel + 14;
++
++				/* If selected freq presents in odd index of the array,
++				 * then check the availability first 80MHz of the 160Mhz.
++				 * Ex : If user selects 49th channel, check 33rd channel
++				 * availability before proceeding 160MHz bringup.
++				 */
++
++				if (j%2 != 0) {
++					channel = freq->channel - 16;
++					seg0 = freq->channel - 2;
++				}
++
++				if (!ibss_mesh_is_80mhz_avail(channel, mode)) {
++					seg0 = freq->channel + 6;
+ 					break;
++				}
+ 
+ 				chwidth = CHANWIDTH_160MHZ;
+-				seg0 = freq->channel + 14;
+ 			}
+ 		}
+ 	}
+-- 
+2.7.4
+

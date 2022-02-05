@@ -111,7 +111,6 @@
 #define PCM_SAMPLE_RATE_384K			384000
 
 enum ipq_hw_type{
-	IPQ4019,
 	IPQ5018,
 	IPQ8074
 };

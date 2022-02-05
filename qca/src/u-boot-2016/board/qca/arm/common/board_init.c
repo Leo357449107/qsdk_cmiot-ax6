@@ -113,7 +113,9 @@ int board_init(void)
 	qca_smem_flash_info_t *sfi = &qca_smem_flash_info;
 
 	gd->bd->bi_boot_params = QCA_BOOT_PARAMS_ADDR;
+#ifndef CONFIG_OF_BOARD_FIXUP
 	gd->bd->bi_arch_number = smem_get_board_platform_type();
+#endif
 
 	ret = smem_get_boot_flash(&sfi->flash_type,
 				  &sfi->flash_index,
@@ -223,7 +225,6 @@ int board_init(void)
 	aquantia_phy_reset_init();
 #endif
 	disable_audio_clks();
-	ipq_uboot_fdt_fixup();
 	/*
 	 * Needed by ipq806x to avoid TX FIFO curruption during
 	 * serial init after relocation
@@ -316,6 +317,14 @@ void get_kernel_fs_part_details(void)
  */
 int board_early_init_f(void)
 {
+	return 0;
+}
+
+int board_fix_fdt(void *rw_fdt_blob)
+{
+	gd->bd->bi_arch_number = smem_get_board_platform_type();
+
+	ipq_uboot_fdt_fixup();
 	return 0;
 }
 

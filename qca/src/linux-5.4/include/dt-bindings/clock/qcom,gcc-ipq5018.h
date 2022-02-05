@@ -194,4 +194,6 @@
 #define GMAC0_TX_DIV_CLK_SRC				199
 #define GMAC1_RX_DIV_CLK_SRC				200
 #define GMAC1_TX_DIV_CLK_SRC				201
+#define ADSS_PWM_CLK_SRC				202
+#define GCC_ADSS_PWM_CLK				203
 #endif

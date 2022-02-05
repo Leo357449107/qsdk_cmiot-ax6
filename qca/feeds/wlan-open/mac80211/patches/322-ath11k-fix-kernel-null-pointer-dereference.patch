@@ -36,14 +36,12 @@ Signed-off-by: Venkateswara Naralasetty <vnaralas@codeaurora.org>
  drivers/net/wireless/ath/ath11k/core.c | 4 ++--
  1 file changed, 2 insertions(+), 2 deletions(-)
 
-diff --git a/drivers/net/wireless/ath/ath11k/core.c b/drivers/net/wireless/ath/ath11k/core.c
-index 8c7f656..d45745b 100644
 --- a/drivers/net/wireless/ath/ath11k/core.c
 +++ b/drivers/net/wireless/ath/ath11k/core.c
-@@ -1192,11 +1192,11 @@ static int ath11k_core_reconfigure_on_crash(struct ath11k_base *ab)
- 	if (ab->hif.bus == ATH11K_BUS_AHB)
- 		qcom_unregister_ssr_notifier(&ab->qmi.ssr_nb);
- #endif
+@@ -1242,11 +1242,11 @@ static int ath11k_core_reconfigure_on_cr
+ 	ath11k_nss_teardown(ab);
+ 	ab->nss.enabled = false;
+ 
 +	ath11k_cfr_deinit(ab);
 +	ath11k_spectral_deinit(ab);
  	ath11k_thermal_unregister(ab);
@@ -54,6 +52,3 @@ index 8c7f656..d45745b 100644
  	ath11k_hif_stop(ab);
  	ath11k_wmi_detach(ab);
  	ath11k_dp_pdev_reo_cleanup(ab);
--- 
-2.7.4
-

@@ -232,6 +232,7 @@ union qm_dbg_data_u {
 	struct qm_dbg_data bf;
 };
 
+#if !defined(IN_QM_MINI)
 /*[register] MCAST_PRIORITY_MAP0*/
 #define MCAST_PRIORITY_MAP0
 #define MCAST_PRIORITY_MAP0_ADDRESS 0x100
@@ -254,6 +255,7 @@ union mcast_priority_map0_u {
 	a_uint32_t val;
 	struct mcast_priority_map0 bf;
 };
+#endif
 
 /*[register] MCAST_PRIORITY_MAP1*/
 #define MCAST_PRIORITY_MAP1
@@ -835,6 +837,7 @@ union ucast_priority_map_tbl_u {
 	struct ucast_priority_map_tbl bf;
 };
 
+#if !defined(IN_QM_MINI)
 /*[table] MCAST_QUEUE_MAP_TBL*/
 #define MCAST_QUEUE_MAP_TBL
 #define MCAST_QUEUE_MAP_TBL_ADDRESS 0x44000
@@ -857,6 +860,7 @@ union mcast_queue_map_tbl_u {
 	a_uint32_t val;
 	struct mcast_queue_map_tbl bf;
 };
+#endif
 
 /*[table] AC_MSEQ_TBL*/
 #define AC_MSEQ_TBL

@@ -1,0 +1,25 @@
+Source-Makefile: package/network/utils/resolveip/Makefile
+
+Package: resolveip
+Version: 2
+Depends: +libc +GCC_LIBSSP:libssp +USE_GLIBC:librt +USE_GLIBC:libpthread 
+Conflicts: 
+Menu-Depends: 
+Provides: 
+Section: utils
+Category: Base system
+Repository: base
+Title: Simple DNS resolver with configurable timeout
+Maintainer: Jo-Philipp Wich <jo@mein.io>
+Source: 
+License: GPL-2.0
+Type: ipkg
+Description:  This package contains the small resolveip utility which
+ can be used by scripts to turn host names into numeric
+ IP addresses. It supports IPv4 and IPv6 resolving and
+ has a configurable timeout to guarantee a certain maximum
+ runtime in case of slow or defunct DNS servers.
+Jo-Philipp Wich <jo@mein.io>
+@@
+
+

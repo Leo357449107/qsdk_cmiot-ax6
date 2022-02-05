@@ -1,4 +1,5 @@
 /* Copyright (c) 2015-2018, The Linux Foundation. All rights reserved.
+ * Copyright (c) 2022, Qualcomm Innovation Center, Inc. All rights reserved.
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License version 2 and
@@ -22,6 +23,7 @@
 #include "main.h"
 #include "qmi.h"
 #include "pci.h"
+#include "cnss_plat_ipc_qmi.h"
 
 #define WLFW_SERVICE_INS_ID_V01		1
 #define WLFW_CLIENT_ID			0x4b4e454c
@@ -42,6 +44,10 @@
 #define DEFAULT_CAL_FILE_PREFIX         "caldata_"
 #define DEFAULT_CAL_FILE_SUFFIX         ".bin"
 #define MAX_HW_LINKS			2
+
+#define MAX_QDSS_CONFIG_FILE_NAME	64
+#define QDSS_CONFIG_FILE_PREFIX		"qdss_trace_config"
+#define QDSS_CONFIG_FILE_SUFFIX		".bin"
 
 #ifdef CONFIG_CNSS2_DEBUG
 static unsigned int qmi_timeout = 5000;
@@ -77,9 +83,9 @@ unsigned int num_wlan_vaps;
 module_param(num_wlan_vaps, uint, 0600);
 MODULE_PARM_DESC(num_wlan_vaps, "num_wlan_vaps");
 
-unsigned int enable_mlo_support;
-module_param(enable_mlo_support, uint, 0600);
-MODULE_PARM_DESC(enable_mlo_support, "enable_mlo_support");
+unsigned int mlo_num_chips;
+module_param(mlo_num_chips, uint, 0600);
+MODULE_PARM_DESC(mlo_num_chips, "mlo_num_chips");
 
 struct qmi_history qmi_log[QMI_HISTORY_SIZE];
 int qmi_history_index;
@@ -192,6 +198,8 @@ static int cnss_wlfw_ind_register_send_sync(struct cnss_plat_data *plat_priv)
 	req->qdss_trace_free_enable = 1;
 	req->m3_dump_upload_req_enable_valid = 1;
 	req->m3_dump_upload_req_enable = 1;
+	req->qdss_mem_ready_enable_valid = 1;
+	req->qdss_mem_ready_enable = 1;
 
 	qmi_record(plat_priv->wlfw_service_instance_id,
 		   QMI_WLFW_IND_REGISTER_REQ_V01, ret, resp_error_msg);
@@ -263,7 +271,6 @@ static int cnss_wlfw_host_cap_send_sync(struct cnss_plat_data *plat_priv)
 	const char *model = NULL;
 	struct device_node *root, *mlo_config = NULL, *chipnp;
 	struct device *dev = &plat_priv->plat_dev->dev;
-	struct device *bus_dev;
 	struct pci_dev *pcidev;
 	int chip_id;
 
@@ -280,15 +287,18 @@ static int cnss_wlfw_host_cap_send_sync(struct cnss_plat_data *plat_priv)
 		return -ENOMEM;
 	}
 	req->num_clients_valid = 1;
-	if (test_bit(ENABLE_DAEMON_SUPPORT,
-		     &plat_priv->ctrl_params.quirks))
-		req->num_clients = 2;
-	else
-		req->num_clients = 1;
-
 	req->num_clients = 1;
-	if (plat_priv->daemon_support)
-		req->num_clients = 2;
+
+	/* Check if cnss-daemon is connected to cnss2 QMI service.
+	 * If so, send number of clients to FW as 1. Else, check
+	 * whether cnss-daemon support is available in plat_priv
+	 * and then send the number of clients as 2.
+	 */
+
+	if (!is_cnss_daemon_connected(0)) {
+		if (plat_priv->daemon_support)
+			req->num_clients = 2;
+	}
 
 	cnss_pr_dbg("Number of clients is %d\n", req->num_clients);
 
@@ -343,22 +353,21 @@ static int cnss_wlfw_host_cap_send_sync(struct cnss_plat_data *plat_priv)
 	}
 
 	/* update MLO configuration */
-	if (plat_priv->device_id == QCN9224_DEVICE_ID)
+	if (plat_priv->device_id == QCN9224_DEVICE_ID) {
+		pcidev = (struct pci_dev *)plat_priv->pci_dev;
+
 		mlo_config = of_find_node_by_name(NULL, "mlo_group0");
 
-	if (enable_mlo_support && mlo_config) {
-		pcidev = (struct pci_dev *)plat_priv->pci_dev;
-		bus_dev = &pcidev->dev;
+		chip_id = cnss_get_mlo_chip_id(&pcidev->dev);
+		if (chip_id == -ENOENT)
+			cnss_pr_info("MLO not enabled for %s",
+				     plat_priv->device_name);
+	}
 
+	if (plat_priv->mlo_support && mlo_config && chip_id >= 0) {
 		req->mlo_capable_valid = 1;
 		req->mlo_capable = 1;
 
-		chip_id = cnss_get_mlo_chip_id(bus_dev);
-		if (ret < 0) {
-			cnss_pr_err("Unable to get chip id\n");
-			ret = -EINVAL;
-			goto err;
-		}
 		req->mlo_chip_id = (u16)chip_id;
 		req->mlo_chip_id_valid = 1;
 
@@ -381,6 +390,9 @@ static int cnss_wlfw_host_cap_send_sync(struct cnss_plat_data *plat_priv)
 			ret = -EINVAL;
 			goto err;
 		}
+		if (mlo_num_chips)
+			req->mlo_num_chips = mlo_num_chips;
+
 		req->mlo_num_chips_valid = 1;
 
 		req->mlo_chip_info_valid = 1;
@@ -715,14 +727,18 @@ int cnss_wlfw_tgt_cap_send_sync(struct cnss_plat_data *plat_priv)
 		}
 	}
 
-	cnss_pr_info("Target capability: chip_id: 0x%x, chip_family: 0x%x, board_id: 0x%x, soc_id: 0x%x, fw_version: 0x%x, fw_build_timestamp: %s, otp_version: 0x%x eeprom_caldata_read_timeout %ds\n",
+	if (resp->bdf_dnld_method_valid)
+		plat_priv->bdf_dnld_method = resp->bdf_dnld_method;
+
+	cnss_pr_info("Target capability: chip_id: 0x%x, chip_family: 0x%x, board_id: 0x%x, soc_id: 0x%x, fw_version: 0x%x, fw_build_timestamp: %s, otp_version: 0x%x eeprom_caldata_read_timeout %ds bdf_dnld_method %d\n",
 		     plat_priv->chip_info.chip_id,
 		     plat_priv->chip_info.chip_family,
 		     plat_priv->board_info.board_id, plat_priv->soc_info.soc_id,
 		     plat_priv->fw_version_info.fw_version,
 		     plat_priv->fw_version_info.fw_build_timestamp,
 		     plat_priv->otp_version,
-		     plat_priv->eeprom_caldata_read_timeout);
+		     plat_priv->eeprom_caldata_read_timeout,
+		     plat_priv->bdf_dnld_method);
 
 	kfree(req);
 	kfree(resp);
@@ -745,30 +761,12 @@ static int cnss_wlfw_load_bdf(struct wlfw_bdf_download_req_msg_v01 *req,
 	int ret;
 	char filename[30];
 	const struct firmware *fw;
-	char *bdf_addr, *folder;
+	char *bdf_addr;
 	unsigned int bdf_addr_pa, location[MAX_TGT_MEM_MODES], board_id;
 	int size;
 	struct device *dev;
 
 	dev = &plat_priv->plat_dev->dev;
-
-	switch (plat_priv->device_id) {
-	case QCA6018_DEVICE_ID:
-		folder = "IPQ6018/";
-		break;
-	case QCA5018_DEVICE_ID:
-		folder = "IPQ5018/";
-		break;
-	case QCN6122_DEVICE_ID:
-		folder = "qcn6122/";
-		break;
-	case QCA9574_DEVICE_ID:
-		folder = "IPQ9574/";
-		break;
-	default:
-		folder = "IPQ8074/";
-		break;
-	}
 
 	switch (bdf_type) {
 	case BDF_TYPE_GOLDEN:
@@ -776,18 +774,20 @@ static int cnss_wlfw_load_bdf(struct wlfw_bdf_download_req_msg_v01 *req,
 			cnss_pr_info("Using Boardid from bootargs:0x%02x\n",
 				     plat_priv->board_info.board_id_override);
 			snprintf(filename, sizeof(filename),
-				 "%s" BDF_WIN_FILE_NAME_PREFIX "%02x", folder,
+				 "%s" BDF_WIN_FILE_NAME_PREFIX "%02x",
+				 cnss_get_fw_path(plat_priv),
 				 plat_priv->board_info.board_id_override);
 		} else if (!of_property_read_u32(dev->of_node, "qcom,board_id",
 					  &board_id)) {
 			if ((board_id == 0xFF) &&
 			    (plat_priv->board_info.board_id == 0xFF)) {
 				snprintf(filename, sizeof(filename),
-					 "%s" DEFAULT_BDF_FILE_NAME, folder);
+					 "%s" DEFAULT_BDF_FILE_NAME,
+					 cnss_get_fw_path(plat_priv));
 			} else if (board_id == 0xFF) {
 				snprintf(filename, sizeof(filename),
 					 "%s" BDF_WIN_FILE_NAME_PREFIX "%02x",
-					 folder,
+					 cnss_get_fw_path(plat_priv),
 					 plat_priv->board_info.board_id);
 			} else {
 				if (board_id != plat_priv->board_info.board_id)
@@ -798,17 +798,19 @@ static int cnss_wlfw_load_bdf(struct wlfw_bdf_download_req_msg_v01 *req,
 
 				snprintf(filename, sizeof(filename),
 					 "%s" BDF_WIN_FILE_NAME_PREFIX "%02x",
-					 folder, board_id);
+					 cnss_get_fw_path(plat_priv),
+					 board_id);
 			}
 		} else {
 			cnss_pr_info("No board_id entry in device tree\n");
 			if (plat_priv->board_info.board_id == 0xFF)
 				snprintf(filename, sizeof(filename),
-					 "%s" DEFAULT_BDF_FILE_NAME, folder);
+					 "%s" DEFAULT_BDF_FILE_NAME,
+					 cnss_get_fw_path(plat_priv));
 			else
 				snprintf(filename, sizeof(filename),
 					 "%s" BDF_WIN_FILE_NAME_PREFIX "%02x",
-					 folder,
+					 cnss_get_fw_path(plat_priv),
 					 plat_priv->board_info.board_id);
 		}
 		break;
@@ -817,19 +819,21 @@ static int cnss_wlfw_load_bdf(struct wlfw_bdf_download_req_msg_v01 *req,
 			snprintf(filename, sizeof(filename),
 				 "%s" DEFAULT_CAL_FILE_PREFIX
 				 "%d" DEFAULT_CAL_FILE_SUFFIX,
-				 folder, plat_priv->userpd_id);
+				 cnss_get_fw_path(plat_priv),
+				 plat_priv->userpd_id);
 		} else {
 			snprintf(filename, sizeof(filename),
-				 "%s" DEFAULT_CAL_FILE_NAME, folder);
+				 "%s" DEFAULT_CAL_FILE_NAME,
+				 cnss_get_fw_path(plat_priv));
 		}
 		break;
 	case BDF_TYPE_HDS:
 		snprintf(filename, sizeof(filename),
-			 "%s" HDS_FILE_NAME, folder);
+			 "%s" HDS_FILE_NAME, cnss_get_fw_path(plat_priv));
 		break;
 	case BDF_TYPE_REGDB:
 		snprintf(filename, sizeof(filename),
-			 "%s" REGDB_FILE_NAME, folder);
+			 "%s" REGDB_FILE_NAME, cnss_get_fw_path(plat_priv));
 		break;
 	default:
 		return -EINVAL;
@@ -899,7 +903,7 @@ int cnss_wlfw_bdf_dnld_send_sync(struct cnss_plat_data *plat_priv,
 	char filename[MAX_BDF_FILE_NAME];
 	const struct firmware *fw_entry = NULL;
 	const u8 *temp;
-	char *folder;
+	const char *board_id_str;
 	struct device *dev;
 	unsigned int remaining, id = 0;
 	struct wlfw_bdf_download_req_msg_v01 *req;
@@ -921,8 +925,6 @@ int cnss_wlfw_bdf_dnld_send_sync(struct cnss_plat_data *plat_priv,
 		return -ENOMEM;
 	}
 
-	folder = (plat_priv->device_id == QCN9000_DEVICE_ID) ? "qcn9000/" :
-		 (plat_priv->device_id == QCN9224_DEVICE_ID) ? "qcn9224/" : "";
 	switch (bdf_type) {
 	case CNSS_BDF_ELF:
 		if (plat_priv->board_info.board_id == 0xFF)
@@ -930,10 +932,12 @@ int cnss_wlfw_bdf_dnld_send_sync(struct cnss_plat_data *plat_priv,
 		else if (plat_priv->board_info.board_id < 0xFF)
 			snprintf(filename, sizeof(filename),
 				 "%s" ELF_BDF_FILE_NAME_PREFIX "%02x",
-				 folder, plat_priv->board_info.board_id);
+				 cnss_get_fw_path(plat_priv),
+				 plat_priv->board_info.board_id);
 		else
 			snprintf(filename, sizeof(filename),
-				 "%s" BDF_FILE_NAME_PREFIX "%02x.e%02x", folder,
+				 "%s" BDF_FILE_NAME_PREFIX "%02x.e%02x",
+				 cnss_get_fw_path(plat_priv),
 				 plat_priv->board_info.board_id >> 8 & 0xFF,
 				 plat_priv->board_info.board_id & 0xFF);
 		break;
@@ -942,11 +946,13 @@ int cnss_wlfw_bdf_dnld_send_sync(struct cnss_plat_data *plat_priv,
 			snprintf(filename, sizeof(filename), BIN_BDF_FILE_NAME);
 		else if (plat_priv->board_info.board_id < 0xFF)
 			snprintf(filename, sizeof(filename),
-				 "%s" BIN_BDF_FILE_NAME_PREFIX "%02x", folder,
+				 "%s" BIN_BDF_FILE_NAME_PREFIX "%02x",
+				 cnss_get_fw_path(plat_priv),
 				 plat_priv->board_info.board_id);
 		else
 			snprintf(filename, sizeof(filename),
-				 "%s" BDF_FILE_NAME_PREFIX "%02x.b%02x", folder,
+				 "%s" BDF_FILE_NAME_PREFIX "%02x.b%02x",
+				 cnss_get_fw_path(plat_priv),
 				 plat_priv->board_info.board_id >> 8 & 0xFF,
 				 plat_priv->board_info.board_id & 0xFF);
 		break;
@@ -957,36 +963,38 @@ int cnss_wlfw_bdf_dnld_send_sync(struct cnss_plat_data *plat_priv,
 		remaining = MAX_BDF_FILE_NAME;
 		goto bypass_bdf;
 	case CNSS_BDF_WIN:
-		if ((plat_priv->device_id == QCN9000_DEVICE_ID ||
-		     plat_priv->device_id == QCN9224_DEVICE_ID) &&
-		    !plat_priv->board_info.board_id_override) {
+		if (plat_priv->bus_type == CNSS_BUS_AHB)
+			board_id_str = "qcom,board_id";
+		else
+			board_id_str = "board_id";
+
+		if (!plat_priv->board_info.board_id_override) {
 			dev = &plat_priv->plat_dev->dev;
-			if (!of_property_read_u32(dev->of_node, "board_id",
+			if (!of_property_read_u32(dev->of_node, board_id_str,
 						  &id)) {
 				plat_priv->board_info.board_id_override = id;
+			} else {
+				cnss_pr_info("No board_id entry in device tree\n");
 			}
 		}
 
-		if ((plat_priv->device_id == QCN9000_DEVICE_ID ||
-		     plat_priv->device_id == QCN9224_DEVICE_ID) &&
-		    plat_priv->board_info.board_id_override)
+		if (plat_priv->board_info.board_id_override)
 			snprintf(filename, sizeof(filename),
-				 "%s" BDF_WIN_FILE_NAME_PREFIX "%02x", folder,
+				 "%s" BDF_WIN_FILE_NAME_PREFIX "%02x",
+				 cnss_get_fw_path(plat_priv),
 				 plat_priv->board_info.board_id_override);
 		else if (plat_priv->board_info.board_id == 0xFF)
 			snprintf(filename, sizeof(filename),
-				 "%s" DEFAULT_BDF_FILE_NAME, folder);
+				 "%s" DEFAULT_BDF_FILE_NAME,
+				 cnss_get_fw_path(plat_priv));
 		else
 			snprintf(filename, sizeof(filename),
-				 "%s" BDF_WIN_FILE_NAME_PREFIX "%02x", folder,
+				 "%s" BDF_WIN_FILE_NAME_PREFIX "%02x",
+				 cnss_get_fw_path(plat_priv),
 				 plat_priv->board_info.board_id);
 
-		if (plat_priv->device_id == QCA8074_DEVICE_ID ||
-		    plat_priv->device_id == QCA8074V2_DEVICE_ID ||
-		    plat_priv->device_id == QCA5018_DEVICE_ID ||
-		    plat_priv->device_id == QCN6122_DEVICE_ID ||
-		    plat_priv->device_id == QCA6018_DEVICE_ID ||
-		    plat_priv->device_id == QCA9574_DEVICE_ID) {
+		if (plat_priv->bdf_dnld_method == WLFW_DIRECT_BDF_COPY_V01) {
+			cnss_pr_dbg("BDF download through direct copy\n");
 			temp = filename;
 			remaining = MAX_BDF_FILE_NAME;
 			goto bypass_bdf;
@@ -1004,20 +1012,23 @@ int cnss_wlfw_bdf_dnld_send_sync(struct cnss_plat_data *plat_priv,
 			snprintf(filename, sizeof(filename),
 				 "%s" DEFAULT_CAL_FILE_PREFIX
 				 "%d" DEFAULT_CAL_FILE_SUFFIX,
-				 folder,
+				 cnss_get_fw_path(plat_priv),
 				 (plat_priv->wlfw_service_instance_id -
 				  (node_id_base - 1)));
+		} else if (plat_priv->device_id == QCN6122_DEVICE_ID) {
+			snprintf(filename, sizeof(filename),
+				 "%s" DEFAULT_CAL_FILE_PREFIX
+				 "%d" DEFAULT_CAL_FILE_SUFFIX,
+				 cnss_get_fw_path(plat_priv),
+				 plat_priv->userpd_id);
 		} else {
 			snprintf(filename, sizeof(filename),
-				 "%s" DEFAULT_CAL_FILE_NAME, folder);
+				 "%s" DEFAULT_CAL_FILE_NAME,
+				 cnss_get_fw_path(plat_priv));
 		}
 
-		if (plat_priv->device_id == QCA8074_DEVICE_ID ||
-		    plat_priv->device_id == QCA8074V2_DEVICE_ID ||
-		    plat_priv->device_id == QCA5018_DEVICE_ID ||
-		    plat_priv->device_id == QCN6122_DEVICE_ID ||
-		    plat_priv->device_id == QCA6018_DEVICE_ID ||
-		    plat_priv->device_id == QCA9574_DEVICE_ID) {
+		if (plat_priv->bdf_dnld_method == WLFW_DIRECT_BDF_COPY_V01) {
+			cnss_pr_dbg("Caldata download through direct copy\n");
 			temp = filename;
 			remaining = MAX_BDF_FILE_NAME;
 			goto bypass_bdf;
@@ -1035,22 +1046,12 @@ int cnss_wlfw_bdf_dnld_send_sync(struct cnss_plat_data *plat_priv,
 	case CNSS_BDF_REGDB:
 		fw_bdf_type = BDF_TYPE_REGDB;
 		snprintf(filename, sizeof(filename),
-			 "%s" REGDB_FILE_NAME, folder);
-		if (plat_priv->bus_type == CNSS_BUS_AHB) {
-			temp = filename;
-			remaining = MAX_BDF_FILE_NAME;
-			goto bypass_bdf;
-		}
+			 "%s" REGDB_FILE_NAME, cnss_get_fw_path(plat_priv));
 		break;
 	case CNSS_BDF_HDS:
 		fw_bdf_type = BDF_TYPE_HDS;
 		snprintf(filename, sizeof(filename),
-			 "%s" HDS_FILE_NAME, folder);
-		if (plat_priv->bus_type == CNSS_BUS_AHB) {
-			temp = filename;
-			remaining = MAX_BDF_FILE_NAME;
-			goto bypass_bdf;
-		}
+			 "%s" HDS_FILE_NAME, cnss_get_fw_path(plat_priv));
 		break;
 	default:
 		cnss_pr_err("Invalid BDF type: %d\n",
@@ -1072,17 +1073,12 @@ int cnss_wlfw_bdf_dnld_send_sync(struct cnss_plat_data *plat_priv,
 			ret = 0;
 			goto out;
 		} else if (bdf_type == CNSS_BDF_REGDB) {
-			if (plat_priv->device_id == QCN9224_DEVICE_ID) {
-				/* Reg DB bin download is mandatory for QCN9224,
-				 * hence if the file is not found, we assert.
-				 */
-				cnss_pr_info("Failed to load RegDB %s\n",
-					     filename);
-				goto out;
-			} else {
-				ret = 0;
-				goto out;
-			}
+			/* If REGDB bin file is not present,
+			 * just print the message and skip it.
+			 */
+			cnss_pr_info("Failed to load RegDB %s\n", filename);
+			ret = 0;
+			goto out;
 		} else {
 			/* BDF download is mandatory for all targets */
 			cnss_pr_err("Failed to load BDF: %s\n", filename);
@@ -1116,12 +1112,11 @@ bypass_bdf:
 			req->data_len = remaining;
 			req->end = 1;
 		}
-		if (plat_priv->device_id == QCA8074_DEVICE_ID ||
-		    plat_priv->device_id == QCA8074V2_DEVICE_ID ||
-		    plat_priv->device_id == QCA5018_DEVICE_ID ||
-		    plat_priv->device_id == QCN6122_DEVICE_ID ||
-		    plat_priv->device_id == QCA6018_DEVICE_ID ||
-		    plat_priv->device_id == QCA9574_DEVICE_ID) {
+
+		if (plat_priv->bdf_dnld_method == WLFW_DIRECT_BDF_COPY_V01) {
+			cnss_pr_dbg("%s: Bus type %d BDF download method %d\n",
+				    __func__, plat_priv->bus_type,
+				    plat_priv->bdf_dnld_method);
 			ret = cnss_wlfw_load_bdf(req, plat_priv,
 						 MAX_BDF_FILE_NAME,
 						 fw_bdf_type);
@@ -1134,8 +1129,9 @@ bypass_bdf:
 					goto err_req_fw;
 				} else if (bdf_type == CNSS_BDF_HDS ||
 					   bdf_type == CNSS_BDF_REGDB) {
-					/* HDS is not mandatory and REGDB is
-					 * is mandatory only for QCN9224
+					/* HDS is not mandatory and
+					 * REGDB is mandatory only for
+					 * QCN9224
 					 */
 					ret = 0;
 					goto err_req_fw;
@@ -1999,6 +1995,229 @@ out:
 	return ret;
 }
 
+int cnss_wlfw_qdss_dnld_send_sync(struct cnss_plat_data *plat_priv)
+{
+	struct wlfw_qdss_trace_config_download_req_msg_v01 *req;
+	struct wlfw_qdss_trace_config_download_resp_msg_v01 *resp;
+	struct qmi_txn txn;
+	const struct firmware *fw_entry = NULL;
+	const u8 *temp;
+	char default_cfg_file_name[MAX_QDSS_CONFIG_FILE_NAME];
+	char custom_cfg_filename[MAX_QDSS_CONFIG_FILE_NAME];
+	unsigned int remaining;
+	int ret = 0, resp_error_msg = 0;
+
+	if (!(test_bit(CNSS_FW_READY, &plat_priv->driver_state) &&
+	      (test_bit(CNSS_QMI_WLFW_CONNECTED, &plat_priv->driver_state)))) {
+		cnss_pr_err("Invalid state to download QDSS config: 0x%lx\n",
+			    plat_priv->driver_state);
+		return -EINVAL;
+	}
+
+	cnss_pr_info("Sending QDSS config download message, state: 0x%lx\n",
+		     plat_priv->driver_state);
+
+	req = kzalloc(sizeof(*req), GFP_KERNEL);
+	if (!req)
+		return -ENOMEM;
+
+	resp = kzalloc(sizeof(*resp), GFP_KERNEL);
+	if (!resp) {
+		kfree(req);
+		return -ENOMEM;
+	}
+
+	/* Per device custom QDSS config file name format is
+	 * qdss_trace_config_QCNXXXX_PCIX.bin in /lib/firmware/
+	 */
+	snprintf(custom_cfg_filename, sizeof(custom_cfg_filename), "%s_%s%s",
+		 QDSS_CONFIG_FILE_PREFIX, plat_priv->device_name,
+		 QDSS_CONFIG_FILE_SUFFIX);
+
+	/* Default QDSS config file present in
+	 * /lib/firmware/<fw_path>/qdss_trace_config.bin
+	 */
+	snprintf(default_cfg_file_name, sizeof(default_cfg_file_name), "%s%s%s",
+		 cnss_get_fw_path(plat_priv),
+		 QDSS_CONFIG_FILE_PREFIX, QDSS_CONFIG_FILE_SUFFIX);
+
+	/* Falling back to sysfs helper would cause delay, use direct */
+	ret = request_firmware_direct(&fw_entry, custom_cfg_filename,
+				      &plat_priv->plat_dev->dev);
+	if (ret) {
+		cnss_pr_info("No Custom QDSS config found, loading default file %s\n",
+			     default_cfg_file_name);
+
+		ret = request_firmware_direct(&fw_entry, default_cfg_file_name,
+					      &plat_priv->plat_dev->dev);
+		if (ret) {
+			cnss_pr_info("Failed to load QDSS Config: %s\n",
+				     default_cfg_file_name);
+			goto err_req_fw;
+		}
+	}
+
+	temp = fw_entry->data;
+	remaining = fw_entry->size;
+
+	cnss_pr_dbg("Downloading QDSS Config file of size: %u\n", remaining);
+	qmi_record(plat_priv->wlfw_service_instance_id,
+		   QMI_WLFW_QDSS_TRACE_CONFIG_DOWNLOAD_REQ_V01,
+		   ret, resp_error_msg);
+
+	while (remaining) {
+		req->total_size_valid = 1;
+		req->total_size = remaining;
+		req->seg_id_valid = 1;
+		req->data_valid = 1;
+		req->end_valid = 1;
+
+		if (remaining > QMI_WLFW_MAX_DATA_SIZE_V01) {
+			req->data_len = QMI_WLFW_MAX_DATA_SIZE_V01;
+		} else {
+			req->data_len = remaining;
+			req->end = 1;
+		}
+
+		memcpy(req->data, temp, req->data_len);
+
+		ret = qmi_txn_init(&plat_priv->qmi_wlfw, &txn,
+				wlfw_qdss_trace_config_download_resp_msg_v01_ei,
+				resp);
+		if (ret < 0) {
+			cnss_pr_err("Failed to initialize txn for QDSS download request, err: %d\n",
+				    ret);
+			goto err_send;
+		}
+
+		ret = qmi_send_request(&plat_priv->qmi_wlfw, NULL, &txn,
+			QMI_WLFW_QDSS_TRACE_CONFIG_DOWNLOAD_REQ_V01,
+			WLFW_QDSS_TRACE_CONFIG_DOWNLOAD_REQ_MSG_V01_MAX_MSG_LEN,
+			wlfw_qdss_trace_config_download_req_msg_v01_ei,
+			req);
+		if (ret < 0) {
+			qmi_txn_cancel(&txn);
+			cnss_pr_err("Failed to send respond QDSS download request, err: %d\n",
+				    ret);
+			goto err_send;
+		}
+
+		ret = qmi_txn_wait(&txn, QMI_WLFW_TIMEOUT_JF);
+		if (ret < 0) {
+			cnss_pr_err("Failed to wait for response of QDSS download request, err: %d\n",
+				    ret);
+			goto err_send;
+		}
+
+		if (resp->resp.result != QMI_RESULT_SUCCESS_V01) {
+			cnss_pr_err("QDSS download request failed, result: %d, err: %d\n",
+				    resp->resp.result, resp->resp.error);
+			ret = -resp->resp.result;
+			resp_error_msg = resp->resp.error;
+			goto err_send;
+		}
+
+		remaining -= req->data_len;
+		temp += req->data_len;
+		req->seg_id++;
+	}
+
+err_send:
+	qmi_record(plat_priv->wlfw_service_instance_id,
+		   QMI_WLFW_QDSS_TRACE_CONFIG_DOWNLOAD_REQ_V01,
+		   ret, resp_error_msg);
+
+	release_firmware(fw_entry);
+
+err_req_fw:
+	kfree(req);
+	kfree(resp);
+
+	if (ret < 0)
+		CNSS_ASSERT(0);
+
+	return ret;
+}
+
+int cnss_wlfw_send_qdss_trace_mode_req(struct cnss_plat_data *plat_priv,
+				       enum wlfw_qdss_trace_mode_enum_v01 mode,
+				       u64 option)
+{
+	struct wlfw_qdss_trace_mode_req_msg_v01 *req;
+	struct wlfw_qdss_trace_mode_resp_msg_v01 *resp;
+	struct qmi_txn txn;
+	int ret = 0, resp_error_msg = 0;
+
+	if (!plat_priv)
+		return -ENODEV;
+
+	req = kzalloc(sizeof(*req), GFP_KERNEL);
+	if (!req)
+		return -ENOMEM;
+
+	resp = kzalloc(sizeof(*resp), GFP_KERNEL);
+	if (!resp) {
+		kfree(req);
+		return -ENOMEM;
+	}
+
+	req->mode_valid = 1;
+	req->mode = mode;
+	req->option_valid = 1;
+	req->option = option;
+	req->hw_trc_disable_override_valid = 0;
+
+	cnss_pr_info("Sending QDSS Mode %u, option %llu", mode, option);
+
+	qmi_record(plat_priv->wlfw_service_instance_id,
+		   QMI_WLFW_QDSS_TRACE_MODE_REQ_V01,
+		   ret, resp_error_msg);
+	ret = qmi_txn_init(&plat_priv->qmi_wlfw, &txn,
+			   wlfw_qdss_trace_mode_resp_msg_v01_ei, resp);
+	if (ret < 0) {
+		cnss_pr_err("Fail to init txn for QDSS Mode resp %d\n",
+			    ret);
+		goto out;
+	}
+
+	ret = qmi_send_request(&plat_priv->qmi_wlfw, NULL, &txn,
+			       QMI_WLFW_QDSS_TRACE_MODE_REQ_V01,
+			       WLFW_QDSS_TRACE_MODE_REQ_MSG_V01_MAX_MSG_LEN,
+			       wlfw_qdss_trace_mode_req_msg_v01_ei, req);
+	if (ret < 0) {
+		qmi_txn_cancel(&txn);
+		cnss_pr_err("Fail to send QDSS Mode req %d\n", ret);
+		goto out;
+	}
+
+	ret = qmi_txn_wait(&txn, QMI_WLFW_TIMEOUT_JF);
+	if (ret < 0) {
+		cnss_pr_err("QDSS Mode resp wait failed with rc %d\n",
+			    ret);
+		goto out;
+	}
+
+	if (resp->resp.result != QMI_RESULT_SUCCESS_V01) {
+		cnss_pr_err("QMI QDSS Mode request rejected, result:%d error:%d\n",
+			    resp->resp.result, resp->resp.error);
+		ret = -resp->resp.result;
+		resp_error_msg = resp->resp.error;
+		goto out;
+	}
+
+out:
+	qmi_record(plat_priv->wlfw_service_instance_id,
+		   QMI_WLFW_QDSS_TRACE_MODE_REQ_V01,
+		   ret, resp_error_msg);
+
+	kfree(resp);
+	kfree(req);
+	if (ret < 0)
+		CNSS_ASSERT(0);
+
+	return ret;
+}
+
 #ifdef CNSS2_IMS
 static int cnss_wlfw_wfc_call_status_send_sync(struct cnss_plat_data *plat_priv,
 					       u32 data_len, const void *data)
@@ -2350,6 +2569,9 @@ static void cnss_wlfw_request_mem_ind_cb(struct qmi_handle *qmi_wlfw,
 			    ind_msg->mem_seg[i].size, ind_msg->mem_seg[i].type);
 		plat_priv->fw_mem[i].type = ind_msg->mem_seg[i].type;
 		plat_priv->fw_mem[i].size = ind_msg->mem_seg[i].size;
+		if (plat_priv->fw_mem[i].type == CNSS_MEM_CAL_V01) {
+			plat_priv->cal_mem = &plat_priv->fw_mem[i];
+		}
 	}
 
 	cnss_driver_event_post(plat_priv, CNSS_DRIVER_EVENT_REQUEST_MEM,
@@ -2362,6 +2584,8 @@ static void cnss_wlfw_fw_mem_ready_ind_cb(struct qmi_handle *qmi_wlfw,
 {
 	struct cnss_plat_data *plat_priv =
 		container_of(qmi_wlfw, struct cnss_plat_data, qmi_wlfw);
+	u32 cal_file_size = 0;
+	unsigned int driver_mode;
 
 	cnss_pr_dbg("Received QMI WLFW FW memory ready indication\n");
 
@@ -2369,6 +2593,22 @@ static void cnss_wlfw_fw_mem_ready_ind_cb(struct qmi_handle *qmi_wlfw,
 		cnss_pr_err("Spurious indication\n");
 		return;
 	}
+
+	if (is_cnss_daemon_connected(0)) {
+		driver_mode = cnss_get_global_driver_mode();
+
+		if (plat_priv->cold_boot_support &&
+		    (driver_mode == CNSS_CALIBRATION ||
+		    driver_mode == CNSS_FTM_CALIBRATION)) {
+			cnss_cal_file_download_to_mem(plat_priv,
+						      &cal_file_size);
+			plat_priv->cal_file_size = cal_file_size;
+			cnss_pr_dbg("%s: Cold boot support enabled. Driver mode %u. CALDB downloaded, file size %lu\n",
+				    __func__, driver_mode,
+				    plat_priv->cal_file_size);
+		}
+	}
+
 	qmi_record(plat_priv->wlfw_service_instance_id,
 		   QMI_WLFW_FW_MEM_READY_IND_V01, 0, 0);
 	/* WAR Conditional check of driver state to hinder processing */
@@ -2395,6 +2635,12 @@ static void cnss_wlfw_fw_ready_ind_cb(struct qmi_handle *qmi_wlfw,
 		cnss_pr_err("Spurious indication\n");
 		return;
 	}
+
+	/* Return here as FW sends a different cold boot cal done indication
+	 * in case of single QMI client.
+	 */
+	if (is_cnss_daemon_connected(0))
+		return;
 
 	cal_info = kzalloc(sizeof(*cal_info), GFP_KERNEL);
 	if (!cal_info)
@@ -2458,6 +2704,72 @@ static void cnss_wlfw_pin_result_ind_cb(struct qmi_handle *qmi_wlfw,
 		    ind_msg->rf_pin_result);
 }
 
+int cnss_wlfw_cal_report_req_send_sync(struct cnss_plat_data *plat_priv,
+				       u32 cal_file_download_size)
+{
+	struct wlfw_cal_report_req_msg_v01 *req;
+	struct wlfw_cal_report_resp_msg_v01 *resp;
+	struct qmi_txn txn;
+	int ret = 0;
+	int resp_error_msg = 0;
+
+	cnss_pr_dbg("Sending cal file report request. File size: %d, state: 0x%x\n",
+		    cal_file_download_size, plat_priv->driver_state);
+
+	req = kzalloc(sizeof(*req), GFP_KERNEL);
+	if (!req)
+		return -ENOMEM;
+
+	resp = kzalloc(sizeof(*resp), GFP_KERNEL);
+	if (!resp) {
+		kfree(req);
+		return -ENOMEM;
+	}
+
+	req->cal_file_download_size_valid = 1;
+	req->cal_file_download_size = cal_file_download_size;
+
+	qmi_record(plat_priv->wlfw_service_instance_id,
+		   QMI_WLFW_CAL_REPORT_REQ_V01, ret, resp_error_msg);
+
+	ret = qmi_txn_init(&plat_priv->qmi_wlfw, &txn,
+			   wlfw_cal_report_resp_msg_v01_ei, resp);
+	if (ret < 0) {
+		cnss_pr_err("Failed to initialize txn for Cal Report request, err: %d\n",
+			    ret);
+		goto out;
+	}
+	ret = qmi_send_request(&plat_priv->qmi_wlfw, NULL, &txn,
+			       QMI_WLFW_CAL_REPORT_REQ_V01,
+			       WLFW_CAL_REPORT_REQ_MSG_V01_MAX_MSG_LEN,
+			       wlfw_cal_report_req_msg_v01_ei, req);
+	if (ret < 0) {
+		qmi_txn_cancel(&txn);
+		cnss_pr_err("Failed to send Cal Report request, err: %d\n",
+			    ret);
+		goto out;
+	}
+	ret = qmi_txn_wait(&txn, QMI_WLFW_TIMEOUT_JF);
+	if (ret < 0) {
+		cnss_pr_err("Failed to wait for response of Cal Report request, err: %d\n",
+			    ret);
+		goto out;
+	}
+	if (resp->resp.result != QMI_RESULT_SUCCESS_V01) {
+		cnss_pr_err("Cal Report request failed, result: %d, err: %d\n",
+			    resp->resp.result, resp->resp.error);
+		resp_error_msg = resp->resp.error;
+		ret = -resp->resp.result;
+		goto out;
+	}
+out:
+	qmi_record(plat_priv->wlfw_service_instance_id,
+		   QMI_WLFW_CAL_REPORT_REQ_V01, ret, resp_error_msg);
+	kfree(req);
+	kfree(resp);
+	return ret;
+}
+
 static void cnss_wlfw_cal_done_ind_cb(struct qmi_handle *qmi_wlfw,
 				      struct sockaddr_qrtr *sq,
 				      struct qmi_txn *txn, const void *data)
@@ -2465,17 +2777,27 @@ static void cnss_wlfw_cal_done_ind_cb(struct qmi_handle *qmi_wlfw,
 	struct cnss_plat_data *plat_priv =
 		container_of(qmi_wlfw, struct cnss_plat_data, qmi_wlfw);
 	struct cnss_cal_info *cal_info;
+	const struct wlfw_cal_done_ind_msg_v01 *ind = data;
 
-	cnss_pr_dbg("Received QMI WLFW calibration done indication\n");
+	cnss_pr_dbg("Received Cal done indication. File size: %d\n",
+		    ind->cal_file_upload_size);
+	cnss_pr_info("Calibration took %d ms\n",
+		     jiffies_to_msecs(jiffies - plat_priv->cal_time));
 
 	if (!txn) {
 		cnss_pr_err("Spurious indication\n");
 		return;
 	}
 
+	if (ind->cal_file_upload_size_valid)
+		plat_priv->cal_file_size = ind->cal_file_upload_size;
+
 	cal_info = kzalloc(sizeof(*cal_info), GFP_KERNEL);
 	if (!cal_info)
 		return;
+
+	qmi_record(plat_priv->wlfw_service_instance_id,
+		   QMI_WLFW_CAL_DONE_IND_V01, 0, 0);
 
 	cal_info->cal_status = CNSS_CAL_DONE;
 	cnss_driver_event_post(plat_priv, CNSS_DRIVER_EVENT_COLD_BOOT_CAL_DONE,
@@ -2544,6 +2866,25 @@ static void cnss_wlfw_qdss_trace_save_ind_cb(struct qmi_handle *qmi_wlfw,
 		return;
 	}
 
+	/* QDSS Save indication is supported only PCI devices,
+	 * drop this indication for other targets
+	 */
+	switch (plat_priv->device_id) {
+	case QCN9000_DEVICE_ID:
+	case QCN6122_DEVICE_ID:
+	case QCN9224_DEVICE_ID:
+		break;
+	case QCA8074_DEVICE_ID:
+	case QCA8074V2_DEVICE_ID:
+	case QCA6018_DEVICE_ID:
+	case QCA5018_DEVICE_ID:
+	case QCA9574_DEVICE_ID:
+	default:
+		cnss_pr_dbg("QDSS Trace save not supported for 0x%lx",
+			    plat_priv->device_id);
+		return;
+	}
+
 	cnss_pr_dbg("QDSS_trace_save info: source %u, total_size %u, file_name_valid %u, file_name %s\n",
 		    ind_msg->source, ind_msg->total_size,
 		    ind_msg->file_name_valid, ind_msg->file_name);
@@ -2599,9 +2940,25 @@ static void cnss_wlfw_qdss_trace_free_ind_cb(struct qmi_handle *qmi_wlfw,
 	struct cnss_plat_data *plat_priv =
 		container_of(qmi_wlfw, struct cnss_plat_data, qmi_wlfw);
 
+	cnss_pr_dbg("Received QMI WLFW QDSS memory free indication\n");
 	qmi_record(plat_priv->wlfw_service_instance_id,
 		   QMI_WLFW_QDSS_TRACE_FREE_IND_V01, 0, 0);
 	cnss_driver_event_post(plat_priv, CNSS_DRIVER_EVENT_QDSS_TRACE_FREE,
+			       0, NULL);
+}
+
+static void cnss_qdss_mem_ready_ind_cb(struct qmi_handle *qmi_wlfw,
+				       struct sockaddr_qrtr *sq,
+				       struct qmi_txn *txn,
+				       const void *data)
+{
+	struct cnss_plat_data *plat_priv =
+		container_of(qmi_wlfw, struct cnss_plat_data, qmi_wlfw);
+
+	cnss_pr_dbg("Received QMI WLFW QDSS memory ready indication\n");
+	qmi_record(plat_priv->wlfw_service_instance_id,
+		   QMI_WLFW_QDSS_MEM_READY_IND_V01, 0, 0);
+	cnss_driver_event_post(plat_priv, CNSS_DRIVER_EVENT_QDSS_MEM_READY,
 			       0, NULL);
 }
 
@@ -2706,6 +3063,14 @@ static struct qmi_msg_handler qmi_wlfw_msg_handlers[] = {
 		.decoded_size =
 			sizeof(struct wlfw_qdss_trace_free_ind_msg_v01),
 		.fn = cnss_wlfw_qdss_trace_free_ind_cb,
+	},
+	{
+		.type = QMI_INDICATION,
+		.msg_id = QMI_WLFW_QDSS_MEM_READY_IND_V01,
+		.ei = wlfw_qdss_mem_ready_ind_msg_v01_ei,
+		.decoded_size =
+			sizeof(struct wlfw_qdss_mem_ready_ind_msg_v01),
+		.fn = cnss_qdss_mem_ready_ind_cb,
 	},
 	{
 		.type = QMI_INDICATION,

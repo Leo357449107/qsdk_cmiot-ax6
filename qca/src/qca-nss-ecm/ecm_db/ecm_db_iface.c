@@ -2592,6 +2592,7 @@ static inline void ecm_db_iface_add_to_db(struct ecm_db_iface_instance *ii,  ecm
 	/*
 	 * Insert into chain
 	 */
+	ii->hash_prev = NULL;
 	ii->hash_next = ecm_db_iface_table[hash_index];
 	if (ecm_db_iface_table[hash_index]) {
 		ecm_db_iface_table[hash_index]->hash_prev = ii;
@@ -2605,6 +2606,7 @@ static inline void ecm_db_iface_add_to_db(struct ecm_db_iface_instance *ii,  ecm
 	/*
 	 * Insert into interface identifier chain
 	 */
+	ii->iface_id_hash_prev = NULL;
 	ii->iface_id_hash_next = ecm_db_iface_id_table[iface_id_hash_index];
 	if (ecm_db_iface_id_table[iface_id_hash_index]) {
 		ecm_db_iface_id_table[iface_id_hash_index]->iface_id_hash_prev = ii;

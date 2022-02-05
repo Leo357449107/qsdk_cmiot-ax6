@@ -1,0 +1,21 @@
+Source-Makefile: package/boot/fconfig/Makefile
+
+Package: fconfig
+Submenu: Boot Loaders
+Version: 20080329-1
+Depends: +libc +GCC_LIBSSP:libssp +USE_GLIBC:librt +USE_GLIBC:libpthread 
+Conflicts: 
+Menu-Depends: 
+Provides: 
+Section: utils
+Category: Utilities
+Repository: base
+Title: RedBoot configuration editor
+Maintainer: 
+Source: fconfig-20080329.tar.gz
+Type: ipkg
+Description: 	displays and (if writable) also edits the RedBoot configuration.
+
+@@
+
+

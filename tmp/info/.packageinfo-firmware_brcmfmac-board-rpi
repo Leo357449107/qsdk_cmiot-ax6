@@ -1,0 +1,37 @@
+Source-Makefile: package/firmware/brcmfmac-board-rpi/Makefile
+
+Package: brcmfmac-board-rpi2
+Version: 2018-03-12-86e88fbf0345da49555d0ec34c80b4fbae7d0cd3
+Depends: +libc +GCC_LIBSSP:libssp +USE_GLIBC:librt +USE_GLIBC:libpthread @TARGET_brcm2708
+Conflicts: 
+Menu-Depends: 
+Provides: 
+Section: firmware
+Category: Firmware
+Title: BCM43430 RPi SDIO NVRAM
+Maintainer: 
+Source: 
+Type: ipkg
+Description:   NVRAM for the Broadcom BCM43430 on RPi boards.
+https://github.com/RPi-Distro/firmware-nonfree/
+
+@@
+
+Package: brcmfmac-board-rpi3
+Version: 2018-03-12-86e88fbf0345da49555d0ec34c80b4fbae7d0cd3
+Depends: +libc +GCC_LIBSSP:libssp +USE_GLIBC:librt +USE_GLIBC:libpthread @TARGET_brcm2708
+Conflicts: 
+Menu-Depends: 
+Provides: 
+Section: firmware
+Category: Firmware
+Title: BCM43455 RPi SDIO NVRAM
+Maintainer: 
+Source: 
+Type: ipkg
+Description:   NVRAM and localisations blob for the Broadcom BCM43455 on RPi boards.
+https://github.com/RPi-Distro/firmware-nonfree/
+
+@@
+
+

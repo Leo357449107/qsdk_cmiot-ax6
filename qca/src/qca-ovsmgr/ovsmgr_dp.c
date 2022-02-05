@@ -1063,22 +1063,27 @@ static void ovsmgr_dp_port_vlan_notify(void *dp, struct ovsmgr_dp_flow *flow, in
 	 * Check if VLAN is set for the port.
 	 */
 	for (i = 0; i < OVSMGR_PORT_VLAN_MAX_CNT; i++) {
-		if (nodp->vlan[i].h_vlan_TCI == flow->ingress_vlan.h_vlan_TCI) {
+		if (nodp->vlan_info[i].vlan.h_vlan_TCI == flow->ingress_vlan.h_vlan_TCI) {
 			if (event == OVSMGR_DP_VLAN_ADD) {
 				/*
 				 * VLAN ID is already notified
 				 */
+				nodp->vlan_info[i].ref_cnt++;
 				read_unlock_bh(&ovsmgr_ctx.lock);
 				return;
 			}
 
 			if (event == OVSMGR_DP_VLAN_DEL) {
-				vlan.dev = flow->indev;
-				vlan.master = nodp->master_dev;
-				vlan.vh.h_vlan_TCI = flow->ingress_vlan.h_vlan_TCI;
-				info.vlan = &vlan;
-				ovsmgr_notifiers_call(&info, OVSMGR_DP_VLAN_DEL);
-				nodp->vlan[i].h_vlan_TCI = 0;
+				nodp->vlan_info[i].ref_cnt--;
+				if (!nodp->vlan_info[i].ref_cnt) {
+
+					vlan.dev = flow->indev;
+					vlan.master = nodp->master_dev;
+					vlan.vh.h_vlan_TCI = flow->ingress_vlan.h_vlan_TCI;
+					info.vlan = &vlan;
+					ovsmgr_notifiers_call(&info, OVSMGR_DP_VLAN_DEL);
+					nodp->vlan_info[i].vlan.h_vlan_TCI = 0;
+				}
 				read_unlock_bh(&ovsmgr_ctx.lock);
 				return;
 			}
@@ -1086,8 +1091,9 @@ static void ovsmgr_dp_port_vlan_notify(void *dp, struct ovsmgr_dp_flow *flow, in
 	}
 
 	for (i = 0; i < OVSMGR_PORT_VLAN_MAX_CNT; i++) {
-		if (!nodp->vlan[i].h_vlan_TCI) {
-			nodp->vlan[i].h_vlan_TCI = flow->ingress_vlan.h_vlan_TCI;
+		if (!nodp->vlan_info[i].vlan.h_vlan_TCI) {
+			nodp->vlan_info[i].vlan.h_vlan_TCI = flow->ingress_vlan.h_vlan_TCI;
+			nodp->vlan_info[i].ref_cnt = 1;
 			vlan.dev = flow->indev;
 			vlan.master = nodp->master_dev;
 			vlan.vh.h_vlan_TCI = flow->ingress_vlan.h_vlan_TCI;

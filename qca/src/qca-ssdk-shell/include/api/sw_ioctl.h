@@ -1,5 +1,8 @@
 /*
  * Copyright (c) 2014-2019, 2021, The Linux Foundation. All rights reserved.
+ *
+ * Copyright (c) 2022, Qualcomm Innovation Center, Inc. All rights reserved.
+ *
  * Permission to use, copy, modify, and/or distribute this software for
  * any purpose with or without fee is hereby granted, provided that the
  * above copyright notice and this permission notice appear in all copies.
@@ -28,6 +31,7 @@ extern "C" {
 #define SW_API_SSDK_CFG            (2  + SW_API_INIT_OFFSET)
 #define SW_API_MODULE_FUNC_CTRL_SET   (3  + SW_API_INIT_OFFSET)
 #define SW_API_MODULE_FUNC_CTRL_GET   (4  + SW_API_INIT_OFFSET)
+#define SW_API_PPE_CAPACITY_GET       (5  + SW_API_INIT_OFFSET)
 
     /*port ctrl*/
 #define SW_API_PORT_OFFSET          30
@@ -336,6 +340,8 @@ extern "C" {
 #define SW_API_ACL_UDF_PROFILE_CFG_GET		(25  + SW_API_ACL_OFFSET)
 #define SW_API_ACL_VPGROUP_SET			(26  + SW_API_ACL_OFFSET)
 #define SW_API_ACL_VPGROUP_GET			(27  + SW_API_ACL_OFFSET)
+#define SW_API_ACL_MAC_ENTRY_SET		(28  + SW_API_ACL_OFFSET)
+#define SW_API_ACL_MAC_ENTRY_DUMP		(29  + SW_API_ACL_OFFSET)
 
     /*qos*/
 #define SW_API_QOS_OFFSET             500
@@ -867,10 +873,11 @@ extern "C" {
 #define SW_API_FLOW_HOST_DEL         (21  + SW_API_FLOW_OFFSET)
 #define SW_API_FLOW_HOST_GET         (22  + SW_API_FLOW_OFFSET)
 #define SW_API_FLOW_COUNTER_GET		(23  + SW_API_FLOW_OFFSET)
-#define SW_API_FLOW_ENTRY_EN_SET	(24  + SW_API_FLOW_OFFSET)
-#define SW_API_FLOW_ENTRY_EN_GET	(25  + SW_API_FLOW_OFFSET)
-#define SW_API_FLOW_QOS_SET		(26  + SW_API_FLOW_OFFSET)
-#define SW_API_FLOW_QOS_GET		(27  + SW_API_FLOW_OFFSET)
+#define SW_API_FLOW_COUNTER_CLEANUP	(24  + SW_API_FLOW_OFFSET)
+#define SW_API_FLOW_ENTRY_EN_SET	(25  + SW_API_FLOW_OFFSET)
+#define SW_API_FLOW_ENTRY_EN_GET	(26  + SW_API_FLOW_OFFSET)
+#define SW_API_FLOW_QOS_SET		(27  + SW_API_FLOW_OFFSET)
+#define SW_API_FLOW_QOS_GET		(28  + SW_API_FLOW_OFFSET)
 
 /* rss hash */
 #define SW_API_RSS_HASH_OFFSET		2400

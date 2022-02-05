@@ -1036,6 +1036,9 @@ int sdx65_attached(void)
 void fdt_fixup_sdx65_gpio(void *blob)
 {
 	unsigned int machid = gd->bd->bi_arch_number;
+	int offset, len;
+	u32 *data;
+
 	if (machid != 0x08010400)
 		return;
 
@@ -1044,10 +1047,41 @@ void fdt_fixup_sdx65_gpio(void *blob)
 
 	parse_fdt_fixup("/soc/pci@20000000/%add%x65_attached", blob);
 	parse_fdt_fixup("/soc/pci@20000000/%x65_attached%1", blob);
-	parse_fdt_fixup("/soc/pci@20000000/pcie0_rp/qcom,mhi@0/%mdm2ap%21", blob);
-	parse_fdt_fixup("/soc/pci@20000000/pcie0_rp/qcom,mhi@0/%ap2mdm%45", blob);
-	parse_fdt_fixup("/soc/pinctrl@1000000/ap2mdm_status/%pins%?gpio45", blob);
-	parse_fdt_fixup("/soc/pinctrl@1000000/mdm2ap_e911_status/%pins%?gpio22", blob);
+
+	offset = fdt_path_offset(blob, "/soc/pci@20000000/pcie0_rp/qcom,mhi@0");
+	if(offset >= 0) {
+		data = (u32 *)fdt_getprop(blob, offset, "mdm2ap", &len);
+		if (data) {
+			parse_fdt_fixup("/soc/pci@20000000/pcie0_rp/qcom,mhi@0/%mdm2ap%21", blob);
+		} else {
+			data = (u32 *)fdt_getprop(blob, offset, "mdm2ap-gpio", &len);
+			if (data) {
+				data[1] = cpu_to_fdt32(21);
+				fdt_setprop_inplace(blob, offset, "mdm2ap-gpio", data, len);
+			}
+		}
+
+		data = (u32 *)fdt_getprop(blob, offset, "ap2mdm", &len);
+		if (data) {
+			parse_fdt_fixup("/soc/pci@20000000/pcie0_rp/qcom,mhi@0/%ap2mdm%45", blob);
+		} else {
+			data = (u32 *)fdt_getprop(blob, offset, "ap2mdm-gpio", &len);
+			if (data) {
+				data[1] = cpu_to_fdt32(45);
+				fdt_setprop_inplace(blob, offset, "ap2mdm-gpio", data, len);
+			}
+		}
+	}
+
+	if (fdt_path_offset(blob, "/soc/pinctrl@1000000/ap2mdm_status") >= 0)
+		parse_fdt_fixup("/soc/pinctrl@1000000/ap2mdm_status/%pins%?gpio45", blob);
+	else if (fdt_path_offset(blob, "/soc/pinctrl@1000000/pcie_sdx_pinmux/ap2mdm_status") >= 0)
+		parse_fdt_fixup("/soc/pinctrl@1000000/pcie_sdx_pinmux/ap2mdm_status/%pins%?gpio45", blob);
+
+	if (fdt_path_offset(blob, "/soc/pinctrl@1000000/mdm2ap_e911_status/") >= 0)
+		parse_fdt_fixup("/soc/pinctrl@1000000/mdm2ap_e911_status/%pins%?gpio22", blob);
+	else if (fdt_path_offset(blob, "/soc/pinctrl@1000000/pcie_sdx_pinmux/mdm2ap_e911_status") >= 0)
+		parse_fdt_fixup("/soc/pinctrl@1000000/pcie_sdx_pinmux/mdm2ap_e911_status/%pins%?gpio22", blob);
 }
 
 #ifdef CONFIG_USB_XHCI_IPQ

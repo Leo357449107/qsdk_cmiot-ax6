@@ -1,0 +1,31 @@
+Source-Makefile: package/utils/busybox/Makefile
+Build-Depends: BUSYBOX_CONFIG_PAM:libpam opkg/host opkg/host opkg/host
+
+Package: busybox
+Menu: 1
+Version: 1.30.1-6
+Depends: +libc +GCC_LIBSSP:libssp +USE_GLIBC:librt +USE_GLIBC:libpthread +BUSYBOX_CONFIG_PAM:libpam +BUSYBOX_CONFIG_NTPD:jsonfilter
+Conflicts: 
+Menu-Depends: 
+Provides: 
+Section: base
+Category: Base system
+Repository: base
+Title: Core utilities for embedded Linux
+Maintainer: Felix Fietkau <nbd@nbd.name>
+Source: busybox-1.30.1.tar.bz2
+License: GPL-2.0
+LicenseFiles: LICENSE archival/libarchive/bz/LICENSE
+Type: ipkg
+Description:  The Swiss Army Knife of embedded Linux.
+ It slices, it dices, it makes Julian Fries.
+http://busybox.net/
+Felix Fietkau <nbd@nbd.name>
+@@
+Config:
+
+	source "/media/leoslion/8ebdf1d7-ebf0-4258-9b0b-e917a597a78f/leoslion/openwrt/qsdk/qsdk/qsdk-package/package/utils/busybox//Config.in"
+	source "package/utils/busybox/Config.in"
+@@
+
+

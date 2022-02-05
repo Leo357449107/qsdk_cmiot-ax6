@@ -1,0 +1,30 @@
+Source-Makefile: package/network/utils/ethtool/Makefile
+
+Package: ethtool
+Version: 5.2-1
+Depends: +libc +GCC_LIBSSP:libssp +USE_GLIBC:librt +USE_GLIBC:libpthread 
+Conflicts: 
+Menu-Depends: 
+Provides: 
+Section: net
+Category: Network
+Repository: base
+Title: Display or change ethernet card settings
+Maintainer: Felix Fietkau <nbd@nbd.name>
+Source: ethtool-5.2.tar.xz
+License: GPL-2.0
+LicenseFiles: COPYING
+Type: ipkg
+Description:  ethtool is a small utility for examining and tuning your ethernet-based
+ network interface
+http://www.kernel.org/pub/software/network/ethtool/
+Felix Fietkau <nbd@nbd.name>
+@@
+Config:
+
+	config ETHTOOL_PRETTY_DUMP
+		depends on PACKAGE_ethtool
+		bool "Enable pretty printing"
+@@
+
+

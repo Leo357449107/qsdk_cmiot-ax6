@@ -38,6 +38,7 @@ int edma_alloc_rx_buffer(struct edma_hw *ehw,
 	struct edma_rxfill_desc *rxfill_desc;
 	uint32_t reg_data = 0;
 	uint32_t store_index = 0;
+	uint32_t alloc_size = ehw->rx_alloc_size;
 	struct edma_rx_preheader *rxph = NULL;
 
 	/*
@@ -63,7 +64,7 @@ int edma_alloc_rx_buffer(struct edma_hw *ehw,
 		/*
 		 * Allocate buffer
 		 */
-		skb = dev_alloc_skb(EDMA_RX_BUFF_SIZE);
+		skb = dev_alloc_skb(alloc_size);
 		if (unlikely(!skb))
 			break;
 
@@ -91,7 +92,7 @@ int edma_alloc_rx_buffer(struct edma_hw *ehw,
 		/*
 		 * Save buffer size in RXFILL descriptor
 		 */
-		rxfill_desc->word1 = cpu_to_le32(EDMA_RX_BUFF_SIZE
+		rxfill_desc->word1 = cpu_to_le32(alloc_size
 					& EDMA_RXFILL_BUF_SIZE_MASK);
 
 		/*
@@ -100,7 +101,7 @@ int edma_alloc_rx_buffer(struct edma_hw *ehw,
 		rxfill_desc->buffer_addr = cpu_to_le32(dma_map_single(
 						&pdev->dev,
 						skb->data,
-						EDMA_RX_BUFF_SIZE,
+						alloc_size,
 						DMA_FROM_DEVICE));
 
 		if (!rxfill_desc->buffer_addr) {
@@ -306,7 +307,7 @@ static uint32_t edma_clean_rx(struct edma_hw *ehw,
 		 */
 		dma_unmap_single(&pdev->dev,
 				 rxdesc_desc->buffer_addr,
-				 EDMA_RX_BUFF_SIZE,
+				 ehw->rx_alloc_size,
 				 DMA_FROM_DEVICE);
 
 		store_index = rxph->opaque;

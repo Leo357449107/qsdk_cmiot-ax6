@@ -1,0 +1,78 @@
+Source-Makefile: package/network/utils/dante/Makefile
+
+Package: libsocks
+Version: 1.4.1-4
+ABIVersion: 0
+Depends: +libc +GCC_LIBSSP:libssp +USE_GLIBC:librt +USE_GLIBC:libpthread 
+Conflicts: 
+Menu-Depends: 
+Provides: 
+Section: libs
+Category: Libraries
+Repository: base
+Title: Dante SOCKS Library
+Maintainer: Jo-Philipp Wich <jo@mein.io>
+Source: dante-1.4.1.tar.gz
+License: BSD-4-Clause
+Type: ipkg
+Description: Dante is a circuit-level firewall/proxy that can be used to provide convenient
+and secure network connectivity, requiring only that the server Dante runs on
+has external network connectivity. Dante is used daily by Fortune 100 companies
+and large international organizations, either as a standard SOCKS server or as
+a "reverse proxy".
+This package provides the shared libsocks library.
+http://www.inet.no/dante/
+Jo-Philipp Wich <jo@mein.io>
+@@
+
+Package: sockd
+Submenu: Web Servers/Proxies
+Version: 1.4.1-4
+Depends: +libc +GCC_LIBSSP:libssp +USE_GLIBC:librt +USE_GLIBC:libpthread 
+Conflicts: 
+Menu-Depends: 
+Provides: 
+Section: net
+Category: Network
+Repository: base
+Title: Dante SOCKS Daemon
+Maintainer: Jo-Philipp Wich <jo@mein.io>
+Source: dante-1.4.1.tar.gz
+License: BSD-4-Clause
+Type: ipkg
+Description: Dante is a circuit-level firewall/proxy that can be used to provide convenient
+and secure network connectivity, requiring only that the server Dante runs on
+has external network connectivity. Dante is used daily by Fortune 100 companies
+and large international organizations, either as a standard SOCKS server or as
+a "reverse proxy".
+This package provides the Dante sockd daemon.
+http://www.inet.no/dante/
+Jo-Philipp Wich <jo@mein.io>
+@@
+
+Package: socksify
+Submenu: Web Servers/Proxies
+Version: 1.4.1-4
+Depends: +libc +GCC_LIBSSP:libssp +USE_GLIBC:librt +USE_GLIBC:libpthread 
+Conflicts: 
+Menu-Depends: 
+Provides: 
+Section: net
+Category: Network
+Repository: base
+Title: Dante SOCKS Client
+Maintainer: Jo-Philipp Wich <jo@mein.io>
+Source: dante-1.4.1.tar.gz
+License: BSD-4-Clause
+Type: ipkg
+Description: Dante is a circuit-level firewall/proxy that can be used to provide convenient
+and secure network connectivity, requiring only that the server Dante runs on
+has external network connectivity. Dante is used daily by Fortune 100 companies
+and large international organizations, either as a standard SOCKS server or as
+a "reverse proxy".
+This package provides the Dante socksify client.
+http://www.inet.no/dante/
+Jo-Philipp Wich <jo@mein.io>
+@@
+
+

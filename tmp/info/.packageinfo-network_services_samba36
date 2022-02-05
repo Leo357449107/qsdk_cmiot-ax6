@@ -1,0 +1,93 @@
+Source-Makefile: package/network/services/samba36/Makefile
+
+Package: samba36-client
+Version: 3.6.25-14
+Depends: +libc +GCC_LIBSSP:libssp +USE_GLIBC:librt +USE_GLIBC:libpthread +libreadline +libncurses
+Conflicts: 
+Menu-Depends: 
+Provides: 
+Section: net
+Category: Network
+Repository: base
+Title: Samba 3.6 SMB/CIFS client
+Maintainer: Felix Fietkau <nbd@nbd.name>
+Source: samba-3.6.25.tar.gz
+License: GPL-3.0
+LicenseFiles: COPYING
+Type: ipkg
+Description: Samba 3.6 SMB/CIFS client
+https://www.samba.org/
+Felix Fietkau <nbd@nbd.name>
+@@
+
+Package: samba36-server
+Version: 3.6.25-14
+Depends: +libc +GCC_LIBSSP:libssp +USE_GLIBC:librt +USE_GLIBC:libpthread 
+Conflicts: 
+Menu-Depends: 
+Provides: 
+Section: net
+Category: Network
+Repository: base
+Title: Samba 3.6 SMB/CIFS server
+Maintainer: Felix Fietkau <nbd@nbd.name>
+Source: samba-3.6.25.tar.gz
+License: GPL-3.0
+LicenseFiles: COPYING
+Type: ipkg
+Description:  The Samba software suite is a collection of programs that implements the
+ SMB protocol for UNIX systems, allowing you to serve files and printers to
+ Windows, NT, OS/2 and DOS clients. This protocol is sometimes also referred
+ to as the LanManager or Netbios protocol.
+https://www.samba.org/
+Felix Fietkau <nbd@nbd.name>
+@@
+Config:
+
+	config PACKAGE_SAMBA_MAX_DEBUG_LEVEL
+		int "Maximum level of compiled-in debug messages"
+		depends on PACKAGE_samba36-server || PACKAGE_samba36-client
+		default -1
+@@
+
+Package: samba36-hotplug
+Version: 3.6.25-14
+Depends: +libc +GCC_LIBSSP:libssp +USE_GLIBC:librt +USE_GLIBC:libpthread +blockd
+Conflicts: 
+Menu-Depends: 
+Provides: 
+Section: net
+Category: Network
+Repository: base
+Title: Samba 3.6 SMB/CIFS hotplug script for auto sharing
+Maintainer: Felix Fietkau <nbd@nbd.name>
+Source: samba-3.6.25.tar.gz
+License: GPL-3.0
+LicenseFiles: COPYING
+Type: ipkg
+Description: Samba 3.6 SMB/CIFS hotplug script for auto sharing
+https://www.samba.org/
+Felix Fietkau <nbd@nbd.name>
+@@
+
+Package: samba36-net
+Version: 3.6.25-14
+Depends: +libc +GCC_LIBSSP:libssp +USE_GLIBC:librt +USE_GLIBC:libpthread +libreadline +libncurses
+Conflicts: 
+Menu-Depends: 
+Provides: 
+Section: net
+Category: Network
+Repository: base
+Title: Samba 3.6 SMB/CIFS net commands
+Maintainer: Felix Fietkau <nbd@nbd.name>
+Source: samba-3.6.25.tar.gz
+License: GPL-3.0
+LicenseFiles: COPYING
+Type: ipkg
+Description: Samba 3.6 SMB/CIFS net commands
+https://www.samba.org/
+Felix Fietkau <nbd@nbd.name>
+@@
+
+

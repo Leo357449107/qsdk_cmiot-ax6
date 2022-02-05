@@ -91,19 +91,19 @@
 	 * +--------+--------------+-------------------------+
 	 * |  QDSS  |  0x4D200000  |           1MB           |
 	 * +--------+--------------+-------------------------+
-	 * |QCN6122 |  0x4D300000  |          15MB           |
+	 * |QCN6122 |  0x4D300000  |          13MB           |
 	 * |  data  |              |                         |
 	 * +--------+--------------+-------------------------+
-	 * | M3 Dump|  0x4E200000  |           1MB           |
+	 * | M3 Dump|  0x4E000000  |           1MB           |
 	 * +--------+--------------+-------------------------+
-	 * |  QDSS  |  0x4E300000  |           1MB           |
+	 * |  QDSS  |  0x4E100000  |           1MB           |
 	 * +--------+--------------+-------------------------+
-	 * |QCN6122 |  0x4E400000  |          15MB           |
+	 * |QCN6122 |  0x4E200000  |          13MB           |
 	 * |  data  |              |                         |
 	 * +--------+--------------+-------------------------+
-	 * | M3 Dump|  0x4F300000  |           1MB           |
+	 * | M3 Dump|  0x4EF00000  |           1MB           |
 	 * +--------+--------------+-------------------------+
-	 * |  QDSS  |  0x4F400000  |           1MB           |
+	 * |  QDSS  |  0x4F000000  |           1MB           |
 	 * +--------+--------------+-------------------------+
 	 * |                                                 |
 	 * |      Rest of the memory for Linux               |
@@ -120,7 +120,7 @@
 
 		q6_mem_regions: q6_mem_regions@4B000000 {
 			no-map;
-			reg = <0x0 0x4B000000 0x0 0x4500000>;
+			reg = <0x0 0x4B000000 0x0 0x4100000>;
 		};
 
 		q6_code_data: q6_code_data@4B000000 {
@@ -145,32 +145,32 @@
 
 		q6_qcn6122_data1: q6_qcn6122_data1@4D300000 {
 			no-map;
-			reg = <0x0 0x4D300000 0x0 0xF00000>;
+			reg = <0x0 0x4D300000 0x0 0xD00000>;
 		};
 
-		m3_dump_qcn6122_1: m3_dump_qcn6122_1@4E200000 {
+		m3_dump_qcn6122_1: m3_dump_qcn6122_1@4E000000 {
 			no-map;
-			reg = <0x0 0x4E200000 0x0 0x100000>;
+			reg = <0x0 0x4E000000 0x0 0x100000>;
 		};
 
-		q6_qcn6122_etr_1: q6_qcn6122_etr_1@4E300000 {
+		q6_qcn6122_etr_1: q6_qcn6122_etr_1@4E100000 {
 			no-map;
-			reg = <0x0 0x4E300000 0x0 0x100000>;
+			reg = <0x0 0x4E100000 0x0 0x100000>;
 		};
 
-		q6_qcn6122_data2: q6_qcn6122_data2@4E400000 {
+		q6_qcn6122_data2: q6_qcn6122_data2@4E200000 {
 			no-map;
-			reg = <0x0 0x4E400000 0x0 0xF00000>;
+			reg = <0x0 0x4E200000 0x0 0xD00000>;
 		};
 
-		m3_dump_qcn6122_2: m3_dump_qcn6122_2@4F300000 {
+		m3_dump_qcn6122_2: m3_dump_qcn6122_2@4EF00000 {
 			no-map;
-			reg = <0x0 0x4F300000 0x0 0x100000>;
+			reg = <0x0 0x4EF00000 0x0 0x100000>;
 		};
 
-		q6_qcn6122_etr_2: q6_qcn6122_etr_2@4F400000 {
+		q6_qcn6122_etr_2: q6_qcn6122_etr_2@4F000000 {
 			no-map;
-			reg = <0x0 0x4F400000 0x0 0x100000>;
+			reg = <0x0 0x4F000000 0x0 0x100000>;
 		};
 	};
 
@@ -618,6 +618,8 @@
 		qcom,smem-state-names = "shutdown",
 					"stop",
 					"spawn";
+		memory-region = <&q6_ipq5018_data>, <&m3_dump>,
+				<&q6_etr_region>;
 	};
 
 	q6_wcss_pd2: remoteproc_pd2 {
@@ -639,6 +641,8 @@
 		qcom,smem-state-names = "shutdown",
 					"stop",
 					"spawn";
+		memory-region = <&q6_qcn6122_data1>, <&m3_dump_qcn6122_1>,
+				<&q6_qcn6122_etr_1>;
 	};
 
 	q6_wcss_pd3: remoteproc_pd3 {
@@ -659,6 +663,8 @@
 		qcom,smem-state-names = "shutdown",
 					"stop",
 					"spawn";
+		memory-region = <&q6_qcn6122_data2>, <&m3_dump_qcn6122_2>,
+				<&q6_qcn6122_etr_2>;
 	};
 };
 
@@ -702,7 +708,7 @@
 	qcom,board_id = <0x50>;
 	qcom,tgt-mem-mode = <2>;
 	compatible = "qcom,cnss-qcn6122";
-	qcom,bdf-addr = <0 0 0x4E400000 0 0>;
+	qcom,bdf-addr = <0 0 0x4E200000 0 0>;
 	qcom,caldb-addr = <0 0 0 0 0>;
 	qcom,caldb-size = <0x0>;
 	qcom,userpd-subsys-name = "cd00000.remoteproc:remoteproc_pd3";

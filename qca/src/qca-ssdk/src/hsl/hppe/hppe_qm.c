@@ -117,7 +117,6 @@ hppe_eg_mirror_priority_ctrl_set(
 				value->val);
 }
 
-#ifndef IN_QM_MINI
 sw_error_t
 hppe_ucast_default_hash_get(
 		a_uint32_t dev_id,
@@ -225,6 +224,7 @@ hppe_qm_dbg_data_set(
 	return SW_NOT_SUPPORTED;
 }
 
+#if !defined(IN_QM_MINI)
 sw_error_t
 hppe_mcast_priority_map0_get(
 		a_uint32_t dev_id,
@@ -448,6 +448,7 @@ hppe_mcast_priority_map7_set(
 				index * MCAST_PRIORITY_MAP7_INC,
 				value->val);
 }
+#endif
 
 sw_error_t
 hppe_agg_profile_cnt_en_get(
@@ -737,7 +738,6 @@ hppe_ucast_queue_map_tbl_get(
 				index * UCAST_QUEUE_MAP_TBL_INC,
 				&value->val);
 }
-#endif
 
 sw_error_t
 hppe_ucast_queue_map_tbl_set(
@@ -765,7 +765,6 @@ hppe_ucast_hash_map_tbl_set(
 				value->val);
 }
 
-#ifndef IN_QM_MINI
 sw_error_t
 hppe_ucast_hash_map_tbl_get(
 		a_uint32_t dev_id,
@@ -795,7 +794,6 @@ hppe_ucast_priority_map_tbl_get(
 				index * UCAST_PRIORITY_MAP_TBL_INC,
 				&value->val);
 }
-#endif
 
 sw_error_t
 hppe_ucast_priority_map_tbl_set(
@@ -810,7 +808,7 @@ hppe_ucast_priority_map_tbl_set(
 				value->val);
 }
 
-#ifndef IN_QM_MINI
+#if !defined(IN_QM_MINI)
 sw_error_t
 hppe_mcast_queue_map_tbl_get(
 		a_uint32_t dev_id,
@@ -838,6 +836,7 @@ hppe_mcast_queue_map_tbl_set(
 				index * MCAST_QUEUE_MAP_TBL_INC,
 				value->val);
 }
+#endif
 
 sw_error_t
 hppe_ac_mseq_tbl_get(
@@ -866,7 +865,6 @@ hppe_ac_mseq_tbl_set(
 				index * AC_MSEQ_TBL_INC,
 				value->val);
 }
-#endif
 
 sw_error_t
 hppe_ac_uni_queue_cfg_tbl_get(
@@ -952,7 +950,6 @@ hppe_ac_grp_cfg_tbl_set(
 				3);
 }
 
-#ifndef IN_QM_MINI
 sw_error_t
 hppe_ac_uni_queue_cnt_tbl_get(
 		a_uint32_t dev_id,
@@ -1135,7 +1132,6 @@ hppe_oq_enq_opr_tbl_get(
 				index * OQ_ENQ_OPR_TBL_INC,
 				&value->val);
 }
-#endif
 
 sw_error_t
 hppe_oq_enq_opr_tbl_set(
@@ -1150,7 +1146,6 @@ hppe_oq_enq_opr_tbl_set(
 				value->val);
 }
 
-#ifndef IN_QM_MINI
 sw_error_t
 hppe_oq_deq_opr_tbl_get(
 		a_uint32_t dev_id,
@@ -1795,6 +1790,7 @@ hppe_uq_agg_profile_map_set(
 				value->val);
 }
 
+#if 0
 sw_error_t
 hppe_flush_cfg_flush_busy_get(
 		a_uint32_t dev_id,

@@ -57,7 +57,7 @@ config OPENVPN_mbedtls_ENABLE_SMALL
 
 config OPENVPN_mbedtls_ENABLE_DCA
 	bool "Enable Data Channel Acceleration"
-	depends on TARGET_ipq_ipq807x_64_QSDK_Premium || TARGET_ipq_ipq807x_QSDK_Premium || TARGET_ipq_ipq807x_64_QSDK_512 || TARGET_ipq_ipq807x_QSDK_512 || TARGET_ipq_ipq60xx_64_QSDK_Premium || TARGET_ipq_ipq60xx_QSDK_Premium || TARGET_ipq_ipq60xx_64_QSDK_512 || TARGET_ipq_ipq60xx_QSDK_512 || TARGET_ipq807x || TARGET_ipq807x_64
+	depends on TARGET_ipq_ipq807x_64_QSDK_Premium || TARGET_ipq_ipq807x_QSDK_Premium || TARGET_ipq_ipq807x_64_QSDK_512 || TARGET_ipq_ipq807x_QSDK_512 || TARGET_ipq_ipq60xx_64_QSDK_Premium || TARGET_ipq_ipq60xx_QSDK_Premium || TARGET_ipq_ipq60xx_64_QSDK_512 || TARGET_ipq_ipq60xx_QSDK_512 || TARGET_ipq807x || TARGET_ipq807x_64 || TARGET_ipq60xx
 	default y
 	help
 	  enable support for data channel acceleration (Dependent on

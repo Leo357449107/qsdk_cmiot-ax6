@@ -1,0 +1,21 @@
+Source-Makefile: package/network/config/vxlan/Makefile
+
+Package: vxlan
+Version: 3
+Depends: +libc +GCC_LIBSSP:libssp +USE_GLIBC:librt +USE_GLIBC:libpthread +kmod-vxlan
+Conflicts: 
+Menu-Depends: 
+Provides: 
+Section: net
+Category: Network
+Repository: base
+Title: Virtual eXtensible LAN config support
+Maintainer: Matthias Schiffer <mschiffer@universe-factory.net>
+Source: 
+License: GPL-2.0
+Type: ipkg
+Description:  Virtual eXtensible LAN config support in /etc/config/network.
+Matthias Schiffer <mschiffer@universe-factory.net>
+@@
+
+

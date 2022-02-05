@@ -1,0 +1,49 @@
+Source-Makefile: package/libs/zlib/Makefile
+
+Package: zlib
+Version: 1.2.11-3
+Depends: +libc +GCC_LIBSSP:libssp +USE_GLIBC:librt +USE_GLIBC:libpthread 
+Conflicts: 
+Menu-Depends: 
+Provides: 
+Section: libs
+Category: Libraries
+Repository: base
+Title: Library implementing the deflate compression method
+Maintainer: 
+Source: zlib-1.2.11.tar.xz
+License: Zlib
+LicenseFiles: README
+Type: ipkg
+Description:  zlib is a lossless data-compression library.
+ This package includes the shared library.
+http://www.zlib.net/
+
+@@
+Config:
+
+	source "package/libs/zlib/Config.in"
+@@
+
+Package: zlib-dev
+Submenu: Libraries
+Version: 1.2.11-3
+Depends: +libc +GCC_LIBSSP:libssp +USE_GLIBC:librt +USE_GLIBC:libpthread zlib
+Conflicts: 
+Menu-Depends: 
+Provides: 
+Section: devel
+Category: Development
+Repository: base
+Title: Development files for the zlib library
+Maintainer: 
+Source: zlib-1.2.11.tar.xz
+License: Zlib
+LicenseFiles: README
+Type: ipkg
+Description:  zlib is a lossless data-compression library.
+ This package includes the development support files.
+
+@@
+
+

@@ -1,7 +1,7 @@
 /*
  * Copyright (c) 2016-2021, The Linux Foundation. All rights reserved.
  *
- * Copyright (c) 2021 Qualcomm Innovation Center, Inc. All rights reserved
+ * Copyright (c) 2021-2022, Qualcomm Innovation Center, Inc. All rights reserved
  *
  * Permission to use, copy, modify, and/or distribute this software for
  * any purpose with or without fee is hereby granted, provided that the
@@ -30,6 +30,41 @@
 #include "nss_dp_hal_info.h"
 
 #define NSS_DP_ACL_DEV_ID 0
+
+/*
+ * Rx buffer allocation size as per memory profile
+ */
+#if (defined(NSS_DP_MEM_PROFILE_LOW) || defined(NSS_DP_MEM_PROFILE_MEDIUM)) && !defined(__LP64__)
+#define NSS_DP_RX_BUFFER_SIZE		1856
+#else
+#define NSS_DP_RX_BUFFER_SIZE		1984
+#endif
+
+#if defined(NSS_DP_IPQ95XX)
+/*
+ * Rx rings flow control threshold values
+ *
+ * The Rx flow control has the X-OFF and the X-ON threshold values.
+ * Whenever the free Rx ring descriptor count falls below the X-OFF value, the
+ * ring level flow control will kick in and the mapped PPE queues will be backpressured.
+ * Similarly, whenever the free Rx ring descriptor count crosses the X-ON value,
+ * the ring level flow control will be disabled.
+ */
+#define NSS_DP_RX_FC_XOFF_DEF		16
+#define NSS_DP_RX_FC_XON_DEF		32
+
+/*
+ * Rx ring's mapped AC FC threshold value.
+ *
+ * This value is picked by running four uni-UDPv4 traffic which are mapped
+ * to 4 different rings (and hence processed by 4 different cores) and then
+ * increase one flow's rate to more than what the core can process and observe
+ * whether this congestion in one flow is influencing other flows or not.
+ * Below is the maximum threshold value which is invoking the congestion's queue
+ * tail drop and hence not trigerring the Rx port's back-pressure.
+ */
+#define NSS_DP_RX_AC_FC_THRES_DEF	0x104
+#endif
 
 struct nss_dp_global_ctx;
 
@@ -74,7 +109,7 @@ struct nss_dp_dev {
 	u8 stp_state;			/* STP state of this physical port */
 	unsigned long brport_flags;	/* bridge port flags */
 #endif
-	bool rx_page_mode;		/* page mode for Rx processing */
+	uint32_t rx_page_mode;		/* page mode for Rx processing */
 	uint32_t rx_jumbo_mru;		/* Jumbo mru value for Rx processing */
 };
 
@@ -87,11 +122,17 @@ struct nss_dp_global_ctx {
 					/* GMAC HAL OPS */
 	bool common_init_done;		/* Flag to hold common init state */
 	uint8_t slowproto_acl_bm;	/* Port bitmap to allow slow protocol packets */
+	uint32_t rx_buf_size;		/* Buffer size to allocate */
 };
 
 /* Global data */
 extern struct nss_dp_global_ctx dp_global_ctx;
 extern struct nss_dp_data_plane_ctx dp_global_data_plane_ctx[NSS_DP_HAL_MAX_PORTS];
+#if defined(NSS_DP_IPQ95XX)
+extern int nss_dp_rx_fc_xon;
+extern int nss_dp_rx_fc_xoff;
+extern int nss_dp_rx_ac_fc_threshold;
+#endif
 
 /*
  * nss data plane link state

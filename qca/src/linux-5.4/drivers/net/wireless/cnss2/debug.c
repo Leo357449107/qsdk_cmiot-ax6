@@ -1,4 +1,5 @@
 /* Copyright (c) 2016-2018, The Linux Foundation. All rights reserved.
+ * Copyright (c) 2022, Qualcomm Innovation Center, Inc. All rights reserved.
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License version 2 and
@@ -124,6 +125,9 @@ static int cnss_stats_show_state(struct seq_file *s,
 			continue;
 		case CNSS_IN_SUSPEND_RESUME:
 			seq_puts(s, "IN_SUSPEND_RESUME");
+			continue;
+		case CNSS_DAEMON_CONNECTED:
+			seq_puts(s, "DAEMON_CONNECTED");
 			continue;
 		}
 
@@ -676,6 +680,64 @@ static const struct file_operations cnss_control_params_debug_fops = {
 	.llseek = seq_lseek,
 };
 
+static ssize_t cnss_ce_reg_info_debug_write(struct file *fp,
+					    const char __user *user_buf,
+					    size_t count, loff_t *off)
+{
+	u64 ce_bitmask;
+	int ret;
+	int ce;
+	struct cnss_ce_base_addr *ce_object;
+	struct cnss_plat_data *plat_priv =
+		((struct seq_file *)fp->private_data)->private;
+
+	ret = kstrtou64_from_user(user_buf, count, 16, &ce_bitmask);
+	if (ret)
+		return ret;
+
+	ce_object = register_ce_object(plat_priv);
+	if (!ce_object) {
+		cnss_pr_err("CE object is null\n");
+		return -1;
+	}
+	if (ce_bitmask >= (1 << ce_object->max_ce_count))
+		return -EINVAL;
+	for (ce = 0; ce < ce_object->max_ce_count; ce++) {
+		/* Each bit represents CEx register. The user can also dump the
+		 * specific CE register(s).
+		 * e.g: echo 0x5 > ce_info will dump CE0 and CE2 registers.
+		 */
+		if (ce_bitmask & (1 << ce))
+			cnss_dump_ce_reg(plat_priv, ce, ce_object);
+	}
+	return count;
+}
+
+static int cnss_ce_reg_info_debug_show(struct seq_file *s, void *data)
+{
+	struct cnss_plat_data *plat_priv = s->private;
+
+	cnss_pr_info("To print specific CEs, echo bitmask > ce_info\n\n");
+	cnss_dump_all_ce_reg(plat_priv);
+
+	return 0;
+}
+
+static int cnss_ce_reg_info_debug_open(struct inode *inode,
+				       struct file *file)
+{
+	return single_open(file, cnss_ce_reg_info_debug_show,
+			   inode->i_private);
+}
+
+static const struct file_operations cnss_ce_reg_debug_fops = {
+	.read = seq_read,
+	.write = cnss_ce_reg_info_debug_write,
+	.open = cnss_ce_reg_info_debug_open,
+	.owner = THIS_MODULE,
+	.llseek = seq_lseek,
+};
+
 static ssize_t cnss_dynamic_feature_write(struct file *fp,
 					  const char __user *user_buf,
 					  size_t count, loff_t *off)
@@ -814,6 +876,8 @@ static int cnss_create_debug_only_node(struct cnss_plat_data *plat_priv)
 			    &cnss_dynamic_feature_fops);
 	debugfs_create_file("hds_support", 0600, root_dentry, plat_priv,
 			    &cnss_hds_support_fops);
+	debugfs_create_file("ce_info", 0600, root_dentry, plat_priv,
+			    &cnss_ce_reg_debug_fops);
 
 	return 0;
 }

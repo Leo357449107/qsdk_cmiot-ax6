@@ -42,27 +42,47 @@
 
 #define EDMA_DST_PORT_TYPE_SET(x)	(((x) << EDMA_DST_PORT_TYPE_SHIFT) & EDMA_DST_PORT_TYPE_MASK)
 #define EDMA_DST_PORT_ID_SET(x)		(((x) << EDMA_DST_PORT_ID_SHIFT) & EDMA_DST_PORT_ID_MASK)
-#define EDMA_DST_INFO_SET(desc, x)	(desc->word4 |= (EDMA_DST_PORT_TYPE_SET(EDMA_DST_PORT_TYPE) | EDMA_DST_PORT_ID_SET(x)))
+#define EDMA_DST_INFO_SET(desc, x)	((desc)->word4 |= (EDMA_DST_PORT_TYPE_SET(EDMA_DST_PORT_TYPE) | EDMA_DST_PORT_ID_SET(x)))
+#define EDMA_TXDESC_TSO_ENABLE_SHIFT		24
+#define EDMA_TXDESC_TSO_ENABLE_MASK		0x1000000
+#define EDMA_TXDESC_TSO_ENABLE_SET(desc, x)	((desc)->word5 |= (((x) << EDMA_TXDESC_TSO_ENABLE_SHIFT) & EDMA_TXDESC_TSO_ENABLE_MASK))
+#define EDMA_TXDESC_MSS_SHIFT			16
+#define EDMA_TXDESC_MSS_MASK			0xFFFF0000
+#define EDMA_TXDESC_MSS_SET(desc, x)		((desc)->word6 |= (((x) << EDMA_TXDESC_MSS_SHIFT) & EDMA_TXDESC_MSS_MASK))
+#define EDMA_TXDESC_MORE_BIT_MASK	0x40000000
+#define EDMA_TXDESC_MORE_BIT_SHIFT	30
+#define EDMA_TXDESC_MORE_BIT_SET(desc, x)	((desc)->word1 |= (((x) << EDMA_TXDESC_MORE_BIT_SHIFT) & EDMA_TXDESC_MORE_BIT_MASK))
 
-#define EDMA_TXDESC_DATA_LEN_SET(desc, x)	(desc->word5 = ((x) & 0x1ffff))
+#define EDMA_TXDESC_ADV_OFFSET_BIT	31
+#define EDMA_TXDESC_ADV_OFFLOAD_SET(desc)	((desc)->word5 |= (1 << EDMA_TXDESC_ADV_OFFSET_BIT))
+#define EDMA_TXDESC_IP_CSUM_BIT		25
+#define EDMA_TXDESC_IP_CSUM_SET(desc)		((desc)->word5 |= (1 << EDMA_TXDESC_IP_CSUM_BIT))
+
+#define EDMA_TXDESC_L4_CSUM_SET_SHIFT	26
+#define EDMA_TXDESC_L4_CSUM_SET_MASK	(0x3 << EDMA_TXDESC_L4_CSUM_SET_SHIFT)
+#define EDMA_TXDESC_L4_CSUM_SET(desc)	((desc)->word5 |= ((1 << EDMA_TXDESC_L4_CSUM_SET_SHIFT) & EDMA_TXDESC_L4_CSUM_SET_MASK))
+
+#define EDMA_TXDESC_DATA_LEN_SET(desc, x)	((desc)->word5 |= ((x) & 0x1ffff))
 #define EDMA_TXDESC_SERVICE_CODE_SHIFT	16
 #define EDMA_TXDESC_SERVICE_CODE_MASK	(0x1FF << EDMA_TXDESC_SERVICE_CODE_SHIFT)
-#define EDMA_TXDESC_SERVICE_CODE_SET(desc, x)	(desc->word1 |= (((x) << EDMA_TXDESC_SERVICE_CODE_SHIFT) & EDMA_TXDESC_SERVICE_CODE_MASK))
+#define EDMA_TXDESC_SERVICE_CODE_SET(desc, x)	((desc)->word1 |= (((x) << EDMA_TXDESC_SERVICE_CODE_SHIFT) & EDMA_TXDESC_SERVICE_CODE_MASK))
 #ifdef __LP64__
-#define EDMA_TXDESC_OPAQUE_GET(desc)		(((uint64_t)desc->word3 << 32) | desc->word2)
-#define EDMA_TXCMPL_OPAQUE_GET(desc)		(((uint64_t)desc->word1 << 32) | desc->word0)
-#define EDMA_TXDESC_OPAQUE_LO_SET(desc, ptr)	(desc->word2 = (uint32_t)(uintptr_t)ptr)
-#define EDMA_TXDESC_OPAQUE_HI_SET(desc, ptr)	(desc->word3 = (uint32_t)((uint64_t)ptr >> 32))
+#define EDMA_TXDESC_OPAQUE_GET(desc)		(((uint64_t)(desc)->word3 << 32) | (desc)->word2)
+#define EDMA_TXCMPL_OPAQUE_GET(desc)		(((uint64_t)(desc)->word1 << 32) | (desc)->word0)
+#define EDMA_TXDESC_OPAQUE_LO_SET(desc, ptr)	((desc)->word2 = (uint32_t)(uintptr_t)ptr)
+#define EDMA_TXDESC_OPAQUE_HI_SET(desc, ptr)	((desc)->word3 = (uint32_t)((uint64_t)ptr >> 32))
 #define EDMA_TXDESC_OPAQUE_SET(desc, ptr)	do {	\
 	EDMA_TXDESC_OPAQUE_LO_SET(desc, ptr);		\
 	EDMA_TXDESC_OPAQUE_HI_SET(desc, ptr);		\
 } while (0)
 #else
-#define EDMA_TXCMPL_OPAQUE_GET(desc)		(desc->word0)
-#define EDMA_TXDESC_OPAQUE_GET(desc)		(desc->word2)
-#define EDMA_TXDESC_OPAQUE_LO_SET(desc, ptr)	(desc->word2 = (uint32_t)(uintptr_t)ptr)
+#define EDMA_TXCMPL_OPAQUE_GET(desc)		((desc)->word0)
+#define EDMA_TXDESC_OPAQUE_GET(desc)		((desc)->word2)
+#define EDMA_TXDESC_OPAQUE_LO_SET(desc, ptr)	((desc)->word2 = (uint32_t)(uintptr_t)ptr)
 #define EDMA_TXDESC_OPAQUE_SET(desc, ptr)	EDMA_TXDESC_OPAQUE_LO_SET(desc, ptr)
 #endif
+#define EDMA_TXCMPL_MORE_BIT_MASK		0x40000000
+#define EDMA_TXCMPL_MORE_BIT_GET(desc)		((desc)->word2 & EDMA_TXCMPL_MORE_BIT_MASK)
 
 /*
  * edma_tx
@@ -83,7 +103,10 @@ struct edma_tx_stats {
 	uint64_t tx_bytes;
 	uint64_t tx_drops;
 	uint64_t tx_no_desc_avail;
-	uint64_t tx_non_linear_pkts;
+	uint64_t tx_nr_frag_pkts;
+	uint64_t tx_fraglist_pkts;
+	uint64_t tx_fraglist_with_nr_frags_pkts;
+	uint64_t tx_tso_pkts;
 	struct u64_stats_sync syncp;
 };
 

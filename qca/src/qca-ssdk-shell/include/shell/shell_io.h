@@ -1,5 +1,8 @@
 /*
  * Copyright (c) 2014-2019, The Linux Foundation. All rights reserved.
+ *
+ * Copyright (c) 2022, Qualcomm Innovation Center, Inc. All rights reserved.
+ *
  * Permission to use, copy, modify, and/or distribute this software for
  * any purpose with or without fee is hereby granted, provided that the
  * above copyright notice and this permission notice appear in all copies.
@@ -241,6 +244,11 @@ sw_error_t
 cmd_data_check_acl_udf_profile_entry(char * cmd_str, void * val, a_uint32_t size);
 void
 cmd_data_print_acl_udf_profile_entry(a_uint8_t * param_name, a_uint32_t * buf, a_uint32_t size);
+
+sw_error_t
+cmd_data_check_acl_mac_entry(char *info, void *val, a_uint32_t size);
+void
+cmd_data_print_acl_mac_entry(a_uint8_t * param_name, a_uint32_t * buf, a_uint32_t size);
 
 sw_error_t
 cmd_data_check_host_entry(char *cmd_str, void * val, a_uint32_t size);
@@ -1320,6 +1328,8 @@ cmd_data_check_tunnel_action(char *cmd_str, fal_tunnel_action_t *arg_val, a_uint
 void
 cmd_data_print_tunnel_action(a_uint8_t *param_name, a_ulong_t *buf, a_uint32_t size);
 
+void
+cmd_data_print_ppe_capacity(a_uint8_t *param_name, a_ulong_t *buf, a_uint32_t size);
 /* auto_insert_flag */
 
 /*qca808x_start*/

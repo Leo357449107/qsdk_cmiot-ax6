@@ -106,6 +106,21 @@ static inline void debug_objects_early_init(void) { }
 static inline void debug_objects_mem_init(void) { }
 #endif
 
+#ifdef CONFIG_DEBUG_MEM_USAGE
+struct debug_obj_trace {
+	struct hlist_node node;
+	void *addr;
+	void *stack[9];
+	int size;
+};
+
+extern void debug_object_trace_init(void *addr, void **stack, size_t size);
+extern void debug_object_trace_free(void *addr);
+extern void debug_mem_usage_init(void);
+#else
+static inline void debug_mem_usage_init(void) { }
+#endif
+
 #ifdef CONFIG_DEBUG_OBJECTS_FREE
 extern void debug_check_no_obj_freed(const void *address, unsigned long size);
 #else

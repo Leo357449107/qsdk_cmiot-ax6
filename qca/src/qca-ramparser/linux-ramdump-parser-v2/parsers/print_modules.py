@@ -21,11 +21,11 @@ import linux_list as llist
 
 class Modules(RamParser):
 
-    #simple light function which prints only the skb count;not module sysmbols
+    #simple light function which prints only the skb count;not module symbols
     def mod_light_func(self, mod_list):
-        if(self.ramdump.isELF64() and (mod_list & 0xfff0000000 != self.ramdump.mod_start_addr)):
+        if(self.ramdump.isELF64() and not (self.ramdump.mod_start_addr <= mod_list and mod_list <= self.ramdump.mod_end_addr)):
             return
-        elif(self.ramdump.isELF32() and mod_list & 0xff000000 != self.ramdump.mod_start_addr):
+        elif(self.ramdump.isELF32() and not (self.ramdump.mod_start_addr <= mod_list and mod_list <= self.ramdump.mod_end_addr)):
             return
         name = self.ramdump.read_cstring(mod_list + self.name_offset, 30)
         if (name is None):
@@ -43,13 +43,13 @@ class Modules(RamParser):
         high_mem_addr = self.ramdump.addr_lookup('high_memory')
         vmalloc_offset = 0x800000
         vmalloc_start = self.ramdump.read_u32(high_mem_addr) + vmalloc_offset & (~int(vmalloc_offset - 0x1))
-        if(self.ramdump.isELF64() and (mod_list & 0xfff0000000 != self.ramdump.mod_start_addr)):
+        if(self.ramdump.isELF64() and not (self.ramdump.mod_start_addr <= mod_list and mod_list <= self.ramdump.mod_end_addr)):
             self.module_out.write('module list reached end: 0x{0:x}'.format(mod_list))
             return
-        elif (self.ramdump.isELF32() and self.ramdump.Is_Hawkeye() and mod_list & 0xff000000 != self.ramdump.mod_start_addr and not ((vmalloc_start & 0xff000000 <= mod_list & 0xff000000) and (mod_list & 0xff000000 <= 0xff000000))):
+        elif (self.ramdump.isELF32() and self.ramdump.Is_Hawkeye() and not (self.ramdump.mod_start_addr <= mod_list and mod_list <= self.ramdump.mod_end_addr) and not ((vmalloc_start & 0xff000000 <= mod_list & 0xff000000) and (mod_list & 0xff000000 <= 0xff000000))):
             self.module_out.write('module list reached end: 0x{0:x}'.format(mod_list))
             return
-        elif (self.ramdump.isELF32() and not self.ramdump.Is_Hawkeye() and mod_list & 0xff000000 != self.ramdump.mod_start_addr):
+        elif (self.ramdump.isELF32() and not self.ramdump.Is_Hawkeye() and not (self.ramdump.mod_start_addr <= mod_list and mod_list <= self.ramdump.mod_end_addr)):
             self.module_out.write('module list reached end: 0x{0:x}'.format(mod_list))
             return
 

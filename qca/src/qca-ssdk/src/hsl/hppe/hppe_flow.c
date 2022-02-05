@@ -22,10 +22,8 @@
 #include "hppe_reg_access.h"
 #include "hppe_flow_reg.h"
 #include "hppe_flow.h"
-#include "hppe_ip_reg.h"
 #include "hppe_ip.h"
 
-#ifndef IN_FLOW_MINI
 static a_uint32_t flow_cmd_id = 0;
 static a_uint32_t flow_host_cmd_id = 0;
 
@@ -40,7 +38,7 @@ hppe_in_flow_cnt_tbl_get(
 				INGRESS_POLICER_BASE_ADDR + IN_FLOW_CNT_TBL_ADDRESS + \
 				index * IN_FLOW_CNT_TBL_INC,
 				value->val,
-				3);
+				ARRAY_SIZE(value->val));
 }
 
 sw_error_t
@@ -54,7 +52,7 @@ hppe_in_flow_cnt_tbl_set(
 				INGRESS_POLICER_BASE_ADDR + IN_FLOW_CNT_TBL_ADDRESS + \
 				index * IN_FLOW_CNT_TBL_INC,
 				value->val,
-				3);
+				ARRAY_SIZE(value->val));
 }
 
 sw_error_t
@@ -78,7 +76,6 @@ hppe_flow_ctrl0_set(
 				IPE_L3_BASE_ADDR + FLOW_CTRL0_ADDRESS,
 				value->val);
 }
-#endif
 
 sw_error_t
 hppe_flow_ctrl1_get(
@@ -108,7 +105,6 @@ hppe_flow_ctrl1_set(
 				value->val);
 }
 
-#ifndef IN_FLOW_MINI
 sw_error_t
 hppe_in_flow_tbl_op_get(
 		a_uint32_t dev_id,
@@ -154,434 +150,67 @@ hppe_in_flow_host_tbl_op_set(
 }
 
 sw_error_t
-hppe_in_flow_tbl_op_data0_get(
+hppe_in_flow_tbl_op_data_set(
 		a_uint32_t dev_id,
-		union in_flow_tbl_op_data0_u *value)
+		a_uint32_t index,
+		a_uint32_t value)
 {
+	if (index > IN_FLOW_TBL_OP_DATA_NUM)
+		return SW_OUT_OF_RANGE;
+
+	return hppe_reg_set(
+				dev_id,
+				IPE_L3_BASE_ADDR + IN_FLOW_TBL_OP_DATA_ADDRESS +
+				IN_FLOW_TBL_OP_DATA_INC * index,
+				value);
+}
+
+sw_error_t
+hppe_in_flow_tbl_op_data_get(
+		a_uint32_t dev_id,
+		a_uint32_t index,
+		a_uint32_t *value)
+{
+	if (index > IN_FLOW_TBL_OP_DATA_NUM)
+		return SW_OUT_OF_RANGE;
+
 	return hppe_reg_get(
 				dev_id,
-				IPE_L3_BASE_ADDR + IN_FLOW_TBL_OP_DATA0_ADDRESS,
-				&value->val);
+				IPE_L3_BASE_ADDR + IN_FLOW_TBL_OP_DATA_ADDRESS +
+				IN_FLOW_TBL_OP_DATA_INC * index,
+				value);
 }
 
 sw_error_t
-hppe_in_flow_tbl_op_data0_set(
+hppe_flow_host_tbl_op_data_get(
 		a_uint32_t dev_id,
-		union in_flow_tbl_op_data0_u *value)
+		a_uint32_t index,
+		a_uint32_t *value)
 {
-	return hppe_reg_set(
-				dev_id,
-				IPE_L3_BASE_ADDR + IN_FLOW_TBL_OP_DATA0_ADDRESS,
-				value->val);
-}
+	if (index >= FLOW_HOST_TBL_OP_DATA_NUM)
+		return SW_OUT_OF_RANGE;
 
-sw_error_t
-hppe_in_flow_tbl_op_data1_get(
-		a_uint32_t dev_id,
-		union in_flow_tbl_op_data1_u *value)
-{
 	return hppe_reg_get(
 				dev_id,
-				IPE_L3_BASE_ADDR + IN_FLOW_TBL_OP_DATA1_ADDRESS,
-				&value->val);
+				IPE_L3_BASE_ADDR + FLOW_HOST_TBL_OP_DATA_ADDRESS +
+				FLOW_HOST_TBL_OP_DATA_INC * index,
+				value);
 }
 
 sw_error_t
-hppe_in_flow_tbl_op_data1_set(
+hppe_flow_host_tbl_op_data_set(
 		a_uint32_t dev_id,
-		union in_flow_tbl_op_data1_u *value)
+		a_uint32_t index,
+		a_uint32_t value)
 {
+	if (index >= FLOW_HOST_TBL_OP_DATA_NUM)
+		return SW_OUT_OF_RANGE;
+
 	return hppe_reg_set(
 				dev_id,
-				IPE_L3_BASE_ADDR + IN_FLOW_TBL_OP_DATA1_ADDRESS,
-				value->val);
-}
-
-sw_error_t
-hppe_in_flow_tbl_op_data2_get(
-		a_uint32_t dev_id,
-		union in_flow_tbl_op_data2_u *value)
-{
-	return hppe_reg_get(
-				dev_id,
-				IPE_L3_BASE_ADDR + IN_FLOW_TBL_OP_DATA2_ADDRESS,
-				&value->val);
-}
-
-sw_error_t
-hppe_in_flow_tbl_op_data2_set(
-		a_uint32_t dev_id,
-		union in_flow_tbl_op_data2_u *value)
-{
-	return hppe_reg_set(
-				dev_id,
-				IPE_L3_BASE_ADDR + IN_FLOW_TBL_OP_DATA2_ADDRESS,
-				value->val);
-}
-
-sw_error_t
-hppe_in_flow_tbl_op_data3_get(
-		a_uint32_t dev_id,
-		union in_flow_tbl_op_data3_u *value)
-{
-	return hppe_reg_get(
-				dev_id,
-				IPE_L3_BASE_ADDR + IN_FLOW_TBL_OP_DATA3_ADDRESS,
-				&value->val);
-}
-
-sw_error_t
-hppe_in_flow_tbl_op_data3_set(
-		a_uint32_t dev_id,
-		union in_flow_tbl_op_data3_u *value)
-{
-	return hppe_reg_set(
-				dev_id,
-				IPE_L3_BASE_ADDR + IN_FLOW_TBL_OP_DATA3_ADDRESS,
-				value->val);
-}
-
-sw_error_t
-hppe_in_flow_tbl_op_data4_get(
-		a_uint32_t dev_id,
-		union in_flow_tbl_op_data4_u *value)
-{
-	return hppe_reg_get(
-				dev_id,
-				IPE_L3_BASE_ADDR + IN_FLOW_TBL_OP_DATA4_ADDRESS,
-				&value->val);
-}
-
-sw_error_t
-hppe_in_flow_tbl_op_data4_set(
-		a_uint32_t dev_id,
-		union in_flow_tbl_op_data4_u *value)
-{
-	return hppe_reg_set(
-				dev_id,
-				IPE_L3_BASE_ADDR + IN_FLOW_TBL_OP_DATA4_ADDRESS,
-				value->val);
-}
-
-sw_error_t
-hppe_in_flow_tbl_op_data5_get(
-		a_uint32_t dev_id,
-		union in_flow_tbl_op_data5_u *value)
-{
-	return hppe_reg_get(
-				dev_id,
-				IPE_L3_BASE_ADDR + IN_FLOW_TBL_OP_DATA5_ADDRESS,
-				&value->val);
-}
-
-sw_error_t
-hppe_in_flow_tbl_op_data5_set(
-		a_uint32_t dev_id,
-		union in_flow_tbl_op_data5_u *value)
-{
-	return hppe_reg_set(
-				dev_id,
-				IPE_L3_BASE_ADDR + IN_FLOW_TBL_OP_DATA5_ADDRESS,
-				value->val);
-}
-
-sw_error_t
-hppe_in_flow_tbl_op_data6_get(
-		a_uint32_t dev_id,
-		union in_flow_tbl_op_data6_u *value)
-{
-	return hppe_reg_get(
-				dev_id,
-				IPE_L3_BASE_ADDR + IN_FLOW_TBL_OP_DATA6_ADDRESS,
-				&value->val);
-}
-
-sw_error_t
-hppe_in_flow_tbl_op_data6_set(
-		a_uint32_t dev_id,
-		union in_flow_tbl_op_data6_u *value)
-{
-	return hppe_reg_set(
-				dev_id,
-				IPE_L3_BASE_ADDR + IN_FLOW_TBL_OP_DATA6_ADDRESS,
-				value->val);
-}
-
-sw_error_t
-hppe_in_flow_tbl_op_data7_get(
-		a_uint32_t dev_id,
-		union in_flow_tbl_op_data7_u *value)
-{
-	return hppe_reg_get(
-				dev_id,
-				IPE_L3_BASE_ADDR + IN_FLOW_TBL_OP_DATA7_ADDRESS,
-				&value->val);
-}
-
-sw_error_t
-hppe_in_flow_tbl_op_data7_set(
-		a_uint32_t dev_id,
-		union in_flow_tbl_op_data7_u *value)
-{
-	return hppe_reg_set(
-				dev_id,
-				IPE_L3_BASE_ADDR + IN_FLOW_TBL_OP_DATA7_ADDRESS,
-				value->val);
-}
-
-sw_error_t
-hppe_in_flow_tbl_op_data8_get(
-		a_uint32_t dev_id,
-		union in_flow_tbl_op_data8_u *value)
-{
-	return hppe_reg_get(
-				dev_id,
-				IPE_L3_BASE_ADDR + IN_FLOW_TBL_OP_DATA8_ADDRESS,
-				&value->val);
-}
-
-sw_error_t
-hppe_in_flow_tbl_op_data8_set(
-		a_uint32_t dev_id,
-		union in_flow_tbl_op_data8_u *value)
-{
-	return hppe_reg_set(
-				dev_id,
-				IPE_L3_BASE_ADDR + IN_FLOW_TBL_OP_DATA8_ADDRESS,
-				value->val);
-}
-
-#if defined(APPE)
-sw_error_t
-hppe_in_flow_tbl_op_data9_set(
-		a_uint32_t dev_id,
-		union in_flow_tbl_op_data9_u *value)
-{
-	return hppe_reg_set(
-				dev_id,
-				IPE_L3_BASE_ADDR + IN_FLOW_TBL_OP_DATA9_ADDRESS,
-				value->val);
-}
-#endif
-
-sw_error_t
-hppe_flow_host_tbl_op_data0_get(
-		a_uint32_t dev_id,
-		union flow_host_tbl_op_data0_u *value)
-{
-	return hppe_reg_get(
-				dev_id,
-				IPE_L3_BASE_ADDR + FLOW_HOST_TBL_OP_DATA0_ADDRESS,
-				&value->val);
-}
-
-sw_error_t
-hppe_flow_host_tbl_op_data0_set(
-		a_uint32_t dev_id,
-		union flow_host_tbl_op_data0_u *value)
-{
-	return hppe_reg_set(
-				dev_id,
-				IPE_L3_BASE_ADDR + FLOW_HOST_TBL_OP_DATA0_ADDRESS,
-				value->val);
-}
-
-sw_error_t
-hppe_flow_host_tbl_op_data1_get(
-		a_uint32_t dev_id,
-		union flow_host_tbl_op_data1_u *value)
-{
-	return hppe_reg_get(
-				dev_id,
-				IPE_L3_BASE_ADDR + FLOW_HOST_TBL_OP_DATA1_ADDRESS,
-				&value->val);
-}
-
-sw_error_t
-hppe_flow_host_tbl_op_data1_set(
-		a_uint32_t dev_id,
-		union flow_host_tbl_op_data1_u *value)
-{
-	return hppe_reg_set(
-				dev_id,
-				IPE_L3_BASE_ADDR + FLOW_HOST_TBL_OP_DATA1_ADDRESS,
-				value->val);
-}
-
-sw_error_t
-hppe_flow_host_tbl_op_data2_get(
-		a_uint32_t dev_id,
-		union flow_host_tbl_op_data2_u *value)
-{
-	return hppe_reg_get(
-				dev_id,
-				IPE_L3_BASE_ADDR + FLOW_HOST_TBL_OP_DATA2_ADDRESS,
-				&value->val);
-}
-
-sw_error_t
-hppe_flow_host_tbl_op_data2_set(
-		a_uint32_t dev_id,
-		union flow_host_tbl_op_data2_u *value)
-{
-	return hppe_reg_set(
-				dev_id,
-				IPE_L3_BASE_ADDR + FLOW_HOST_TBL_OP_DATA2_ADDRESS,
-				value->val);
-}
-
-sw_error_t
-hppe_flow_host_tbl_op_data3_get(
-		a_uint32_t dev_id,
-		union flow_host_tbl_op_data3_u *value)
-{
-	return hppe_reg_get(
-				dev_id,
-				IPE_L3_BASE_ADDR + FLOW_HOST_TBL_OP_DATA3_ADDRESS,
-				&value->val);
-}
-
-sw_error_t
-hppe_flow_host_tbl_op_data3_set(
-		a_uint32_t dev_id,
-		union flow_host_tbl_op_data3_u *value)
-{
-	return hppe_reg_set(
-				dev_id,
-				IPE_L3_BASE_ADDR + FLOW_HOST_TBL_OP_DATA3_ADDRESS,
-				value->val);
-}
-
-sw_error_t
-hppe_flow_host_tbl_op_data4_get(
-		a_uint32_t dev_id,
-		union flow_host_tbl_op_data4_u *value)
-{
-	return hppe_reg_get(
-				dev_id,
-				IPE_L3_BASE_ADDR + FLOW_HOST_TBL_OP_DATA4_ADDRESS,
-				&value->val);
-}
-
-sw_error_t
-hppe_flow_host_tbl_op_data4_set(
-		a_uint32_t dev_id,
-		union flow_host_tbl_op_data4_u *value)
-{
-	return hppe_reg_set(
-				dev_id,
-				IPE_L3_BASE_ADDR + FLOW_HOST_TBL_OP_DATA4_ADDRESS,
-				value->val);
-}
-
-sw_error_t
-hppe_flow_host_tbl_op_data5_get(
-		a_uint32_t dev_id,
-		union flow_host_tbl_op_data5_u *value)
-{
-	return hppe_reg_get(
-				dev_id,
-				IPE_L3_BASE_ADDR + FLOW_HOST_TBL_OP_DATA5_ADDRESS,
-				&value->val);
-}
-
-sw_error_t
-hppe_flow_host_tbl_op_data5_set(
-		a_uint32_t dev_id,
-		union flow_host_tbl_op_data5_u *value)
-{
-	return hppe_reg_set(
-				dev_id,
-				IPE_L3_BASE_ADDR + FLOW_HOST_TBL_OP_DATA5_ADDRESS,
-				value->val);
-}
-
-sw_error_t
-hppe_flow_host_tbl_op_data6_get(
-		a_uint32_t dev_id,
-		union flow_host_tbl_op_data6_u *value)
-{
-	return hppe_reg_get(
-				dev_id,
-				IPE_L3_BASE_ADDR + FLOW_HOST_TBL_OP_DATA6_ADDRESS,
-				&value->val);
-}
-
-sw_error_t
-hppe_flow_host_tbl_op_data6_set(
-		a_uint32_t dev_id,
-		union flow_host_tbl_op_data6_u *value)
-{
-	return hppe_reg_set(
-				dev_id,
-				IPE_L3_BASE_ADDR + FLOW_HOST_TBL_OP_DATA6_ADDRESS,
-				value->val);
-}
-
-sw_error_t
-hppe_flow_host_tbl_op_data7_get(
-		a_uint32_t dev_id,
-		union flow_host_tbl_op_data7_u *value)
-{
-	return hppe_reg_get(
-				dev_id,
-				IPE_L3_BASE_ADDR + FLOW_HOST_TBL_OP_DATA7_ADDRESS,
-				&value->val);
-}
-
-sw_error_t
-hppe_flow_host_tbl_op_data7_set(
-		a_uint32_t dev_id,
-		union flow_host_tbl_op_data7_u *value)
-{
-	return hppe_reg_set(
-				dev_id,
-				IPE_L3_BASE_ADDR + FLOW_HOST_TBL_OP_DATA7_ADDRESS,
-				value->val);
-}
-
-sw_error_t
-hppe_flow_host_tbl_op_data8_get(
-		a_uint32_t dev_id,
-		union flow_host_tbl_op_data8_u *value)
-{
-	return hppe_reg_get(
-				dev_id,
-				IPE_L3_BASE_ADDR + FLOW_HOST_TBL_OP_DATA8_ADDRESS,
-				&value->val);
-}
-
-sw_error_t
-hppe_flow_host_tbl_op_data8_set(
-		a_uint32_t dev_id,
-		union flow_host_tbl_op_data8_u *value)
-{
-	return hppe_reg_set(
-				dev_id,
-				IPE_L3_BASE_ADDR + FLOW_HOST_TBL_OP_DATA8_ADDRESS,
-				value->val);
-}
-
-sw_error_t
-hppe_flow_host_tbl_op_data9_get(
-		a_uint32_t dev_id,
-		union flow_host_tbl_op_data9_u *value)
-{
-	return hppe_reg_get(
-				dev_id,
-				IPE_L3_BASE_ADDR + FLOW_HOST_TBL_OP_DATA9_ADDRESS,
-				&value->val);
-}
-
-sw_error_t
-hppe_flow_host_tbl_op_data9_set(
-		a_uint32_t dev_id,
-		union flow_host_tbl_op_data9_u *value)
-{
-	return hppe_reg_set(
-				dev_id,
-				IPE_L3_BASE_ADDR + FLOW_HOST_TBL_OP_DATA9_ADDRESS,
-				value->val);
+				IPE_L3_BASE_ADDR + FLOW_HOST_TBL_OP_DATA_ADDRESS +
+				FLOW_HOST_TBL_OP_DATA_INC * index,
+				value);
 }
 
 sw_error_t
@@ -667,434 +296,67 @@ hppe_in_flow_host_tbl_rd_op_set(
 }
 
 sw_error_t
-hppe_in_flow_tbl_rd_op_data0_get(
+hppe_in_flow_tbl_rd_op_data_get(
 		a_uint32_t dev_id,
-		union in_flow_tbl_rd_op_data0_u *value)
+		a_uint32_t index,
+		a_uint32_t *value)
 {
+	if (index >= IN_FLOW_TBL_RD_OP_DATA_NUM)
+		return SW_OUT_OF_RANGE;
+
 	return hppe_reg_get(
 				dev_id,
-				IPE_L3_BASE_ADDR + IN_FLOW_TBL_RD_OP_DATA0_ADDRESS,
-				&value->val);
+				IPE_L3_BASE_ADDR + IN_FLOW_TBL_RD_OP_DATA_ADDRESS +
+				IN_FLOW_TBL_RD_OP_DATA_INC * index,
+				value);
 }
 
 sw_error_t
-hppe_in_flow_tbl_rd_op_data0_set(
+hppe_in_flow_tbl_rd_op_data_set(
 		a_uint32_t dev_id,
-		union in_flow_tbl_rd_op_data0_u *value)
+		a_uint32_t index,
+		a_uint32_t value)
 {
+	if (index >= IN_FLOW_TBL_RD_OP_DATA_NUM)
+		return SW_OUT_OF_RANGE;
+
 	return hppe_reg_set(
 				dev_id,
-				IPE_L3_BASE_ADDR + IN_FLOW_TBL_RD_OP_DATA0_ADDRESS,
-				value->val);
+				IPE_L3_BASE_ADDR + IN_FLOW_TBL_RD_OP_DATA_ADDRESS +
+				IN_FLOW_TBL_RD_OP_DATA_INC * index,
+				value);
 }
 
 sw_error_t
-hppe_in_flow_tbl_rd_op_data1_get(
+hppe_flow_host_tbl_rd_op_data_get(
 		a_uint32_t dev_id,
-		union in_flow_tbl_rd_op_data1_u *value)
+		a_uint32_t index,
+		a_uint32_t *value)
 {
+	if (index >= FLOW_HOST_TBL_RD_OP_DATA_NUM)
+		return SW_OUT_OF_RANGE;
+
 	return hppe_reg_get(
 				dev_id,
-				IPE_L3_BASE_ADDR + IN_FLOW_TBL_RD_OP_DATA1_ADDRESS,
-				&value->val);
+				IPE_L3_BASE_ADDR + FLOW_HOST_TBL_RD_OP_DATA_ADDRESS +
+				FLOW_HOST_TBL_RD_OP_DATA_INC * index,
+				value);
 }
 
 sw_error_t
-hppe_in_flow_tbl_rd_op_data1_set(
+hppe_flow_host_tbl_rd_op_data_set(
 		a_uint32_t dev_id,
-		union in_flow_tbl_rd_op_data1_u *value)
+		a_uint32_t index,
+		a_uint32_t value)
 {
+	if (index >= FLOW_HOST_TBL_RD_OP_DATA_NUM)
+		return SW_OUT_OF_RANGE;
+
 	return hppe_reg_set(
 				dev_id,
-				IPE_L3_BASE_ADDR + IN_FLOW_TBL_RD_OP_DATA1_ADDRESS,
-				value->val);
-}
-
-sw_error_t
-hppe_in_flow_tbl_rd_op_data2_get(
-		a_uint32_t dev_id,
-		union in_flow_tbl_rd_op_data2_u *value)
-{
-	return hppe_reg_get(
-				dev_id,
-				IPE_L3_BASE_ADDR + IN_FLOW_TBL_RD_OP_DATA2_ADDRESS,
-				&value->val);
-}
-
-sw_error_t
-hppe_in_flow_tbl_rd_op_data2_set(
-		a_uint32_t dev_id,
-		union in_flow_tbl_rd_op_data2_u *value)
-{
-	return hppe_reg_set(
-				dev_id,
-				IPE_L3_BASE_ADDR + IN_FLOW_TBL_RD_OP_DATA2_ADDRESS,
-				value->val);
-}
-
-sw_error_t
-hppe_in_flow_tbl_rd_op_data3_get(
-		a_uint32_t dev_id,
-		union in_flow_tbl_rd_op_data3_u *value)
-{
-	return hppe_reg_get(
-				dev_id,
-				IPE_L3_BASE_ADDR + IN_FLOW_TBL_RD_OP_DATA3_ADDRESS,
-				&value->val);
-}
-
-sw_error_t
-hppe_in_flow_tbl_rd_op_data3_set(
-		a_uint32_t dev_id,
-		union in_flow_tbl_rd_op_data3_u *value)
-{
-	return hppe_reg_set(
-				dev_id,
-				IPE_L3_BASE_ADDR + IN_FLOW_TBL_RD_OP_DATA3_ADDRESS,
-				value->val);
-}
-
-sw_error_t
-hppe_in_flow_tbl_rd_op_data4_get(
-		a_uint32_t dev_id,
-		union in_flow_tbl_rd_op_data4_u *value)
-{
-	return hppe_reg_get(
-				dev_id,
-				IPE_L3_BASE_ADDR + IN_FLOW_TBL_RD_OP_DATA4_ADDRESS,
-				&value->val);
-}
-
-sw_error_t
-hppe_in_flow_tbl_rd_op_data4_set(
-		a_uint32_t dev_id,
-		union in_flow_tbl_rd_op_data4_u *value)
-{
-	return hppe_reg_set(
-				dev_id,
-				IPE_L3_BASE_ADDR + IN_FLOW_TBL_RD_OP_DATA4_ADDRESS,
-				value->val);
-}
-
-sw_error_t
-hppe_in_flow_tbl_rd_op_data5_get(
-		a_uint32_t dev_id,
-		union in_flow_tbl_rd_op_data5_u *value)
-{
-	return hppe_reg_get(
-				dev_id,
-				IPE_L3_BASE_ADDR + IN_FLOW_TBL_RD_OP_DATA5_ADDRESS,
-				&value->val);
-}
-
-sw_error_t
-hppe_in_flow_tbl_rd_op_data5_set(
-		a_uint32_t dev_id,
-		union in_flow_tbl_rd_op_data5_u *value)
-{
-	return hppe_reg_set(
-				dev_id,
-				IPE_L3_BASE_ADDR + IN_FLOW_TBL_RD_OP_DATA5_ADDRESS,
-				value->val);
-}
-
-sw_error_t
-hppe_in_flow_tbl_rd_op_data6_get(
-		a_uint32_t dev_id,
-		union in_flow_tbl_rd_op_data6_u *value)
-{
-	return hppe_reg_get(
-				dev_id,
-				IPE_L3_BASE_ADDR + IN_FLOW_TBL_RD_OP_DATA6_ADDRESS,
-				&value->val);
-}
-
-sw_error_t
-hppe_in_flow_tbl_rd_op_data6_set(
-		a_uint32_t dev_id,
-		union in_flow_tbl_rd_op_data6_u *value)
-{
-	return hppe_reg_set(
-				dev_id,
-				IPE_L3_BASE_ADDR + IN_FLOW_TBL_RD_OP_DATA6_ADDRESS,
-				value->val);
-}
-
-sw_error_t
-hppe_in_flow_tbl_rd_op_data7_get(
-		a_uint32_t dev_id,
-		union in_flow_tbl_rd_op_data7_u *value)
-{
-	return hppe_reg_get(
-				dev_id,
-				IPE_L3_BASE_ADDR + IN_FLOW_TBL_RD_OP_DATA7_ADDRESS,
-				&value->val);
-}
-
-sw_error_t
-hppe_in_flow_tbl_rd_op_data7_set(
-		a_uint32_t dev_id,
-		union in_flow_tbl_rd_op_data7_u *value)
-{
-	return hppe_reg_set(
-				dev_id,
-				IPE_L3_BASE_ADDR + IN_FLOW_TBL_RD_OP_DATA7_ADDRESS,
-				value->val);
-}
-
-sw_error_t
-hppe_in_flow_tbl_rd_op_data8_get(
-		a_uint32_t dev_id,
-		union in_flow_tbl_rd_op_data8_u *value)
-{
-	return hppe_reg_get(
-				dev_id,
-				IPE_L3_BASE_ADDR + IN_FLOW_TBL_RD_OP_DATA8_ADDRESS,
-				&value->val);
-}
-
-sw_error_t
-hppe_in_flow_tbl_rd_op_data8_set(
-		a_uint32_t dev_id,
-		union in_flow_tbl_rd_op_data8_u *value)
-{
-	return hppe_reg_set(
-				dev_id,
-				IPE_L3_BASE_ADDR + IN_FLOW_TBL_RD_OP_DATA8_ADDRESS,
-				value->val);
-}
-
-#if defined(APPE)
-sw_error_t
-hppe_in_flow_tbl_rd_op_data9_set(
-		a_uint32_t dev_id,
-		union in_flow_tbl_rd_op_data9_u *value)
-{
-	return hppe_reg_set(
-				dev_id,
-				IPE_L3_BASE_ADDR + IN_FLOW_TBL_RD_OP_DATA9_ADDRESS,
-				value->val);
-}
-#endif
-
-sw_error_t
-hppe_flow_host_tbl_rd_op_data0_get(
-		a_uint32_t dev_id,
-		union flow_host_tbl_rd_op_data0_u *value)
-{
-	return hppe_reg_get(
-				dev_id,
-				IPE_L3_BASE_ADDR + FLOW_HOST_TBL_RD_OP_DATA0_ADDRESS,
-				&value->val);
-}
-
-sw_error_t
-hppe_flow_host_tbl_rd_op_data0_set(
-		a_uint32_t dev_id,
-		union flow_host_tbl_rd_op_data0_u *value)
-{
-	return hppe_reg_set(
-				dev_id,
-				IPE_L3_BASE_ADDR + FLOW_HOST_TBL_RD_OP_DATA0_ADDRESS,
-				value->val);
-}
-
-sw_error_t
-hppe_flow_host_tbl_rd_op_data1_get(
-		a_uint32_t dev_id,
-		union flow_host_tbl_rd_op_data1_u *value)
-{
-	return hppe_reg_get(
-				dev_id,
-				IPE_L3_BASE_ADDR + FLOW_HOST_TBL_RD_OP_DATA1_ADDRESS,
-				&value->val);
-}
-
-sw_error_t
-hppe_flow_host_tbl_rd_op_data1_set(
-		a_uint32_t dev_id,
-		union flow_host_tbl_rd_op_data1_u *value)
-{
-	return hppe_reg_set(
-				dev_id,
-				IPE_L3_BASE_ADDR + FLOW_HOST_TBL_RD_OP_DATA1_ADDRESS,
-				value->val);
-}
-
-sw_error_t
-hppe_flow_host_tbl_rd_op_data2_get(
-		a_uint32_t dev_id,
-		union flow_host_tbl_rd_op_data2_u *value)
-{
-	return hppe_reg_get(
-				dev_id,
-				IPE_L3_BASE_ADDR + FLOW_HOST_TBL_RD_OP_DATA2_ADDRESS,
-				&value->val);
-}
-
-sw_error_t
-hppe_flow_host_tbl_rd_op_data2_set(
-		a_uint32_t dev_id,
-		union flow_host_tbl_rd_op_data2_u *value)
-{
-	return hppe_reg_set(
-				dev_id,
-				IPE_L3_BASE_ADDR + FLOW_HOST_TBL_RD_OP_DATA2_ADDRESS,
-				value->val);
-}
-
-sw_error_t
-hppe_flow_host_tbl_rd_op_data3_get(
-		a_uint32_t dev_id,
-		union flow_host_tbl_rd_op_data3_u *value)
-{
-	return hppe_reg_get(
-				dev_id,
-				IPE_L3_BASE_ADDR + FLOW_HOST_TBL_RD_OP_DATA3_ADDRESS,
-				&value->val);
-}
-
-sw_error_t
-hppe_flow_host_tbl_rd_op_data3_set(
-		a_uint32_t dev_id,
-		union flow_host_tbl_rd_op_data3_u *value)
-{
-	return hppe_reg_set(
-				dev_id,
-				IPE_L3_BASE_ADDR + FLOW_HOST_TBL_RD_OP_DATA3_ADDRESS,
-				value->val);
-}
-
-sw_error_t
-hppe_flow_host_tbl_rd_op_data4_get(
-		a_uint32_t dev_id,
-		union flow_host_tbl_rd_op_data4_u *value)
-{
-	return hppe_reg_get(
-				dev_id,
-				IPE_L3_BASE_ADDR + FLOW_HOST_TBL_RD_OP_DATA4_ADDRESS,
-				&value->val);
-}
-
-sw_error_t
-hppe_flow_host_tbl_rd_op_data4_set(
-		a_uint32_t dev_id,
-		union flow_host_tbl_rd_op_data4_u *value)
-{
-	return hppe_reg_set(
-				dev_id,
-				IPE_L3_BASE_ADDR + FLOW_HOST_TBL_RD_OP_DATA4_ADDRESS,
-				value->val);
-}
-
-sw_error_t
-hppe_flow_host_tbl_rd_op_data5_get(
-		a_uint32_t dev_id,
-		union flow_host_tbl_rd_op_data5_u *value)
-{
-	return hppe_reg_get(
-				dev_id,
-				IPE_L3_BASE_ADDR + FLOW_HOST_TBL_RD_OP_DATA5_ADDRESS,
-				&value->val);
-}
-
-sw_error_t
-hppe_flow_host_tbl_rd_op_data5_set(
-		a_uint32_t dev_id,
-		union flow_host_tbl_rd_op_data5_u *value)
-{
-	return hppe_reg_set(
-				dev_id,
-				IPE_L3_BASE_ADDR + FLOW_HOST_TBL_RD_OP_DATA5_ADDRESS,
-				value->val);
-}
-
-sw_error_t
-hppe_flow_host_tbl_rd_op_data6_get(
-		a_uint32_t dev_id,
-		union flow_host_tbl_rd_op_data6_u *value)
-{
-	return hppe_reg_get(
-				dev_id,
-				IPE_L3_BASE_ADDR + FLOW_HOST_TBL_RD_OP_DATA6_ADDRESS,
-				&value->val);
-}
-
-sw_error_t
-hppe_flow_host_tbl_rd_op_data6_set(
-		a_uint32_t dev_id,
-		union flow_host_tbl_rd_op_data6_u *value)
-{
-	return hppe_reg_set(
-				dev_id,
-				IPE_L3_BASE_ADDR + FLOW_HOST_TBL_RD_OP_DATA6_ADDRESS,
-				value->val);
-}
-
-sw_error_t
-hppe_flow_host_tbl_rd_op_data7_get(
-		a_uint32_t dev_id,
-		union flow_host_tbl_rd_op_data7_u *value)
-{
-	return hppe_reg_get(
-				dev_id,
-				IPE_L3_BASE_ADDR + FLOW_HOST_TBL_RD_OP_DATA7_ADDRESS,
-				&value->val);
-}
-
-sw_error_t
-hppe_flow_host_tbl_rd_op_data7_set(
-		a_uint32_t dev_id,
-		union flow_host_tbl_rd_op_data7_u *value)
-{
-	return hppe_reg_set(
-				dev_id,
-				IPE_L3_BASE_ADDR + FLOW_HOST_TBL_RD_OP_DATA7_ADDRESS,
-				value->val);
-}
-
-sw_error_t
-hppe_flow_host_tbl_rd_op_data8_get(
-		a_uint32_t dev_id,
-		union flow_host_tbl_rd_op_data8_u *value)
-{
-	return hppe_reg_get(
-				dev_id,
-				IPE_L3_BASE_ADDR + FLOW_HOST_TBL_RD_OP_DATA8_ADDRESS,
-				&value->val);
-}
-
-sw_error_t
-hppe_flow_host_tbl_rd_op_data8_set(
-		a_uint32_t dev_id,
-		union flow_host_tbl_rd_op_data8_u *value)
-{
-	return hppe_reg_set(
-				dev_id,
-				IPE_L3_BASE_ADDR + FLOW_HOST_TBL_RD_OP_DATA8_ADDRESS,
-				value->val);
-}
-
-sw_error_t
-hppe_flow_host_tbl_rd_op_data9_get(
-		a_uint32_t dev_id,
-		union flow_host_tbl_rd_op_data9_u *value)
-{
-	return hppe_reg_get(
-				dev_id,
-				IPE_L3_BASE_ADDR + FLOW_HOST_TBL_RD_OP_DATA9_ADDRESS,
-				&value->val);
-}
-
-sw_error_t
-hppe_flow_host_tbl_rd_op_data9_set(
-		a_uint32_t dev_id,
-		union flow_host_tbl_rd_op_data9_u *value)
-{
-	return hppe_reg_set(
-				dev_id,
-				IPE_L3_BASE_ADDR + FLOW_HOST_TBL_RD_OP_DATA9_ADDRESS,
-				value->val);
+				IPE_L3_BASE_ADDR + FLOW_HOST_TBL_RD_OP_DATA_ADDRESS +
+				FLOW_HOST_TBL_RD_OP_DATA_INC * index,
+				value);
 }
 
 sw_error_t
@@ -1136,364 +398,35 @@ hppe_flow_host_tbl_rd_op_rslt_set(
 }
 
 sw_error_t
-hppe_in_flow_tbl_rd_rslt_data0_get(
+hppe_in_flow_tbl_rd_rslt_data_get(
 		a_uint32_t dev_id,
-		union in_flow_tbl_rd_rslt_data0_u *value)
+		a_uint32_t index,
+		a_uint32_t *value)
 {
+	if (index >= IN_FLOW_TBL_RD_RSLT_DATA_NUM)
+		return SW_OUT_OF_RANGE;
+
 	return hppe_reg_get(
 				dev_id,
-				IPE_L3_BASE_ADDR + IN_FLOW_TBL_RD_RSLT_DATA0_ADDRESS,
-				&value->val);
+				IPE_L3_BASE_ADDR + IN_FLOW_TBL_RD_RSLT_DATA_ADDRESS +
+				IN_FLOW_TBL_RD_RSLT_DATA_INC * index,
+				value);
 }
 
 sw_error_t
-hppe_in_flow_tbl_rd_rslt_data0_set(
+hppe_flow_host_tbl_rd_rslt_data_get(
 		a_uint32_t dev_id,
-		union in_flow_tbl_rd_rslt_data0_u *value)
+		a_uint32_t index,
+		a_uint32_t *value)
 {
-	return SW_NOT_SUPPORTED;
-}
+	if (index >= FLOW_HOST_TBL_RD_RSLT_DATA_NUM)
+		return SW_OUT_OF_RANGE;
 
-sw_error_t
-hppe_in_flow_tbl_rd_rslt_data1_get(
-		a_uint32_t dev_id,
-		union in_flow_tbl_rd_rslt_data1_u *value)
-{
 	return hppe_reg_get(
 				dev_id,
-				IPE_L3_BASE_ADDR + IN_FLOW_TBL_RD_RSLT_DATA1_ADDRESS,
-				&value->val);
-}
-
-sw_error_t
-hppe_in_flow_tbl_rd_rslt_data1_set(
-		a_uint32_t dev_id,
-		union in_flow_tbl_rd_rslt_data1_u *value)
-{
-	return SW_NOT_SUPPORTED;
-}
-
-sw_error_t
-hppe_in_flow_tbl_rd_rslt_data2_get(
-		a_uint32_t dev_id,
-		union in_flow_tbl_rd_rslt_data2_u *value)
-{
-	return hppe_reg_get(
-				dev_id,
-				IPE_L3_BASE_ADDR + IN_FLOW_TBL_RD_RSLT_DATA2_ADDRESS,
-				&value->val);
-}
-
-sw_error_t
-hppe_in_flow_tbl_rd_rslt_data2_set(
-		a_uint32_t dev_id,
-		union in_flow_tbl_rd_rslt_data2_u *value)
-{
-	return SW_NOT_SUPPORTED;
-}
-
-sw_error_t
-hppe_in_flow_tbl_rd_rslt_data3_get(
-		a_uint32_t dev_id,
-		union in_flow_tbl_rd_rslt_data3_u *value)
-{
-	return hppe_reg_get(
-				dev_id,
-				IPE_L3_BASE_ADDR + IN_FLOW_TBL_RD_RSLT_DATA3_ADDRESS,
-				&value->val);
-}
-
-sw_error_t
-hppe_in_flow_tbl_rd_rslt_data3_set(
-		a_uint32_t dev_id,
-		union in_flow_tbl_rd_rslt_data3_u *value)
-{
-	return SW_NOT_SUPPORTED;
-}
-
-sw_error_t
-hppe_in_flow_tbl_rd_rslt_data4_get(
-		a_uint32_t dev_id,
-		union in_flow_tbl_rd_rslt_data4_u *value)
-{
-	return hppe_reg_get(
-				dev_id,
-				IPE_L3_BASE_ADDR + IN_FLOW_TBL_RD_RSLT_DATA4_ADDRESS,
-				&value->val);
-}
-
-sw_error_t
-hppe_in_flow_tbl_rd_rslt_data4_set(
-		a_uint32_t dev_id,
-		union in_flow_tbl_rd_rslt_data4_u *value)
-{
-	return SW_NOT_SUPPORTED;
-}
-
-sw_error_t
-hppe_in_flow_tbl_rd_rslt_data5_get(
-		a_uint32_t dev_id,
-		union in_flow_tbl_rd_rslt_data5_u *value)
-{
-	return hppe_reg_get(
-				dev_id,
-				IPE_L3_BASE_ADDR + IN_FLOW_TBL_RD_RSLT_DATA5_ADDRESS,
-				&value->val);
-}
-
-sw_error_t
-hppe_in_flow_tbl_rd_rslt_data5_set(
-		a_uint32_t dev_id,
-		union in_flow_tbl_rd_rslt_data5_u *value)
-{
-	return SW_NOT_SUPPORTED;
-}
-
-sw_error_t
-hppe_in_flow_tbl_rd_rslt_data6_get(
-		a_uint32_t dev_id,
-		union in_flow_tbl_rd_rslt_data6_u *value)
-{
-	return hppe_reg_get(
-				dev_id,
-				IPE_L3_BASE_ADDR + IN_FLOW_TBL_RD_RSLT_DATA6_ADDRESS,
-				&value->val);
-}
-
-sw_error_t
-hppe_in_flow_tbl_rd_rslt_data6_set(
-		a_uint32_t dev_id,
-		union in_flow_tbl_rd_rslt_data6_u *value)
-{
-	return SW_NOT_SUPPORTED;
-}
-
-sw_error_t
-hppe_in_flow_tbl_rd_rslt_data7_get(
-		a_uint32_t dev_id,
-		union in_flow_tbl_rd_rslt_data7_u *value)
-{
-	return hppe_reg_get(
-				dev_id,
-				IPE_L3_BASE_ADDR + IN_FLOW_TBL_RD_RSLT_DATA7_ADDRESS,
-				&value->val);
-}
-
-sw_error_t
-hppe_in_flow_tbl_rd_rslt_data7_set(
-		a_uint32_t dev_id,
-		union in_flow_tbl_rd_rslt_data7_u *value)
-{
-	return SW_NOT_SUPPORTED;
-}
-
-sw_error_t
-hppe_in_flow_tbl_rd_rslt_data8_get(
-		a_uint32_t dev_id,
-		union in_flow_tbl_rd_rslt_data8_u *value)
-{
-	return hppe_reg_get(
-				dev_id,
-				IPE_L3_BASE_ADDR + IN_FLOW_TBL_RD_RSLT_DATA8_ADDRESS,
-				&value->val);
-}
-
-sw_error_t
-hppe_in_flow_tbl_rd_rslt_data8_set(
-		a_uint32_t dev_id,
-		union in_flow_tbl_rd_rslt_data8_u *value)
-{
-	return SW_NOT_SUPPORTED;
-}
-
-sw_error_t
-hppe_flow_host_tbl_rd_rslt_data0_get(
-		a_uint32_t dev_id,
-		union flow_host_tbl_rd_rslt_data0_u *value)
-{
-	return hppe_reg_get(
-				dev_id,
-				IPE_L3_BASE_ADDR + FLOW_HOST_TBL_RD_RSLT_DATA0_ADDRESS,
-				&value->val);
-}
-
-sw_error_t
-hppe_flow_host_tbl_rd_rslt_data0_set(
-		a_uint32_t dev_id,
-		union flow_host_tbl_rd_rslt_data0_u *value)
-{
-	return SW_NOT_SUPPORTED;
-}
-
-sw_error_t
-hppe_flow_host_tbl_rd_rslt_data1_get(
-		a_uint32_t dev_id,
-		union flow_host_tbl_rd_rslt_data1_u *value)
-{
-	return hppe_reg_get(
-				dev_id,
-				IPE_L3_BASE_ADDR + FLOW_HOST_TBL_RD_RSLT_DATA1_ADDRESS,
-				&value->val);
-}
-
-sw_error_t
-hppe_flow_host_tbl_rd_rslt_data1_set(
-		a_uint32_t dev_id,
-		union flow_host_tbl_rd_rslt_data1_u *value)
-{
-	return SW_NOT_SUPPORTED;
-}
-
-sw_error_t
-hppe_flow_host_tbl_rd_rslt_data2_get(
-		a_uint32_t dev_id,
-		union flow_host_tbl_rd_rslt_data2_u *value)
-{
-	return hppe_reg_get(
-				dev_id,
-				IPE_L3_BASE_ADDR + FLOW_HOST_TBL_RD_RSLT_DATA2_ADDRESS,
-				&value->val);
-}
-
-sw_error_t
-hppe_flow_host_tbl_rd_rslt_data2_set(
-		a_uint32_t dev_id,
-		union flow_host_tbl_rd_rslt_data2_u *value)
-{
-	return SW_NOT_SUPPORTED;
-}
-
-sw_error_t
-hppe_flow_host_tbl_rd_rslt_data3_get(
-		a_uint32_t dev_id,
-		union flow_host_tbl_rd_rslt_data3_u *value)
-{
-	return hppe_reg_get(
-				dev_id,
-				IPE_L3_BASE_ADDR + FLOW_HOST_TBL_RD_RSLT_DATA3_ADDRESS,
-				&value->val);
-}
-
-sw_error_t
-hppe_flow_host_tbl_rd_rslt_data3_set(
-		a_uint32_t dev_id,
-		union flow_host_tbl_rd_rslt_data3_u *value)
-{
-	return SW_NOT_SUPPORTED;
-}
-
-sw_error_t
-hppe_flow_host_tbl_rd_rslt_data4_get(
-		a_uint32_t dev_id,
-		union flow_host_tbl_rd_rslt_data4_u *value)
-{
-	return hppe_reg_get(
-				dev_id,
-				IPE_L3_BASE_ADDR + FLOW_HOST_TBL_RD_RSLT_DATA4_ADDRESS,
-				&value->val);
-}
-
-sw_error_t
-hppe_flow_host_tbl_rd_rslt_data4_set(
-		a_uint32_t dev_id,
-		union flow_host_tbl_rd_rslt_data4_u *value)
-{
-	return SW_NOT_SUPPORTED;
-}
-
-sw_error_t
-hppe_flow_host_tbl_rd_rslt_data5_get(
-		a_uint32_t dev_id,
-		union flow_host_tbl_rd_rslt_data5_u *value)
-{
-	return hppe_reg_get(
-				dev_id,
-				IPE_L3_BASE_ADDR + FLOW_HOST_TBL_RD_RSLT_DATA5_ADDRESS,
-				&value->val);
-}
-
-sw_error_t
-hppe_flow_host_tbl_rd_rslt_data5_set(
-		a_uint32_t dev_id,
-		union flow_host_tbl_rd_rslt_data5_u *value)
-{
-	return SW_NOT_SUPPORTED;
-}
-
-sw_error_t
-hppe_flow_host_tbl_rd_rslt_data6_get(
-		a_uint32_t dev_id,
-		union flow_host_tbl_rd_rslt_data6_u *value)
-{
-	return hppe_reg_get(
-				dev_id,
-				IPE_L3_BASE_ADDR + FLOW_HOST_TBL_RD_RSLT_DATA6_ADDRESS,
-				&value->val);
-}
-
-sw_error_t
-hppe_flow_host_tbl_rd_rslt_data6_set(
-		a_uint32_t dev_id,
-		union flow_host_tbl_rd_rslt_data6_u *value)
-{
-	return SW_NOT_SUPPORTED;
-}
-
-sw_error_t
-hppe_flow_host_tbl_rd_rslt_data7_get(
-		a_uint32_t dev_id,
-		union flow_host_tbl_rd_rslt_data7_u *value)
-{
-	return hppe_reg_get(
-				dev_id,
-				IPE_L3_BASE_ADDR + FLOW_HOST_TBL_RD_RSLT_DATA7_ADDRESS,
-				&value->val);
-}
-
-sw_error_t
-hppe_flow_host_tbl_rd_rslt_data7_set(
-		a_uint32_t dev_id,
-		union flow_host_tbl_rd_rslt_data7_u *value)
-{
-	return SW_NOT_SUPPORTED;
-}
-
-sw_error_t
-hppe_flow_host_tbl_rd_rslt_data8_get(
-		a_uint32_t dev_id,
-		union flow_host_tbl_rd_rslt_data8_u *value)
-{
-	return hppe_reg_get(
-				dev_id,
-				IPE_L3_BASE_ADDR + FLOW_HOST_TBL_RD_RSLT_DATA8_ADDRESS,
-				&value->val);
-}
-
-sw_error_t
-hppe_flow_host_tbl_rd_rslt_data8_set(
-		a_uint32_t dev_id,
-		union flow_host_tbl_rd_rslt_data8_u *value)
-{
-	return SW_NOT_SUPPORTED;
-}
-
-sw_error_t
-hppe_flow_host_tbl_rd_rslt_data9_get(
-		a_uint32_t dev_id,
-		union flow_host_tbl_rd_rslt_data9_u *value)
-{
-	return hppe_reg_get(
-				dev_id,
-				IPE_L3_BASE_ADDR + FLOW_HOST_TBL_RD_RSLT_DATA9_ADDRESS,
-				&value->val);
-}
-
-sw_error_t
-hppe_flow_host_tbl_rd_rslt_data9_set(
-		a_uint32_t dev_id,
-		union flow_host_tbl_rd_rslt_data9_u *value)
-{
-	return SW_NOT_SUPPORTED;
+				IPE_L3_BASE_ADDR + FLOW_HOST_TBL_RD_RSLT_DATA_ADDRESS +
+				FLOW_HOST_TBL_RD_RSLT_DATA_INC * index,
+				value);
 }
 
 sw_error_t
@@ -1507,7 +440,7 @@ hppe_in_flow_3tuple_tbl_get(
 				IPE_L3_BASE_ADDR + IN_FLOW_3TUPLE_TBL_ADDRESS + \
 				index * IN_FLOW_3TUPLE_TBL_INC,
 				value->val,
-				4);
+				ARRAY_SIZE(value->val));
 }
 
 sw_error_t
@@ -1521,7 +454,7 @@ hppe_in_flow_3tuple_tbl_set(
 				IPE_L3_BASE_ADDR + IN_FLOW_3TUPLE_TBL_ADDRESS + \
 				index * IN_FLOW_3TUPLE_TBL_INC,
 				value->val,
-				4);
+				ARRAY_SIZE(value->val));
 }
 
 sw_error_t
@@ -1535,7 +468,7 @@ hppe_in_flow_ipv6_3tuple_tbl_get(
 				IPE_L3_BASE_ADDR + IN_FLOW_IPV6_3TUPLE_TBL_ADDRESS + \
 				index * IN_FLOW_IPV6_3TUPLE_TBL_INC,
 				value->val,
-				9);
+				ARRAY_SIZE(value->val));
 }
 
 sw_error_t
@@ -1549,7 +482,7 @@ hppe_in_flow_ipv6_3tuple_tbl_set(
 				IPE_L3_BASE_ADDR + IN_FLOW_IPV6_3TUPLE_TBL_ADDRESS + \
 				index * IN_FLOW_IPV6_3TUPLE_TBL_INC,
 				value->val,
-				9);
+				ARRAY_SIZE(value->val));
 }
 
 sw_error_t
@@ -1563,7 +496,7 @@ hppe_in_flow_ipv6_5tuple_tbl_get(
 				IPE_L3_BASE_ADDR + IN_FLOW_IPV6_5TUPLE_TBL_ADDRESS + \
 				index * IN_FLOW_IPV6_5TUPLE_TBL_INC,
 				value->val,
-				9);
+				ARRAY_SIZE(value->val));
 }
 
 sw_error_t
@@ -1577,7 +510,7 @@ hppe_in_flow_ipv6_5tuple_tbl_set(
 				IPE_L3_BASE_ADDR + IN_FLOW_IPV6_5TUPLE_TBL_ADDRESS + \
 				index * IN_FLOW_IPV6_5TUPLE_TBL_INC,
 				value->val,
-				9);
+				ARRAY_SIZE(value->val));
 }
 
 sw_error_t
@@ -1591,7 +524,7 @@ hppe_in_flow_tbl_get(
 				IPE_L3_BASE_ADDR + IN_FLOW_TBL_ADDRESS + \
 				index * IN_FLOW_TBL_INC,
 				value->val,
-				sizeof(union in_flow_tbl_u)/sizeof(a_uint32_t));
+				ARRAY_SIZE(value->val));
 }
 
 sw_error_t
@@ -1605,7 +538,7 @@ hppe_in_flow_tbl_set(
 				IPE_L3_BASE_ADDR + IN_FLOW_TBL_ADDRESS + \
 				index * IN_FLOW_TBL_INC,
 				value->val,
-				sizeof(union in_flow_tbl_u)/sizeof(a_uint32_t));
+				ARRAY_SIZE(value->val));
 }
 
 #if defined(APPE)
@@ -1622,7 +555,7 @@ hppe_eg_flow_tree_map_tbl_get(
 				NSS_PTX_CSR_BASE_ADDR + EG_FLOW_TREE_MAP_TBL_ADDRESS + \
 				index * EG_FLOW_TREE_MAP_TBL_INC,
 				value->val,
-				sizeof(union eg_flow_tree_map_tbl_u)/sizeof(a_uint32_t));
+				ARRAY_SIZE(value->val));
 }
 
 sw_error_t
@@ -1636,7 +569,7 @@ hppe_eg_flow_tree_map_tbl_set(
 				NSS_PTX_CSR_BASE_ADDR + EG_FLOW_TREE_MAP_TBL_ADDRESS + \
 				index * EG_FLOW_TREE_MAP_TBL_INC,
 				value->val,
-				sizeof(union eg_flow_tree_map_tbl_u)/sizeof(a_uint32_t));
+				ARRAY_SIZE(value->val));
 }
 #elif defined(HPPE)
 sw_error_t
@@ -1668,6 +601,7 @@ hppe_eg_flow_tree_map_tbl_set(
 }
 #endif
 
+#if 0
 sw_error_t
 hppe_flow_ctrl0_flow_hash_mode_0_get(
 		a_uint32_t dev_id,
@@ -2992,19 +1926,6 @@ hppe_in_flow_tbl_op_rslt_cmd_id_set(
 }
 
 sw_error_t
-hppe_flow_host_tbl_op_rslt_host_entry_index_get(
-		a_uint32_t dev_id,
-		a_uint32_t *value)
-{
-	union flow_host_tbl_op_rslt_u reg_val;
-	sw_error_t ret = SW_OK;
-
-	ret = hppe_flow_host_tbl_op_rslt_get(dev_id, &reg_val);
-	*value = reg_val.bf.host_entry_index;
-	return ret;
-}
-
-sw_error_t
 hppe_flow_host_tbl_op_rslt_host_entry_index_set(
 		a_uint32_t dev_id,
 		a_uint32_t value)
@@ -3416,19 +2337,6 @@ hppe_in_flow_tbl_rd_op_rslt_cmd_id_set(
 }
 
 sw_error_t
-hppe_flow_host_tbl_rd_op_rslt_host_entry_index_get(
-		a_uint32_t dev_id,
-		a_uint32_t *value)
-{
-	union flow_host_tbl_rd_op_rslt_u reg_val;
-	sw_error_t ret = SW_OK;
-
-	ret = hppe_flow_host_tbl_rd_op_rslt_get(dev_id, &reg_val);
-	*value = reg_val.bf.host_entry_index;
-	return ret;
-}
-
-sw_error_t
 hppe_flow_host_tbl_rd_op_rslt_host_entry_index_set(
 		a_uint32_t dev_id,
 		a_uint32_t value)
@@ -3530,7 +2438,33 @@ hppe_in_flow_cnt_tbl_hit_pkt_counter_set(
 	ret = hppe_in_flow_cnt_tbl_set(dev_id, index, &reg_val);
 	return ret;
 }
+#endif
 
+sw_error_t
+hppe_flow_host_tbl_op_rslt_host_entry_index_get(
+		a_uint32_t dev_id,
+		a_uint32_t *value)
+{
+	union flow_host_tbl_op_rslt_u reg_val;
+	sw_error_t ret = SW_OK;
+
+	ret = hppe_flow_host_tbl_op_rslt_get(dev_id, &reg_val);
+	*value = reg_val.bf.host_entry_index;
+	return ret;
+}
+
+sw_error_t
+hppe_flow_host_tbl_rd_op_rslt_host_entry_index_get(
+		a_uint32_t dev_id,
+		a_uint32_t *value)
+{
+	union flow_host_tbl_rd_op_rslt_u reg_val;
+	sw_error_t ret = SW_OK;
+
+	ret = hppe_flow_host_tbl_rd_op_rslt_get(dev_id, &reg_val);
+	*value = reg_val.bf.host_entry_index;
+	return ret;
+}
 
 sw_error_t
 hppe_flow_get_common(
@@ -3568,7 +2502,7 @@ hppe_flow_get_common(
 	if (result.bf.op_rslt == 0) {
 		hppe_reg_tbl_get(
 				dev_id,
-				IPE_L3_BASE_ADDR + IN_FLOW_TBL_RD_RSLT_DATA0_ADDRESS,
+				IPE_L3_BASE_ADDR + IN_FLOW_TBL_RD_RSLT_DATA_ADDRESS,
 				data, num);
 		*index = result.bf.flow_entry_index;
 		return SW_OK;
@@ -3655,8 +2589,6 @@ hppe_flow_op_common(
 	
 }
 
-#include "hppe_ip_reg.h"
-
 sw_error_t
 hppe_flow_host_get_common(
 		a_uint32_t dev_id,
@@ -3694,7 +2626,7 @@ hppe_flow_host_get_common(
 	if (result.bf.op_rslt == 0) {
 		hppe_reg_tbl_get(
 				dev_id,
-				IPE_L3_BASE_ADDR + IN_FLOW_TBL_RD_RSLT_DATA0_ADDRESS,
+				IPE_L3_BASE_ADDR + IN_FLOW_TBL_RD_RSLT_DATA_ADDRESS,
 				data, num);
 		*index = result.bf.flow_entry_index;
 		return SW_OK;
@@ -3777,19 +2709,33 @@ hppe_flow_host_op_both_common(
 }
 
 sw_error_t
+hppe_flow_entry_op(
+		a_uint32_t dev_id,
+		a_uint32_t op_type, a_uint32_t op_mode,
+		a_uint32_t *index, a_uint32_t *entry, a_uint32_t entry_size, a_bool_t flow_host)
+{
+	a_uint32_t i = 0;
+
+	if (op_mode == HASH_MODE) {
+		while (i < entry_size) {
+			hppe_in_flow_tbl_op_data_set(dev_id, i, entry[i]);
+			i++;
+		}
+	}
+
+	if (flow_host)
+		return hppe_flow_host_op_both_common(dev_id, op_type, op_mode, index);
+
+	return hppe_flow_op_common(dev_id, op_type, op_mode, index);
+}
+
+sw_error_t
 hppe_flow_entry_host_op_ipv4_5tuple_add(
 		a_uint32_t dev_id, a_uint32_t op_mode,
 		a_uint32_t *index, union in_flow_tbl_u *entry)
 {
-	hppe_in_flow_tbl_op_data0_set(dev_id, (union in_flow_tbl_op_data0_u *)(&entry->val[0]));
-	hppe_in_flow_tbl_op_data1_set(dev_id, (union in_flow_tbl_op_data1_u *)(&entry->val[1]));
-	hppe_in_flow_tbl_op_data2_set(dev_id, (union in_flow_tbl_op_data2_u *)(&entry->val[2]));
-	hppe_in_flow_tbl_op_data3_set(dev_id, (union in_flow_tbl_op_data3_u *)(&entry->val[3]));
-	hppe_in_flow_tbl_op_data4_set(dev_id, (union in_flow_tbl_op_data4_u *)(&entry->val[4]));
-#if defined(APPE)
-	hppe_in_flow_tbl_op_data5_set(dev_id, (union in_flow_tbl_op_data5_u *)(&entry->val[5]));
-#endif
-	return hppe_flow_host_op_both_common(dev_id, 0, op_mode, index);
+	return hppe_flow_entry_op(dev_id, OP_ADD, op_mode, index,
+			entry->val, ARRAY_SIZE(entry->val), A_TRUE);
 }
 
 sw_error_t
@@ -3797,12 +2743,8 @@ hppe_flow_entry_host_op_ipv4_3tuple_add(
 		a_uint32_t dev_id, a_uint32_t op_mode,
 		a_uint32_t *index, union in_flow_3tuple_tbl_u *entry)
 {
-	hppe_in_flow_tbl_op_data0_set(dev_id, (union in_flow_tbl_op_data0_u *)(&entry->val[0]));
-	hppe_in_flow_tbl_op_data1_set(dev_id, (union in_flow_tbl_op_data1_u *)(&entry->val[1]));
-	hppe_in_flow_tbl_op_data2_set(dev_id, (union in_flow_tbl_op_data2_u *)(&entry->val[2]));
-	hppe_in_flow_tbl_op_data3_set(dev_id, (union in_flow_tbl_op_data3_u *)(&entry->val[3]));
-	hppe_in_flow_tbl_op_data4_set(dev_id, (union in_flow_tbl_op_data4_u *)(&entry->val[4]));
-	return hppe_flow_host_op_both_common(dev_id, 0, op_mode, index);
+	return hppe_flow_entry_op(dev_id, OP_ADD, op_mode, index,
+			entry->val, ARRAY_SIZE(entry->val), A_TRUE);
 }
 
 sw_error_t
@@ -3810,16 +2752,8 @@ hppe_flow_entry_host_op_ipv6_5tuple_add(
 		a_uint32_t dev_id, a_uint32_t op_mode,
 		a_uint32_t *index, union in_flow_ipv6_5tuple_tbl_u *entry)
 {
-	hppe_in_flow_tbl_op_data0_set(dev_id, (union in_flow_tbl_op_data0_u *)(&entry->val[0]));
-	hppe_in_flow_tbl_op_data1_set(dev_id, (union in_flow_tbl_op_data1_u *)(&entry->val[1]));
-	hppe_in_flow_tbl_op_data2_set(dev_id, (union in_flow_tbl_op_data2_u *)(&entry->val[2]));
-	hppe_in_flow_tbl_op_data3_set(dev_id, (union in_flow_tbl_op_data3_u *)(&entry->val[3]));
-	hppe_in_flow_tbl_op_data4_set(dev_id, (union in_flow_tbl_op_data4_u *)(&entry->val[4]));
-	hppe_in_flow_tbl_op_data5_set(dev_id, (union in_flow_tbl_op_data5_u *)(&entry->val[5]));
-	hppe_in_flow_tbl_op_data6_set(dev_id, (union in_flow_tbl_op_data6_u *)(&entry->val[6]));
-	hppe_in_flow_tbl_op_data7_set(dev_id, (union in_flow_tbl_op_data7_u *)(&entry->val[7]));
-	hppe_in_flow_tbl_op_data8_set(dev_id, (union in_flow_tbl_op_data8_u *)(&entry->val[8]));
-	return hppe_flow_host_op_both_common(dev_id, 0, op_mode, index);
+	return hppe_flow_entry_op(dev_id, OP_ADD, op_mode, index,
+			entry->val, ARRAY_SIZE(entry->val), A_TRUE);
 }
 
 sw_error_t
@@ -3827,16 +2761,8 @@ hppe_flow_entry_host_op_ipv6_3tuple_add(
 		a_uint32_t dev_id, a_uint32_t op_mode,
 		a_uint32_t *index, union in_flow_ipv6_3tuple_tbl_u *entry)
 {
-	hppe_in_flow_tbl_op_data0_set(dev_id, (union in_flow_tbl_op_data0_u *)(&entry->val[0]));
-	hppe_in_flow_tbl_op_data1_set(dev_id, (union in_flow_tbl_op_data1_u *)(&entry->val[1]));
-	hppe_in_flow_tbl_op_data2_set(dev_id, (union in_flow_tbl_op_data2_u *)(&entry->val[2]));
-	hppe_in_flow_tbl_op_data3_set(dev_id, (union in_flow_tbl_op_data3_u *)(&entry->val[3]));
-	hppe_in_flow_tbl_op_data4_set(dev_id, (union in_flow_tbl_op_data4_u *)(&entry->val[4]));
-	hppe_in_flow_tbl_op_data5_set(dev_id, (union in_flow_tbl_op_data5_u *)(&entry->val[5]));
-	hppe_in_flow_tbl_op_data6_set(dev_id, (union in_flow_tbl_op_data6_u *)(&entry->val[6]));
-	hppe_in_flow_tbl_op_data7_set(dev_id, (union in_flow_tbl_op_data7_u *)(&entry->val[7]));
-	hppe_in_flow_tbl_op_data8_set(dev_id, (union in_flow_tbl_op_data8_u *)(&entry->val[8]));
-	return hppe_flow_host_op_both_common(dev_id, 0, op_mode, index);
+	return hppe_flow_entry_op(dev_id, OP_ADD, op_mode, index,
+			entry->val, ARRAY_SIZE(entry->val), A_TRUE);
 }
 
 sw_error_t
@@ -3844,17 +2770,8 @@ hppe_flow_entry_host_op_ipv4_5tuple_del(
 		a_uint32_t dev_id, a_uint32_t op_mode,
 		a_uint32_t *index, union in_flow_tbl_u *entry)
 {
-	if (op_mode == 0) {
-		hppe_in_flow_tbl_op_data0_set(dev_id, (union in_flow_tbl_op_data0_u *)(&entry->val[0]));
-		hppe_in_flow_tbl_op_data1_set(dev_id, (union in_flow_tbl_op_data1_u *)(&entry->val[1]));
-		hppe_in_flow_tbl_op_data2_set(dev_id, (union in_flow_tbl_op_data2_u *)(&entry->val[2]));
-		hppe_in_flow_tbl_op_data3_set(dev_id, (union in_flow_tbl_op_data3_u *)(&entry->val[3]));
-		hppe_in_flow_tbl_op_data4_set(dev_id, (union in_flow_tbl_op_data4_u *)(&entry->val[4]));
-#if defined(APPE)
-		hppe_in_flow_tbl_op_data5_set(dev_id, (union in_flow_tbl_op_data5_u *)(&entry->val[5]));
-#endif
-	}
-	return hppe_flow_host_op_both_common(dev_id, 1, op_mode, index);
+	return hppe_flow_entry_op(dev_id, OP_DEL, op_mode, index,
+			entry->val, ARRAY_SIZE(entry->val), A_TRUE);
 }
 
 sw_error_t
@@ -3862,14 +2779,8 @@ hppe_flow_entry_host_op_ipv4_3tuple_del(
 		a_uint32_t dev_id, a_uint32_t op_mode,
 		a_uint32_t *index, union in_flow_3tuple_tbl_u *entry)
 {
-	if (op_mode == 0) {
-		hppe_in_flow_tbl_op_data0_set(dev_id, (union in_flow_tbl_op_data0_u *)(&entry->val[0]));
-		hppe_in_flow_tbl_op_data1_set(dev_id, (union in_flow_tbl_op_data1_u *)(&entry->val[1]));
-		hppe_in_flow_tbl_op_data2_set(dev_id, (union in_flow_tbl_op_data2_u *)(&entry->val[2]));
-		hppe_in_flow_tbl_op_data3_set(dev_id, (union in_flow_tbl_op_data3_u *)(&entry->val[3]));
-		hppe_in_flow_tbl_op_data4_set(dev_id, (union in_flow_tbl_op_data4_u *)(&entry->val[4]));
-	}
-	return hppe_flow_host_op_both_common(dev_id, 1, op_mode, index);
+	return hppe_flow_entry_op(dev_id, OP_DEL, op_mode, index,
+			entry->val, ARRAY_SIZE(entry->val), A_TRUE);
 }
 
 sw_error_t
@@ -3877,18 +2788,8 @@ hppe_flow_entry_host_op_ipv6_5tuple_del(
 		a_uint32_t dev_id, a_uint32_t op_mode,
 		a_uint32_t *index, union in_flow_ipv6_5tuple_tbl_u *entry)
 {
-	if (op_mode == 0) {
-		hppe_in_flow_tbl_op_data0_set(dev_id, (union in_flow_tbl_op_data0_u *)(&entry->val[0]));
-		hppe_in_flow_tbl_op_data1_set(dev_id, (union in_flow_tbl_op_data1_u *)(&entry->val[1]));
-		hppe_in_flow_tbl_op_data2_set(dev_id, (union in_flow_tbl_op_data2_u *)(&entry->val[2]));
-		hppe_in_flow_tbl_op_data3_set(dev_id, (union in_flow_tbl_op_data3_u *)(&entry->val[3]));
-		hppe_in_flow_tbl_op_data4_set(dev_id, (union in_flow_tbl_op_data4_u *)(&entry->val[4]));
-		hppe_in_flow_tbl_op_data5_set(dev_id, (union in_flow_tbl_op_data5_u *)(&entry->val[5]));
-		hppe_in_flow_tbl_op_data6_set(dev_id, (union in_flow_tbl_op_data6_u *)(&entry->val[6]));
-		hppe_in_flow_tbl_op_data7_set(dev_id, (union in_flow_tbl_op_data7_u *)(&entry->val[7]));
-		hppe_in_flow_tbl_op_data8_set(dev_id, (union in_flow_tbl_op_data8_u *)(&entry->val[8]));
-	}
-	return hppe_flow_host_op_both_common(dev_id, 1, op_mode, index);
+	return hppe_flow_entry_op(dev_id, OP_DEL, op_mode, index,
+			entry->val, ARRAY_SIZE(entry->val), A_TRUE);
 }
 
 sw_error_t
@@ -3896,36 +2797,37 @@ hppe_flow_entry_host_op_ipv6_3tuple_del(
 		a_uint32_t dev_id, a_uint32_t op_mode,
 		a_uint32_t *index, union in_flow_ipv6_3tuple_tbl_u *entry)
 {
-	if (op_mode == 0) {
-		hppe_in_flow_tbl_op_data0_set(dev_id, (union in_flow_tbl_op_data0_u *)(&entry->val[0]));
-		hppe_in_flow_tbl_op_data1_set(dev_id, (union in_flow_tbl_op_data1_u *)(&entry->val[1]));
-		hppe_in_flow_tbl_op_data2_set(dev_id, (union in_flow_tbl_op_data2_u *)(&entry->val[2]));
-		hppe_in_flow_tbl_op_data3_set(dev_id, (union in_flow_tbl_op_data3_u *)(&entry->val[3]));
-		hppe_in_flow_tbl_op_data4_set(dev_id, (union in_flow_tbl_op_data4_u *)(&entry->val[4]));
-		hppe_in_flow_tbl_op_data5_set(dev_id, (union in_flow_tbl_op_data5_u *)(&entry->val[5]));
-		hppe_in_flow_tbl_op_data6_set(dev_id, (union in_flow_tbl_op_data6_u *)(&entry->val[6]));
-		hppe_in_flow_tbl_op_data7_set(dev_id, (union in_flow_tbl_op_data7_u *)(&entry->val[7]));
-		hppe_in_flow_tbl_op_data8_set(dev_id, (union in_flow_tbl_op_data8_u *)(&entry->val[8]));
-	}
-	return hppe_flow_host_op_both_common(dev_id, 1, op_mode, index);
+	return hppe_flow_entry_op(dev_id, OP_DEL, op_mode, index,
+			entry->val, ARRAY_SIZE(entry->val), A_TRUE);
 }
+
+sw_error_t
+hppe_flow_entry_get(
+		a_uint32_t dev_id, a_uint32_t op_mode,
+		a_uint32_t *index, a_uint32_t *entry, a_uint32_t entry_size, a_bool_t flow_host)
+{
+	a_uint32_t i = 0;
+	if (op_mode == HASH_MODE) {
+		while (i < entry_size) {
+			hppe_in_flow_tbl_rd_op_data_set(dev_id, i, entry[i]);
+			i++;
+		}
+	}
+
+	if (flow_host)
+		return hppe_flow_host_get_common(dev_id, op_mode, index, entry, entry_size);
+
+	return hppe_flow_get_common(dev_id, op_mode, index, entry, entry_size);
+}
+
 
 sw_error_t
 hppe_flow_entry_host_op_ipv4_5tuple_get(
 		a_uint32_t dev_id, a_uint32_t op_mode,
 		a_uint32_t *index, union in_flow_tbl_u *entry)
 {
-	if (op_mode == 0) {
-		hppe_in_flow_tbl_rd_op_data0_set(dev_id, (union in_flow_tbl_rd_op_data0_u *)(&entry->val[0]));
-		hppe_in_flow_tbl_rd_op_data1_set(dev_id, (union in_flow_tbl_rd_op_data1_u *)(&entry->val[1]));
-		hppe_in_flow_tbl_rd_op_data2_set(dev_id, (union in_flow_tbl_rd_op_data2_u *)(&entry->val[2]));
-		hppe_in_flow_tbl_rd_op_data3_set(dev_id, (union in_flow_tbl_rd_op_data3_u *)(&entry->val[3]));
-		hppe_in_flow_tbl_rd_op_data4_set(dev_id, (union in_flow_tbl_rd_op_data4_u *)(&entry->val[4]));
-#if defined(APPE)
-		hppe_in_flow_tbl_rd_op_data5_set(dev_id, (union in_flow_tbl_rd_op_data5_u *)(&entry->val[5]));
-#endif
-	}
-	return hppe_flow_host_get_common(dev_id, op_mode, index, (a_uint32_t *)entry, 5);
+	return hppe_flow_entry_get(dev_id, op_mode, index,
+			entry->val, ARRAY_SIZE(entry->val), A_TRUE);
 }
 
 sw_error_t
@@ -3933,14 +2835,8 @@ hppe_flow_entry_host_op_ipv4_3tuple_get(
 		a_uint32_t dev_id, a_uint32_t op_mode,
 		a_uint32_t *index, union in_flow_3tuple_tbl_u *entry)
 {
-	if (op_mode == 0) {
-		hppe_in_flow_tbl_rd_op_data0_set(dev_id, (union in_flow_tbl_rd_op_data0_u *)(&entry->val[0]));
-		hppe_in_flow_tbl_rd_op_data1_set(dev_id, (union in_flow_tbl_rd_op_data1_u *)(&entry->val[1]));
-		hppe_in_flow_tbl_rd_op_data2_set(dev_id, (union in_flow_tbl_rd_op_data2_u *)(&entry->val[2]));
-		hppe_in_flow_tbl_rd_op_data3_set(dev_id, (union in_flow_tbl_rd_op_data3_u *)(&entry->val[3]));
-		hppe_in_flow_tbl_rd_op_data4_set(dev_id, (union in_flow_tbl_rd_op_data4_u *)(&entry->val[4]));
-	}
-	return hppe_flow_host_get_common(dev_id, op_mode, index, (a_uint32_t *)entry, 5);
+	return hppe_flow_entry_get(dev_id, op_mode, index,
+			entry->val, ARRAY_SIZE(entry->val), A_TRUE);
 }
 
 sw_error_t
@@ -3948,18 +2844,8 @@ hppe_flow_entry_host_op_ipv6_5tuple_get(
 		a_uint32_t dev_id, a_uint32_t op_mode,
 		a_uint32_t *index, union in_flow_ipv6_5tuple_tbl_u *entry)
 {
-	if (op_mode == 0) {
-		hppe_in_flow_tbl_rd_op_data0_set(dev_id, (union in_flow_tbl_rd_op_data0_u *)(&entry->val[0]));
-		hppe_in_flow_tbl_rd_op_data1_set(dev_id, (union in_flow_tbl_rd_op_data1_u *)(&entry->val[1]));
-		hppe_in_flow_tbl_rd_op_data2_set(dev_id, (union in_flow_tbl_rd_op_data2_u *)(&entry->val[2]));
-		hppe_in_flow_tbl_rd_op_data3_set(dev_id, (union in_flow_tbl_rd_op_data3_u *)(&entry->val[3]));
-		hppe_in_flow_tbl_rd_op_data4_set(dev_id, (union in_flow_tbl_rd_op_data4_u *)(&entry->val[4]));
-		hppe_in_flow_tbl_rd_op_data5_set(dev_id, (union in_flow_tbl_rd_op_data5_u *)(&entry->val[5]));
-		hppe_in_flow_tbl_rd_op_data6_set(dev_id, (union in_flow_tbl_rd_op_data6_u *)(&entry->val[6]));
-		hppe_in_flow_tbl_rd_op_data7_set(dev_id, (union in_flow_tbl_rd_op_data7_u *)(&entry->val[7]));
-		hppe_in_flow_tbl_rd_op_data8_set(dev_id, (union in_flow_tbl_rd_op_data8_u *)(&entry->val[8]));
-	}
-	return hppe_flow_host_get_common(dev_id, op_mode, index, (a_uint32_t *)entry, 9);
+	return hppe_flow_entry_get(dev_id, op_mode, index,
+			entry->val, ARRAY_SIZE(entry->val), A_TRUE);
 }
 
 sw_error_t
@@ -3967,18 +2853,8 @@ hppe_flow_entry_host_op_ipv6_3tuple_get(
 		a_uint32_t dev_id, a_uint32_t op_mode,
 		a_uint32_t *index, union in_flow_ipv6_3tuple_tbl_u *entry)
 {
-	if (op_mode == 0) {
-		hppe_in_flow_tbl_rd_op_data0_set(dev_id, (union in_flow_tbl_rd_op_data0_u *)(&entry->val[0]));
-		hppe_in_flow_tbl_rd_op_data1_set(dev_id, (union in_flow_tbl_rd_op_data1_u *)(&entry->val[1]));
-		hppe_in_flow_tbl_rd_op_data2_set(dev_id, (union in_flow_tbl_rd_op_data2_u *)(&entry->val[2]));
-		hppe_in_flow_tbl_rd_op_data3_set(dev_id, (union in_flow_tbl_rd_op_data3_u *)(&entry->val[3]));
-		hppe_in_flow_tbl_rd_op_data4_set(dev_id, (union in_flow_tbl_rd_op_data4_u *)(&entry->val[4]));
-		hppe_in_flow_tbl_rd_op_data5_set(dev_id, (union in_flow_tbl_rd_op_data5_u *)(&entry->val[5]));
-		hppe_in_flow_tbl_rd_op_data6_set(dev_id, (union in_flow_tbl_rd_op_data6_u *)(&entry->val[6]));
-		hppe_in_flow_tbl_rd_op_data7_set(dev_id, (union in_flow_tbl_rd_op_data7_u *)(&entry->val[7]));
-		hppe_in_flow_tbl_rd_op_data8_set(dev_id, (union in_flow_tbl_rd_op_data8_u *)(&entry->val[8]));
-	}
-	return hppe_flow_host_get_common(dev_id, op_mode, index, (a_uint32_t *)entry, 9);
+	return hppe_flow_entry_get(dev_id, op_mode, index,
+			entry->val, ARRAY_SIZE(entry->val), A_TRUE);
 }
 
 sw_error_t
@@ -4020,15 +2896,32 @@ hppe_flow_host_data_rd_op_common(
 
 	return SW_OK;
 }
+
+sw_error_t
+hppe_flow_host_entry_op(
+		a_uint32_t dev_id,
+		a_uint32_t op_type, a_uint32_t op_mode,
+		a_uint32_t *index, a_uint32_t *entry, a_uint32_t entry_size)
+{
+	a_uint32_t i = 0;
+
+	if (op_mode == HASH_MODE) {
+		while (i < entry_size) {
+			hppe_flow_host_tbl_op_data_set(dev_id, i, entry[i]);
+			i++;
+		}
+	}
+
+	return hppe_flow_host_data_op_common(dev_id, op_type, op_mode, index);
+}
+
 sw_error_t
 hppe_flow_host_ipv4_data_add(
 		a_uint32_t dev_id, a_uint32_t op_mode,
 		a_uint32_t *index, union host_tbl_u *entry)
 {
-	hppe_flow_host_tbl_op_data0_set(dev_id, (union flow_host_tbl_op_data0_u *)(&entry->val[0]));
-	hppe_flow_host_tbl_op_data1_set(dev_id, (union flow_host_tbl_op_data1_u *)(&entry->val[1]));
-	hppe_flow_host_tbl_op_data2_set(dev_id, (union flow_host_tbl_op_data2_u *)(&entry->val[2]));
-	return hppe_flow_host_data_op_common(dev_id, 0, op_mode, index);
+	return hppe_flow_host_entry_op(dev_id, OP_ADD, op_mode, index,
+			entry->val, ARRAY_SIZE(entry->val));
 }
 
 sw_error_t
@@ -4036,12 +2929,25 @@ hppe_flow_host_ipv6_data_add(
 		a_uint32_t dev_id, a_uint32_t op_mode,
 		a_uint32_t *index, union host_ipv6_tbl_u *entry)
 {
-	hppe_flow_host_tbl_op_data0_set(dev_id, (union flow_host_tbl_op_data0_u *)(&entry->val[0]));
-	hppe_flow_host_tbl_op_data1_set(dev_id, (union flow_host_tbl_op_data1_u *)(&entry->val[1]));
-	hppe_flow_host_tbl_op_data2_set(dev_id, (union flow_host_tbl_op_data2_u *)(&entry->val[2]));
-	hppe_flow_host_tbl_op_data3_set(dev_id, (union flow_host_tbl_op_data3_u *)(&entry->val[3]));
-	hppe_flow_host_tbl_op_data4_set(dev_id, (union flow_host_tbl_op_data4_u *)(&entry->val[4]));
-	return hppe_flow_host_data_op_common(dev_id, 0, op_mode, index);
+	return hppe_flow_host_entry_op(dev_id, OP_ADD, op_mode, index,
+			entry->val, ARRAY_SIZE(entry->val));
+}
+
+sw_error_t
+hppe_flow_host_entry_get(
+		a_uint32_t dev_id, a_uint32_t op_mode,
+		a_uint32_t *index, a_uint32_t *entry, a_uint32_t entry_size)
+{
+	a_uint32_t i = 0;
+
+	if (op_mode == HASH_MODE) {
+		while (i < entry_size) {
+			i++;
+			hppe_flow_host_tbl_rd_op_data_set(dev_id, i, entry[i]);
+		}
+	}
+
+	return hppe_flow_host_data_rd_op_common(dev_id, OP_ADD, op_mode, index);
 }
 
 sw_error_t
@@ -4049,10 +2955,8 @@ hppe_flow_host_ipv4_data_rd_add(
 		a_uint32_t dev_id, a_uint32_t op_mode,
 		a_uint32_t *index, union host_tbl_u *entry)
 {
-	hppe_flow_host_tbl_rd_op_data0_set(dev_id, (union flow_host_tbl_rd_op_data0_u *)(&entry->val[0]));
-	hppe_flow_host_tbl_rd_op_data1_set(dev_id, (union flow_host_tbl_rd_op_data1_u *)(&entry->val[1]));
-	hppe_flow_host_tbl_rd_op_data2_set(dev_id, (union flow_host_tbl_rd_op_data2_u*)(&entry->val[2]));
-	return hppe_flow_host_data_rd_op_common(dev_id, 0, op_mode, index);
+	return hppe_flow_host_entry_get(dev_id, op_mode, index,
+			entry->val, ARRAY_SIZE(entry->val));
 }
 
 sw_error_t
@@ -4060,12 +2964,8 @@ hppe_flow_host_ipv6_data_rd_add(
 		a_uint32_t dev_id, a_uint32_t op_mode,
 		a_uint32_t *index, union host_ipv6_tbl_u *entry)
 {
-	hppe_flow_host_tbl_rd_op_data0_set(dev_id, (union flow_host_tbl_rd_op_data0_u *)(&entry->val[0]));
-	hppe_flow_host_tbl_rd_op_data1_set(dev_id, (union flow_host_tbl_rd_op_data1_u *)(&entry->val[1]));
-	hppe_flow_host_tbl_rd_op_data2_set(dev_id, (union flow_host_tbl_rd_op_data2_u *)(&entry->val[2]));
-	hppe_flow_host_tbl_rd_op_data3_set(dev_id, (union flow_host_tbl_rd_op_data3_u *)(&entry->val[3]));
-	hppe_flow_host_tbl_rd_op_data4_set(dev_id, (union flow_host_tbl_rd_op_data4_u *)(&entry->val[4]));
-	return hppe_flow_host_data_rd_op_common(dev_id, 0, op_mode, index);
+	return hppe_flow_host_entry_get(dev_id, op_mode, index,
+			entry->val, ARRAY_SIZE(entry->val));
 }
 
 sw_error_t
@@ -4073,10 +2973,11 @@ hppe_flow_host_ipv4_data_get(
 		a_uint32_t dev_id, a_uint32_t op_mode,
 		a_uint32_t *index, union host_tbl_u *entry)
 {
-	if (1){//op_mode == 0) {
-		hppe_host_tbl_rd_op_data0_get(dev_id, (union host_tbl_rd_op_data0_u *)(&entry->val[0]));
-		hppe_host_tbl_rd_op_data1_get(dev_id, (union host_tbl_rd_op_data1_u *)(&entry->val[1]));
-		hppe_host_tbl_rd_op_data2_set(dev_id, (union host_tbl_rd_op_data2_u *)(&entry->val[2]));
+	a_uint32_t i = 0;
+
+	while (i < ARRAY_SIZE(entry->val)) {
+		hppe_flow_host_tbl_rd_rslt_data_get(dev_id, i, &(entry->val[i]));
+		i++;
 	}
 	return SW_OK;
 }
@@ -4086,12 +2987,11 @@ hppe_flow_host_ipv6_data_get(
 		a_uint32_t dev_id, a_uint32_t op_mode,
 		a_uint32_t *index, union host_ipv6_tbl_u *entry)
 {
-	if (1){//op_mode == 0) {
-		hppe_host_tbl_rd_op_data0_get(dev_id, (union host_tbl_rd_op_data0_u *)(&entry->val[0]));
-		hppe_host_tbl_rd_op_data1_get(dev_id, (union host_tbl_rd_op_data1_u *)(&entry->val[1]));
-		hppe_host_tbl_rd_op_data2_get(dev_id, (union host_tbl_rd_op_data2_u *)(&entry->val[2]));
-		hppe_host_tbl_rd_op_data3_get(dev_id, (union host_tbl_rd_op_data3_u *)(&entry->val[3]));
-		hppe_host_tbl_rd_op_data4_get(dev_id, (union host_tbl_rd_op_data4_u *)(&entry->val[4]));
+	a_uint32_t i = 0;
+
+	while (i < ARRAY_SIZE(entry->val)) {
+		hppe_flow_host_tbl_rd_rslt_data_get(dev_id, i, &(entry->val[i]));
+		i++;
 	}
 	return SW_OK;
 }
@@ -4101,13 +3001,8 @@ hppe_flow_host_ipv4_data_del(
 		a_uint32_t dev_id, a_uint32_t op_mode,
 		a_uint32_t *index, union host_tbl_u *entry)
 {
-	if (op_mode == 0) {
-		hppe_host_tbl_op_data0_set(dev_id, (union host_tbl_op_data0_u *)(&entry->val[0]));
-		hppe_host_tbl_op_data1_set(dev_id, (union host_tbl_op_data1_u *)(&entry->val[1]));
-		hppe_host_tbl_op_data2_set(dev_id, (union host_tbl_op_data2_u *)(&entry->val[2]));
-	}
-	return hppe_flow_host_data_op_common(dev_id, 1, op_mode, index);
-
+	return hppe_flow_host_entry_op(dev_id, OP_DEL, op_mode, index,
+			entry->val, ARRAY_SIZE(entry->val));
 }
 
 sw_error_t
@@ -4115,31 +3010,17 @@ hppe_flow_host_ipv6_data_del(
 		a_uint32_t dev_id, a_uint32_t op_mode,
 		a_uint32_t *index, union host_ipv6_tbl_u *entry)
 {
-	if (op_mode == 0) {
-		hppe_host_tbl_op_data0_set(dev_id, (union host_tbl_op_data0_u *)(&entry->val[0]));
-		hppe_host_tbl_op_data1_set(dev_id, (union host_tbl_op_data1_u *)(&entry->val[1]));
-		hppe_host_tbl_op_data2_set(dev_id, (union host_tbl_op_data2_u *)(&entry->val[2]));
-		hppe_host_tbl_op_data3_set(dev_id, (union host_tbl_op_data3_u *)(&entry->val[3]));
-		hppe_host_tbl_op_data4_set(dev_id, (union host_tbl_op_data4_u *)(&entry->val[4]));
-	}
-	return hppe_flow_host_data_op_common(dev_id, 1, op_mode, index);
+	return hppe_flow_host_entry_op(dev_id, OP_DEL, op_mode, index,
+			entry->val, ARRAY_SIZE(entry->val));
 }
-
 
 sw_error_t
 hppe_flow_ipv4_5tuple_add(
 		a_uint32_t dev_id, a_uint32_t op_mode,
 		a_uint32_t *index, union in_flow_tbl_u *entry)
 {
-	hppe_in_flow_tbl_op_data0_set(dev_id, (union in_flow_tbl_op_data0_u *)(&entry->val[0]));
-	hppe_in_flow_tbl_op_data1_set(dev_id, (union in_flow_tbl_op_data1_u *)(&entry->val[1]));
-	hppe_in_flow_tbl_op_data2_set(dev_id, (union in_flow_tbl_op_data2_u *)(&entry->val[2]));
-	hppe_in_flow_tbl_op_data3_set(dev_id, (union in_flow_tbl_op_data3_u *)(&entry->val[3]));
-	hppe_in_flow_tbl_op_data4_set(dev_id, (union in_flow_tbl_op_data4_u *)(&entry->val[4]));
-#if defined(APPE)
-	hppe_in_flow_tbl_op_data5_set(dev_id, (union in_flow_tbl_op_data5_u *)(&entry->val[5]));
-#endif
-	return hppe_flow_op_common(dev_id, 0, op_mode, index);
+	return hppe_flow_entry_op(dev_id, OP_ADD, op_mode, index,
+			entry->val, ARRAY_SIZE(entry->val), A_FALSE);
 }
 
 sw_error_t
@@ -4147,12 +3028,8 @@ hppe_flow_ipv4_3tuple_add(
 		a_uint32_t dev_id, a_uint32_t op_mode,
 		a_uint32_t *index, union in_flow_3tuple_tbl_u *entry)
 {
-	hppe_in_flow_tbl_op_data0_set(dev_id, (union in_flow_tbl_op_data0_u *)(&entry->val[0]));
-	hppe_in_flow_tbl_op_data1_set(dev_id, (union in_flow_tbl_op_data1_u *)(&entry->val[1]));
-	hppe_in_flow_tbl_op_data2_set(dev_id, (union in_flow_tbl_op_data2_u *)(&entry->val[2]));
-	hppe_in_flow_tbl_op_data3_set(dev_id, (union in_flow_tbl_op_data3_u *)(&entry->val[3]));
-	hppe_in_flow_tbl_op_data4_set(dev_id, (union in_flow_tbl_op_data4_u *)(&entry->val[4]));
-	return hppe_flow_op_common(dev_id, 0, op_mode, index);
+	return hppe_flow_entry_op(dev_id, OP_ADD, op_mode, index,
+			entry->val, ARRAY_SIZE(entry->val), A_FALSE);
 }
 
 sw_error_t
@@ -4160,16 +3037,8 @@ hppe_flow_ipv6_5tuple_add(
 		a_uint32_t dev_id, a_uint32_t op_mode,
 		a_uint32_t *index, union in_flow_ipv6_5tuple_tbl_u *entry)
 {
-	hppe_in_flow_tbl_op_data0_set(dev_id, (union in_flow_tbl_op_data0_u *)(&entry->val[0]));
-	hppe_in_flow_tbl_op_data1_set(dev_id, (union in_flow_tbl_op_data1_u *)(&entry->val[1]));
-	hppe_in_flow_tbl_op_data2_set(dev_id, (union in_flow_tbl_op_data2_u *)(&entry->val[2]));
-	hppe_in_flow_tbl_op_data3_set(dev_id, (union in_flow_tbl_op_data3_u *)(&entry->val[3]));
-	hppe_in_flow_tbl_op_data4_set(dev_id, (union in_flow_tbl_op_data4_u *)(&entry->val[4]));
-	hppe_in_flow_tbl_op_data5_set(dev_id, (union in_flow_tbl_op_data5_u *)(&entry->val[5]));
-	hppe_in_flow_tbl_op_data6_set(dev_id, (union in_flow_tbl_op_data6_u *)(&entry->val[6]));
-	hppe_in_flow_tbl_op_data7_set(dev_id, (union in_flow_tbl_op_data7_u *)(&entry->val[7]));
-	hppe_in_flow_tbl_op_data8_set(dev_id, (union in_flow_tbl_op_data8_u *)(&entry->val[8]));
-	return hppe_flow_op_common(dev_id, 0, op_mode, index);
+	return hppe_flow_entry_op(dev_id, OP_ADD, op_mode, index,
+			entry->val, ARRAY_SIZE(entry->val), A_FALSE);
 }
 
 sw_error_t
@@ -4177,16 +3046,8 @@ hppe_flow_ipv6_3tuple_add(
 		a_uint32_t dev_id, a_uint32_t op_mode,
 		a_uint32_t *index, union in_flow_ipv6_3tuple_tbl_u *entry)
 {
-	hppe_in_flow_tbl_op_data0_set(dev_id, (union in_flow_tbl_op_data0_u *)(&entry->val[0]));
-	hppe_in_flow_tbl_op_data1_set(dev_id, (union in_flow_tbl_op_data1_u *)(&entry->val[1]));
-	hppe_in_flow_tbl_op_data2_set(dev_id, (union in_flow_tbl_op_data2_u *)(&entry->val[2]));
-	hppe_in_flow_tbl_op_data3_set(dev_id, (union in_flow_tbl_op_data3_u *)(&entry->val[3]));
-	hppe_in_flow_tbl_op_data4_set(dev_id, (union in_flow_tbl_op_data4_u *)(&entry->val[4]));
-	hppe_in_flow_tbl_op_data5_set(dev_id, (union in_flow_tbl_op_data5_u *)(&entry->val[5]));
-	hppe_in_flow_tbl_op_data6_set(dev_id, (union in_flow_tbl_op_data6_u *)(&entry->val[6]));
-	hppe_in_flow_tbl_op_data7_set(dev_id, (union in_flow_tbl_op_data7_u *)(&entry->val[7]));
-	hppe_in_flow_tbl_op_data8_set(dev_id, (union in_flow_tbl_op_data8_u *)(&entry->val[8]));
-	return hppe_flow_op_common(dev_id, 0, op_mode, index);
+	return hppe_flow_entry_op(dev_id, OP_ADD, op_mode, index,
+			entry->val, ARRAY_SIZE(entry->val), A_FALSE);
 }
 
 sw_error_t
@@ -4194,23 +3055,8 @@ hppe_flow_ipv4_5tuple_del(
 		a_uint32_t dev_id, a_uint32_t op_mode,
 		a_uint32_t *index, union in_flow_tbl_u *entry)
 {
-	if (op_mode == 0) {
-		hppe_in_flow_tbl_op_data0_set(dev_id,
-				(union in_flow_tbl_op_data0_u *)(&entry->val[0]));
-		hppe_in_flow_tbl_op_data1_set(dev_id,
-				(union in_flow_tbl_op_data1_u *)(&entry->val[1]));
-		hppe_in_flow_tbl_op_data2_set(dev_id,
-				(union in_flow_tbl_op_data2_u *)(&entry->val[2]));
-		hppe_in_flow_tbl_op_data3_set(dev_id,
-				(union in_flow_tbl_op_data3_u *)(&entry->val[3]));
-		hppe_in_flow_tbl_op_data4_set(dev_id,
-				(union in_flow_tbl_op_data4_u *)(&entry->val[4]));
-#if defined(APPE)
-		hppe_in_flow_tbl_op_data5_set(dev_id,
-				(union in_flow_tbl_op_data5_u *)(&entry->val[5]));
-#endif
-	}
-	return hppe_flow_op_common(dev_id, 1, op_mode, index);
+	return hppe_flow_entry_op(dev_id, OP_DEL, op_mode, index,
+			entry->val, ARRAY_SIZE(entry->val), A_FALSE);
 }
 
 sw_error_t
@@ -4218,19 +3064,8 @@ hppe_flow_ipv4_3tuple_del(
 		a_uint32_t dev_id, a_uint32_t op_mode,
 		a_uint32_t *index, union in_flow_3tuple_tbl_u *entry)
 {
-	if (op_mode == 0) {
-		hppe_in_flow_tbl_op_data0_set(dev_id,
-				(union in_flow_tbl_op_data0_u *)(&entry->val[0]));
-		hppe_in_flow_tbl_op_data1_set(dev_id,
-				(union in_flow_tbl_op_data1_u *)(&entry->val[1]));
-		hppe_in_flow_tbl_op_data2_set(dev_id,
-				(union in_flow_tbl_op_data2_u *)(&entry->val[2]));
-		hppe_in_flow_tbl_op_data3_set(dev_id,
-				(union in_flow_tbl_op_data3_u *)(&entry->val[3]));
-		hppe_in_flow_tbl_op_data4_set(dev_id,
-				(union in_flow_tbl_op_data4_u *)(&entry->val[4]));
-	}
-	return hppe_flow_op_common(dev_id, 1, op_mode, index);
+	return hppe_flow_entry_op(dev_id, OP_DEL, op_mode, index,
+			entry->val, ARRAY_SIZE(entry->val), A_FALSE);
 }
 
 sw_error_t
@@ -4238,27 +3073,8 @@ hppe_flow_ipv6_5tuple_del(
 		a_uint32_t dev_id, a_uint32_t op_mode,
 		a_uint32_t *index, union in_flow_ipv6_5tuple_tbl_u *entry)
 {
-	if (op_mode == 0) {
-		hppe_in_flow_tbl_op_data0_set(dev_id,
-				(union in_flow_tbl_op_data0_u *)(&entry->val[0]));
-		hppe_in_flow_tbl_op_data1_set(dev_id,
-				(union in_flow_tbl_op_data1_u *)(&entry->val[1]));
-		hppe_in_flow_tbl_op_data2_set(dev_id,
-				(union in_flow_tbl_op_data2_u *)(&entry->val[2]));
-		hppe_in_flow_tbl_op_data3_set(dev_id,
-				(union in_flow_tbl_op_data3_u *)(&entry->val[3]));
-		hppe_in_flow_tbl_op_data4_set(dev_id,
-				(union in_flow_tbl_op_data4_u *)(&entry->val[4]));
-		hppe_in_flow_tbl_op_data5_set(dev_id,
-				(union in_flow_tbl_op_data5_u *)(&entry->val[5]));
-		hppe_in_flow_tbl_op_data6_set(dev_id,
-				(union in_flow_tbl_op_data6_u *)(&entry->val[6]));
-		hppe_in_flow_tbl_op_data7_set(dev_id,
-				(union in_flow_tbl_op_data7_u *)(&entry->val[7]));
-		hppe_in_flow_tbl_op_data8_set(dev_id,
-				(union in_flow_tbl_op_data8_u *)(&entry->val[8]));
-	}
-	return hppe_flow_op_common(dev_id, 1, op_mode, index);
+	return hppe_flow_entry_op(dev_id, OP_DEL, op_mode, index,
+			entry->val, ARRAY_SIZE(entry->val), A_FALSE);
 }
 
 sw_error_t
@@ -4266,27 +3082,8 @@ hppe_flow_ipv6_3tuple_del(
 		a_uint32_t dev_id, a_uint32_t op_mode,
 		a_uint32_t *index, union in_flow_ipv6_3tuple_tbl_u *entry)
 {
-	if (op_mode == 0) {
-		hppe_in_flow_tbl_op_data0_set(dev_id,
-				(union in_flow_tbl_op_data0_u *)(&entry->val[0]));
-		hppe_in_flow_tbl_op_data1_set(dev_id,
-				(union in_flow_tbl_op_data1_u *)(&entry->val[1]));
-		hppe_in_flow_tbl_op_data2_set(dev_id,
-				(union in_flow_tbl_op_data2_u *)(&entry->val[2]));
-		hppe_in_flow_tbl_op_data3_set(dev_id,
-				(union in_flow_tbl_op_data3_u *)(&entry->val[3]));
-		hppe_in_flow_tbl_op_data4_set(dev_id,
-				(union in_flow_tbl_op_data4_u *)(&entry->val[4]));
-		hppe_in_flow_tbl_op_data5_set(dev_id,
-				(union in_flow_tbl_op_data5_u *)(&entry->val[5]));
-		hppe_in_flow_tbl_op_data6_set(dev_id,
-				(union in_flow_tbl_op_data6_u *)(&entry->val[6]));
-		hppe_in_flow_tbl_op_data7_set(dev_id,
-				(union in_flow_tbl_op_data7_u *)(&entry->val[7]));
-		hppe_in_flow_tbl_op_data8_set(dev_id,
-				(union in_flow_tbl_op_data8_u *)(&entry->val[8]));
-	}
-	return hppe_flow_op_common(dev_id, 1, op_mode, index);
+	return hppe_flow_entry_op(dev_id, OP_DEL, op_mode, index,
+			entry->val, ARRAY_SIZE(entry->val), A_FALSE);
 }
 
 sw_error_t
@@ -4294,24 +3091,8 @@ hppe_flow_ipv4_5tuple_get(
 		a_uint32_t dev_id, a_uint32_t op_mode,
 		a_uint32_t *index, union in_flow_tbl_u *entry)
 {
-	if (op_mode == 0) {
-		hppe_in_flow_tbl_rd_op_data0_set(dev_id,
-				(union in_flow_tbl_rd_op_data0_u *)(&entry->val[0]));
-		hppe_in_flow_tbl_rd_op_data1_set(dev_id,
-				(union in_flow_tbl_rd_op_data1_u *)(&entry->val[1]));
-		hppe_in_flow_tbl_rd_op_data2_set(dev_id,
-				(union in_flow_tbl_rd_op_data2_u *)(&entry->val[2]));
-		hppe_in_flow_tbl_rd_op_data3_set(dev_id,
-				(union in_flow_tbl_rd_op_data3_u *)(&entry->val[3]));
-		hppe_in_flow_tbl_rd_op_data4_set(dev_id,
-				(union in_flow_tbl_rd_op_data4_u *)(&entry->val[4]));
-#if defined(APPE)
-		hppe_in_flow_tbl_rd_op_data5_set(dev_id,
-				(union in_flow_tbl_rd_op_data5_u *)(&entry->val[5]));
-#endif
-	}
-	return hppe_flow_get_common(dev_id, op_mode, index, (a_uint32_t *)entry,
-			sizeof(union in_flow_tbl_u)/sizeof(a_uint32_t));
+	return hppe_flow_entry_get(dev_id, op_mode, index,
+			entry->val, ARRAY_SIZE(entry->val), A_FALSE);
 }
 
 sw_error_t
@@ -4319,20 +3100,8 @@ hppe_flow_ipv4_3tuple_get(
 		a_uint32_t dev_id, a_uint32_t op_mode,
 		a_uint32_t *index, union in_flow_3tuple_tbl_u *entry)
 {
-	if (op_mode == 0) {
-		hppe_in_flow_tbl_rd_op_data0_set(dev_id,
-				(union in_flow_tbl_rd_op_data0_u *)(&entry->val[0]));
-		hppe_in_flow_tbl_rd_op_data1_set(dev_id,
-				(union in_flow_tbl_rd_op_data1_u *)(&entry->val[1]));
-		hppe_in_flow_tbl_rd_op_data2_set(dev_id,
-				(union in_flow_tbl_rd_op_data2_u *)(&entry->val[2]));
-		hppe_in_flow_tbl_rd_op_data3_set(dev_id,
-				(union in_flow_tbl_rd_op_data3_u *)(&entry->val[3]));
-		hppe_in_flow_tbl_rd_op_data4_set(dev_id,
-				(union in_flow_tbl_rd_op_data4_u *)(&entry->val[4]));
-	}
-	return hppe_flow_get_common(dev_id, op_mode, index, (a_uint32_t *)entry,
-			sizeof(union in_flow_3tuple_tbl_u)/sizeof(a_uint32_t));
+	return hppe_flow_entry_get(dev_id, op_mode, index,
+			entry->val, ARRAY_SIZE(entry->val), A_FALSE);
 }
 
 sw_error_t
@@ -4340,28 +3109,8 @@ hppe_flow_ipv6_5tuple_get(
 		a_uint32_t dev_id, a_uint32_t op_mode,
 		a_uint32_t *index, union in_flow_ipv6_5tuple_tbl_u *entry)
 {
-	if (op_mode == 0) {
-		hppe_in_flow_tbl_rd_op_data0_set(dev_id,
-				(union in_flow_tbl_rd_op_data0_u *)(&entry->val[0]));
-		hppe_in_flow_tbl_rd_op_data1_set(dev_id,
-				(union in_flow_tbl_rd_op_data1_u *)(&entry->val[1]));
-		hppe_in_flow_tbl_rd_op_data2_set(dev_id,
-				(union in_flow_tbl_rd_op_data2_u *)(&entry->val[2]));
-		hppe_in_flow_tbl_rd_op_data3_set(dev_id,
-				(union in_flow_tbl_rd_op_data3_u *)(&entry->val[3]));
-		hppe_in_flow_tbl_rd_op_data4_set(dev_id,
-				(union in_flow_tbl_rd_op_data4_u *)(&entry->val[4]));
-		hppe_in_flow_tbl_rd_op_data5_set(dev_id,
-				(union in_flow_tbl_rd_op_data5_u *)(&entry->val[5]));
-		hppe_in_flow_tbl_rd_op_data6_set(dev_id,
-				(union in_flow_tbl_rd_op_data6_u *)(&entry->val[6]));
-		hppe_in_flow_tbl_rd_op_data7_set(dev_id,
-				(union in_flow_tbl_rd_op_data7_u *)(&entry->val[7]));
-		hppe_in_flow_tbl_rd_op_data8_set(dev_id,
-				(union in_flow_tbl_rd_op_data8_u *)(&entry->val[8]));
-	}
-	return hppe_flow_get_common(dev_id, op_mode, index, (a_uint32_t *)entry,
-			sizeof(union in_flow_ipv6_5tuple_tbl_u)/sizeof(a_uint32_t));
+	return hppe_flow_entry_get(dev_id, op_mode, index,
+			entry->val, ARRAY_SIZE(entry->val), A_FALSE);
 }
 
 sw_error_t
@@ -4369,27 +3118,6 @@ hppe_flow_ipv6_3tuple_get(
 		a_uint32_t dev_id, a_uint32_t op_mode,
 		a_uint32_t *index, union in_flow_ipv6_3tuple_tbl_u *entry)
 {
-	if (op_mode == 0) {
-		hppe_in_flow_tbl_rd_op_data0_set(dev_id,
-				(union in_flow_tbl_rd_op_data0_u *)(&entry->val[0]));
-		hppe_in_flow_tbl_rd_op_data1_set(dev_id,
-				(union in_flow_tbl_rd_op_data1_u *)(&entry->val[1]));
-		hppe_in_flow_tbl_rd_op_data2_set(dev_id,
-				(union in_flow_tbl_rd_op_data2_u *)(&entry->val[2]));
-		hppe_in_flow_tbl_rd_op_data3_set(dev_id,
-				(union in_flow_tbl_rd_op_data3_u *)(&entry->val[3]));
-		hppe_in_flow_tbl_rd_op_data4_set(dev_id,
-				(union in_flow_tbl_rd_op_data4_u *)(&entry->val[4]));
-		hppe_in_flow_tbl_rd_op_data5_set(dev_id,
-				(union in_flow_tbl_rd_op_data5_u *)(&entry->val[5]));
-		hppe_in_flow_tbl_rd_op_data6_set(dev_id,
-				(union in_flow_tbl_rd_op_data6_u *)(&entry->val[6]));
-		hppe_in_flow_tbl_rd_op_data7_set(dev_id,
-				(union in_flow_tbl_rd_op_data7_u *)(&entry->val[7]));
-		hppe_in_flow_tbl_rd_op_data8_set(dev_id,
-				(union in_flow_tbl_rd_op_data8_u *)(&entry->val[8]));
-	}
-	return hppe_flow_get_common(dev_id, op_mode, index, (a_uint32_t *)entry,
-			sizeof(union in_flow_ipv6_3tuple_tbl_u)/sizeof(a_uint32_t));
+	return hppe_flow_entry_get(dev_id, op_mode, index,
+			entry->val, ARRAY_SIZE(entry->val), A_FALSE);
 }
-#endif

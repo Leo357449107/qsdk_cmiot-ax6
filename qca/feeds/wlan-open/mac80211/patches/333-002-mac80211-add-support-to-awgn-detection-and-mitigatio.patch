@@ -1,6 +1,6 @@
-From bc77c3d359c68e58f496991285b01005b84a3e6c Mon Sep 17 00:00:00 2001
+From 1634cf729a978d025cfe726ef0d1796af6cdea36 Mon Sep 17 00:00:00 2001
 From: Hari Chandrakanthan <quic_haric@quicinc.com>
-Date: Fri, 29 Oct 2021 19:03:38 +0530
+Date: Wed, 1 Dec 2021 12:21:06 +0530
 Subject: [PATCH] mac80211 : add support to awgn detection and mitigation in
  6Ghz
 
@@ -35,10 +35,10 @@ Signed-off-by: Hari Chandrakanthan <quic_haric@quicinc.com>
  10 files changed, 119 insertions(+), 33 deletions(-)
 
 diff --git a/include/net/cfg80211.h b/include/net/cfg80211.h
-index 7b4c4b0..afefe20 100644
+index eebe8ba..781aa79 100644
 --- a/include/net/cfg80211.h
 +++ b/include/net/cfg80211.h
-@@ -7580,6 +7580,19 @@ void cfg80211_radar_event(struct wiphy *wiphy,
+@@ -7585,6 +7585,19 @@ void cfg80211_radar_event(struct wiphy *wiphy,
  			  struct cfg80211_chan_def *chandef, gfp_t gfp);
  
  /**
@@ -59,10 +59,10 @@ index 7b4c4b0..afefe20 100644
   * @dev: network device
   * @mac: MAC address of a station which opmode got modified
 diff --git a/include/net/mac80211.h b/include/net/mac80211.h
-index ccdceae..32495db 100644
+index ae805b1..002354c 100644
 --- a/include/net/mac80211.h
 +++ b/include/net/mac80211.h
-@@ -6260,9 +6260,10 @@ void ieee80211_chswitch_done(struct ieee80211_vif *vif, bool success);
+@@ -6268,9 +6268,10 @@ void ieee80211_chswitch_done(struct ieee80211_vif *vif, bool success);
  /**
   * ieee80211_awgn_detected - inform that awgn interference is detected
   *
@@ -76,7 +76,7 @@ index ccdceae..32495db 100644
  /**
   * ieee80211_request_smps - request SM PS transition
 diff --git a/include/uapi/linux/nl80211.h b/include/uapi/linux/nl80211.h
-index e2393d0..c79942d 100644
+index a2e10f5..dbf1a3a 100644
 --- a/include/uapi/linux/nl80211.h
 +++ b/include/uapi/linux/nl80211.h
 @@ -1209,6 +1209,11 @@
@@ -118,10 +118,10 @@ index e2393d0..c79942d 100644
  
  	__NL80211_ATTR_AFTER_LAST,
 diff --git a/net/mac80211/ieee80211_i.h b/net/mac80211/ieee80211_i.h
-index 200d325..613bb3e 100644
+index fc1e902..bb46c22 100644
 --- a/net/mac80211/ieee80211_i.h
 +++ b/net/mac80211/ieee80211_i.h
-@@ -952,8 +952,6 @@ struct ieee80211_sub_if_data {
+@@ -954,8 +954,6 @@ struct ieee80211_sub_if_data {
  	bool csa_block_tx; /* write-protected by sdata_lock and local->mtx */
  	struct cfg80211_chan_def csa_chandef;
  
@@ -130,7 +130,7 @@ index 200d325..613bb3e 100644
  	struct work_struct color_change_finalize_work;
  
  	struct list_head assigned_chanctx_list; /* protected by chanctx_mtx */
-@@ -1461,6 +1459,8 @@ struct ieee80211_local {
+@@ -1465,6 +1463,8 @@ struct ieee80211_local {
  	struct sk_buff_head skb_queue_tdls_chsw;
  
  	struct mac80211_memory_stats memory_stats;
@@ -139,7 +139,7 @@ index 200d325..613bb3e 100644
  };
  
  static inline struct ieee80211_sub_if_data *
-@@ -2298,6 +2298,7 @@ void ieee80211_dfs_cac_timer(unsigned long data);
+@@ -2305,6 +2305,7 @@ void ieee80211_dfs_cac_timer(unsigned long data);
  void ieee80211_dfs_cac_timer_work(struct work_struct *work);
  void ieee80211_dfs_cac_cancel(struct ieee80211_local *local);
  void ieee80211_dfs_radar_detected_work(struct work_struct *work);
@@ -148,10 +148,10 @@ index 200d325..613bb3e 100644
  			      struct cfg80211_csa_settings *csa_settings);
  
 diff --git a/net/mac80211/iface.c b/net/mac80211/iface.c
-index 79f893e..9daf85f 100644
+index 152e76b..5d874eb 100644
 --- a/net/mac80211/iface.c
 +++ b/net/mac80211/iface.c
-@@ -474,8 +474,6 @@ static void ieee80211_do_stop(struct ieee80211_sub_if_data *sdata, bool going_do
+@@ -476,8 +476,6 @@ static void ieee80211_do_stop(struct ieee80211_sub_if_data *sdata, bool going_do
  	sdata_unlock(sdata);
  
  	cancel_work_sync(&sdata->csa_finalize_work);
@@ -160,7 +160,7 @@ index 79f893e..9daf85f 100644
  	cancel_delayed_work_sync(&sdata->dfs_cac_timer_work);
  
  	if (sdata->wdev.cac_started) {
-@@ -1672,7 +1670,6 @@ static void ieee80211_setup_sdata(struct ieee80211_sub_if_data *sdata,
+@@ -1680,7 +1678,6 @@ static void ieee80211_setup_sdata(struct ieee80211_sub_if_data *sdata,
  	INIT_WORK(&sdata->work, ieee80211_iface_work);
  	INIT_WORK(&sdata->recalc_smps, ieee80211_recalc_smps_work);
  	INIT_WORK(&sdata->csa_finalize_work, ieee80211_csa_finalize_work);
@@ -198,10 +198,10 @@ index f644172..87229b2 100644
  	ieee80211_clear_tx_pending(local);
  	rate_control_deinitialize(local);
 diff --git a/net/mac80211/util.c b/net/mac80211/util.c
-index 8ba7e75..766bf13 100644
+index 7cebaa8..a285d12 100644
 --- a/net/mac80211/util.c
 +++ b/net/mac80211/util.c
-@@ -3834,6 +3834,32 @@ void ieee80211_dfs_cac_cancel(struct ieee80211_local *local)
+@@ -3860,6 +3860,32 @@ void ieee80211_dfs_cac_cancel(struct ieee80211_local *local)
  	mutex_unlock(&local->mtx);
  }
  
@@ -234,7 +234,7 @@ index 8ba7e75..766bf13 100644
  void ieee80211_dfs_radar_detected_work(struct work_struct *work)
  {
  	struct ieee80211_local *local =
-@@ -3873,6 +3899,15 @@ void ieee80211_radar_detected(struct ieee80211_hw *hw)
+@@ -3899,6 +3925,15 @@ void ieee80211_radar_detected(struct ieee80211_hw *hw)
  }
  EXPORT_SYMBOL(ieee80211_radar_detected);
  
@@ -250,7 +250,7 @@ index 8ba7e75..766bf13 100644
  u32 ieee80211_chandef_downgrade(struct cfg80211_chan_def *c)
  {
  	u32 ret;
-@@ -3938,32 +3973,6 @@ u32 ieee80211_chandef_downgrade(struct cfg80211_chan_def *c)
+@@ -3964,32 +3999,6 @@ u32 ieee80211_chandef_downgrade(struct cfg80211_chan_def *c)
  	return ret;
  }
  
@@ -304,7 +304,7 @@ index a8a17b9..3705eda 100644
  			const struct cfg80211_chan_def *chandef,
  			enum nl80211_radar_event event, gfp_t gfp)
 diff --git a/net/wireless/nl80211.c b/net/wireless/nl80211.c
-index 958b6f9..1fb5547 100644
+index bd93def..62e9d13 100644
 --- a/net/wireless/nl80211.c
 +++ b/net/wireless/nl80211.c
 @@ -802,6 +802,7 @@ static const struct nla_policy nl80211_policy[NUM_NL80211_ATTR] = {
@@ -315,7 +315,7 @@ index 958b6f9..1fb5547 100644
  };
  
  /* policy for the key attributes */
-@@ -17708,6 +17709,42 @@ void cfg80211_ch_switch_notify(struct net_device *dev,
+@@ -17726,6 +17727,42 @@ void cfg80211_ch_switch_notify(struct net_device *dev,
  }
  EXPORT_SYMBOL(cfg80211_ch_switch_notify);
  

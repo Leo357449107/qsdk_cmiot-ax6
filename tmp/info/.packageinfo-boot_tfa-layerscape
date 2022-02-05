@@ -1,0 +1,176 @@
+Source-Makefile: package/boot/tfa-layerscape/Makefile
+Build-Depends: uboot-layerscape tfa-layerscape/host
+Build-Types: host
+
+Package: tfa-ls1012ardb
+Version: lsdk-1903-1
+Depends: +libc +GCC_LIBSSP:libssp +USE_GLIBC:librt +USE_GLIBC:libpthread @TARGET_layerscape_armv8_64b +layerscape-rcw-ls1012ardb
+Conflicts: 
+Menu-Depends: 
+Provides: 
+Build-Variant: ls1012ardb
+Section: boot
+Category: Boot Loaders
+Repository: base
+Title: NXP LS1012ARDB Trusted Firmware
+Maintainer: 
+Source: tfa-layerscape-lsdk-1903.tar.xz
+Type: ipkg
+Hidden: 1
+Description: NXP LS1012ARDB Trusted Firmware
+
+@@
+
+Package: tfa-ls1012afrwy
+Version: lsdk-1903-1
+Depends: +libc +GCC_LIBSSP:libssp +USE_GLIBC:librt +USE_GLIBC:libpthread @TARGET_layerscape_armv8_64b +layerscape-rcw-ls1012afrwy
+Conflicts: 
+Menu-Depends: 
+Provides: 
+Build-Variant: ls1012afrwy
+Section: boot
+Category: Boot Loaders
+Repository: base
+Title: NXP LS1012AFRWY Trusted Firmware
+Maintainer: 
+Source: tfa-layerscape-lsdk-1903.tar.xz
+Type: ipkg
+Hidden: 1
+Description: NXP LS1012AFRWY Trusted Firmware
+
+@@
+
+Package: tfa-ls1043ardb
+Version: lsdk-1903-1
+Depends: +libc +GCC_LIBSSP:libssp +USE_GLIBC:librt +USE_GLIBC:libpthread @TARGET_layerscape_armv8_64b +layerscape-rcw-ls1043ardb
+Conflicts: 
+Menu-Depends: 
+Provides: 
+Build-Variant: ls1043ardb
+Section: boot
+Category: Boot Loaders
+Repository: base
+Title: NXP LS1043ARDB Trusted Firmware
+Maintainer: 
+Source: tfa-layerscape-lsdk-1903.tar.xz
+Type: ipkg
+Hidden: 1
+Description: NXP LS1043ARDB Trusted Firmware
+
+@@
+
+Package: tfa-ls1043ardb-sdboot
+Version: lsdk-1903-1
+Depends: +libc +GCC_LIBSSP:libssp +USE_GLIBC:librt +USE_GLIBC:libpthread @TARGET_layerscape_armv8_64b +layerscape-rcw-ls1043ardb-sdboot
+Conflicts: 
+Menu-Depends: 
+Provides: 
+Build-Variant: ls1043ardb-sdboot
+Section: boot
+Category: Boot Loaders
+Repository: base
+Title: NXP LS1043ARDB SD Boot Trusted Firmware
+Maintainer: 
+Source: tfa-layerscape-lsdk-1903.tar.xz
+Type: ipkg
+Hidden: 1
+Description: NXP LS1043ARDB SD Boot Trusted Firmware
+
+@@
+
+Package: tfa-ls1046ardb
+Version: lsdk-1903-1
+Depends: +libc +GCC_LIBSSP:libssp +USE_GLIBC:librt +USE_GLIBC:libpthread @TARGET_layerscape_armv8_64b +layerscape-rcw-ls1046ardb
+Conflicts: 
+Menu-Depends: 
+Provides: 
+Build-Variant: ls1046ardb
+Section: boot
+Category: Boot Loaders
+Repository: base
+Title: NXP LS1046ARDB Trusted Firmware
+Maintainer: 
+Source: tfa-layerscape-lsdk-1903.tar.xz
+Type: ipkg
+Hidden: 1
+Description: NXP LS1046ARDB Trusted Firmware
+
+@@
+
+Package: tfa-ls1046ardb-sdboot
+Version: lsdk-1903-1
+Depends: +libc +GCC_LIBSSP:libssp +USE_GLIBC:librt +USE_GLIBC:libpthread @TARGET_layerscape_armv8_64b +layerscape-rcw-ls1046ardb-sdboot
+Conflicts: 
+Menu-Depends: 
+Provides: 
+Build-Variant: ls1046ardb-sdboot
+Section: boot
+Category: Boot Loaders
+Repository: base
+Title: NXP LS1046ARDB SD Boot Trusted Firmware
+Maintainer: 
+Source: tfa-layerscape-lsdk-1903.tar.xz
+Type: ipkg
+Hidden: 1
+Description: NXP LS1046ARDB SD Boot Trusted Firmware
+
+@@
+
+Package: tfa-ls1088ardb
+Version: lsdk-1903-1
+Depends: +libc +GCC_LIBSSP:libssp +USE_GLIBC:librt +USE_GLIBC:libpthread @TARGET_layerscape_armv8_64b +layerscape-rcw-ls1088ardb
+Conflicts: 
+Menu-Depends: 
+Provides: 
+Build-Variant: ls1088ardb
+Section: boot
+Category: Boot Loaders
+Repository: base
+Title: NXP LS1088ARDB Trusted Firmware
+Maintainer: 
+Source: tfa-layerscape-lsdk-1903.tar.xz
+Type: ipkg
+Hidden: 1
+Description: NXP LS1088ARDB Trusted Firmware
+
+@@
+
+Package: tfa-ls1088ardb-sdboot
+Version: lsdk-1903-1
+Depends: +libc +GCC_LIBSSP:libssp +USE_GLIBC:librt +USE_GLIBC:libpthread @TARGET_layerscape_armv8_64b +layerscape-rcw-ls1088ardb-sdboot
+Conflicts: 
+Menu-Depends: 
+Provides: 
+Build-Variant: ls1088ardb-sdboot
+Section: boot
+Category: Boot Loaders
+Repository: base
+Title: NXP LS1088ARDB SD Boot Trusted Firmware
+Maintainer: 
+Source: tfa-layerscape-lsdk-1903.tar.xz
+Type: ipkg
+Hidden: 1
+Description: NXP LS1088ARDB SD Boot Trusted Firmware
+
+@@
+
+Package: tfa-ls2088ardb
+Version: lsdk-1903-1
+Depends: +libc +GCC_LIBSSP:libssp +USE_GLIBC:librt +USE_GLIBC:libpthread @TARGET_layerscape_armv8_64b +layerscape-rcw-ls2088ardb
+Conflicts: 
+Menu-Depends: 
+Provides: 
+Build-Variant: ls2088ardb
+Section: boot
+Category: Boot Loaders
+Repository: base
+Title: NXP LS2088ARDB Trusted Firmware
+Maintainer: 
+Source: tfa-layerscape-lsdk-1903.tar.xz
+Type: ipkg
+Hidden: 1
+Description: NXP LS2088ARDB Trusted Firmware
+
+@@
+
+

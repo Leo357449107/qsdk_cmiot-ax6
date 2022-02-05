@@ -1,0 +1,31 @@
+Source-Makefile: package/system/urngd/Makefile
+
+Package: urngd
+Version: 2020-01-21-c7f7b6b65b82eda4675b42d8cd28d76ea7aebf1a-1
+Depends: +libc +GCC_LIBSSP:libssp +USE_GLIBC:librt +USE_GLIBC:libpthread +libubox
+Conflicts: 
+Menu-Depends: 
+Provides: 
+Section: utils
+Category: Base system
+Repository: base
+Title: OpenWrt non-physical true random number generator based on timing jitter
+Maintainer: 
+Source: urngd-2020-01-21-c7f7b6b65b82eda4675b42d8cd28d76ea7aebf1a.tar.xz
+License: GPL-2.0 BSD-3-Clause
+Type: ipkg
+Description:   urngd is OpenWrt's micro non-physical true random number generator based on
+  timing jitter.
+
+  Using the Jitter RNG core, the rngd provides an entropy source that feeds into
+  the Linux /dev/random device if its entropy runs low. It updates the
+  /dev/random entropy estimator such that the newly provided entropy unblocks
+  /dev/random.
+
+  The seeding of /dev/random also ensures that /dev/urandom benefits from
+  entropy. Especially during boot time, when the entropy of Linux is low, the
+  Jitter RNGd provides a source of sufficient entropy.
+
+@@
+
+

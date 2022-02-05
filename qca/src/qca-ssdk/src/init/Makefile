@@ -33,6 +33,10 @@ ifeq (TRUE, $(SWCONFIG))
 	SRC_LIST += ssdk_uci.c
 endif
 
+ifeq (TRUE, $(IN_NETLINK))
+	SRC_LIST += ssdk_netlink.c
+endif
+
 include $(PRJ_PATH)/make/components.mk
 include $(PRJ_PATH)/make/defs.mk
 include $(PRJ_PATH)/make/target.mk

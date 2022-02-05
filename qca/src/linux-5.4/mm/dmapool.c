@@ -39,17 +39,6 @@
 #define DMAPOOL_DEBUG 1
 #endif
 
-struct dma_pool {		/* the pool */
-	struct list_head page_list;
-	spinlock_t lock;
-	size_t size;
-	struct device *dev;
-	size_t allocation;
-	size_t boundary;
-	char name[32];
-	struct list_head pools;
-};
-
 struct dma_page {		/* cacheable header for 'allocation' bytes */
 	struct list_head page_list;
 	void *vaddr;

@@ -1,0 +1,24 @@
+Source-Makefile: package/network/ipv6/map/Makefile
+
+Package: map
+Version: 4-13
+Depends: +libc +GCC_LIBSSP:libssp +USE_GLIBC:librt +USE_GLIBC:libpthread @IPV6 +kmod-ip6-tunnel +libubox +libubus +iptables-mod-conntrack-extra +kmod-nat46
+Conflicts: 
+Menu-Depends: 
+Provides: map-t
+Section: net
+Category: Network
+Repository: base
+Title: MAP-E/MAP-T and Lightweight 4over6 configuration support
+Maintainer: Hans Dedecker <dedeckeh@gmail.com>
+Source: 
+License: GPL-2.0
+Type: ipkg
+Description:  Provides support for MAP-E (RFC7597), MAP-T (RFC7599) and
+ Lightweight 4over6 (RFC7596) in /etc/config/network.
+ MAP combines address and port translation with the tunneling
+ of IPv4 packets over an IPv6 network
+Hans Dedecker <dedeckeh@gmail.com>
+@@
+
+

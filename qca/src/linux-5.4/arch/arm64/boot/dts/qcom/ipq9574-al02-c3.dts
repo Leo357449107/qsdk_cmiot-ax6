@@ -23,7 +23,9 @@
 				qcom,mhi@0 {
 					reg = <0 0 0 0 0>;
 					qrtr_instance_id = <0x21>;
+#if defined(__CNSS2__)
 					memory-region = <&mhi_region1>;
+#endif
 				};
 			};
 
@@ -34,6 +36,14 @@
 		};
 
 		pcie3_x2: pci@18000000 {
+			perst-gpio = <&tlmm 32 1>;
+			pinctrl-0 = <&pcie3_wake_pins &pcie3_sdx_pins>;
+			e911-gpio =  <&tlmm 43 GPIO_ACTIVE_HIGH>;
+
+			interrupts-extended = <&tlmm 33 IRQ_TYPE_LEVEL_HIGH>,
+			                      <&tlmm 43 IRQ_TYPE_LEVEL_HIGH>;
+			interrupt-names = "wake_gpio", "mdm2ap_e911";
+
 			/* delete pcie3_rp node to remove QCN9000 related entries
 			 * and add it again only with reg as like other PCIE */
 			/delete-node/ pcie3_rp;

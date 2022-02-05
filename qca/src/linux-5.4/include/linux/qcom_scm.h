@@ -125,6 +125,12 @@ struct qcom_scm_vmperm {
 	int perm;
 };
 
+struct fuse_blow {
+	dma_addr_t address;
+	size_t size;
+	unsigned long *status;
+};
+
 #define QTI_OWNER_QSEE_OS		50
 #define QTI_OWNER_TZ_APPS		48
 #define QTI_SVC_CRYPTO			10
@@ -138,6 +144,7 @@ struct qcom_scm_vmperm {
 #define QTI_CMD_LOAD_APP_ID		0x01
 #define QTI_CMD_SEND_DATA_ID		0x01
 #define QTI_CMD_UNLOAD_APP_ID		0x02
+#define QTI_ARMv8_CMD_REMOVE_XPU		0x09
 
 #define QTI_SYSCALL_CREATE_SMC_ID(o, s, f) \
 	((uint32_t)((((o & 0x3f) << 24) | (s & 0xff) << 8) | (f & 0xff)))
@@ -203,6 +210,7 @@ extern int qti_sec_upgrade_auth(unsigned int scm_cmd_id, unsigned int sw_type,
 extern bool qti_scm_sec_auth_available(unsigned int scm_cmd_id);
 extern int qti_fuseipq_scm_call(struct device *dev, u32 svc_id, u32 cmd_id,
 					void *cmd_buf, size_t size);
+extern int qti_scm_qseecom_remove_xpu(void);
 extern int qti_scm_qseecom_notify(struct qsee_notify_app *req,
 				  size_t req_size,
 				  struct qseecom_command_scm_resp *resp,
@@ -230,7 +238,7 @@ extern int qti_scm_tls_hardening(uint32_t req_addr, uint32_t req_size,
 				 u32 cmd_id);
 extern int qti_scm_aes(uint32_t req_addr, uint32_t req_size,
 		       uint32_t resp_addr, uint32_t resp_size, u32 cmd_id);
-extern int qti_scm_dload(u32 svc_id, u32 cmd_id, void *cmd_buf);
+extern int qti_scm_dload(u32 svc_id, u32 cmd_id, void *cmd_buf, void *dload_reg);
 extern int qti_scm_sdi(u32 svc_id, u32 cmd_id);
 extern int qti_scm_tz_log(void *ker_buf, u32 buf_len);
 extern int qti_scm_hvc_log(void *ker_buf, u32 buf_len);

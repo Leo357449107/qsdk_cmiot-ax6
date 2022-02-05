@@ -1,7 +1,7 @@
 /*
  * Copyright (c) 2012, 2015-2019, 2021, The Linux Foundation. All rights reserved.
  *
- * Copyright (c) 2021 Qualcomm Innovation Center, Inc. All rights reserved.
+ * Copyright (c) 2021-2022, Qualcomm Innovation Center, Inc. All rights reserved.
  *
  * Permission to use, copy, modify, and/or distribute this software for
  * any purpose with or without fee is hereby granted, provided that the
@@ -31,6 +31,7 @@ extern "C" {
 #define SW_API_SSDK_CFG            (2  + SW_API_INIT_OFFSET)
 #define SW_API_MODULE_FUNC_CTRL_SET   (3  + SW_API_INIT_OFFSET)
 #define SW_API_MODULE_FUNC_CTRL_GET   (4  + SW_API_INIT_OFFSET)
+#define SW_API_PPE_CAPACITY_GET       (5  + SW_API_INIT_OFFSET)
 
     /*port ctrl*/
 #define SW_API_PORT_OFFSET          30
@@ -338,6 +339,8 @@ extern "C" {
 #define SW_API_ACL_UDF_PROFILE_CFG_GET		(25  + SW_API_ACL_OFFSET)
 #define SW_API_ACL_VPGROUP_SET			(26  + SW_API_ACL_OFFSET)
 #define SW_API_ACL_VPGROUP_GET			(27  + SW_API_ACL_OFFSET)
+#define SW_API_ACL_MAC_ENTRY_SET		(28  + SW_API_ACL_OFFSET)
+#define SW_API_ACL_MAC_ENTRY_DUMP		(29  + SW_API_ACL_OFFSET)
 
     /*qos*/
 #define SW_API_QOS_OFFSET             500
@@ -868,10 +871,11 @@ extern "C" {
 #define SW_API_FLOW_HOST_DEL         (21  + SW_API_FLOW_OFFSET)
 #define SW_API_FLOW_HOST_GET         (22  + SW_API_FLOW_OFFSET)
 #define SW_API_FLOW_COUNTER_GET		(23  + SW_API_FLOW_OFFSET)
-#define SW_API_FLOW_ENTRY_EN_SET	(24  + SW_API_FLOW_OFFSET)
-#define SW_API_FLOW_ENTRY_EN_GET	(25  + SW_API_FLOW_OFFSET)
-#define SW_API_FLOW_QOS_SET		(26  + SW_API_FLOW_OFFSET)
-#define SW_API_FLOW_QOS_GET		(27  + SW_API_FLOW_OFFSET)
+#define SW_API_FLOW_COUNTER_CLEANUP	(24  + SW_API_FLOW_OFFSET)
+#define SW_API_FLOW_ENTRY_EN_SET	(25  + SW_API_FLOW_OFFSET)
+#define SW_API_FLOW_ENTRY_EN_GET	(26  + SW_API_FLOW_OFFSET)
+#define SW_API_FLOW_QOS_SET		(27  + SW_API_FLOW_OFFSET)
+#define SW_API_FLOW_QOS_GET		(28  + SW_API_FLOW_OFFSET)
 
 /* rss hash */
 #define SW_API_RSS_HASH_OFFSET		2400
@@ -1078,6 +1082,12 @@ extern "C" {
 #define SW_API_TUNNEL_UDF_PROFILE_CFG_GET		(37  + SW_API_TUNNEL_OFFSET)
 #define SW_API_TUNNEL_EXP_DECAP_SET	(38 + SW_API_TUNNEL_OFFSET)
 #define SW_API_TUNNEL_EXP_DECAP_GET	(39 + SW_API_TUNNEL_OFFSET)
+#define SW_API_TUNNEL_DECAP_KEY_SET	(40 + SW_API_TUNNEL_OFFSET)
+#define SW_API_TUNNEL_DECAP_KEY_GET	(41 + SW_API_TUNNEL_OFFSET)
+#define SW_API_TUNNEL_DECAP_EN_SET	(42 + SW_API_TUNNEL_OFFSET)
+#define SW_API_TUNNEL_DECAP_EN_GET	(43 + SW_API_TUNNEL_OFFSET)
+#define SW_API_TUNNEL_DECAP_ACTION_UPDATE	(44 + SW_API_TUNNEL_OFFSET)
+#define SW_API_TUNNEL_DECAP_COUNTER_GET		(45 + SW_API_TUNNEL_OFFSET)
 
 /* VXLAN */
 #define SW_API_VXLAN_OFFSET                       3500

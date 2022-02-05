@@ -28,6 +28,7 @@
 #define MHI_PANIC_TIMER_STEP	1000
 
 volatile int mhi_panic_timeout;
+volatile int force_graceful = 0;
 
 int ap2mdm_gpio, mdm2ap_gpio;
 bool mhi_ssr_negotiate;
@@ -61,6 +62,24 @@ static ssize_t sysfs_store(struct kobject *kobj, struct kobj_attribute *attr,
 	}
 	return count;
 }
+
+static ssize_t force_graceful_sysfs_show(struct kobject *kobj, struct kobj_attribute *attr,
+			  char *buf)
+{
+	return snprintf(buf, PAGE_SIZE, "%d\n", force_graceful);
+}
+
+static ssize_t force_graceful_sysfs_store(struct kobject *kobj, struct kobj_attribute *attr,
+			   const char *buf, size_t count)
+{
+	if (sscanf(buf, "%du", &force_graceful) != 1) {
+		pr_err("failed to read force graceful value from string\n");
+		return -EINVAL;
+	}
+	return count;
+}
+static struct kobj_attribute force_graceful_attr =
+	__ATTR(force_graceful, 0660, force_graceful_sysfs_show, force_graceful_sysfs_store);
 
 struct firmware_info {
 	unsigned int dev_id;
@@ -225,6 +244,66 @@ static struct mhi_channel_config mhi_sdx_mhi_channels[] = {
 		.doorbell_mode_switch = false,
 		.auto_queue = true,
 		.auto_start = true,
+	},
+	{
+		.num = 32,
+		.name = "DUN",
+		.num_elements = 32,
+		.event_ring = 3,
+		.dir = DMA_TO_DEVICE,
+		.ee_mask = 0x4,
+		.pollcfg = 0,
+		.doorbell = MHI_DB_BRST_DISABLE,
+		.lpm_notify = false,
+		.offload_channel = false,
+		.doorbell_mode_switch = false,
+		.auto_queue = false,
+		.auto_start = false,
+	},
+	{
+		.num = 33,
+		.name = "DUN",
+		.num_elements = 32,
+		.event_ring = 3,
+		.dir = DMA_FROM_DEVICE,
+		.ee_mask = 0x4,
+		.pollcfg = 0,
+		.doorbell = MHI_DB_BRST_DISABLE,
+		.lpm_notify = false,
+		.offload_channel = false,
+		.doorbell_mode_switch = false,
+		.auto_queue = false,
+		.auto_start = false,
+	},
+	{
+		.num = 34,
+		.name = "FIREHOSE",
+		.num_elements = 32,
+		.event_ring = 1,
+		.dir = DMA_TO_DEVICE,
+		.ee_mask = BIT(MHI_EE_FP),
+		.pollcfg = 0,
+		.doorbell = MHI_DB_BRST_DISABLE,
+		.lpm_notify = false,
+		.offload_channel = false,
+		.doorbell_mode_switch = false,
+		.auto_queue = false,
+		.auto_start = false,
+	},
+	{
+		.num = 35,
+		.name = "FIREHOSE",
+		.num_elements = 32,
+		.event_ring = 1,
+		.dir = DMA_FROM_DEVICE,
+		.ee_mask = BIT(MHI_EE_FP),
+		.pollcfg = 0,
+		.doorbell = MHI_DB_BRST_DISABLE,
+		.lpm_notify = false,
+		.offload_channel = false,
+		.doorbell_mode_switch = false,
+		.auto_queue = false,
+		.auto_start = false,
 	},
 	{
 		.num = 46,
@@ -434,6 +513,7 @@ static const struct firmware_info firmware_table[] = {
 	{.dev_id = 0x306, .fw_image = "sdx55m/sbl1.mbn"},
 	{.dev_id = 0x305, .fw_image = "sdx50m/sbl1.mbn"},
 	{.dev_id = 0x304, .fw_image = "sbl.mbn", .edl_image = "edl.mbn"},
+	{.dev_id = 0x308, .edl_image = "edl.mbn"},
 	/* default, set to debug.mbn */
 	{.fw_image = "debug.mbn"},
 };
@@ -1103,6 +1183,11 @@ int mhi_pci_probe(struct pci_dev *pci_dev,
 				MHI_ERR("Cannot create sysfs file for mhi_panic_timeout\n");
 				kobject_put(mhi_kobj);
 			}
+			/* Creating sysfs file for force_graceful */
+			if (sysfs_create_file(mhi_kobj, &force_graceful_attr.attr)) {
+				MHI_ERR("Cannot create sysfs file for force_graceful\n");
+				kobject_put(mhi_kobj);
+			}
 		} else {
 			MHI_ERR("Unable to create mhi sysfs entry\n");
 		}
@@ -1164,6 +1249,8 @@ void mhi_pci_device_removed(struct pci_dev *pci_dev)
 				MHI_ERR("Unable to acquire mdm2ap_gpio");
 
 			graceful = gpiod_get_value(mdm2ap);
+			if(force_graceful)
+				graceful = 1;
 		}
 
 		MHI_LOG("Triggering shutdown process\n");

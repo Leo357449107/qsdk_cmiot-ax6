@@ -573,6 +573,38 @@ static struct clk_fixed_factor gpll6_out_main_div2 = {
 	},
 };
 
+static struct clk_alpha_pll audio_pll_main = {
+	.offset = 0x4b000,
+	.regs = clk_alpha_pll_regs[CLK_ALPHA_PLL_TYPE_BRAMMO],
+	.clkr = {
+		.enable_reg = 0x0b000,
+		.enable_mask = BIT(1),
+		.hw.init = &(struct clk_init_data){
+			.name = "audio_pll_main",
+			.parent_names = (const char *[]){
+				"xo"
+			},
+			.num_parents = 1,
+			.ops = &clk_alpha_pll_brammo_ops,
+		},
+	},
+};
+
+static struct clk_alpha_pll_postdiv audio_pll = {
+	.offset = 0x4b000,
+	.regs = clk_alpha_pll_regs[CLK_ALPHA_PLL_TYPE_BRAMMO],
+	.width = 2,
+	.clkr.hw.init = &(struct clk_init_data){
+		.name = "audio_pll",
+		.parent_names = (const char *[]){
+			"audio_pll_main"
+		},
+		.num_parents = 1,
+		.ops = &clk_alpha_pll_postdiv_ro_ops,
+		.flags = CLK_SET_RATE_PARENT,
+	},
+};
+
 static struct clk_alpha_pll ubi32_pll_main = {
 	.offset = 0x25000,
 	.regs = clk_alpha_pll_regs[CLK_ALPHA_PLL_TYPE_HUAYRA],
@@ -4620,6 +4652,17 @@ static struct clk_hw *gcc_ipq8074_hws[] = {
 	&qdss_dap_sync_clk_src.hw,
 };
 
+static const struct alpha_pll_config audio_pll_config = {
+	.l = 0x25,
+	.alpha = 0xcac08312,
+	.alpha_hi = 0xa1,
+	.config_ctl_val = 0x00004289,
+	.main_output_mask = BIT(0),
+	.post_div_val = 0x3 << 8,
+	.post_div_mask = GENMASK(9, 8),
+	.alpha_en_mask = BIT(24),
+};
+
 static const struct alpha_pll_config ubi32_pll_config = {
 	.l = 0x4e,
 	.config_ctl_val = 0x200d4aa8,
@@ -4885,6 +4928,8 @@ static struct clk_regmap *gcc_ipq8074_clks[] = {
 	[GCC_QDSS_DAP_CLK] = &gcc_qdss_dap_clk.clkr,
 	[ADSS_PWM_CLK_SRC] = &adss_pwm_clk_src.clkr,
 	[GCC_ADSS_PWM_CLK] = &gcc_adss_pwm_clk.clkr,
+	[AUDIO_PLL_MAIN] = &audio_pll_main.clkr,
+	[AUDIO_PLL] = &audio_pll.clkr,
 };
 
 static const struct qcom_reset_map gcc_ipq8074_resets[] = {
@@ -5103,6 +5148,8 @@ static int gcc_ipq8074_probe(struct platform_device *pdev)
 	regmap_update_bits(regmap, 0x3e078, BIT(0), 0x0);
 	/* Disable SW_COLLAPSE for USB1 GDSCR */
 	regmap_update_bits(regmap, 0x3f078, BIT(0), 0x0);
+
+	clk_alpha_pll_configure(&audio_pll_main, regmap, &audio_pll_config);
 
 	/* SW Workaround for UBI Huayra PLL */
 	regmap_update_bits(regmap, 0x2501c, BIT(26), BIT(26));

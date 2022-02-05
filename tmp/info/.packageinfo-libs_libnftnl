@@ -1,0 +1,24 @@
+Source-Makefile: package/libs/libnftnl/Makefile
+
+Package: libnftnl
+Version: 1.1.4-1
+ABIVersion: 11
+Depends: +libc +GCC_LIBSSP:libssp +USE_GLIBC:librt +USE_GLIBC:libpthread +libmnl
+Conflicts: 
+Menu-Depends: 
+Provides: 
+Section: libs
+Category: Libraries
+Repository: base
+Title: Low-level netlink library for the nf_tables subsystem
+Maintainer: Steven Barth <steven@midlink.org>
+Source: libnftnl-1.1.4.tar.bz2
+License: GPL-2.0+
+Type: ipkg
+Description:  libnftnl is a userspace library providing a low-level netlink
+ programming interface (API) to the in-kernel nf_tables subsystem.
+http://www.netfilter.org/projects/libnftnl
+Steven Barth <steven@midlink.org>
+@@
+
+

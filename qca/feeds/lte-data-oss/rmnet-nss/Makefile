@@ -18,7 +18,7 @@ define KernelPackage/rmnet-nss
   SECTION:=kernel
   CATEGORY:=Kernel modules
   SUBMENU:=Network Support
-  DEPENDS:=@TARGET_ipq806x||TARGET_ipq807x||TARGET_ipq_ipq807x||TARGET_ipq_ipq807x_64||TARGET_ipq_ipq50xx||TARGET_ipq_ipq50xx_64 +kmod-qca-nss-drv +TARGET_ipq807x:kmod-rmnet-core
+  DEPENDS:=@TARGET_ipq95xx||TARGET_ipq50xx||TARGET_ipq806x||TARGET_ipq807x||TARGET_ipq_ipq807x||TARGET_ipq_ipq807x_64||TARGET_ipq_ipq50xx||TARGET_ipq_ipq50xx_64 +kmod-qca-nss-drv +TARGET_ipq807x:kmod-rmnet-core +TARGET_ipq95xx:kmod-rmnet-core +TARGET_ipq50xx:kmod-rmnet-core
   TITLE:=RMNET NSS interface module
   FILES:=$(PKG_BUILD_DIR)/rmnet_nss.ko
   KCONFIG:=CONFIG_RMNET_DATA=y

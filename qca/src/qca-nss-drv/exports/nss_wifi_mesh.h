@@ -114,13 +114,13 @@ enum nss_wifi_mesh_extended_data_pkt_types {
  *	Wi-Fi header
  */
 struct nss_wifi_mesh_ieee80211_hdr {
-	uint16_t frame_ctl;				/* Frame control. */
-	uint16_t duration_id;				/* Duration ID. */
-	uint8_t addr1[ETH_ALEN];			/* Address 1. */
-	uint8_t addr2[ETH_ALEN];			/* Address 2. */
-	uint8_t addr3[ETH_ALEN];			/* Address 3. */
-	uint16_t seq_ctrl;				/* Sequence control. */
-	uint8_t addr4[ETH_ALEN];			/* Address 4. */
+	uint16_t frame_ctl;				/**< Frame control. */
+	uint16_t duration_id;				/**< Duration ID. */
+	uint8_t addr1[ETH_ALEN];			/**< Address 1. */
+	uint8_t addr2[ETH_ALEN];			/**< Address 2. */
+	uint8_t addr3[ETH_ALEN];			/**< Address 3. */
+	uint16_t seq_ctrl;				/**< Sequence control. */
+	uint8_t addr4[ETH_ALEN];			/**< Address 4. */
 }__packed;
 
 /*
@@ -128,11 +128,11 @@ struct nss_wifi_mesh_ieee80211_hdr {
  *	Wi-Fi mesh header
  */
 struct nss_wifi_mesh_ieee80211s_hdr {
-	uint8_t flags;					/* Mesh flags. */
-	uint8_t ttl;					/* TTL. */
-	uint32_t seq_num;				/* Sequence number. */
-	uint8_t eaddr1[ETH_ALEN];			/* Mesh Address1. */
-	uint8_t eaddr2[ETH_ALEN];			/* Mesh Address2. */
+	uint8_t flags;					/**< Mesh flags. */
+	uint8_t ttl;					/**< TTL. */
+	uint32_t seq_num;				/**< Sequence number. */
+	uint8_t eaddr1[ETH_ALEN];			/**< Mesh Address1. */
+	uint8_t eaddr2[ETH_ALEN];			/**< Mesh Address2. */
 }__packed;
 
 /*
@@ -389,28 +389,28 @@ struct nss_wifi_mesh_path_expiry_msg {
  *	Encapsulation statistics.
  */
 struct nss_wifi_mesh_encap_stats {
-	uint32_t expiry_notify_sent;		/* Number of times expiry notification sent to host. */
-	uint32_t mc_count;			/* Number of multicast packets. */
-	uint32_t mp_not_found;			/* Number of times mesh path is not found. */
-	uint32_t mp_active;			/* Number of times mesh path is active. */
-	uint32_t mpp_not_found;			/* Number of times proxy path is not found. */
-	uint32_t mpp_found;			/* Number of times proxy path is found. */
-	uint32_t encap_hdr_fail;		/* Number of times encapsulating mesh header failed. */
-	uint32_t mp_del_notify_fail;		/* Number of times notifying mesh path delete failed. */
-	uint32_t link_enqueue;			/* Number of packets enqueued to the link VAP. */
-	uint32_t link_enq_fail;			/* Number of times enqueue to link vap failed. */
-	uint32_t ra_lup_fail;			/* Number of times receiver address look up is failed. */
-	uint32_t dummy_add_count;		/* Number of times dummy path is added. */
-	uint32_t encap_mp_add_notify_fail;	/* Number of times add notification failed. */
-	uint32_t dummy_add_fail;		/* Number of times dummy addition failed. */
-	uint32_t dummy_lup_fail;		/* Number of times dummy lookup failed. */
-	uint32_t send_to_host_failed;		/* Number of packets failed to be sent to host. */
-	uint32_t sent_to_host;			/* Number of packets sent to host. */
-	uint32_t expiry_notify_fail; 		/* Number of times expiry notification to host failed. */
-	uint32_t no_headroom;			/* Number of packets dropped because there is no headroom. */
-	uint32_t path_refresh_sent;		/* Number of times path refresh is sent to host. */
-	uint32_t linearise_failed;		/* Number of packets dropped because pb_linearise. */
-	uint32_t mp_exception_event_rl_dropped;	/* Number of packets dropped due to rate limit. */
+	uint32_t expiry_notify_sent;		/**< Number of times expiry notification sent to host. */
+	uint32_t mc_count;			/**< Number of multicast packets. */
+	uint32_t mp_not_found;			/**< Number of times mesh path is not found. */
+	uint32_t mp_active;			/**< Number of times mesh path is active. */
+	uint32_t mpp_not_found;			/**< Number of times proxy path is not found. */
+	uint32_t mpp_found;			/**< Number of times proxy path is found. */
+	uint32_t encap_hdr_fail;		/**< Number of times encapsulating mesh header failed. */
+	uint32_t mp_del_notify_fail;		/**< Number of times notifying mesh path delete failed. */
+	uint32_t link_enqueue;			/**< Number of packets enqueued to the link VAP. */
+	uint32_t link_enq_fail;			/**< Number of times enqueue to link vap failed. */
+	uint32_t ra_lup_fail;			/**< Number of times receiver address look up is failed. */
+	uint32_t dummy_add_count;		/**< Number of times dummy path is added. */
+	uint32_t encap_mp_add_notify_fail;	/**< Number of times add notification failed. */
+	uint32_t dummy_add_fail;		/**< Number of times dummy addition failed. */
+	uint32_t dummy_lup_fail;		/**< Number of times dummy lookup failed. */
+	uint32_t send_to_host_failed;		/**< Number of packets failed to be sent to host. */
+	uint32_t sent_to_host;			/**< Number of packets sent to host. */
+	uint32_t expiry_notify_fail; 		/**< Number of times expiry notification to host failed. */
+	uint32_t no_headroom;			/**< Number of packets dropped because there is no headroom. */
+	uint32_t path_refresh_sent;		/**< Number of times path refresh is sent to host. */
+	uint32_t linearise_failed;		/**< Number of packets dropped because pb_linearise. */
+	uint32_t mp_exception_event_rl_dropped;	/**< Number of packets dropped due to rate limit. */
 };
 
 /*

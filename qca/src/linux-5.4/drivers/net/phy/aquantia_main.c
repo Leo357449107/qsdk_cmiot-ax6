@@ -74,6 +74,8 @@
 #define MDIO_AN_RX_LP_STAT1_1000BASET_HALF	BIT(14)
 #define MDIO_AN_RX_LP_STAT1_SHORT_REACH		BIT(13)
 #define MDIO_AN_RX_LP_STAT1_AQRATE_DOWNSHIFT	BIT(12)
+#define MDIO_AN_RX_LP_STAT1_LP_5000		BIT(11)
+#define MDIO_AN_RX_LP_STAT1_LP_2500		BIT(10)
 #define MDIO_AN_RX_LP_STAT1_AQ_PHY		BIT(2)
 
 #define MDIO_AN_RX_LP_STAT4			0xe823
@@ -541,7 +543,7 @@ static int aqr_ack_interrupt(struct phy_device *phydev)
 
 static int aqr_read_status(struct phy_device *phydev)
 {
-	int val;
+	int val = 0, ret;
 
 	if (phydev->autoneg == AUTONEG_ENABLE) {
 		val = phy_read_mmd(phydev, MDIO_MMD_AN, MDIO_AN_RX_LP_STAT1);
@@ -556,7 +558,20 @@ static int aqr_read_status(struct phy_device *phydev)
 				 val & MDIO_AN_RX_LP_STAT1_1000BASET_HALF);
 	}
 
-	return genphy_c45_read_status(phydev);
+	ret = genphy_c45_read_status(phydev);
+
+	if (val) {
+		linkmode_mod_bit(ETHTOOL_LINK_MODE_2500baseT_Full_BIT,
+				 phydev->lp_advertising,
+				 val & MDIO_AN_RX_LP_STAT1_LP_2500);
+		linkmode_mod_bit(ETHTOOL_LINK_MODE_5000baseT_Full_BIT,
+				 phydev->lp_advertising,
+				 val & MDIO_AN_RX_LP_STAT1_LP_5000);
+
+		phy_resolve_aneg_linkmode(phydev);
+	}
+
+	return ret;
 }
 
 static int aqr107_read_downshift_event(struct phy_device *phydev)

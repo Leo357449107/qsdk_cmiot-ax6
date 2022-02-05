@@ -1,0 +1,20 @@
+Source-Makefile: package/firmware/am33x-cm3/Makefile
+
+Package: am33x-cm3
+Version: 20130304-1
+Depends: +libc +GCC_LIBSSP:libssp +USE_GLIBC:librt +USE_GLIBC:libpthread @TARGET_omap
+Conflicts: 
+Menu-Depends: 
+Provides: 
+Section: firmware
+Category: Firmware
+Title: TI AM335x PM firmware
+Maintainer: Imre Kaloz <kaloz@openwrt.org>
+Source: am33x-cm3-20130304.tar.xz
+Type: ipkg
+Description: TI AM335x PM firmware
+http://arago-project.org/git/projects/?p=am33x-cm3.git
+Imre Kaloz <kaloz@openwrt.org>
+@@
+
+

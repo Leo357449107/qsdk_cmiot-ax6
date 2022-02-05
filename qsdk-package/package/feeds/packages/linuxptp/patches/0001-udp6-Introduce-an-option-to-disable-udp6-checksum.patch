@@ -1,0 +1,121 @@
+From 7fea2e000baff414e13a12fbb70383e5c1fead7c Mon Sep 17 00:00:00 2001
+From: Luo Jie <quic_luoj@quicinc.com>
+Date: Tue, 28 Dec 2021 13:40:53 +0800
+Subject: [PATCH 1/2] udp6: Introduce an option to disable udp6 checksum
+
+Signed-off-by: Luo Jie <quic_luoj@quicinc.com>
+---
+ config.c            |  1 +
+ configs/default.cfg |  1 +
+ ptp4l.8             |  5 +++++
+ udp6.c              | 20 ++++++++++++++++----
+ 4 files changed, 23 insertions(+), 4 deletions(-)
+
+diff --git a/config.c b/config.c
+index d237de9..15a87b7 100644
+--- a/config.c
++++ b/config.c
+@@ -322,6 +322,7 @@ struct config_item config_tab[] = {
+ 	GLOB_ITEM_INT("tx_timestamp_timeout", 1, 1, INT_MAX),
+ 	PORT_ITEM_INT("udp_ttl", 1, 1, 255),
+ 	PORT_ITEM_INT("udp6_scope", 0x0E, 0x00, 0x0F),
++	GLOB_ITEM_INT("udp6_checksum_disabled", 0, 0, 1),
+ 	GLOB_ITEM_STR("uds_address", "/var/run/ptp4l"),
+ 	PORT_ITEM_INT("unicast_listen", 0, 0, 1),
+ 	PORT_ITEM_INT("unicast_master_table", 0, 0, INT_MAX),
+diff --git a/configs/default.cfg b/configs/default.cfg
+index 8c19129..cad6aaa 100644
+--- a/configs/default.cfg
++++ b/configs/default.cfg
+@@ -51,6 +51,7 @@ hybrid_e2e		0
+ inhibit_multicast_service	0
+ net_sync_monitor	0
+ tc_spanning_tree	0
++udp6_checksum_disabled  0
+ tx_timestamp_timeout	1
+ unicast_listen		0
+ unicast_master_table	0
+diff --git a/ptp4l.8 b/ptp4l.8
+index b179b81..85d267c 100644
+--- a/ptp4l.8
++++ b/ptp4l.8
+@@ -480,6 +480,11 @@ field of Announce messages that pass through the switch.  Enabling
+ this option ensures that PTP message loops never form, provided the
+ switches all implement this option together with the BMCA.
+ .TP
++.B udp6_checksum_disabled
++When network_transport is UDPv6, the PTP message inserted by the
++timestamp is used with a zero UDP checksum, disabling udp6 checksum
++ensures that the PTP message can be received successfully.
++.TP
+ .B tx_timestamp_timeout
+ The number of milliseconds to poll waiting for the tx time stamp from the kernel
+ when a message has recently been sent.
+diff --git a/udp6.c b/udp6.c
+index ba5482e..a9f552e 100644
+--- a/udp6.c
++++ b/udp6.c
+@@ -26,6 +26,7 @@
+ #include <string.h>
+ #include <sys/ioctl.h>
+ #include <sys/socket.h>
++#include <linux/udp.h>
+ #include <unistd.h>
+ 
+ #include "address.h"
+@@ -102,7 +103,7 @@ static int udp6_close(struct transport *t, struct fdarray *fda)
+ }
+ 
+ static int open_socket_ipv6(const char *name, struct in6_addr mc_addr[2], short port,
+-			    int *interface_index, int hop_limit)
++			    int *interface_index, int hop_limit, int udp_no_check6)
+ {
+ 	struct sockaddr_in6 addr;
+ 	int fd, index, on = 1;
+@@ -127,6 +128,16 @@ static int open_socket_ipv6(const char *name, struct in6_addr mc_addr[2], short
+ 		pr_err("setsockopt SO_REUSEADDR failed: %m");
+ 		goto no_option;
+ 	}
++	if (udp_no_check6 == 1) {
++		if (setsockopt(fd, IPPROTO_UDP, UDP_NO_CHECK6_RX, &on, sizeof(on))) {
++			pr_err("setsockopt UDP_NO_CHECK6_RX failed: %m");
++			goto no_option;
++		}
++		if (setsockopt(fd, IPPROTO_UDP, UDP_NO_CHECK6_TX, &on, sizeof(on))) {
++			pr_err("setsockopt UDP_NO_CHECK6_TX failed: %m");
++			goto no_option;
++		}
++	}
+ 	if (bind(fd, (struct sockaddr *) &addr, sizeof(addr))) {
+ 		pr_err("bind failed: %m");
+ 		goto no_option;
+@@ -166,8 +177,9 @@ static int udp6_open(struct transport *t, struct interface *iface,
+ 	struct udp6 *udp6 = container_of(t, struct udp6, t);
+ 	const char *name = interface_name(iface);
+ 	uint8_t event_dscp, general_dscp;
+-	int efd, gfd, hop_limit;
++	int efd, gfd, hop_limit, udp_no_check6;
+ 
++	udp_no_check6 = config_get_int(t->cfg, name, "udp6_checksum_disabled");
+ 	hop_limit = config_get_int(t->cfg, name, "udp_ttl");
+ 	udp6->mac.len = 0;
+ 	sk_interface_macaddr(name, &udp6->mac);
+@@ -187,12 +199,12 @@ static int udp6_open(struct transport *t, struct interface *iface,
+ 		return -1;
+ 
+ 	efd = open_socket_ipv6(name, udp6->mc6_addr, EVENT_PORT, &udp6->index,
+-			       hop_limit);
++			       hop_limit, udp_no_check6);
+ 	if (efd < 0)
+ 		goto no_event;
+ 
+ 	gfd = open_socket_ipv6(name, udp6->mc6_addr, GENERAL_PORT, &udp6->index,
+-			       hop_limit);
++			       hop_limit, udp_no_check6);
+ 	if (gfd < 0)
+ 		goto no_general;
+ 
+-- 
+The Qualcomm Innovation Center, Inc. is a member of the Code Aurora Forum,
+a Linux Foundation Collaborative Project
+

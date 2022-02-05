@@ -1,0 +1,32 @@
+Source-Makefile: package/network/utils/wireguard-tools/Makefile
+
+Package: wireguard-tools
+Submenu: VPN
+Version: 1.0.20191226-1
+Depends: +libc +GCC_LIBSSP:libssp +USE_GLIBC:librt +USE_GLIBC:libpthread +libmnl +ip
+Conflicts: 
+Menu-Depends: 
+Provides: 
+Section: net
+Category: Network
+Repository: base
+Title: WireGuard userspace control program (wg)
+Maintainer: Jason A. Donenfeld <Jason@zx2c4.com>
+Source: wireguard-tools-1.0.20191226.tar.xz
+License: GPL-2.0
+LicenseFiles: COPYING
+Type: ipkg
+Description:   WireGuard is a novel VPN that runs inside the Linux Kernel and utilizes
+  state-of-the-art cryptography. It aims to be faster, simpler, leaner, and
+  more useful than IPSec, while avoiding the massive headache. It intends to
+  be considerably more performant than OpenVPN.  WireGuard is designed as a
+  general purpose VPN for running on embedded interfaces and super computers
+  alike, fit for many different circumstances. It uses UDP.
+
+  This package provides the userspace control program for WireGuard,
+  `wg(8)`, a netifd protocol helper, and a re-resolve watchdog script.
+https://www.wireguard.com
+Jason A. Donenfeld <Jason@zx2c4.com>
+@@
+
+

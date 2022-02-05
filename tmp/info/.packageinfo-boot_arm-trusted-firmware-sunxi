@@ -1,0 +1,22 @@
+Source-Makefile: package/boot/arm-trusted-firmware-sunxi/Makefile
+
+Package: arm-trusted-firmware-sunxi
+Version: 2018-10-02-dbc8d9496ead9ecdd7c2a276b542a4fbbbf64027-1
+Depends: +libc +GCC_LIBSSP:libssp +USE_GLIBC:librt +USE_GLIBC:libpthread @TARGET_sunxi_cortexa53
+Conflicts: 
+Menu-Depends: 
+Provides: 
+Section: boot
+Category: Boot Loaders
+Repository: base
+Title: ARM Trusted Firmware for Allwinner
+Maintainer: Hauke Mehrtens <hauke@hauke-m.de>
+Source: arm-trusted-firmware-sunxi-2018-10-02-dbc8d9496ead9ecdd7c2a276b542a4fbbbf64027.tar.xz
+License: BSD-3-Clause
+LicenseFiles: license.md
+Type: ipkg
+Description: ARM Trusted Firmware for Allwinner
+Hauke Mehrtens <hauke@hauke-m.de>
+@@
+
+

@@ -6,7 +6,7 @@ PKG_VERSION:=20212301
 PKG_RELEASE:=1
 
 PKG_SOURCE_PROTO:=git
-PKG_SOURCE_URL:=git://github.com/qca/sigma-dut.git
+PKG_SOURCE_URL:=https://github.com/qca/sigma-dut.git
 PKG_BUILD_DIR:=$(BUILD_DIR)/$(PKG)-$(PKG_VERSION)
 PKG_MD5SUM:=skip
 

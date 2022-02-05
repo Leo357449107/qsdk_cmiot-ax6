@@ -33,7 +33,7 @@
 #endif
 
 #ifndef IN_MISC_MINI
-char cpucode[][85] = {
+char *cpucode[] = {
 "Forwarding to CPU",
 "Unkown L2 protocol exception redirect/copy to CPU",
 "PPPoE wrong version or wrong type exception redirect/copy to CPU",
@@ -236,7 +236,7 @@ char cpucode[][85] = {
 #endif
 };
 
-char dropcode[][75] = {
+char *dropcode[] = {
 #ifdef APPE
 "None",
 "Unkown L2 protocol exception drop",

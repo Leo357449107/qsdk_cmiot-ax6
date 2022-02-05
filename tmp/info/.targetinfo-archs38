@@ -1,0 +1,41 @@
+Source-Makefile: target/linux/archs38/Makefile
+Target: archs38
+Target-Board: archs38
+Target-Name: Synopsys DesignWare ARC HS38
+Target-Arch: arc
+Target-Arch-Packages: arc_archs
+Target-Features: dt gpio usb
+Target-Depends: 
+Target-Optimization: -Os -pipe -matomic -mcpu=archs
+CPU-Type: archs
+Linux-Version: 4.14.254
+Linux-Release: 1
+Linux-Kernel-Arch: arc
+Target-Description:
+	Synopsys DesignWare boards
+@@
+Default-Packages: base-files libc libgcc busybox dropbear mtd uci opkg netifd fstools uclient-fetch logd urandom-seed urngd  
+Target: archs38/generic
+Target-Board: archs38
+Target-Name: Generic
+Target-Arch: arc
+Target-Arch-Packages: arc_archs
+Target-Features: dt ext4 gpio ramdisk usb
+Target-Depends: 
+Target-Optimization: -Os -pipe -matomic -mcpu=archs
+CPU-Type: archs
+Linux-Version: 4.14.254
+Linux-Release: 1
+Linux-Kernel-Arch: arc
+Target-Description:
+	Build firmware images for ARC HS38 based boards.
+@@
+Default-Packages: base-files libc libgcc busybox dropbear mtd uci opkg netifd fstools uclient-fetch logd urandom-seed urngd  
+Target-Profile: Default
+Target-Profile-Name: Default Profile (all drivers)
+Target-Profile-Packages: kmod-usb-core kmod-usb2 kmod-ath9k-htc wpad-basic iwinfo
+Target-Profile-Description:
+	Default package set compatible with most boards.
+@@
+
+

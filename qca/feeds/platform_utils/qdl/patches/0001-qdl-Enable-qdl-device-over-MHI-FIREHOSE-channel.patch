@@ -1,0 +1,135 @@
+From 6cb1ebc71eb091e59a9396b445233d2c9ff2311b Mon Sep 17 00:00:00 2001
+From: Gokul Sriram Palanisamy <quic_gokulsri@quicinc.com>
+Date: Sun, 24 Oct 2021 08:22:59 +0530
+Subject: [PATCH] qdl: Enable qdl device over MHI FIREHOSE channel
+
+Signed-off-by: Gokul Sriram Palanisamy <quic_gokulsri@quicinc.com>
+---
+ firehose.c |  2 ++
+ qdl.c      | 68 +++++++++++++++++++++++++++++++++++++++++++++++++++++---------
+ 2 files changed, 61 insertions(+), 9 deletions(-)
+
+diff --git a/firehose.c b/firehose.c
+index 9e47f64..b9a15e1 100644
+--- a/firehose.c
++++ b/firehose.c
+@@ -138,6 +138,8 @@ static int firehose_read(struct qdl_device *qdl, int timeout_ms,
+ 
+ 			warnx("firehose operation timed out");
+ 			return -ETIMEDOUT;
++		} else if (n == 0) {
++			return 0;
+ 		}
+ 		buf[n] = '\0';
+ 
+diff --git a/qdl.c b/qdl.c
+index 256ca96..43fa65a 100644
+--- a/qdl.c
++++ b/qdl.c
+@@ -339,7 +339,7 @@ found:
+ 	return 0;
+ }
+ 
+-int qdl_read(struct qdl_device *qdl, void *buf, size_t len, unsigned int timeout)
++int usb_read(struct qdl_device *qdl, void *buf, size_t len, unsigned int timeout)
+ {
+ 	struct usbdevfs_bulktransfer bulk = {};
+ 
+@@ -351,7 +351,7 @@ int qdl_read(struct qdl_device *qdl, void *buf, size_t len, unsigned int timeout
+ 	return ioctl(qdl->fd, USBDEVFS_BULK, &bulk);
+ }
+ 
+-int qdl_write(struct qdl_device *qdl, const void *buf, size_t len)
++int usb_write(struct qdl_device *qdl, const void *buf, size_t len)
+ {
+ 
+ 	unsigned char *data = (unsigned char*) buf;
+@@ -394,6 +394,53 @@ int qdl_write(struct qdl_device *qdl, const void *buf, size_t len)
+ 	return count;
+ }
+ 
++static int mhifirehosedev_open(struct qdl_device *qdl)
++{
++	qdl->fd = open("/dev/wwan0p1FIREHOSE", O_RDWR | O_NOCTTY | O_NONBLOCK);
++	return 0;
++}
++
++int mhifirehosedev_read(struct qdl_device *qdl, void *buf, size_t len, unsigned int timeout)
++{
++	int ret;
++	struct pollfd pollfds[] = {{qdl->fd, POLLIN, 0}};
++
++	ret = poll(pollfds, 1, timeout);
++	if (ret <= 0)
++		return ret;
++
++	return read(qdl->fd, buf, len);
++}
++
++int mhifirehosedev_write(struct qdl_device *qdl, const void *buf, size_t len)
++{
++	int ret;
++	struct pollfd pollfds[] = {{qdl->fd, POLLOUT, 0}};
++
++	ret = poll(pollfds, 1, 5000);
++	if (ret <= 0)
++		return ret;
++
++	return write(qdl->fd, buf, len);
++}
++
++int qdl_read(struct qdl_device *qdl, void *buf, size_t len, unsigned int timeout)
++{
++	if (qdl->in_ep || qdl->out_ep)
++		return usb_read(qdl, buf, len, timeout);
++	else
++		return mhifirehosedev_read(qdl, buf, len, timeout);
++}
++
++int qdl_write(struct qdl_device *qdl, const void *buf, size_t len)
++{
++	if (qdl->in_ep || qdl->out_ep)
++		return usb_write(qdl, buf, len);
++	else
++		return mhifirehosedev_write(qdl, buf, len);
++}
++
++
+ static void print_usage(void)
+ {
+ 	extern const char *__progname;
+@@ -410,7 +457,7 @@ int main(int argc, char **argv)
+ 	int ret;
+ 	int opt;
+ 	bool qdl_finalize_provisioning = false;
+-	struct qdl_device qdl;
++	struct qdl_device qdl = {0};
+ 
+ 
+ 	static struct option options[] = {
+@@ -476,13 +523,16 @@ int main(int argc, char **argv)
+ 		}
+ 	} while (++optind < argc);
+ 
+-	ret = usb_open(&qdl);
+-	if (ret)
+-		return 1;
++	ret = mhifirehosedev_open(&qdl);
++	if (ret) {
++		ret = usb_open(&qdl);
++		if (ret)
++			return 1;
+ 
+-	ret = sahara_run(&qdl, prog_mbn);
+-	if (ret < 0)
+-		return 1;
++		ret = sahara_run(&qdl, prog_mbn);
++		if (ret < 0)
++			return 1;
++	}
+ 
+ 	ret = firehose_run(&qdl, incdir, storage);
+ 	if (ret < 0)
+-- 
+2.7.4
+

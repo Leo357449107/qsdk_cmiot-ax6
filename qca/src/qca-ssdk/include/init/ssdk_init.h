@@ -1,5 +1,8 @@
 /*
  * Copyright (c) 2012, 2015-2021, The Linux Foundation. All rights reserved.
+ *
+ * Copyright (c) 2022, Qualcomm Innovation Center, Inc. All rights reserved.
+ *
  * Permission to use, copy, modify, and/or distribute this software for
  * any purpose with or without fee is hereby granted, provided that the
  * above copyright notice and this permission notice appear in all copies.
@@ -206,6 +209,7 @@ enum {
 	QCA_PHY_F_INIT_BIT,
 	QCA_PHY_F_FORCE_BIT,
 	QCA_PHY_F_SFP_BIT,
+	QCA_PHY_F_SFP_SGMII_BIT,
 	QCA_PHY_FEATURE_MAX
 };
 /*qca808x_start*/
@@ -221,6 +225,7 @@ enum {
 #define PHY_F_INIT         _PHY_F(INIT)
 #define PHY_F_FORCE        _PHY_F(FORCE)
 #define PHY_F_SFP          _PHY_F(SFP)
+#define PHY_F_SFP_SGMII    _PHY_F(SFP_SGMII)
 
 typedef struct
 {
@@ -376,6 +381,10 @@ a_uint32_t
 qca_hppe_port_mac_type_get(a_uint32_t dev_id, a_uint32_t port_id);
 a_uint32_t
 qca_hppe_port_mac_type_set(a_uint32_t dev_id, a_uint32_t port_id, a_uint32_t port_type);
+a_uint32_t
+ssdk_ifname_to_port(a_uint32_t dev_id, const char *ifname);
+char *
+ssdk_port_to_ifname(a_uint32_t dev_id, a_uint32_t port_id);
 
 void ssdk_portvlan_init(a_uint32_t dev_id);
 sw_error_t ssdk_dess_trunk_init(a_uint32_t dev_id, a_uint32_t wan_bitmap);
@@ -391,6 +400,8 @@ sw_error_t qca_switch_init(a_uint32_t dev_id);
 void qca_mac_sw_sync_work_stop(struct qca_phy_priv *priv);
 void qca_mac_sw_sync_work_resume(struct qca_phy_priv *priv);
 int qca_mac_sw_sync_work_start(struct qca_phy_priv *priv);
+int qca_fdb_sw_sync_work_start(struct qca_phy_priv *priv, fal_pbmp_t port_map);
+void qca_fdb_sw_sync_work_stop(struct qca_phy_priv *priv, fal_pbmp_t port_map);
 /*qca808x_start*/
 #ifdef __cplusplus
 }

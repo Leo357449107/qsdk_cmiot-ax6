@@ -186,6 +186,7 @@ extern "C"
 #define QCA808X_CTRL_SOFTWARE_RESET              0x8000
 
 #define QCA808X_PHY_MMD7_AUTONEGOTIATION_CONTROL 0x20
+#define QCA808X_PHY_MMD7_LP_2500M_ABILITY        0x21
 
 #define QCA808X_CTRL_SPEED_MASK                  0x2040
 #define QCA808X_CTRL_SPEED_1000                  0x0040
@@ -506,6 +507,10 @@ qca808x_phy_set_autoneg_adv (a_uint32_t dev_id, a_uint32_t phy_id,
 sw_error_t
 qca808x_phy_get_autoneg_adv (a_uint32_t dev_id, a_uint32_t phy_id,
 			a_uint32_t * autoneg);
+
+sw_error_t
+qca808x_phy_get_partner_ability(a_uint32_t dev_id, a_uint32_t phy_id,
+	a_uint32_t * ability);
 
 a_bool_t qca808x_phy_autoneg_status (a_uint32_t dev_id, a_uint32_t phy_id);
 #ifndef IN_PORTCONTROL_MINI

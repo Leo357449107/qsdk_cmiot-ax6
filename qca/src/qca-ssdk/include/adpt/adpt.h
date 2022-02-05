@@ -555,6 +555,9 @@ typedef sw_error_t (*adpt_flow_entry_add_func)(
 typedef sw_error_t (*adpt_flow_counter_get_func)(a_uint32_t dev_id,
 		a_uint32_t flow_index, fal_entry_counter_t *flow_counter);
 
+typedef sw_error_t (*adpt_flow_counter_cleanup_func)(a_uint32_t dev_id,
+		a_uint32_t flow_index);
+
 typedef sw_error_t (*adpt_flow_entry_en_set_func)(a_uint32_t dev_id,
 		a_uint32_t flow_index, a_bool_t enable);
 
@@ -1347,6 +1350,24 @@ typedef sw_error_t
 typedef sw_error_t
 (*adpt_tunnel_exp_decap_get_func)(a_uint32_t dev_id,
 		fal_port_t port_id, a_bool_t *enable);
+typedef sw_error_t
+(*adpt_tunnel_decap_key_set_func)(a_uint32_t dev_id,
+		fal_tunnel_type_t tunnel_type, fal_tunnel_decap_key_t *key_gen);
+typedef sw_error_t
+(*adpt_tunnel_decap_key_get_func)(a_uint32_t dev_id,
+		fal_tunnel_type_t tunnel_type, fal_tunnel_decap_key_t *key_gen);
+typedef sw_error_t
+(*adpt_tunnel_decap_en_set_func)(a_uint32_t dev_id,
+		a_uint32_t tunnel_index, a_bool_t en);
+typedef sw_error_t
+(*adpt_tunnel_decap_en_get_func)(a_uint32_t dev_id,
+		a_uint32_t tunnel_index, a_bool_t *en);
+typedef sw_error_t
+(*adpt_tunnel_decap_action_update_func)(a_uint32_t dev_id,
+		a_uint32_t tunnel_index, fal_tunnel_action_t *update_action);
+typedef sw_error_t
+(*adpt_tunnel_decap_counter_get_func)(a_uint32_t dev_id,
+		a_uint32_t tunnel_index, fal_entry_counter_t *decap_counter);
 
 /*tunnel program*/
 typedef sw_error_t (*adpt_tunnel_program_entry_add_func)(a_uint32_t dev_id,
@@ -1654,6 +1675,7 @@ typedef struct
 	adpt_flow_global_cfg_get_func adpt_flow_global_cfg_get;
 	adpt_flow_global_cfg_set_func adpt_flow_global_cfg_set;
 	adpt_flow_counter_get_func adpt_flow_counter_get;
+	adpt_flow_counter_cleanup_func adpt_flow_counter_cleanup;
 	adpt_flow_entry_en_set_func adpt_flow_entry_en_set;
 	adpt_flow_entry_en_get_func adpt_flow_entry_en_get;
 	adpt_flow_qos_set_func adpt_flow_qos_set;
@@ -2053,6 +2075,12 @@ typedef struct
 	adpt_tunnel_udf_profile_cfg_get_func adpt_tunnel_udf_profile_cfg_get;
 	adpt_tunnel_exp_decap_set_func adpt_tunnel_exp_decap_set;
 	adpt_tunnel_exp_decap_get_func adpt_tunnel_exp_decap_get;
+	adpt_tunnel_decap_key_set_func adpt_tunnel_decap_key_set;
+	adpt_tunnel_decap_key_get_func adpt_tunnel_decap_key_get;
+	adpt_tunnel_decap_en_set_func adpt_tunnel_decap_en_set;
+	adpt_tunnel_decap_en_get_func adpt_tunnel_decap_en_get;
+	adpt_tunnel_decap_action_update_func adpt_tunnel_decap_action_update;
+	adpt_tunnel_decap_counter_get_func adpt_tunnel_decap_counter_get;
 
 	/*vxlan*/
 	a_uint32_t adpt_vxlan_func_bitmap;
@@ -2230,6 +2258,7 @@ sw_error_t adpt_module_func_ctrl_get(a_uint32_t dev_id,
 		a_uint32_t module, fal_func_ctrl_t *func_ctrl);
 sw_error_t adpt_module_func_init(a_uint32_t dev_id, ssdk_init_cfg *cfg);
 a_uint32_t adpt_chip_type_get(a_uint32_t dev_id);
+sw_error_t adpt_ppe_capacity_get(a_uint32_t dev_id, fal_ppe_tbl_caps_t *ppe_capacity);
 #ifdef SCOMPHY
 a_uint32_t adapt_scomphy_revision_get(a_uint32_t dev_id);
 #endif

@@ -3924,6 +3924,8 @@ adpt_hppe_port_wol_status_get(a_uint32_t dev_id, fal_port_t port_id,
 	return rv;
 
 }
+#endif
+
 #if (defined(CPPE) || defined(APPE))
 static sw_error_t
 _adpt_ppe_port_source_filter_config_get(a_uint32_t dev_id,
@@ -4019,6 +4021,7 @@ _adpt_ppe_port_source_filter_set(a_uint32_t dev_id,
 	return rv;
 }
 #endif
+
 sw_error_t
 adpt_hppe_port_source_filter_get(a_uint32_t dev_id,
 				fal_port_t port_id, a_bool_t * enable)
@@ -4115,7 +4118,7 @@ adpt_ppe_port_source_filter_config_set(a_uint32_t dev_id,
 #endif
 	return SW_NOT_SUPPORTED;
 }
-
+#ifndef IN_PORTCONTROL_MINI
 static sw_error_t
 adpt_hppe_port_interface_3az_set(a_uint32_t dev_id, fal_port_t port_id, a_bool_t enable)
 {
@@ -4196,6 +4199,7 @@ adpt_hppe_port_interface_3az_get(a_uint32_t dev_id, fal_port_t port_id, a_bool_t
 
 	return SW_OK;
 }
+#endif
 
 sw_error_t
 adpt_hppe_port_promisc_mode_get(a_uint32_t dev_id, fal_port_t port_id, a_bool_t *enable)
@@ -4225,7 +4229,6 @@ adpt_hppe_port_promisc_mode_get(a_uint32_t dev_id, fal_port_t port_id, a_bool_t 
 
 	return SW_OK;
 }
-#endif
 
 sw_error_t
 adpt_hppe_port_promisc_mode_set(a_uint32_t dev_id, fal_port_t port_id, a_bool_t enable)
@@ -6227,11 +6230,11 @@ sw_error_t adpt_hppe_port_ctrl_init(a_uint32_t dev_id)
 	{
 		p_adpt_api->adpt_port_phy_id_get = adpt_hppe_port_phy_id_get;
 	}
+#endif
 	if(p_adpt_api->adpt_port_ctrl_func_bitmap[0] & (1 << FUNC_ADPT_PORT_MRU_GET))
 	{
 		p_adpt_api->adpt_port_mru_get = adpt_ppe_port_mru_get;
 	}
-#endif
 	if(p_adpt_api->adpt_port_ctrl_func_bitmap[0] & (1 << FUNC_ADPT_PORT_POWER_ON))
 	{
 		p_adpt_api->adpt_port_power_on = adpt_hppe_port_power_on;
@@ -6418,7 +6421,6 @@ sw_error_t adpt_hppe_port_ctrl_init(a_uint32_t dev_id)
 	{
 		p_adpt_api->adpt_port_max_frame_size_get = adpt_ppe_port_max_frame_size_get;
 	}
-#ifndef IN_PORTCONTROL_MINI
 	if(p_adpt_api->adpt_port_ctrl_func_bitmap[1] &
 		(1 <<  (FUNC_ADPT_PORT_SOURCE_FILTER_GET % 32)))
 	{
@@ -6429,6 +6431,7 @@ sw_error_t adpt_hppe_port_ctrl_init(a_uint32_t dev_id)
 	{
 		p_adpt_api->adpt_port_source_filter_set = adpt_ppe_port_source_filter_set;
 	}
+#ifndef IN_PORTCONTROL_MINI
 	if(p_adpt_api->adpt_port_ctrl_func_bitmap[2] &
 		(1 <<  (FUNC_ADPT_PORT_INTERFACE_MODE_APPLY% 32)))
 	{
@@ -6450,14 +6453,11 @@ sw_error_t adpt_hppe_port_ctrl_init(a_uint32_t dev_id)
 	{
 		p_adpt_api->adpt_port_promisc_mode_set = adpt_hppe_port_promisc_mode_set;
 	}
-#ifndef IN_PORTCONTROL_MINI
-
 	if(p_adpt_api->adpt_port_ctrl_func_bitmap[2] &
 		(1 <<  (FUNC_ADPT_PORT_PROMISC_MODE_GET% 32)))
 	{
 		p_adpt_api->adpt_port_promisc_mode_get = adpt_hppe_port_promisc_mode_get;
 	}
-#endif
 	if(p_adpt_api->adpt_port_ctrl_func_bitmap[2] &
 		(1 <<  (FUNC_ADPT_PORT_FLOWCTRL_FORCEMODE_SET% 32)))
 	{
@@ -6471,9 +6471,9 @@ sw_error_t adpt_hppe_port_ctrl_init(a_uint32_t dev_id)
 		p_adpt_api->adpt_port_flowctrl_forcemode_get =
 			adpt_hppe_port_flowctrl_forcemode_get;
 	}
+#endif
 	p_adpt_api->adpt_port_source_filter_config_get = adpt_ppe_port_source_filter_config_get;
 	p_adpt_api->adpt_port_source_filter_config_set = adpt_ppe_port_source_filter_config_set;
-#endif
 	p_adpt_api->adpt_port_mux_mac_type_set = adpt_hppe_port_mux_mac_type_set;
 	p_adpt_api->adpt_port_mac_speed_set = adpt_hppe_port_mac_speed_set;
 	p_adpt_api->adpt_port_mac_duplex_set = adpt_hppe_port_mac_duplex_set;

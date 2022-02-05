@@ -32,6 +32,7 @@ unsigned int qtiseclib_cb_plat_my_cluster_pos(void);
 void qtiseclib_cb_clear_interrupt_pending(unsigned int id);
 void qtiseclib_cb_set_interrupt_pending(unsigned int irq);
 uintptr_t qtiseclib_cb_get_warmboot_entry_addr(void);
+uintptr_t qtiseclib_cb_get_entry_addr(void);
 
 int qtiseclib_cb_mmap_add_dynamic_region(unsigned long long base_pa,
 					 uintptr_t base_va, size_t size,
@@ -59,4 +60,8 @@ void qtiseclib_cb_get_ns_ctx(qtiseclib_dbg_a64_ctxt_regs_type *ns_ctx);
 int qtiseclib_cb_crash_console_init(void);
 int qtiseclib_cb_crash_console_flush(void);
 uintptr_t qti_page_align(uintptr_t value, unsigned dir);
+#if QTI_5018_PLATFORM
+int qtiseclib_qfprom_fuse_secdat(uint32_t*);
+#endif
+bool qtiseclib_is_overlap_atf_rg(unsigned long long addr, size_t size);
 #endif /* __QTISECLIB_CB_INTERFACE_H__ */

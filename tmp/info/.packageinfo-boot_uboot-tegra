@@ -1,0 +1,25 @@
+Source-Makefile: package/boot/uboot-tegra/Makefile
+
+Package: u-boot-trimslice
+Default: y if (TARGET_tegra_Default || TARGET_tegra_DEVICE_compulab_trimslice || TARGET_DEVICE_tegra_DEVICE_compulab_trimslice)
+Version: 2019.04-1
+Depends: +libc +GCC_LIBSSP:libssp +USE_GLIBC:librt +USE_GLIBC:libpthread @!IN_SDK @TARGET_tegra
+Conflicts: 
+Menu-Depends: 
+Provides: 
+Build-Variant: trimslice
+Section: boot
+Category: Boot Loaders
+Title: U-Boot for CompuLab TrimSlice
+Maintainer: Tomasz Maciej Nowak <tomek_n@o2.pl>
+Source: u-boot-2019.04.tar.bz2
+License: GPL-2.0 GPL-2.0+
+LicenseFiles: Licenses/README
+Type: bin
+Hidden: y
+Description: U-Boot for CompuLab TrimSlice
+http://www.denx.de/wiki/U-Boot
+Tomasz Maciej Nowak <tomek_n@o2.pl>
+@@
+
+

@@ -1,5 +1,8 @@
 /*
  * Copyright (c) 2012, The Linux Foundation. All rights reserved.
+ *
+ * Copyright (c) 2022, Qualcomm Innovation Center, Inc. All rights reserved.
+ *
  * Permission to use, copy, modify, and/or distribute this software for
  * any purpose with or without fee is hereby granted, provided that the
  * above copyright notice and this permission notice appear in all copies.
@@ -115,6 +118,10 @@ extern "C" {
 #define SW_PBMP_CLEAR(pbm) ((pbm) = 0)
 #define SW_PBMP_ADD_PORT(pbm, port) ((pbm) |= (1U << (port)))
 #define SW_PBMP_DEL_PORT(pbm,port) ((pbm) &= ~(1U << (port)))
+
+    /* mac address functions */
+#define SW_MAC2STR(a) (a)[0], (a)[1], (a)[2], (a)[3], (a)[4], (a)[5]
+#define SW_MACSTR "%02x-%02x-%02x-%02x-%02x-%02x"
 
 #ifdef __cplusplus
 }

@@ -293,6 +293,32 @@ static ssize_t mhi_debugfs_timeout_ms_write(struct file *file,
 	return count;
 }
 
+static int mhi_debugfs_force_edl_show(struct seq_file *m, void *d)
+{
+	return 0;
+}
+
+static ssize_t mhi_debugfs_force_edl_write(struct file *file,
+					   const char __user *ubuf,
+					   size_t count, loff_t *ppos)
+{
+	struct seq_file	*m = file->private_data;
+	struct mhi_controller *mhi_cntrl = m->private;
+	u32 force_edl;
+
+	if (kstrtou32_from_user(ubuf, count, 0, &force_edl))
+		return -EINVAL;
+
+	if (force_edl == 1) {
+		mhi_write_db(mhi_cntrl, mhi_cntrl->edl_db, 0xEDEDEDED);
+		mhi_write_reg(mhi_cntrl, mhi_cntrl->regs,
+			      MHI_SOC_RESET_REQ_OFFSET,
+			      MHI_SOC_RESET_REQ);
+	}
+
+	return count;
+}
+
 static int mhi_debugfs_states_open(struct inode *inode, struct file *fp)
 {
 	return single_open(fp, mhi_debugfs_states_show, inode->i_private);
@@ -326,6 +352,11 @@ static int mhi_debugfs_device_wake_open(struct inode *inode, struct file *fp)
 static int mhi_debugfs_timeout_ms_open(struct inode *inode, struct file *fp)
 {
 	return single_open(fp, mhi_debugfs_timeout_ms_show, inode->i_private);
+}
+
+static int mhi_debugfs_force_edl_open(struct inode *inode, struct file *fp)
+{
+	return single_open(fp, mhi_debugfs_force_edl_show, inode->i_private);
 }
 
 static const struct file_operations debugfs_states_fops = {
@@ -372,12 +403,19 @@ static const struct file_operations debugfs_timeout_ms_fops = {
 	.read = seq_read,
 };
 
+static const struct file_operations debugfs_force_edl_fops = {
+	.open = mhi_debugfs_force_edl_open,
+	.write = mhi_debugfs_force_edl_write,
+	.release = single_release,
+	.read = seq_read,
+};
+
 static struct dentry *mhi_debugfs_root;
 
 void mhi_create_debugfs(struct mhi_controller *mhi_cntrl)
 {
 	mhi_cntrl->debugfs_dentry =
-			debugfs_create_dir(dev_name(mhi_cntrl->cntrl_dev),
+			debugfs_create_dir(dev_name(&mhi_cntrl->mhi_dev->dev),
 					   mhi_debugfs_root);
 
 	debugfs_create_file("states", 0444, mhi_cntrl->debugfs_dentry,
@@ -394,6 +432,8 @@ void mhi_create_debugfs(struct mhi_controller *mhi_cntrl)
 			    mhi_cntrl, &debugfs_device_wake_fops);
 	debugfs_create_file("timeout_ms", 0644, mhi_cntrl->debugfs_dentry,
 			    mhi_cntrl, &debugfs_timeout_ms_fops);
+	debugfs_create_file("force_edl", 0644, mhi_cntrl->debugfs_dentry,
+			    mhi_cntrl, &debugfs_force_edl_fops);
 }
 
 void mhi_destroy_debugfs(struct mhi_controller *mhi_cntrl)

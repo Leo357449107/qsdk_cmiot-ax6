@@ -1,0 +1,24 @@
+Source-Makefile: package/libs/libtool/Makefile
+
+Package: libltdl
+Version: 2.4.6-2
+ABIVersion: 7
+Depends: +libc +GCC_LIBSSP:libssp +USE_GLIBC:librt +USE_GLIBC:libpthread 
+Conflicts: 
+Menu-Depends: 
+Provides: 
+Section: libs
+Category: Libraries
+Repository: base
+Title: A generic dynamic object loading library
+Maintainer: 
+Source: libtool-2.4.6.tar.xz
+License: GPL-2.0+
+LicenseFiles: COPYING
+Type: ipkg
+Description: A generic dynamic object loading library
+http://www.gnu.org/software/libtool/
+
+@@
+
+

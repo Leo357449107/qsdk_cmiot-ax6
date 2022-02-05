@@ -1,5 +1,8 @@
 /*
  * Copyright (c) 2014-2019, 2021, The Linux Foundation. All rights reserved.
+ *
+ * Copyright (c) 2022, Qualcomm Innovation Center, Inc. All rights reserved.
+ *
  * Permission to use, copy, modify, and/or distribute this software for
  * any purpose with or without fee is hereby granted, provided that the
  * above copyright notice and this permission notice appear in all copies.
@@ -89,6 +92,7 @@ typedef enum
 	SW_PPPOE_LESS,
 	SW_ACL_UDF_TYPE,
 	SW_ACL_UDF_PROFILE_ENTRY,
+	SW_ACL_MAC_ENTRY,
 	SW_IP_HOSTENTRY,
 	SW_ARP_LEARNMODE,
 	SW_IP_GUARDMODE,
@@ -301,6 +305,7 @@ typedef enum
 	SW_TUNNEL_TYPE,
 	SW_TUNNEL_KEY,
 	SW_TUNNEL_DECAP_ACTION,
+	SW_PPE_CAPACITY,
 /* auto_insert_flag */
 } sw_data_type_e;
 

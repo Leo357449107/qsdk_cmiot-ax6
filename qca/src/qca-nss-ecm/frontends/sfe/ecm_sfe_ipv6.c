@@ -281,7 +281,6 @@ static void ecm_sfe_ipv6_stats_sync_callback(void *app_data, struct sfe_ipv6_msg
 				ci, sync->flow_rx_packet_count, sync->flow_rx_byte_count, sync->return_rx_packet_count, sync->return_rx_byte_count);
 		DEBUG_TRACE("%px: flow_tx_packet_count: %u, flow_tx_byte_count: %u, return_tx_packet_count: %u, return_tx_byte_count: %u\n",
 				ci, sync->flow_tx_packet_count, sync->flow_tx_byte_count, sync->return_tx_packet_count, sync->return_tx_byte_count);
-
 		/*
 		 * The amount of data *sent* by the ECM connection 'from' side is the amount the SFE has *received* in the 'flow' direction.
 		 */
@@ -296,6 +295,13 @@ static void ecm_sfe_ipv6_stats_sync_callback(void *app_data, struct sfe_ipv6_msg
 		 * As packets have been accelerated we have seen some action.
 		 */
 		feci->action_seen(feci);
+
+		/*
+		 * Update interface stats.
+		 * This will update interface enabled for SFE frontend
+		 */
+		ecm_interface_stats_update(ci, sync->flow_tx_packet_count, sync->flow_tx_byte_count, sync->flow_rx_packet_count,
+				sync->flow_rx_byte_count, sync->return_tx_packet_count, sync->return_tx_byte_count, sync->return_rx_packet_count, sync->return_rx_byte_count);
 	}
 
 	switch(sync->reason) {

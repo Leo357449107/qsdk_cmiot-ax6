@@ -1,0 +1,23 @@
+Source-Makefile: package/libs/gettext/Makefile
+Build-Types: host
+
+Package: libintl
+Version: 2
+Depends: +libc +GCC_LIBSSP:libssp +USE_GLIBC:librt +USE_GLIBC:libpthread 
+Conflicts: 
+Menu-Depends: 
+Provides: 
+Section: libs
+Category: Libraries
+Repository: base
+Title: Stub header for the GNU Internationalization library
+Maintainer: Jo-Philipp Wich <jo@mein.io>
+Source: 
+License: FSFULLR
+LicenseFiles: LICENSE
+Type: ipkg
+Description: Stub header for the GNU Internationalization library
+Jo-Philipp Wich <jo@mein.io>
+@@
+
+

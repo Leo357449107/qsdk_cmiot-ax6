@@ -104,10 +104,10 @@ static const char *action_to_string(enum subsys_notif_type action)
 static int tssr_notifier(struct notifier_block *nb, unsigned long action,
 								void *data)
 {
-	struct notif_data *notif = (struct notif_data *)data;
+	struct platform_device *pdev = data;
 
 	pr_emerg("%s:\tReceived [%s] notification from [%s]subsystem\n",
-		THIS_MODULE->name, action_to_string(action), notif->pdev->name);
+		THIS_MODULE->name, action_to_string(action), pdev->name);
 
 	return NOTIFY_DONE;
 }

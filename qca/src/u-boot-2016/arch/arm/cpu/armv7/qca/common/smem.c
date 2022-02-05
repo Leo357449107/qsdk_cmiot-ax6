@@ -38,6 +38,11 @@
 #include "fdt_info.h"
 #include <ubi_uboot.h>
 #include <command.h>
+#ifdef CONFIG_IPQ_RUNTIME_FAILSAFE
+#include <sdhci.h>
+#include <mmc.h>
+#endif
+
 
 #ifdef IPQ_UBI_VOL_WRITE_SUPPORT
 static struct ubi_device *ubi;
@@ -144,6 +149,12 @@ static struct smem *smem = (void *)(CONFIG_QCA_SMEM_BASE);
 
 qca_smem_flash_info_t qca_smem_flash_info;
 qca_smem_bootconfig_info_t qca_smem_bootconfig_info;
+
+#ifdef CONFIG_IPQ_RUNTIME_FAILSAFE
+unsigned ipq_runtime_failsafe_status;
+unsigned ipq_runtime_fs_skip_status_check = 0;
+unsigned ipq_runtime_fs_feature_enabled = 0;
+#endif
 
 #ifdef CONFIG_SMEM_VERSION_C
 
@@ -496,9 +507,120 @@ int smem_bootconfig_info(void)
 	return 0;
 }
 
+#ifdef CONFIG_IPQ_RUNTIME_FAILSAFE
+int smem_runtime_failsafe_info(void)
+{
+	unsigned ret;
+
+	ret = smem_read_alloc_entry(SMEM_RUNTIME_FAILSAFE_INFO,
+			&ipq_runtime_failsafe_status, sizeof(ipq_runtime_failsafe_status));
+	if (ret != 0) {
+		printf("\nsmem: Failed to fetch the runtime failsafe status.." \
+			"Disabling the feature.\n");
+		ipq_runtime_fs_feature_enabled = 0;
+	}
+	if (ipq_runtime_failsafe_status & IPQ_RUNTIME_FAILSAFE_ENABLED) {
+		printf("\nRuntime Failsafe Feature Enabled\n");
+		ipq_runtime_fs_feature_enabled = 1;
+	}
+	return 0;
+}
+#endif
+
+#ifndef CONFIG_SDHCI_SUPPORT
+extern qca_mmc mmc_host;
+#else
+extern struct sdhci_host mmc_host;
+#endif
+#ifdef CONFIG_IPQ_RUNTIME_FAILSAFE
+int smem_update_bootconfig_to_flash(void)
+{
+
+	unsigned i, j, len;
+	uint32_t load_addr = 0;
+	char *part_name[] = {"0:BOOTCONFIG", "0:BOOTCONFIG1"};
+	char runcmd[256];
+
+	if (smem_runtime_failsafe_info() != 0)
+		return -ENOMSG;
+
+	if (ipq_runtime_fs_feature_enabled == 0)
+		return 0;
+
+	/* Update BOOTCONFIG in flash only if there is an update in SMEM by SBL */
+	if (!ipq_runtime_fs_skip_status_check) {
+		if (ipq_runtime_failsafe_status & IPQ_RUNTIME_FS_BOOTCONFIG_UPDATED) {
+			printf("\nNonHLOS runtime hang detected: Partitions switched.\n");
+		} else {
+			return 0;
+		}
+	}
+
+	if (qca_smem_bootconfig_info.magic_start != _SMEM_DUAL_BOOTINFO_MAGIC_START) {
+		if(smem_bootconfig_info() != 0)
+			return -1;
+	}
+
+	fs_debug("\nFailsafe: SMEM bootinfo from SBL: ");
+	for (j = 0; j < qca_smem_bootconfig_info.numaltpart; j++)
+		fs_debug("\nPartition: %s primaryboot = %d\n",
+		qca_smem_bootconfig_info.per_part_entry[j].name,
+		qca_smem_bootconfig_info.per_part_entry[j].primaryboot);
+
+	len = sizeof(part_name)/sizeof(part_name[0]);
+	load_addr = (uint32_t)&qca_smem_bootconfig_info;
+
+	for (i = 0; i < len; i++) {
+
+		snprintf(runcmd, sizeof(runcmd), "setenv fileaddr 0x%x && \
+				 setenv filesize %d && flash %s",
+				load_addr, sizeof(qca_smem_bootconfig_info), part_name[i]);
+
+		if (run_command(runcmd, 0) != CMD_RET_SUCCESS)
+			return CMD_RET_FAILURE;
+	}
+
+	return CMD_RET_SUCCESS;
+}
+
+__weak int is_hlos_crashed(void)
+{
+	return 0;
+}
+
+void update_hlos_rootfs_primaryboot(void)
+{
+	unsigned int i;
+	qca_smem_flash_info_t *sfi = &qca_smem_flash_info;
+
+	fs_debug("\nFailsafe: %s: HLOS bit is SET", __func__);
+	printf("\nHLOS runtime hang detected: Switching Partitions.\n");
+	for (i = 0; i < qca_smem_bootconfig_info.numaltpart; i++) {
+		if (sfi->flash_type == SMEM_BOOT_MMC_FLASH ||
+			sfi->flash_type == SMEM_BOOT_SPI_FLASH) {
+			/* Note: SBL swaps the offsets for NAND case */
+			if (strncmp("0:HLOS", qca_smem_bootconfig_info.per_part_entry[i].name,
+				     ALT_PART_NAME_LENGTH) == 0)
+				qca_smem_bootconfig_info.per_part_entry[i].primaryboot = 1;
+			if (strncmp("rootfs", qca_smem_bootconfig_info.per_part_entry[i].name,
+				     ALT_PART_NAME_LENGTH) == 0)
+				qca_smem_bootconfig_info.per_part_entry[i].primaryboot = 1;
+		}
+	}
+	ipq_runtime_fs_skip_status_check = 1;
+}
+#endif
+
 unsigned int get_rootfs_active_partition(void)
 {
 	int i;
+
+#ifdef CONFIG_IPQ_RUNTIME_FAILSAFE
+        if (ipq_runtime_fs_feature_enabled && is_hlos_crashed()) {
+		update_hlos_rootfs_primaryboot();
+		smem_update_bootconfig_to_flash();
+	}
+#endif
 
 	for (i = 0; i < qca_smem_bootconfig_info.numaltpart; i++) {
 		if (strncmp("rootfs", qca_smem_bootconfig_info.per_part_entry[i].name,

@@ -1,0 +1,25 @@
+Source-Makefile: package/libs/gmp/Makefile
+Build-Types: host
+
+Package: libgmp
+Version: 6.1.2-2
+ABIVersion: 10
+Depends: +libc +GCC_LIBSSP:libssp +USE_GLIBC:librt +USE_GLIBC:libpthread 
+Conflicts: 
+Menu-Depends: 
+Provides: 
+Section: libs
+Category: Libraries
+Repository: base
+Title: GNU multiprecision arithmetic library
+Maintainer: 
+Source: gmp-6.1.2.tar.xz
+License: GPL-2.0+
+Type: ipkg
+Description: 	GMP is a free library for arbitrary precision arithmetic, operating on
+	signed integers, rational numbers, and floating point numbers.
+http://gmplib.org/
+
+@@
+
+

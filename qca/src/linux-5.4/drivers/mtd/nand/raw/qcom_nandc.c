@@ -231,6 +231,7 @@
 #define TOTAL_NUM_PHASE	7
 #define	AUTO_STS_VAL	0x000B000B
 #define	PAGE_SCOPE_READ	(1 << 23)
+#define	MAX_STATUS_REG	12
 
 #define nandc_set_read_loc_first(nandc, reg, cw_offset, read_size, is_last_read_loc)	\
 nandc_set_reg(nandc, reg,			\
@@ -289,6 +290,13 @@ static const u32 qspi_training_block_64[] = {
 	0x0F0F0F0F, 0x0F0F0F0F, 0x0F0F0F0F, 0x0F0F0F0F,
 	0x0F0F0F0F, 0x0F0F0F0F, 0x0F0F0F0F, 0x0F0F0F0F,
 	0x0F0F0F0F, 0x0F0F0F0F, 0x0F0F0F0F, 0x0F0F0F0F,
+};
+
+struct nand_flash_dev qspinand_flash_ids_2k[] = {
+	{"MX35UF4GE4AD-Z4I SPI NAND 1G 1.8V",
+			{ .id = {0xc2, 0xb7} },
+		SZ_2K, SZ_512, SZ_256K, 0, 2, 256, NAND_ECC_INFO(8, SZ_512), 0},
+	{NULL}
 };
 
 /*
@@ -424,6 +432,8 @@ struct nandc_regs {
  * @data_buffer:		our local DMA buffer for page read/writes,
  *				used when we can't use the buffer provided
  *				by upper layers directly
+ * @boot_layout:		flag to tell whether current layout is boot
+ *				layout
  * @buf_size/count/start:	markers for chip->legacy.read_buf/write_buf
  *				functions
  * @reg_read_buf:		local buffer for reading back registers via DMA
@@ -474,6 +484,7 @@ struct qcom_nand_controller {
 	struct bam_transaction *bam_txn;
 
 	u8		*data_buffer;
+	bool		boot_layout;
 	int		buf_size;
 	int		buf_count;
 	int		buf_start;
@@ -557,6 +568,7 @@ struct qcom_nand_host {
  * @is_serial_training - flag to enable or disable serial training
  * @quad_mode - flag to enable or disable quad mode
  * @page_scope - flag to enable or disable page scope
+ * @switch_layout - flag to enable or disable switching of nand page size
  * @dev_cmd_reg_start - device command register start
  */
 struct qcom_nandc_props {
@@ -568,6 +580,7 @@ struct qcom_nandc_props {
 	bool is_serial_training;
 	bool quad_mode;
 	bool page_scope;
+	bool switch_layout;
 	u32 dev_cmd_reg_start;
 };
 
@@ -1334,6 +1347,7 @@ config_nand_cw_read(struct nand_chip *chip, bool use_ecc, int cw)
 
 	if (use_ecc) {
 		if (nandc->props->qpic_v2 && nandc->props->page_scope) {
+			write_reg_dma(nandc, NAND_AUTO_STATUS_EN, 1, NAND_BAM_NEXT_SGL);
 			if (qcom_nandc_is_last_cw(ecc, cw))
 				write_reg_dma(nandc, NAND_EXEC_CMD, 1, NAND_BAM_NEXT_SGL);
 		} else {
@@ -2154,8 +2168,8 @@ static int read_page_ecc(struct qcom_nand_host *host, u8 *data_buf,
 
 		if (nandc->props->qpic_v2 && nandc->props->page_scope) {
 			read_status_data_dma(nandc, FLASH_BUF_ACC, (void *)status_buf_cw,
-					(nandc->sts_buf_size >> 2), 0);
-			status_buf_cw += (nandc->sts_buf_size >> 4);
+					MAX_STATUS_REG, 0);
+			status_buf_cw += (MAX_STATUS_REG / sizeof(u32));
 		}
 
 		/*
@@ -2925,7 +2939,7 @@ static int qcom_nand_attach_chip(struct nand_chip *chip)
 	nandc->regs->erased_cw_detect_cfg_set =
 		cpu_to_le32(SET_ERASED_PAGE_DET);
 
-	dev_dbg(nandc->dev,
+	dev_info(nandc->dev,
 		"cfg0 %x cfg1 %x ecc_buf_cfg %x ecc_bch cfg %x cw_size %d cw_data %d strength %d parity_bytes %d steps %d\n",
 		host->cfg0, host->cfg1, host->ecc_buf_cfg, host->ecc_bch_cfg,
 		host->cw_size, host->cw_data, ecc->strength, ecc->bytes,
@@ -3424,7 +3438,7 @@ static int qspi_execute_training(struct qcom_nand_controller *nandc,
 	/* Read qspi training data @ low freq */
 	memset(training_data, 0xff, mtd->writesize);
 	ret = qcom_nandc_read_page(chip, training_data, 0, page);
-	if (ret) {
+	if (ret < 0) {
 		dev_err(nandc->dev, "Error in reading training data @ low freq");
 		ret = -EINVAL;
 		goto mem_err;
@@ -3463,10 +3477,10 @@ static int qspi_execute_training(struct qcom_nand_controller *nandc,
 		/* Prepare clean buffer to read */
 		memset(training_data, 0xff, mtd->writesize);
 		ret = qcom_nandc_read_page(chip, training_data, 0, page);
-		if (ret) {
+		if (ret < 0) {
 			dev_err(nandc->dev, "Error in reading training data @ high freq");
-			ret = -EINVAL;
-			goto mem_err;
+			ret = 0;
+			break;
 		}
 		/* compare read training data with known pattern */
 		for (i = 0; i <  mtd->writesize; i += sizeof(qspi_training_block_64)) {
@@ -3554,12 +3568,19 @@ static int qcom_nand_host_init_and_register(struct qcom_nand_controller *nandc,
 	/* set up initial status value */
 	host->status = NAND_STATUS_READY | NAND_STATUS_WP;
 
-	if (nandc->props->is_serial_nand)
+	if (nandc->props->is_serial_nand) {
 		qspi_nand_init(nandc);
-
-	ret = nand_scan(chip, 1);
-	if (ret)
+		if (nandc->boot_layout)
+			ret = nand_scan_with_ids(chip, 1, qspinand_flash_ids_2k);
+		else
+			ret = nand_scan(chip, 1);
+	} else {
+		ret = nand_scan(chip, 1);
+	}
+	if (ret) {
+		dev_err(nandc->dev, "nand scan returned error\n");
 		return ret;
+	}
 
 	if (nandc->props->is_bam) {
 		free_bam_transaction(nandc);
@@ -3572,7 +3593,8 @@ static int qcom_nand_host_init_and_register(struct qcom_nand_controller *nandc,
 	}
 
 	if (nandc->props->qpic_v2 && nandc->props->page_scope) {
-		nandc->sts_buf_size = mtd->writesize == SZ_2K ? 48 : 96;
+		nandc->sts_buf_size = (mtd->writesize / NANDC_STEP_SIZE) *
+							MAX_STATUS_REG;
 		nandc->status_buf = devm_kzalloc(nandc->dev, nandc->sts_buf_size,
 				GFP_KERNEL);
 		if (!nandc->status_buf)
@@ -3590,9 +3612,15 @@ static int qcom_nand_host_init_and_register(struct qcom_nand_controller *nandc,
 		if (ret)
 			dev_err(nandc->dev, "qspi_nand device config failed\n");
 		if (nandc->props->is_serial_training) {
-			ret = qspi_execute_training(nandc, host, mtd);
-			if (ret)
-				dev_err(nandc->dev, "failed to enable serial training\n");
+			if (nandc->boot_layout) {
+				dev_info(nandc->dev,
+				"Skip serial training in boot layout\n");
+			} else {
+				ret = qspi_execute_training(nandc, host, mtd);
+				if (ret)
+					dev_err(nandc->dev,
+					"failed to enable serial training\n");
+			}
 		}
 	}
 
@@ -3608,7 +3636,7 @@ static int qcom_probe_nand_devices(struct qcom_nand_controller *nandc)
 	struct device *dev = nandc->dev;
 	struct device_node *dn = dev->of_node, *child;
 	struct qcom_nand_host *host;
-	int ret;
+	int ret = -ENODEV;
 
 	for_each_available_child_of_node(dn, child) {
 		host = devm_kzalloc(dev, sizeof(*host), GFP_KERNEL);
@@ -3626,10 +3654,7 @@ static int qcom_probe_nand_devices(struct qcom_nand_controller *nandc)
 		list_add_tail(&host->node, &nandc->host_list);
 	}
 
-	if (list_empty(&nandc->host_list))
-		return -ENODEV;
-
-	return 0;
+	return ret;
 }
 
 /* parse custom DT properties here */
@@ -3658,9 +3683,63 @@ static int qcom_nandc_parse_dt(struct platform_device *pdev)
 	return 0;
 }
 
+static ssize_t boot_layout_show(struct device *dev,
+				struct device_attribute *attr,
+				char *buf)
+{
+	struct qcom_nand_controller *nandc = dev_get_drvdata(dev);
+
+	return snprintf(buf, PAGE_SIZE, "%u\n", nandc->boot_layout);
+}
+
+static ssize_t boot_layout_store(struct device *dev,
+				struct device_attribute *attr,
+				const char *buf, size_t n)
+{
+	struct qcom_nand_controller *nandc = dev_get_drvdata(dev);
+	struct qcom_nand_host *host, *tmp;
+	int ret;
+
+	ret = kstrtobool(buf, &nandc->boot_layout);
+	if (ret) {
+		dev_err(dev, "invalid boot_layout\n");
+		return ret;
+	}
+
+	list_for_each_entry_safe_reverse(host, tmp, &nandc->host_list, node) {
+		struct nand_chip *chip = &host->chip;
+		struct mtd_info *mtd = nand_to_mtd(chip);
+
+		ret = mtd_device_unregister(mtd);
+		if (ret) {
+			dev_err(dev, "device unregister failed\n");
+			return ret;
+		}
+		memset(mtd, 0, sizeof(struct mtd_info));
+		list_del(&host->node);
+		devm_kfree(nandc->dev, host);
+	}
+
+	if (nandc->props->qpic_v2 && nandc->props->page_scope) {
+		devm_kfree(nandc->dev, nandc->status_buf);
+	}
+
+	ret = qcom_probe_nand_devices(nandc);
+	if (ret) {
+		dev_err(dev, "nand device probe failed\n");
+		return ret;
+	}
+
+	return n;
+}
+
+static const DEVICE_ATTR(boot_layout, 0644, boot_layout_show,
+			boot_layout_store);
+
 static int qcom_nandc_probe(struct platform_device *pdev)
 {
 	struct qcom_nand_controller *nandc;
+	struct qcom_nand_host *host;
 	const void *dev_data;
 	struct device *dev = &pdev->dev;
 	struct resource *res;
@@ -3741,6 +3820,20 @@ static int qcom_nandc_probe(struct platform_device *pdev)
 	if (ret)
 		goto err_setup;
 
+	if (nandc->props->is_serial_nand && nandc->props->switch_layout) {
+		list_for_each_entry(host, &nandc->host_list, node) {
+			struct nand_chip *chip = &host->chip;
+			struct mtd_info *mtd = nand_to_mtd(chip);
+
+			if (mtd->writesize == SZ_4K) {
+				ret = sysfs_create_file(&pdev->dev.kobj,
+							&dev_attr_boot_layout.attr);
+				if (ret)
+					goto err_setup;
+			}
+		}
+	}
+
 	return 0;
 
 err_setup:
@@ -3768,6 +3861,8 @@ static int qcom_nandc_remove(struct platform_device *pdev)
 	list_for_each_entry(host, &nandc->host_list, node)
 		nand_release(&host->chip);
 
+	if (nandc->props->switch_layout)
+		sysfs_remove_file(&pdev->dev.kobj, &dev_attr_boot_layout.attr);
 
 	qcom_nandc_unalloc(nandc);
 
@@ -3822,6 +3917,7 @@ static const struct qcom_nandc_props ipq9574_nandc_props = {
 	.is_serial_training = true,
 	.quad_mode = true,
 	.page_scope = true,
+	.switch_layout = true,
 	.dev_cmd_reg_start = 0x7000,
 };
 

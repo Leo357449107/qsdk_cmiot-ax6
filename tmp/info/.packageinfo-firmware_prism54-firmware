@@ -1,0 +1,75 @@
+Source-Makefile: package/firmware/prism54-firmware/Makefile
+
+Package: prism54-firmware
+Version: 1
+Depends: +libc +GCC_LIBSSP:libssp +USE_GLIBC:librt +USE_GLIBC:libpthread 
+Conflicts: 
+Menu-Depends: 
+Provides: 
+Section: firmware
+Category: Firmware
+Repository: base
+Title: prism54 firmware
+Maintainer: 
+Source: 
+Type: ipkg
+Description: prism54 firmware
+https://daemonizer.de/prism54/prism54-fw
+
+@@
+
+Package: p54-usb-firmware
+Version: 1
+Depends: +libc +GCC_LIBSSP:libssp +USE_GLIBC:librt +USE_GLIBC:libpthread 
+Conflicts: 
+Menu-Depends: 
+Provides: 
+Section: firmware
+Category: Firmware
+Repository: base
+Title: p54-usb firmware
+Maintainer: 
+Source: 
+Type: ipkg
+Description: p54-usb firmware
+https://daemonizer.de/prism54/prism54-fw
+
+@@
+
+Package: p54-pci-firmware
+Version: 1
+Depends: +libc +GCC_LIBSSP:libssp +USE_GLIBC:librt +USE_GLIBC:libpthread 
+Conflicts: 
+Menu-Depends: 
+Provides: 
+Section: firmware
+Category: Firmware
+Repository: base
+Title: p54-pci firmware
+Maintainer: 
+Source: 
+Type: ipkg
+Description: p54-pci firmware
+https://daemonizer.de/prism54/prism54-fw
+
+@@
+
+Package: p54-spi-firmware
+Version: 1
+Depends: +libc +GCC_LIBSSP:libssp +USE_GLIBC:librt +USE_GLIBC:libpthread 
+Conflicts: 
+Menu-Depends: 
+Provides: 
+Section: firmware
+Category: Firmware
+Repository: base
+Title: p54-spi firmware
+Maintainer: 
+Source: 
+Type: ipkg
+Description: p54-spi firmware
+https://daemonizer.de/prism54/prism54-fw
+
+@@
+
+

@@ -1,6 +1,8 @@
 /*
  * Copyright (c) 2021, The Linux Foundation. All rights reserved.
  *
+ * Copyright (c) 2022 Qualcomm Innovation Center, Inc. All rights reserved.
+ *
  * Permission to use, copy, modify, and/or distribute this software for any
  * purpose with or without fee is hereby granted, provided that the above
  * copyright notice and this permission notice appear in all copies.
@@ -37,13 +39,28 @@
 #endif
 
 #define EDMA_HW_RESET_ID		"edma_rst"
-#define EDMA_HW_CFG_RESET_ID		"edma_cfg_reset"
-#define EDMA_BUF_SIZE			2000
 #define EDMA_DEVICE_NODE_NAME		"edma"
 #define EDMA_START_GMACS		NSS_DP_HAL_START_IFNUM
 #define EDMA_MAX_GMACS			NSS_DP_HAL_MAX_PORTS
 #define EDMA_IRQ_NAME_SIZE		32
-#define EDMA_SC_BYPASS		1
+#define EDMA_SC_BYPASS			1
+#define EDMA_NETDEV_FEATURES		NETIF_F_FRAGLIST \
+					| NETIF_F_SG \
+					| NETIF_F_RXCSUM \
+					| NETIF_F_HW_CSUM \
+					| NETIF_F_TSO \
+					| NETIF_F_TSO6;
+
+#define EDMA_SWITCH_DEV_ID	0
+#define EDMA_PPE_QUEUE_LEVEL	0
+#define EDMA_BITS_IN_WORD	32
+
+/*
+ * Bitmap for ring to PPE queue's mapping.
+ *
+ * A bitmap for 300 PPE queues requires 10 32bit integers
+ */
+#define EDMA_RING_MAPPED_QUEUE_BM_WORD_COUNT	10
 
 /*
  * EDMA common clocks
@@ -139,6 +156,9 @@ struct edma_gbl_ctx {
 	bool napi_added;
 			/* NAPI flag */
 
+	struct ctl_table_header *ctl_table_hdr;
+			/* sysctl table entry */
+
 	struct edma_rxfill_ring *rxfill_rings;
 			/* Rx Fill Rings, SW is producer */
 	struct edma_rxdesc_ring *rxdesc_rings;
@@ -152,6 +172,8 @@ struct edma_gbl_ctx {
 			/* Rx Fill ring per-core mapping from device tree */
 	uint32_t rxdesc_ring_map[EDMA_RXDESC_RING_PER_CORE_MAX][NR_CPUS];
 			/* Rx Descriptor ring per-core mapping from device tree */
+	uint32_t (*rxdesc_ring_to_queue_bm)[EDMA_RING_MAPPED_QUEUE_BM_WORD_COUNT];
+			/* Bitmap of mapped PPE queue ids of the Rx descriptor rings */
 	int32_t tx_to_txcmpl_map[EDMA_MAX_TXDESC_RINGS];
 			/* Tx ring to Tx complete ring mapping */
 	int32_t tx_map[EDMA_TX_RING_PER_CORE_MAX][NR_CPUS];

@@ -36,7 +36,8 @@ ipq50xx_setup_interfaces()
 	qcom,ipq5018-ap-mp03.1-c2 |\
 	qcom,ipq5018-ap-mp03.1-c3 |\
 	qcom,ipq5018-db-mp03.1 |\
-	qcom,ipq5018-db-mp03.1-c2)
+	qcom,ipq5018-db-mp03.1-c2 |\
+	qcom,ipq5018-ap-mp05.1)
 		ucidef_set_interfaces_lan_wan "eth1" "eth0"
 		ucidef_add_switch "switch1"
 		ucidef_add_switch_attr "switch1" "enable" false

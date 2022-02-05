@@ -537,7 +537,7 @@ static inline void syn_resume_dma_rx(void __iomem *mac_base)
  */
 static inline void syn_clear_tx_dma_status(void __iomem *mac_base)
 {
-	hal_write_relaxed_reg(mac_base, SYN_DMA_STATUS, SYN_DMA_INT_TX_COMPLETED);
+	hal_write_relaxed_reg(mac_base, SYN_DMA_STATUS, (SYN_DMA_INT_NORMAL | SYN_DMA_INT_TX_COMPLETED));
 }
 
 /*
@@ -546,7 +546,7 @@ static inline void syn_clear_tx_dma_status(void __iomem *mac_base)
  */
 static inline void syn_clear_rx_dma_status(void __iomem *mac_base)
 {
-	hal_write_relaxed_reg(mac_base, SYN_DMA_STATUS, SYN_DMA_INT_RX_COMPLETED);
+	hal_write_relaxed_reg(mac_base, SYN_DMA_STATUS, (SYN_DMA_INT_NORMAL | SYN_DMA_INT_RX_COMPLETED));
 }
 
 /*

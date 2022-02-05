@@ -177,7 +177,6 @@
 			reg = <0xb017000 0x1000>;
 			interrupts = <GIC_SPI 3 IRQ_TYPE_EDGE_RISING>;
 			clocks = <&sleep_clk>;
-			max-timeout-sec = <32>;
 		};
 
 		timer@b120000 {
@@ -848,6 +847,9 @@
 					<0 0 0 4 &intc 0 83
 					 IRQ_TYPE_LEVEL_HIGH>; /* int_d */
 
+			interrupts = <GIC_SPI 51 IRQ_TYPE_LEVEL_HIGH>;
+			interrupt-names = "global_irq";
+
 			clocks = <&gcc GCC_SYS_NOC_PCIE0_AXI_CLK>,
 				 <&gcc GCC_PCIE0_AXI_M_CLK>,
 				 <&gcc GCC_PCIE0_AXI_S_CLK>,
@@ -944,6 +946,9 @@
 					 IRQ_TYPE_LEVEL_HIGH>, /* int_c */
 					<0 0 0 4 &intc 0 145
 					 IRQ_TYPE_LEVEL_HIGH>; /* int_d */
+
+			interrupts = <GIC_SPI 84 IRQ_TYPE_LEVEL_HIGH>;
+			interrupt-names = "global_irq";
 
 			clocks = <&gcc GCC_SYS_NOC_PCIE1_AXI_CLK>,
 				 <&gcc GCC_PCIE1_AXI_M_CLK>,
@@ -1305,6 +1310,7 @@
 			npu-supply = <&npu_vreg>;
 		};
 
+		#ifndef __IPQ_MEM_PROFILE_256_MB__
 		nss1: nss@40800000 {
 			compatible = "qcom,nss";
 			interrupts = <0 390 0x1>, <0 391 0x1>, <0 392 0x1>,
@@ -1450,6 +1456,7 @@
 				};
 			};
 		};
+		#endif
 
 		wifi0: wifi@c0000000 {
 			compatible = "qcom,cnss-qca8074";
@@ -1648,6 +1655,7 @@
 				<0 163 1>,
 				<0 162 1>,
 				<0 160 1>,
+				<0 414 1>,
 				<0 159 1>,
 				<0 158 1>,
 				<0 157 1>,
@@ -1700,6 +1708,7 @@
 				"host2tcl-input-ring3",
 				"host2tcl-input-ring2",
 				"host2tcl-input-ring1",
+				"wbm2host-tx-completions-ring4",
 				"wbm2host-tx-completions-ring3",
 				"wbm2host-tx-completions-ring2",
 				"wbm2host-tx-completions-ring1",
@@ -1813,10 +1822,10 @@
 		interrupts = <GIC_PPI 7 (GIC_CPU_MASK_SIMPLE(4) | IRQ_TYPE_LEVEL_HIGH)>;
 	};
 
-	clocks {
+	clocks: clocks {
 		sleep_clk: sleep_clk {
 			compatible = "fixed-clock";
-			clock-frequency = <32000>;
+			clock-frequency = <32764>;
 			#clock-cells = <0>;
 		};
 

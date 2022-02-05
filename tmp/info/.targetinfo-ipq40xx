@@ -1,0 +1,300 @@
+Source-Makefile: target/linux/ipq40xx/Makefile
+Target: ipq40xx
+Target-Board: ipq40xx
+Target-Name: Qualcomm Atheros IPQ40XX
+Target-Arch: arm
+Target-Arch-Packages: arm_cortex-a7_neon-vfpv4
+Target-Features: arm_v7 dt fpu gpio nand pci pcie ramdisk rtc squashfs usb
+Target-Depends: 
+Target-Optimization: -Os -pipe
+CPU-Type: cortex-a7+neon-vfpv4
+Linux-Version: 4.14.254
+Linux-Release: 1
+Linux-Kernel-Arch: arm
+Target-Description:
+
+@@
+Default-Packages: base-files libc libgcc busybox dropbear mtd uci opkg netifd fstools uclient-fetch logd urandom-seed urngd dnsmasq iptables ip6tables ppp ppp-mod-pppoe firewall odhcpd-ipv6only odhcp6c kmod-ipt-offload kmod-usb-dwc3-of-simple kmod-leds-gpio kmod-gpio-button-hotplug swconfig kmod-ath10k-ct wpad-basic kmod-usb3 kmod-usb-dwc3 ath10k-firmware-qca4019-ct iwinfo
+Target-Profile: Default
+Target-Profile-Priority: 1
+Target-Profile-Name: Default Profile
+Target-Profile-Packages:  
+Target-Profile-Description:
+	Default package set compatible with most boards.
+@@
+
+Target: ipq40xx/generic
+Target-Board: ipq40xx
+Target-Name: Generic
+Target-Arch: arm
+Target-Arch-Packages: arm_cortex-a7_neon-vfpv4
+Target-Features: arm_v7 dt fpu gpio nand pci pcie ramdisk rtc squashfs usb
+Target-Depends: 
+Target-Optimization: -Os -pipe
+CPU-Type: cortex-a7+neon-vfpv4
+Linux-Version: 4.14.254
+Linux-Release: 1
+Linux-Kernel-Arch: arm
+Target-Description:
+
+@@
+Default-Packages: base-files libc libgcc busybox dropbear mtd uci opkg netifd fstools uclient-fetch logd urandom-seed urngd dnsmasq iptables ip6tables ppp ppp-mod-pppoe firewall odhcpd-ipv6only odhcp6c kmod-ipt-offload kmod-usb-dwc3-of-simple kmod-leds-gpio kmod-gpio-button-hotplug swconfig kmod-ath10k-ct wpad-basic kmod-usb3 kmod-usb-dwc3 ath10k-firmware-qca4019-ct iwinfo
+Target-Profile: Default
+Target-Profile-Priority: 1
+Target-Profile-Name: Default Profile
+Target-Profile-Packages:  
+Target-Profile-Description:
+	Default package set compatible with most boards.
+@@
+
+Target-Profile: DEVICE_8dev_jalapeno
+Target-Profile-Name: 8devices Jalapeno
+Target-Profile-Packages:  
+Target-Profile-hasImageMetadata: 1
+Target-Profile-SupportedDevices: 8dev,jalapeno
+
+Target-Profile-Description:
+Build firmware images for 8devices Jalapeno
+@@
+
+Target-Profile: DEVICE_alfa-network_ap120c-ac
+Target-Profile-Name: ALFA Network AP120C-AC
+Target-Profile-Packages: ipq-wifi-alfa-network_ap120c-ac kmod-usb-acm kmod-tpm-i2c-atmel uboot-envtools 
+Target-Profile-hasImageMetadata: 1
+Target-Profile-SupportedDevices: alfa-network,ap120c-ac
+
+Target-Profile-Description:
+Build firmware images for ALFA Network AP120C-AC
+@@
+
+Target-Profile: DEVICE_asus_map-ac2200
+Target-Profile-Name: ASUS Lyra MAP-AC2200
+Target-Profile-Packages: ipq-wifi-asus_map-ac2200 ath10k-firmware-qca9888-ct kmod-ath3k 
+Target-Profile-hasImageMetadata: 1
+Target-Profile-SupportedDevices: asus,map-ac2200
+
+Target-Profile-Description:
+Build firmware images for ASUS Lyra MAP-AC2200
+@@
+
+Target-Profile: DEVICE_asus_rt-ac58u
+Target-Profile-Name: Asus RT-AC58U
+Target-Profile-Packages: -kmod-ath10k-ct kmod-ath10k-ct-smallbuffers kmod-usb-ledtrig-usbport 
+Target-Profile-hasImageMetadata: 1
+Target-Profile-SupportedDevices: asus,rt-ac58u
+
+Target-Profile-Description:
+Build firmware images for Asus RT-AC58U
+@@
+
+Target-Profile: DEVICE_avm_fritzbox-4040
+Target-Profile-Name: AVM Fritz!Box 4040
+Target-Profile-Packages: fritz-tffs fritz-caldata 
+Target-Profile-hasImageMetadata: 1
+Target-Profile-SupportedDevices: avm,fritzbox-4040
+
+Target-Profile-Description:
+Build firmware images for AVM Fritz!Box 4040
+@@
+
+Target-Profile: DEVICE_avm_fritzbox-7530
+Target-Profile-Name: AVM Fritz!Box 7530
+Target-Profile-Packages: fritz-caldata fritz-tffs-nand ipq-wifi-avm_fritzbox-7530 
+Target-Profile-hasImageMetadata: 1
+Target-Profile-SupportedDevices: avm,fritzbox-7530
+
+Target-Profile-Description:
+Build firmware images for AVM Fritz!Box 7530
+@@
+
+Target-Profile: DEVICE_avm_fritzrepeater-1200
+Target-Profile-Name: AVM FRITZ!Repeater 1200
+Target-Profile-Packages: fritz-caldata fritz-tffs-nand ipq-wifi-avm_fritzrepeater-1200 
+Target-Profile-hasImageMetadata: 1
+Target-Profile-SupportedDevices: avm,fritzrepeater-1200
+
+Target-Profile-Description:
+Build firmware images for AVM FRITZ!Repeater 1200
+@@
+
+Target-Profile: DEVICE_avm_fritzrepeater-3000
+Target-Profile-Name: AVM Fritz!Repeater 3000
+Target-Profile-Packages: ath10k-firmware-qca9984-ct fritz-caldata fritz-tffs-nand ipq-wifi-avm_fritzrepeater-3000 
+Target-Profile-hasImageMetadata: 1
+Target-Profile-SupportedDevices: avm,fritzrepeater-3000
+
+Target-Profile-Description:
+Build firmware images for AVM Fritz!Repeater 3000
+@@
+
+Target-Profile: DEVICE_compex_wpj428
+Target-Profile-Name: Compex WPJ428
+Target-Profile-Packages: kmod-gpio-beeper 
+Target-Profile-hasImageMetadata: 1
+Target-Profile-SupportedDevices: compex,wpj428
+
+Target-Profile-Description:
+Build firmware images for Compex WPJ428
+@@
+
+Target-Profile: DEVICE_engenius_eap1300
+Target-Profile-Name: EnGenius EAP1300
+Target-Profile-Packages: ipq-wifi-engenius_eap1300 
+Target-Profile-hasImageMetadata: 1
+Target-Profile-SupportedDevices: engenius,eap1300
+
+Target-Profile-Description:
+Build firmware images for EnGenius EAP1300
+@@
+
+Target-Profile: DEVICE_engenius_ens620ext
+Target-Profile-Name: EnGenius ENS620EXT
+Target-Profile-Packages: ipq-wifi-engenius_ens620ext 
+Target-Profile-hasImageMetadata: 1
+Target-Profile-SupportedDevices: engenius,ens620ext
+
+Target-Profile-Description:
+Build firmware images for EnGenius ENS620EXT
+@@
+
+Target-Profile: DEVICE_glinet_gl-b1300
+Target-Profile-Name: GL.iNet GL-B1300
+Target-Profile-Packages:  
+Target-Profile-hasImageMetadata: 1
+Target-Profile-SupportedDevices: glinet,gl-b1300
+
+Target-Profile-Description:
+Build firmware images for GL.iNet GL-B1300
+@@
+
+Target-Profile: DEVICE_linksys_ea6350v3
+Target-Profile-Name: Linksys EA6350v3
+Target-Profile-Packages: ipq-wifi-linksys_ea6350v3 uboot-envtools 
+Target-Profile-hasImageMetadata: 1
+Target-Profile-SupportedDevices: linksys,ea6350v3
+
+Target-Profile-Description:
+Build firmware images for Linksys EA6350v3
+@@
+
+Target-Profile: DEVICE_linksys_ea8300
+Target-Profile-Name: Linksys EA8300 (Dallas)
+Target-Profile-Packages: uboot-envtools ath10k-firmware-qca9888-ct ipq-wifi-linksys_ea8300 kmod-usb-ledtrig-usbport 
+Target-Profile-hasImageMetadata: 1
+Target-Profile-SupportedDevices: linksys,ea8300
+
+Target-Profile-Description:
+Build firmware images for Linksys EA8300 (Dallas)
+@@
+
+Target-Profile: DEVICE_meraki_mr33
+Target-Profile-Name: Cisco Meraki MR33
+Target-Profile-Packages: -swconfig ath10k-firmware-qca9887-ct 
+Target-Profile-hasImageMetadata: 1
+Target-Profile-SupportedDevices: meraki,mr33
+
+Target-Profile-Description:
+Build firmware images for Cisco Meraki MR33
+@@
+
+Target-Profile: DEVICE_netgear_ex6100v2
+Target-Profile-Name: Netgear EX6100v2
+Target-Profile-Packages:  
+Target-Profile-hasImageMetadata: 1
+Target-Profile-SupportedDevices: netgear,ex6100v2
+
+Target-Profile-Description:
+Build firmware images for Netgear EX6100v2
+@@
+
+Target-Profile: DEVICE_netgear_ex6150v2
+Target-Profile-Name: Netgear EX6150v2
+Target-Profile-Packages:  
+Target-Profile-hasImageMetadata: 1
+Target-Profile-SupportedDevices: netgear,ex6150v2
+
+Target-Profile-Description:
+Build firmware images for Netgear EX6150v2
+@@
+
+Target-Profile: DEVICE_openmesh_a42
+Target-Profile-Name: OpenMesh A42
+Target-Profile-Packages: uboot-envtools 
+Target-Profile-hasImageMetadata: 1
+Target-Profile-SupportedDevices: openmesh,a42
+
+Target-Profile-Description:
+Build firmware images for OpenMesh A42
+@@
+
+Target-Profile: DEVICE_openmesh_a62
+Target-Profile-Name: OpenMesh A62
+Target-Profile-Packages: ath10k-firmware-qca9888-ct uboot-envtools 
+Target-Profile-hasImageMetadata: 1
+Target-Profile-SupportedDevices: openmesh,a62
+
+Target-Profile-Description:
+Build firmware images for OpenMesh A62
+@@
+
+Target-Profile: DEVICE_qcom_ap-dk01.1-c1
+Target-Profile-Name: QCA AP-DK01.1-C1
+Target-Profile-Packages:  
+Target-Profile-hasImageMetadata: 1
+Target-Profile-SupportedDevices: qcom,ap-dk01.1-c1
+
+Target-Profile-Description:
+Build firmware images for QCA AP-DK01.1-C1
+@@
+
+Target-Profile: DEVICE_qcom_ap-dk04.1-c1
+Target-Profile-Name: QCA AP-DK04.1-C1
+Target-Profile-Packages:  
+Target-Profile-hasImageMetadata: 1
+Target-Profile-SupportedDevices: qcom,ap-dk04.1-c1
+
+Target-Profile-Description:
+Build firmware images for QCA AP-DK04.1-C1
+@@
+
+Target-Profile: DEVICE_qxwlan_e2600ac-c1
+Target-Profile-Name: Qxwlan E2600AC-C1 (nor flash)
+Target-Profile-Packages: ipq-wifi-qxwlan_e2600ac 
+Target-Profile-hasImageMetadata: 1
+Target-Profile-SupportedDevices: qxwlan,e2600ac-c1
+
+Target-Profile-Description:
+Build firmware images for Qxwlan E2600AC-C1 (nor flash)
+@@
+
+Target-Profile: DEVICE_qxwlan_e2600ac-c2
+Target-Profile-Name: Qxwlan E2600AC-C2 (nornand flash)
+Target-Profile-Packages: ipq-wifi-qxwlan_e2600ac 
+Target-Profile-hasImageMetadata: 1
+Target-Profile-SupportedDevices: qxwlan,e2600ac-c2
+
+Target-Profile-Description:
+Build firmware images for Qxwlan E2600AC-C2 (nornand flash)
+@@
+
+Target-Profile: DEVICE_zyxel_nbg6617
+Target-Profile-Name: ZyXEL NBG6617
+Target-Profile-Packages: uboot-envtools kmod-usb-ledtrig-usbport 
+Target-Profile-hasImageMetadata: 1
+Target-Profile-SupportedDevices: zyxel,nbg6617
+
+Target-Profile-Description:
+Build firmware images for ZyXEL NBG6617
+@@
+
+Target-Profile: DEVICE_zyxel_wre6606
+Target-Profile-Name: ZyXEL WRE6606
+Target-Profile-Packages: -kmod-ath10k-ct kmod-ath10k-ct-smallbuffers 
+Target-Profile-hasImageMetadata: 1
+Target-Profile-SupportedDevices: zyxel,wre6606
+
+Target-Profile-Description:
+Build firmware images for ZyXEL WRE6606
+@@
+
+

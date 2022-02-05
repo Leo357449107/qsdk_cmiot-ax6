@@ -2725,7 +2725,7 @@ void ecm_db_connection_add(struct ecm_db_connection_instance *ci,
 	/*
 	 * Insert connection into the connections hash table
 	 */
-	ci->hash_next = NULL;
+	ci->hash_prev = NULL;
 	ci->hash_next = ecm_db_connection_table[hash_index];
 	if (ecm_db_connection_table[hash_index]) {
 		ecm_db_connection_table[hash_index]->hash_prev = ci;
@@ -2737,7 +2737,7 @@ void ecm_db_connection_add(struct ecm_db_connection_instance *ci,
 	/*
 	 * Insert connection into the connections serial hash table
 	 */
-	ci->serial_hash_next = NULL;
+	ci->serial_hash_prev = NULL;
 	ci->serial_hash_next = ecm_db_connection_serial_table[serial_hash_index];
 	if (ecm_db_connection_serial_table[serial_hash_index]) {
 		ecm_db_connection_serial_table[serial_hash_index]->serial_hash_prev = ci;

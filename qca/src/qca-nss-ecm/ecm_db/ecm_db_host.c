@@ -573,6 +573,7 @@ void ecm_db_host_add(struct ecm_db_host_instance *hi, ip_addr_t address, bool on
 	/*
 	 * Add host into the hash table
 	 */
+	hi->hash_prev = NULL;
 	hi->hash_next = ecm_db_host_table[hash_index];
 	if (ecm_db_host_table[hash_index]) {
 		ecm_db_host_table[hash_index]->hash_prev = hi;

@@ -35,7 +35,7 @@
 
 	chosen {
 		bootargs = "console=ttyMSM0,115200,n8 rw init=/init";
-		bootargs-append = " swiotlb=1 coherent_pool=2M clk_ignore_unused";
+		bootargs-append = " swiotlb=1 coherent_pool=2M";
 		stdout-path = "serial0";
 	};
 
@@ -73,22 +73,22 @@
 	 * |   QDSS   |  0x4D200000  |           1MB           |
 	 * +----------+--------------+-------------------------+
 	 * | QCN6122_1|              |                         |
-	 * |   data   |  0x4D300000  |          15MB           |
+	 * |   data   |  0x4D300000  |          13MB           |
 	 * +----------+--------------+-------------------------+
 	 * | QCN6122_1|              |                         |
-	 * |  M3 Dump |  0x4E200000  |           1MB           |
+	 * |  M3 Dump |  0x4E000000  |           1MB           |
 	 * +----------+--------------+-------------------------+
 	 * | QCN6122_1|              |                         |
-	 * |   QDSS   |  0x4E300000  |           1MB           |
+	 * |   QDSS   |  0x4E100000  |           1MB           |
 	 * +----------+--------------+-------------------------+
 	 * | QCN6122_2|              |                         |
-	 * |   data   |  0x4E400000  |          15MB           |
+	 * |   data   |  0x4E200000  |          13MB           |
 	 * +----------+--------------+-------------------------+
 	 * | QCN6122_2|              |                         |
-	 * |  M3 Dump |  0x4F300000  |           1MB           |
+	 * |  M3 Dump |  0x4EF00000  |           1MB           |
 	 * +----------+--------------+-------------------------+
 	 * | QCN6122_2|              |                         |
-	 * |   QDSS   |  0x4F400000  |           1MB           |
+	 * |   QDSS   |  0x4F000000  |           1MB           |
 	 * +----------+--------------+-------------------------+
 	 * |                                                   |
 	 * |            Rest of the memory for Linux           |
@@ -97,7 +97,7 @@
 	 */
 		q6_mem_regions: q6_mem_regions@4B000000 {
 			no-map;
-			reg = <0x0 0x4B000000 0x0 0x4500000>;
+			reg = <0x0 0x4B000000 0x0 0x4100000>;
 		};
 
 		q6_code_data: q6_code_data@4B000000 {
@@ -122,32 +122,32 @@
 
 		q6_qcn6122_data1: q6_qcn6122_data1@4D300000 {
 			no-map;
-			reg = <0x0 0x4D300000 0x0 0xF00000>;
+			reg = <0x0 0x4D300000 0x0 0xD00000>;
 		};
 
-		m3_dump_qcn6122_1: m3_dump_qcn6122_1@4E200000 {
+		m3_dump_qcn6122_1: m3_dump_qcn6122_1@4E000000 {
 			no-map;
-			reg = <0x0 0x4E200000 0x0 0x100000>;
+			reg = <0x0 0x4E000000 0x0 0x100000>;
 		};
 
-		q6_qcn6122_etr_1: q6_qcn6122_etr_1@4E300000 {
+		q6_qcn6122_etr_1: q6_qcn6122_etr_1@4E100000 {
 			no-map;
-			reg = <0x0 0x4E300000 0x0 0x100000>;
+			reg = <0x0 0x4E100000 0x0 0x100000>;
 		};
 
-		q6_qcn6122_data2: q6_qcn6122_data2@4E400000 {
+		q6_qcn6122_data2: q6_qcn6122_data2@4E200000 {
 			no-map;
-			reg = <0x0 0x4E400000 0x0 0xF00000>;
+			reg = <0x0 0x4E200000 0x0 0xD00000>;
 		};
 
-		m3_dump_qcn6122_2: m3_dump_qcn6122_2@4F300000 {
+		m3_dump_qcn6122_2: m3_dump_qcn6122_2@4EF00000 {
 			no-map;
-			reg = <0x0 0x4F300000 0x0 0x100000>;
+			reg = <0x0 0x4EF00000 0x0 0x100000>;
 		};
 
-		q6_qcn6122_etr_2: q6_qcn6122_etr_2@4F400000 {
+		q6_qcn6122_etr_2: q6_qcn6122_etr_2@4F000000 {
 			no-map;
-			reg = <0x0 0x4F400000 0x0 0x100000>;
+			reg = <0x0 0x4F000000 0x0 0x100000>;
 		};
 	#else
 	/*                 512MB/1GB Profiles
@@ -409,6 +409,13 @@
 			phy_addr = <0x1c>;
 			mdiobus = <&mdio1>;
 		};
+
+		pcm: pcm@0xA3C0000{
+			pinctrl-0 = <&audio_pins>;
+			pinctrl-names = "default";
+			status = "disabled";
+		};
+
 	};
 
 	qcom,test@0 {
@@ -512,6 +519,82 @@
 			bias-disable;
 		};
 	};
+
+	button_pins: button_pins {
+		wps_button {
+			pins = "gpio38";
+			function = "gpio";
+			drive-strength = <8>;
+			bias-pull-up;
+		};
+	};
+
+	audio_pins: audio_pinmux {
+		mux_1 {
+			pins = "gpio24";
+			function = "audio_rxbclk";
+			drive-strength = <8>;
+			bias-pull-down;
+		};
+
+		mux_2 {
+			pins = "gpio25";
+			function = "audio_rxfsync";
+			drive-strength = <8>;
+			bias-pull-down;
+		};
+
+		mux_3 {
+			pins = "gpio26";
+			function = "audio_rxd";
+			drive-strength = <8>;
+			bias-pull-down;
+		};
+
+		mux_4 {
+			pins = "gpio27";
+			function = "audio_txmclk";
+			drive-strength = <8>;
+			bias-pull-down;
+		};
+
+		mux_5 {
+			pins = "gpio28";
+			function = "audio_txbclk";
+			drive-strength = <8>;
+			bias-pull-down;
+		};
+
+		mux_6 {
+			pins = "gpio29";
+			function = "audio_txfsync";
+			drive-strength = <8>;
+			bias-pull-down;
+		};
+
+		mux_7 {
+			pins = "gpio30";
+			function = "audio_txd";
+			drive-strength = <8>;
+			bias-pull-down;
+		};
+	};
+};
+
+&soc {
+	gpio_keys {
+		compatible = "gpio-keys";
+		pinctrl-0 = <&button_pins>;
+		pinctrl-names = "default";
+
+		button@1 {
+			label = "wps";
+			linux,code = <KEY_WPS_BUTTON>;
+			gpios = <&tlmm 38 GPIO_ACTIVE_LOW>;
+			linux,input-type = <1>;
+			debounce-interval = <60>;
+		};
+	};
 };
 
 &q6v5_wcss {
@@ -596,6 +679,14 @@
 		qcom,smem-state-names = "shutdown",
 					"stop",
 					"spawn";
+	#ifdef __IPQ_MEM_PROFILE_256_MB__
+		memory-region = <&q6_ipq5018_data>, <&m3_dump>,
+				<&q6_etr_region>;
+	#else
+		memory-region = <&q6_ipq5018_data>, <&m3_dump>,
+				<&q6_etr_region>, <&q6_caldb_region>;
+	#endif
+
 	};
 
 	q6_wcss_pd2: remoteproc_pd2 {
@@ -617,6 +708,14 @@
 		qcom,smem-state-names = "shutdown",
 					"stop",
 					"spawn";
+	#ifdef __IPQ_MEM_PROFILE_256_MB__
+		memory-region = <&q6_qcn6122_data1>, <&m3_dump_qcn6122_1>,
+				<&q6_qcn6122_etr_1>;
+	#else
+		memory-region = <&q6_qcn6122_data1>, <&m3_dump_qcn6122_1>,
+				<&q6_qcn6122_etr_1>, <&q6_qcn6122_caldb_1>;
+	#endif
+
 	};
 
 	q6_wcss_pd3: remoteproc_pd3 {
@@ -637,6 +736,13 @@
 		qcom,smem-state-names = "shutdown",
 					"stop",
 					"spawn";
+	#ifdef	__IPQ_MEM_PROFILE_256_MB__
+		memory-region = <&q6_qcn6122_data2>, <&m3_dump_qcn6122_2>,
+				<&q6_qcn6122_etr_2>;
+	#else
+		memory-region = <&q6_qcn6122_data2>, <&m3_dump_qcn6122_2>,
+				<&q6_qcn6122_etr_2>, <&q6_qcn6122_caldb_2>;
+	#endif
 	};
 };
 
@@ -703,7 +809,7 @@
 	qcom,tgt-mem-mode = <1>;
 #endif
 	qcom,board_id = <0xb0>;
-	qcom,bdf-addr = <0x4ED00000 0x4ED00000 0x4E400000 0x0 0x0>;
+	qcom,bdf-addr = <0x4ED00000 0x4ED00000 0x4E200000 0x0 0x0>;
 #ifdef __CNSS2__
 	qcom,caldb-addr = <0x4FF00000 0x4FF00000 0 0 0>;
 #else

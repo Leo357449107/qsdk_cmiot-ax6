@@ -864,7 +864,7 @@ int minidump_fill_tlv_crashdump_buffer(const uint64_t start_addr, uint64_t size,
 }
 
 /*
-* Function: minidump_fill_segments
+* Function: minidump_fill_segments_internal
 *
 * Description: Add a dump segment as a TLV entry in the Metadata list
 * and global crashdump buffer. Store relevant VA and PA information in
@@ -878,7 +878,7 @@ int minidump_fill_tlv_crashdump_buffer(const uint64_t start_addr, uint64_t size,
 *
 * Return: 0 on success, -ENOMEM on failure
 */
-int minidump_fill_segments(const uint64_t start_addr, uint64_t size, minidump_tlv_type_t type, const char *name)
+int minidump_fill_segments_internal(const uint64_t start_addr, uint64_t size, minidump_tlv_type_t type, const char *name, int islowmem)
 {
 
 	int ret = 0;
@@ -892,14 +892,17 @@ int minidump_fill_segments(const uint64_t start_addr, uint64_t size, minidump_tl
 	* Calculate PA of Dump segment using relevant APIs for lowmem and highmem
 	* virtual address.
 	*/
-	if ((unsigned long)start_addr >= PAGE_OFFSET && (unsigned long) start_addr
-				< (unsigned long)high_memory) {
+	if (islowmem) {
 		phys_addr = (uint64_t)__pa(start_addr);
 	} else {
-		minidump_tlv_page = vmalloc_to_page((const void *)(uintptr_t)
-				(start_addr & (~(PAGE_SIZE - 1))));
-		phys_addr = page_to_phys(minidump_tlv_page) + offset_in_page(start_addr);
-		highmem = 1;
+		if (!is_vmalloc_or_module_addr((const void *)(uintptr_t)(start_addr & (~(PAGE_SIZE - 1))))) {
+			phys_addr = (uint64_t)__pa(start_addr);
+		} else {
+			minidump_tlv_page = vmalloc_to_page((const void *)(uintptr_t)
+					(start_addr & (~(PAGE_SIZE - 1))));
+			phys_addr = page_to_phys(minidump_tlv_page) + offset_in_page(start_addr);
+			highmem = 1;
+		}
 	}
 
 	replace = minidump_traverse_metadata_list(name, start_addr,(const unsigned long)phys_addr, &tlv_offset, size, (unsigned char)type);
@@ -925,7 +928,29 @@ int minidump_fill_segments(const uint64_t start_addr, uint64_t size, minidump_tl
 
 	return 0;
 }
+
+/*
+* Function: minidump_fill_segments
+*
+* Description: Add a dump segment as a TLV entry in the Metadata list
+* and global crashdump buffer. Store relevant VA and PA information in
+* MMU Metadata file. Also writes module information to Metadata text
+* file, which is useful for post processing of collected dumps.
+*
+* @param: [in] start_address - Virtual address of Dump segment
+*		[in] type - Type associated with the Dump segment
+*		[in] size - Size associated with the Dump segment
+*		[in] name - name associated with the Dump segment. Can be set to NULL.
+*
+* Return: 0 on success, -ENOMEM on failure
+*/
+
+int minidump_fill_segments(const uint64_t start_addr, uint64_t size, minidump_tlv_type_t type, const char *name)
+{
+	return minidump_fill_segments_internal(start_addr, size, type, name, 0);
+}
 EXPORT_SYMBOL(minidump_fill_segments);
+
 /*
 * Function: minidump_store_mmu_info
 * Description: Add virtual address and physical address
@@ -1118,38 +1143,38 @@ static int ctx_save_fill_log_dump_tlv(void)
 
 #ifdef CONFIG_QCA_MINIDUMP
 	minidump_get_log_buf_info(&log_buf_info.start, &log_buf_info.size);
-	ret_val = minidump_fill_segments(log_buf_info.start, log_buf_info.size,
-						CTX_SAVE_LOG_DUMP_TYPE_DMESG, "DMESG");
+	ret_val = minidump_fill_segments_internal(log_buf_info.start, log_buf_info.size,
+						CTX_SAVE_LOG_DUMP_TYPE_DMESG, "DMESG", 1);
 	if (ret_val) {
 		pr_err("Minidump: Crashdump buffer is full %d \n", ret_val);
 		return ret_val;
 	}
 
 	minidump_get_pgd_info(&pagetable_tlv_info.start, &pagetable_tlv_info.size);
-	ret_val = minidump_fill_segments(pagetable_tlv_info.start,
-				pagetable_tlv_info.size, CTX_SAVE_LOG_DUMP_TYPE_LEVEL1_PT, "PGD");
+	ret_val = minidump_fill_segments_internal(pagetable_tlv_info.start,
+				pagetable_tlv_info.size, CTX_SAVE_LOG_DUMP_TYPE_LEVEL1_PT, "PGD", 1);
 	if (ret_val) {
 		pr_err("Minidump: Crashdump buffer is full %d \n", ret_val);
 		return ret_val;
 	}
 
 	minidump_get_linux_buf_info(&linux_banner_info.start, &linux_banner_info.size);
-	ret_val = minidump_fill_segments(linux_banner_info.start, linux_banner_info.size,
-				CTX_SAVE_LOG_DUMP_TYPE_WLAN_MOD, NULL);
+	ret_val = minidump_fill_segments_internal(linux_banner_info.start, linux_banner_info.size,
+				CTX_SAVE_LOG_DUMP_TYPE_WLAN_MOD, NULL, 1);
 	if (ret_val) {
 		pr_err("Minidump: Crashdump buffer is full %d \n", ret_val);
 		return ret_val;
 	}
 
-	ret_val = minidump_fill_segments((uint64_t)(uintptr_t)minidump_meta_info.mod_log,(uint64_t)__pa(&minidump_meta_info.mod_log_len),
-					CTX_SAVE_LOG_DUMP_TYPE_WLAN_MOD_INFO, NULL);
+	ret_val = minidump_fill_segments_internal((uint64_t)(uintptr_t)minidump_meta_info.mod_log,(uint64_t)__pa(&minidump_meta_info.mod_log_len),
+					CTX_SAVE_LOG_DUMP_TYPE_WLAN_MOD_INFO, NULL, 1);
 	if (ret_val) {
 		pr_err("Minidump: Crashdump buffer is full %d \n", ret_val);
 		return ret_val;
 	}
 
-	ret_val = minidump_fill_segments((uint64_t)(uintptr_t)minidump_meta_info.mmu_log,(uint64_t)__pa(&minidump_meta_info.mmu_log_len),
-					CTX_SAVE_LOG_DUMP_TYPE_WLAN_MMU_INFO, NULL);
+	ret_val = minidump_fill_segments_internal((uint64_t)(uintptr_t)minidump_meta_info.mmu_log,(uint64_t)__pa(&minidump_meta_info.mmu_log_len),
+					CTX_SAVE_LOG_DUMP_TYPE_WLAN_MMU_INFO, NULL, 1);
 	if (ret_val) {
 		pr_err("Minidump: Crashdump buffer is full %d \n", ret_val);
 		return ret_val;
@@ -1191,8 +1216,8 @@ int minidump_dump_wlan_modules(void){
 	/*Dump list head*/
 	module_tlv_info.start = (uintptr_t)minidump_modules;
 	module_tlv_info.size = sizeof(struct module);
-	ret_val = minidump_fill_segments(module_tlv_info.start,
-		module_tlv_info.size, CTX_SAVE_LOG_DUMP_TYPE_WLAN_MOD, "mod_list_head");
+	ret_val = minidump_fill_segments_internal(module_tlv_info.start,
+		module_tlv_info.size, CTX_SAVE_LOG_DUMP_TYPE_WLAN_MOD, "mod_list_head", 0);
 	if (ret_val) {
 		pr_err("Minidump: Crashdump buffer is full %d\n", ret_val);
 		return ret_val;
@@ -1221,8 +1246,8 @@ int minidump_dump_wlan_modules(void){
 			wlan_count++ ;
 			module_tlv_info.start = (uintptr_t)mod;
 			module_tlv_info.size = sizeof(struct module);
-			ret_val = minidump_fill_segments(module_tlv_info.start,
-				module_tlv_info.size, CTX_SAVE_LOG_DUMP_TYPE_WLAN_MOD, NULL);
+			ret_val = minidump_fill_segments_internal(module_tlv_info.start,
+				module_tlv_info.size, CTX_SAVE_LOG_DUMP_TYPE_WLAN_MOD, NULL, 0);
 			if (ret_val) {
 				pr_err("Minidump: Crashdump buffer is full %d\n", ret_val);
 				return ret_val;
@@ -1230,8 +1255,8 @@ int minidump_dump_wlan_modules(void){
 
 			module_tlv_info.start = (unsigned long)mod->sect_attrs;
 			module_tlv_info.size = (unsigned long)(sizeof(struct module_sect_attrs) + ((sizeof(struct module_sect_attr))*(mod->sect_attrs->nsections)));
-			ret_val = minidump_fill_segments(module_tlv_info.start,
-				module_tlv_info.size, CTX_SAVE_LOG_DUMP_TYPE_WLAN_MOD, NULL);
+			ret_val = minidump_fill_segments_internal(module_tlv_info.start,
+				module_tlv_info.size, CTX_SAVE_LOG_DUMP_TYPE_WLAN_MOD, NULL, 0);
 			if (ret_val) {
 				pr_err("Minidump: Crashdump buffer is full %d\n", ret_val);
 				return ret_val;
@@ -1250,9 +1275,9 @@ int minidump_dump_wlan_modules(void){
 						mod->name);
 #endif
 					/* Log .bss VA of module in buffer */
-					ret_val = minidump_fill_segments(module_tlv_info.start,
+					ret_val = minidump_fill_segments_internal(module_tlv_info.start,
 					module_tlv_info.size, CTX_SAVE_LOG_DUMP_TYPE_WLAN_MOD,
-						mod->name);
+						mod->name, 0);
 					if (ret_val) {
 						pr_err("Minidump: Crashdump buffer is full %d", ret_val);
 						return ret_val;
@@ -1264,8 +1289,8 @@ int minidump_dump_wlan_modules(void){
 			/* For all other modules dump module meta data*/
 			module_tlv_info.start = (unsigned long)mod;
 			module_tlv_info.size = sizeof(mod->list) + sizeof(mod->state) + sizeof(mod->name);
-			ret_val = minidump_fill_segments(module_tlv_info.start,
-				module_tlv_info.size, CTX_SAVE_LOG_DUMP_TYPE_WLAN_MOD, NULL);
+			ret_val = minidump_fill_segments_internal(module_tlv_info.start,
+				module_tlv_info.size, CTX_SAVE_LOG_DUMP_TYPE_WLAN_MOD, NULL, 0);
 			if (ret_val) {
 				pr_err("Minidump: Crashdump buffer is full %d\n", ret_val);
 				return ret_val;

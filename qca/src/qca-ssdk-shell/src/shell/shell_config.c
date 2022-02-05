@@ -1,5 +1,8 @@
 /*
  * Copyright (c) 2014-2019, 2021, The Linux Foundation. All rights reserved.
+ *
+ * Copyright (c) 2022, Qualcomm Innovation Center, Inc. All rights reserved.
+ *
  * Permission to use, copy, modify, and/or distribute this software for
  * any purpose with or without fee is hereby granted, provided that the
  * above copyright notice and this permission notice appear in all copies.
@@ -550,6 +553,7 @@ struct cmd_des_t gcmd_des[] =
                     SW_API_ACL_VPGROUP_SET, NULL},
             {"vpgroup", "get", "get vpgroup", "<vport_id> <vport_type>",
                     SW_API_ACL_VPGROUP_GET, NULL},
+            {"macentry", "set", "set mac entry", "<entry>", SW_API_ACL_MAC_ENTRY_SET, NULL},
             {NULL, NULL, NULL, NULL, SW_API_INVALID, NULL}/*end of desc*/
         },
     },
@@ -1073,6 +1077,8 @@ struct cmd_des_t gcmd_des[] =
             {"global", "set", "set flow global cfg", "", SW_API_FLOW_GLOBAL_CFG_SET, NULL},
             {"counter", "get", "get flow counter", "<flow_index>",
 		    SW_API_FLOW_COUNTER_GET, NULL},
+            {"counter", "cleanup", "clean up flow counter", "<flow_index>",
+		    SW_API_FLOW_COUNTER_CLEANUP, NULL},
             {"entry_en", "set", "set flow entry status", "<flow_index> <en>",
 		    SW_API_FLOW_ENTRY_EN_SET, NULL},
             {"entry_en", "get", "get flow entry status", "<flow_index>",
@@ -1400,6 +1406,7 @@ struct cmd_des_t gcmd_des[] =
             {"field", "set", "write switch register field", "<reg_addr> <offset> <len> <value> <4>", SW_API_REG_FIELD_SET, NULL},
             {"aclList", "dump", "dump all acl list", "", SW_API_ACL_LIST_DUMP, NULL},
             {"aclRule", "dump", "dump all acl rule", "", SW_API_ACL_RULE_DUMP, NULL},
+	    {"aclMacEntry", "dump", "dump all acl mac entry", "", SW_API_ACL_MAC_ENTRY_DUMP, NULL},
             {"device",  "reset", "reset device",     "", SW_API_SWITCH_RESET, NULL},
             {"module_func",  "set", "set the module function bitmap", "<module>", SW_API_MODULE_FUNC_CTRL_SET, NULL},
             {"module_func",  "get", "set the module function bitmap", "<module>", SW_API_MODULE_FUNC_CTRL_GET, NULL},
@@ -1421,6 +1428,7 @@ struct cmd_des_t gcmd_des[] =
         "device", "set device id",
         {
             {"id", "set", "set device id", "<dev_id>", SW_CMD_SET_DEVID, cmd_set_devid},
+            {"ppe_capacity", "get", "get ppe capacity", "", SW_API_PPE_CAPACITY_GET, NULL},
             {NULL, NULL, NULL, NULL, SW_API_INVALID, NULL}/*end of desc*/
         },
     },

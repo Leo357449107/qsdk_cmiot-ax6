@@ -1118,6 +1118,10 @@ static void __tmc_etr_disable_hw(struct tmc_drvdata *drvdata)
 
 void tmc_etr_disable_hw(struct tmc_drvdata *drvdata)
 {
+
+	if (!drvdata->enable)
+		return;
+
 	__tmc_etr_disable_hw(drvdata);
 	/* Disable CATU device if this ETR is connected to one */
 	tmc_etr_disable_catu(drvdata);

@@ -273,6 +273,7 @@ union l3_vsi_ext_u {
 	struct l3_vsi_ext bf;
 };
 
+#if !defined(IN_IP_MINI)
 /*[register] NETWORK_ROUTE_IP*/
 #define NETWORK_ROUTE_IP
 #if defined (APPE)
@@ -376,6 +377,7 @@ union network_route_action_u {
 	a_uint32_t val;
 	struct network_route_action bf;
 };
+#endif
 
 /*[register] L3_ROUTE_CTRL*/
 #define L3_ROUTE_CTRL
@@ -682,263 +684,29 @@ union host_tbl_op_u {
 };
 
 /*[register] HOST_TBL_OP_DATA0*/
-#define HOST_TBL_OP_DATA0
+#define HOST_TBL_OP_DATA
 #if defined(APPE)
-#define HOST_TBL_OP_DATA0_ADDRESS 0x738
+#define HOST_TBL_OP_DATA_ADDRESS 0x738
 #else
-#define HOST_TBL_OP_DATA0_ADDRESS 0x4c0
+#define HOST_TBL_OP_DATA_ADDRESS 0x4c0
 #endif
-#define HOST_TBL_OP_DATA0_NUM     1
-#define HOST_TBL_OP_DATA0_INC     0x4
-#define HOST_TBL_OP_DATA0_TYPE    REG_TYPE_RW
-#define HOST_TBL_OP_DATA0_DEFAULT 0x0
+#define HOST_TBL_OP_DATA_NUM     10
+#define HOST_TBL_OP_DATA_INC     0x4
+#define HOST_TBL_OP_DATA_TYPE    REG_TYPE_RW
+#define HOST_TBL_OP_DATA_DEFAULT 0x0
 	/*[field] DATA*/
-	#define HOST_TBL_OP_DATA0_DATA
-	#define HOST_TBL_OP_DATA0_DATA_OFFSET  0
-	#define HOST_TBL_OP_DATA0_DATA_LEN     32
-	#define HOST_TBL_OP_DATA0_DATA_DEFAULT 0x0
+	#define HOST_TBL_OP_DATA_DATA
+	#define HOST_TBL_OP_DATA_DATA_OFFSET  0
+	#define HOST_TBL_OP_DATA_DATA_LEN     32
+	#define HOST_TBL_OP_DATA_DATA_DEFAULT 0x0
 
-struct host_tbl_op_data0 {
+struct host_tbl_op_data {
 	a_uint32_t  data:32;
 };
 
-union host_tbl_op_data0_u {
+union host_tbl_op_data_u {
 	a_uint32_t val;
-	struct host_tbl_op_data0 bf;
-};
-
-/*[register] HOST_TBL_OP_DATA1*/
-#define HOST_TBL_OP_DATA1
-#if defined(APPE)
-#define HOST_TBL_OP_DATA1_ADDRESS 0x73c
-#else
-#define HOST_TBL_OP_DATA1_ADDRESS 0x4c4
-#endif
-#define HOST_TBL_OP_DATA1_NUM     1
-#define HOST_TBL_OP_DATA1_INC     0x4
-#define HOST_TBL_OP_DATA1_TYPE    REG_TYPE_RW
-#define HOST_TBL_OP_DATA1_DEFAULT 0x0
-	/*[field] DATA*/
-	#define HOST_TBL_OP_DATA1_DATA
-	#define HOST_TBL_OP_DATA1_DATA_OFFSET  0
-	#define HOST_TBL_OP_DATA1_DATA_LEN     32
-	#define HOST_TBL_OP_DATA1_DATA_DEFAULT 0x0
-
-struct host_tbl_op_data1 {
-	a_uint32_t  data:32;
-};
-
-union host_tbl_op_data1_u {
-	a_uint32_t val;
-	struct host_tbl_op_data1 bf;
-};
-
-/*[register] HOST_TBL_OP_DATA2*/
-#define HOST_TBL_OP_DATA2
-#if defined(APPE)
-#define HOST_TBL_OP_DATA2_ADDRESS 0x740
-#else
-#define HOST_TBL_OP_DATA2_ADDRESS 0x4c8
-#endif
-#define HOST_TBL_OP_DATA2_NUM     1
-#define HOST_TBL_OP_DATA2_INC     0x4
-#define HOST_TBL_OP_DATA2_TYPE    REG_TYPE_RW
-#define HOST_TBL_OP_DATA2_DEFAULT 0x0
-	/*[field] DATA*/
-	#define HOST_TBL_OP_DATA2_DATA
-	#define HOST_TBL_OP_DATA2_DATA_OFFSET  0
-	#define HOST_TBL_OP_DATA2_DATA_LEN     32
-	#define HOST_TBL_OP_DATA2_DATA_DEFAULT 0x0
-
-struct host_tbl_op_data2 {
-	a_uint32_t  data:32;
-};
-
-union host_tbl_op_data2_u {
-	a_uint32_t val;
-	struct host_tbl_op_data2 bf;
-};
-
-/*[register] HOST_TBL_OP_DATA3*/
-#define HOST_TBL_OP_DATA3
-#if defined(APPE)
-#define HOST_TBL_OP_DATA3_ADDRESS 0x744
-#else
-#define HOST_TBL_OP_DATA3_ADDRESS 0x4cc
-#endif
-#define HOST_TBL_OP_DATA3_NUM     1
-#define HOST_TBL_OP_DATA3_INC     0x4
-#define HOST_TBL_OP_DATA3_TYPE    REG_TYPE_RW
-#define HOST_TBL_OP_DATA3_DEFAULT 0x0
-	/*[field] DATA*/
-	#define HOST_TBL_OP_DATA3_DATA
-	#define HOST_TBL_OP_DATA3_DATA_OFFSET  0
-	#define HOST_TBL_OP_DATA3_DATA_LEN     32
-	#define HOST_TBL_OP_DATA3_DATA_DEFAULT 0x0
-
-struct host_tbl_op_data3 {
-	a_uint32_t  data:32;
-};
-
-union host_tbl_op_data3_u {
-	a_uint32_t val;
-	struct host_tbl_op_data3 bf;
-};
-
-/*[register] HOST_TBL_OP_DATA4*/
-#define HOST_TBL_OP_DATA4
-#if defined(APPE)
-#define HOST_TBL_OP_DATA4_ADDRESS 0x748
-#else
-#define HOST_TBL_OP_DATA4_ADDRESS 0x4d0
-#endif
-#define HOST_TBL_OP_DATA4_NUM     1
-#define HOST_TBL_OP_DATA4_INC     0x4
-#define HOST_TBL_OP_DATA4_TYPE    REG_TYPE_RW
-#define HOST_TBL_OP_DATA4_DEFAULT 0x0
-	/*[field] DATA*/
-	#define HOST_TBL_OP_DATA4_DATA
-	#define HOST_TBL_OP_DATA4_DATA_OFFSET  0
-	#define HOST_TBL_OP_DATA4_DATA_LEN     32
-	#define HOST_TBL_OP_DATA4_DATA_DEFAULT 0x0
-
-struct host_tbl_op_data4 {
-	a_uint32_t  data:32;
-};
-
-union host_tbl_op_data4_u {
-	a_uint32_t val;
-	struct host_tbl_op_data4 bf;
-};
-
-/*[register] HOST_TBL_OP_DATA5*/
-#define HOST_TBL_OP_DATA5
-#if defined(APPE)
-#define HOST_TBL_OP_DATA5_ADDRESS 0x74c
-#else
-#define HOST_TBL_OP_DATA5_ADDRESS 0x4d4
-#endif
-#define HOST_TBL_OP_DATA5_NUM     1
-#define HOST_TBL_OP_DATA5_INC     0x4
-#define HOST_TBL_OP_DATA5_TYPE    REG_TYPE_RW
-#define HOST_TBL_OP_DATA5_DEFAULT 0x0
-	/*[field] DATA*/
-	#define HOST_TBL_OP_DATA5_DATA
-	#define HOST_TBL_OP_DATA5_DATA_OFFSET  0
-	#define HOST_TBL_OP_DATA5_DATA_LEN     32
-	#define HOST_TBL_OP_DATA5_DATA_DEFAULT 0x0
-
-struct host_tbl_op_data5 {
-	a_uint32_t  data:32;
-};
-
-union host_tbl_op_data5_u {
-	a_uint32_t val;
-	struct host_tbl_op_data5 bf;
-};
-
-/*[register] HOST_TBL_OP_DATA6*/
-#define HOST_TBL_OP_DATA6
-#if defined(APPE)
-#define HOST_TBL_OP_DATA6_ADDRESS 0x750
-#else
-#define HOST_TBL_OP_DATA6_ADDRESS 0x4d8
-#endif
-#define HOST_TBL_OP_DATA6_NUM     1
-#define HOST_TBL_OP_DATA6_INC     0x4
-#define HOST_TBL_OP_DATA6_TYPE    REG_TYPE_RW
-#define HOST_TBL_OP_DATA6_DEFAULT 0x0
-	/*[field] DATA*/
-	#define HOST_TBL_OP_DATA6_DATA
-	#define HOST_TBL_OP_DATA6_DATA_OFFSET  0
-	#define HOST_TBL_OP_DATA6_DATA_LEN     32
-	#define HOST_TBL_OP_DATA6_DATA_DEFAULT 0x0
-
-struct host_tbl_op_data6 {
-	a_uint32_t  data:32;
-};
-
-union host_tbl_op_data6_u {
-	a_uint32_t val;
-	struct host_tbl_op_data6 bf;
-};
-
-/*[register] HOST_TBL_OP_DATA7*/
-#define HOST_TBL_OP_DATA7
-#if defined(APPE)
-#define HOST_TBL_OP_DATA7_ADDRESS 0x754
-#else
-#define HOST_TBL_OP_DATA7_ADDRESS 0x4dc
-#endif
-#define HOST_TBL_OP_DATA7_NUM     1
-#define HOST_TBL_OP_DATA7_INC     0x4
-#define HOST_TBL_OP_DATA7_TYPE    REG_TYPE_RW
-#define HOST_TBL_OP_DATA7_DEFAULT 0x0
-	/*[field] DATA*/
-	#define HOST_TBL_OP_DATA7_DATA
-	#define HOST_TBL_OP_DATA7_DATA_OFFSET  0
-	#define HOST_TBL_OP_DATA7_DATA_LEN     32
-	#define HOST_TBL_OP_DATA7_DATA_DEFAULT 0x0
-
-struct host_tbl_op_data7 {
-	a_uint32_t  data:32;
-};
-
-union host_tbl_op_data7_u {
-	a_uint32_t val;
-	struct host_tbl_op_data7 bf;
-};
-
-/*[register] HOST_TBL_OP_DATA8*/
-#define HOST_TBL_OP_DATA8
-#if defined(APPE)
-#define HOST_TBL_OP_DATA8_ADDRESS 0x758
-#else
-#define HOST_TBL_OP_DATA8_ADDRESS 0x4e0
-#endif
-#define HOST_TBL_OP_DATA8_NUM     1
-#define HOST_TBL_OP_DATA8_INC     0x4
-#define HOST_TBL_OP_DATA8_TYPE    REG_TYPE_RW
-#define HOST_TBL_OP_DATA8_DEFAULT 0x0
-	/*[field] DATA*/
-	#define HOST_TBL_OP_DATA8_DATA
-	#define HOST_TBL_OP_DATA8_DATA_OFFSET  0
-	#define HOST_TBL_OP_DATA8_DATA_LEN     32
-	#define HOST_TBL_OP_DATA8_DATA_DEFAULT 0x0
-
-struct host_tbl_op_data8 {
-	a_uint32_t  data:32;
-};
-
-union host_tbl_op_data8_u {
-	a_uint32_t val;
-	struct host_tbl_op_data8 bf;
-};
-
-/*[register] HOST_TBL_OP_DATA9*/
-#define HOST_TBL_OP_DATA9
-#if defined(APPE)
-#define HOST_TBL_OP_DATA9_ADDRESS 0x75c
-#else
-#define HOST_TBL_OP_DATA9_ADDRESS 0x4e4
-#endif
-#define HOST_TBL_OP_DATA9_NUM     1
-#define HOST_TBL_OP_DATA9_INC     0x4
-#define HOST_TBL_OP_DATA9_TYPE    REG_TYPE_RW
-#define HOST_TBL_OP_DATA9_DEFAULT 0x0
-	/*[field] DATA*/
-	#define HOST_TBL_OP_DATA9_DATA
-	#define HOST_TBL_OP_DATA9_DATA_OFFSET  0
-	#define HOST_TBL_OP_DATA9_DATA_LEN     32
-	#define HOST_TBL_OP_DATA9_DATA_DEFAULT 0x0
-
-struct host_tbl_op_data9 {
-	a_uint32_t  data:32;
-};
-
-union host_tbl_op_data9_u {
-	a_uint32_t val;
-	struct host_tbl_op_data9 bf;
+	struct host_tbl_op_data bf;
 };
 
 /*[register] HOST_TBL_OP_RSLT*/
@@ -1055,264 +823,30 @@ union host_tbl_rd_op_u {
 	struct host_tbl_rd_op bf;
 };
 
-/*[register] HOST_TBL_RD_OP_DATA0*/
-#define HOST_TBL_RD_OP_DATA0
+/*[register] HOST_TBL_RD_OP_DATA*/
+#define HOST_TBL_RD_OP_DATA
 #if defined(APPE)
-#define HOST_TBL_RD_OP_DATA0_ADDRESS 0x798
+#define HOST_TBL_RD_OP_DATA_ADDRESS 0x798
 #else
-#define HOST_TBL_RD_OP_DATA0_ADDRESS 0x4f0
+#define HOST_TBL_RD_OP_DATA_ADDRESS 0x4f0
 #endif
-#define HOST_TBL_RD_OP_DATA0_NUM     1
-#define HOST_TBL_RD_OP_DATA0_INC     0x4
-#define HOST_TBL_RD_OP_DATA0_TYPE    REG_TYPE_RW
-#define HOST_TBL_RD_OP_DATA0_DEFAULT 0x0
+#define HOST_TBL_RD_OP_DATA_NUM     10
+#define HOST_TBL_RD_OP_DATA_INC     0x4
+#define HOST_TBL_RD_OP_DATA_TYPE    REG_TYPE_RW
+#define HOST_TBL_RD_OP_DATA_DEFAULT 0x0
 	/*[field] DATA*/
-	#define HOST_TBL_RD_OP_DATA0_DATA
-	#define HOST_TBL_RD_OP_DATA0_DATA_OFFSET  0
-	#define HOST_TBL_RD_OP_DATA0_DATA_LEN     32
-	#define HOST_TBL_RD_OP_DATA0_DATA_DEFAULT 0x0
+	#define HOST_TBL_RD_OP_DATA_DATA
+	#define HOST_TBL_RD_OP_DATA_DATA_OFFSET  0
+	#define HOST_TBL_RD_OP_DATA_DATA_LEN     32
+	#define HOST_TBL_RD_OP_DATA_DATA_DEFAULT 0x0
 
-struct host_tbl_rd_op_data0 {
+struct host_tbl_rd_op_data {
 	a_uint32_t  data:32;
 };
 
-union host_tbl_rd_op_data0_u {
+union host_tbl_rd_op_data_u {
 	a_uint32_t val;
-	struct host_tbl_rd_op_data0 bf;
-};
-
-/*[register] HOST_TBL_RD_OP_DATA1*/
-#define HOST_TBL_RD_OP_DATA1
-#if defined(APPE)
-#define HOST_TBL_RD_OP_DATA1_ADDRESS 0x79c
-#else
-#define HOST_TBL_RD_OP_DATA1_ADDRESS 0x4f4
-#endif
-#define HOST_TBL_RD_OP_DATA1_NUM     1
-#define HOST_TBL_RD_OP_DATA1_INC     0x4
-#define HOST_TBL_RD_OP_DATA1_TYPE    REG_TYPE_RW
-#define HOST_TBL_RD_OP_DATA1_DEFAULT 0x0
-	/*[field] DATA*/
-	#define HOST_TBL_RD_OP_DATA1_DATA
-	#define HOST_TBL_RD_OP_DATA1_DATA_OFFSET  0
-	#define HOST_TBL_RD_OP_DATA1_DATA_LEN     32
-	#define HOST_TBL_RD_OP_DATA1_DATA_DEFAULT 0x0
-
-struct host_tbl_rd_op_data1 {
-	a_uint32_t  data:32;
-};
-
-union host_tbl_rd_op_data1_u {
-	a_uint32_t val;
-	struct host_tbl_rd_op_data1 bf;
-};
-
-/*[register] HOST_TBL_RD_OP_DATA2*/
-#define HOST_TBL_RD_OP_DATA2
-#if defined(APPE)
-#define HOST_TBL_RD_OP_DATA2_ADDRESS 0x7a0
-#else
-#define HOST_TBL_RD_OP_DATA2_ADDRESS 0x4f8
-#endif
-#define HOST_TBL_RD_OP_DATA2_NUM     1
-#define HOST_TBL_RD_OP_DATA2_INC     0x4
-#define HOST_TBL_RD_OP_DATA2_TYPE    REG_TYPE_RW
-#define HOST_TBL_RD_OP_DATA2_DEFAULT 0x0
-	/*[field] DATA*/
-	#define HOST_TBL_RD_OP_DATA2_DATA
-	#define HOST_TBL_RD_OP_DATA2_DATA_OFFSET  0
-	#define HOST_TBL_RD_OP_DATA2_DATA_LEN     32
-	#define HOST_TBL_RD_OP_DATA2_DATA_DEFAULT 0x0
-
-struct host_tbl_rd_op_data2 {
-	a_uint32_t  data:32;
-};
-
-union host_tbl_rd_op_data2_u {
-	a_uint32_t val;
-	struct host_tbl_rd_op_data2 bf;
-};
-
-/*[register] HOST_TBL_RD_OP_DATA3*/
-#define HOST_TBL_RD_OP_DATA3
-#if defined(APPE)
-#define HOST_TBL_RD_OP_DATA3_ADDRESS 0x7a4
-#else
-#define HOST_TBL_RD_OP_DATA3_ADDRESS 0x4fc
-#endif
-#define HOST_TBL_RD_OP_DATA3_NUM     1
-#define HOST_TBL_RD_OP_DATA3_INC     0x4
-#define HOST_TBL_RD_OP_DATA3_TYPE    REG_TYPE_RW
-#define HOST_TBL_RD_OP_DATA3_DEFAULT 0x0
-	/*[field] DATA*/
-	#define HOST_TBL_RD_OP_DATA3_DATA
-	#define HOST_TBL_RD_OP_DATA3_DATA_OFFSET  0
-	#define HOST_TBL_RD_OP_DATA3_DATA_LEN     32
-	#define HOST_TBL_RD_OP_DATA3_DATA_DEFAULT 0x0
-
-struct host_tbl_rd_op_data3 {
-	a_uint32_t  data:32;
-};
-
-union host_tbl_rd_op_data3_u {
-	a_uint32_t val;
-	struct host_tbl_rd_op_data3 bf;
-};
-
-/*[register] HOST_TBL_RD_OP_DATA4*/
-#define HOST_TBL_RD_OP_DATA4
-#if defined(APPE)
-#define HOST_TBL_RD_OP_DATA4_ADDRESS 0x7a8
-#else
-#define HOST_TBL_RD_OP_DATA4_ADDRESS 0x500
-#endif
-#define HOST_TBL_RD_OP_DATA4_NUM     1
-#define HOST_TBL_RD_OP_DATA4_INC     0x4
-#define HOST_TBL_RD_OP_DATA4_TYPE    REG_TYPE_RW
-#define HOST_TBL_RD_OP_DATA4_DEFAULT 0x0
-	/*[field] DATA*/
-	#define HOST_TBL_RD_OP_DATA4_DATA
-	#define HOST_TBL_RD_OP_DATA4_DATA_OFFSET  0
-	#define HOST_TBL_RD_OP_DATA4_DATA_LEN     32
-	#define HOST_TBL_RD_OP_DATA4_DATA_DEFAULT 0x0
-
-struct host_tbl_rd_op_data4 {
-	a_uint32_t  data:32;
-};
-
-union host_tbl_rd_op_data4_u {
-	a_uint32_t val;
-	struct host_tbl_rd_op_data4 bf;
-};
-
-/*[register] HOST_TBL_RD_OP_DATA5*/
-#define HOST_TBL_RD_OP_DATA5
-#if defined(APPE)
-#define HOST_TBL_RD_OP_DATA5_ADDRESS 0x7ac
-#else
-#define HOST_TBL_RD_OP_DATA5_ADDRESS 0x504
-#endif
-#define HOST_TBL_RD_OP_DATA5_NUM     1
-#define HOST_TBL_RD_OP_DATA5_INC     0x4
-#define HOST_TBL_RD_OP_DATA5_TYPE    REG_TYPE_RW
-#define HOST_TBL_RD_OP_DATA5_DEFAULT 0x0
-	/*[field] DATA*/
-	#define HOST_TBL_RD_OP_DATA5_DATA
-	#define HOST_TBL_RD_OP_DATA5_DATA_OFFSET  0
-	#define HOST_TBL_RD_OP_DATA5_DATA_LEN     32
-	#define HOST_TBL_RD_OP_DATA5_DATA_DEFAULT 0x0
-
-struct host_tbl_rd_op_data5 {
-	a_uint32_t  data:32;
-};
-
-union host_tbl_rd_op_data5_u {
-	a_uint32_t val;
-	struct host_tbl_rd_op_data5 bf;
-};
-
-/*[register] HOST_TBL_RD_OP_DATA6*/
-#define HOST_TBL_RD_OP_DATA6
-#if defined(APPE)
-#define HOST_TBL_RD_OP_DATA6_ADDRESS 0x7b0
-#else
-#define HOST_TBL_RD_OP_DATA6_ADDRESS 0x508
-#endif
-#define HOST_TBL_RD_OP_DATA6_NUM     1
-#define HOST_TBL_RD_OP_DATA6_INC     0x4
-#define HOST_TBL_RD_OP_DATA6_TYPE    REG_TYPE_RW
-#define HOST_TBL_RD_OP_DATA6_DEFAULT 0x0
-	/*[field] DATA*/
-	#define HOST_TBL_RD_OP_DATA6_DATA
-	#define HOST_TBL_RD_OP_DATA6_DATA_OFFSET  0
-	#define HOST_TBL_RD_OP_DATA6_DATA_LEN     32
-	#define HOST_TBL_RD_OP_DATA6_DATA_DEFAULT 0x0
-
-struct host_tbl_rd_op_data6 {
-	a_uint32_t  data:32;
-};
-
-union host_tbl_rd_op_data6_u {
-	a_uint32_t val;
-	struct host_tbl_rd_op_data6 bf;
-};
-
-/*[register] HOST_TBL_RD_OP_DATA7*/
-#define HOST_TBL_RD_OP_DATA7
-#if defined(APPE)
-#define HOST_TBL_RD_OP_DATA7_ADDRESS 0x7b4
-#else
-#define HOST_TBL_RD_OP_DATA7_ADDRESS 0x50c
-#endif
-#define HOST_TBL_RD_OP_DATA7_NUM     1
-#define HOST_TBL_RD_OP_DATA7_INC     0x4
-#define HOST_TBL_RD_OP_DATA7_TYPE    REG_TYPE_RW
-#define HOST_TBL_RD_OP_DATA7_DEFAULT 0x0
-	/*[field] DATA*/
-	#define HOST_TBL_RD_OP_DATA7_DATA
-	#define HOST_TBL_RD_OP_DATA7_DATA_OFFSET  0
-	#define HOST_TBL_RD_OP_DATA7_DATA_LEN     32
-	#define HOST_TBL_RD_OP_DATA7_DATA_DEFAULT 0x0
-
-struct host_tbl_rd_op_data7 {
-	a_uint32_t  data:32;
-};
-
-union host_tbl_rd_op_data7_u {
-	a_uint32_t val;
-	struct host_tbl_rd_op_data7 bf;
-};
-
-/*[register] HOST_TBL_RD_OP_DATA8*/
-#define HOST_TBL_RD_OP_DATA8
-#if defined(APPE)
-#define HOST_TBL_RD_OP_DATA8_ADDRESS 0x7b8
-#else
-#define HOST_TBL_RD_OP_DATA8_ADDRESS 0x510
-#endif
-#define HOST_TBL_RD_OP_DATA8_NUM     1
-#define HOST_TBL_RD_OP_DATA8_INC     0x4
-#define HOST_TBL_RD_OP_DATA8_TYPE    REG_TYPE_RW
-#define HOST_TBL_RD_OP_DATA8_DEFAULT 0x0
-	/*[field] DATA*/
-	#define HOST_TBL_RD_OP_DATA8_DATA
-	#define HOST_TBL_RD_OP_DATA8_DATA_OFFSET  0
-	#define HOST_TBL_RD_OP_DATA8_DATA_LEN     32
-	#define HOST_TBL_RD_OP_DATA8_DATA_DEFAULT 0x0
-
-struct host_tbl_rd_op_data8 {
-	a_uint32_t  data:32;
-};
-
-union host_tbl_rd_op_data8_u {
-	a_uint32_t val;
-	struct host_tbl_rd_op_data8 bf;
-};
-
-/*[register] HOST_TBL_RD_OP_DATA9*/
-#define HOST_TBL_RD_OP_DATA9
-#if defined(APPE)
-#define HOST_TBL_RD_OP_DATA9_ADDRESS 0x7bc
-#else
-#define HOST_TBL_RD_OP_DATA9_ADDRESS 0x514
-#endif
-#define HOST_TBL_RD_OP_DATA9_NUM     1
-#define HOST_TBL_RD_OP_DATA9_INC     0x4
-#define HOST_TBL_RD_OP_DATA9_TYPE    REG_TYPE_RW
-#define HOST_TBL_RD_OP_DATA9_DEFAULT 0x0
-	/*[field] DATA*/
-	#define HOST_TBL_RD_OP_DATA9_DATA
-	#define HOST_TBL_RD_OP_DATA9_DATA_OFFSET  0
-	#define HOST_TBL_RD_OP_DATA9_DATA_LEN     32
-	#define HOST_TBL_RD_OP_DATA9_DATA_DEFAULT 0x0
-
-struct host_tbl_rd_op_data9 {
-	a_uint32_t  data:32;
-};
-
-union host_tbl_rd_op_data9_u {
-	a_uint32_t val;
-	struct host_tbl_rd_op_data9 bf;
+	struct host_tbl_rd_op_data bf;
 };
 
 /*[register] HOST_TBL_RD_OP_RSLT*/
@@ -1361,263 +895,29 @@ union host_tbl_rd_op_rslt_u {
 };
 
 /*[register] HOST_TBL_RD_RSLT_DATA0*/
-#define HOST_TBL_RD_RSLT_DATA0
+#define HOST_TBL_RD_RSLT_DATA
 #if defined(APPE)
-#define HOST_TBL_RD_RSLT_DATA0_ADDRESS 0x7e4
+#define HOST_TBL_RD_RSLT_DATA_ADDRESS 0x7e4
 #else
-#define HOST_TBL_RD_RSLT_DATA0_ADDRESS 0x51c
+#define HOST_TBL_RD_RSLT_DATA_ADDRESS 0x51c
 #endif
-#define HOST_TBL_RD_RSLT_DATA0_NUM     1
-#define HOST_TBL_RD_RSLT_DATA0_INC     0x4
-#define HOST_TBL_RD_RSLT_DATA0_TYPE    REG_TYPE_RO
-#define HOST_TBL_RD_RSLT_DATA0_DEFAULT 0x0
+#define HOST_TBL_RD_RSLT_DATA_NUM     10
+#define HOST_TBL_RD_RSLT_DATA_INC     0x4
+#define HOST_TBL_RD_RSLT_DATA_TYPE    REG_TYPE_RO
+#define HOST_TBL_RD_RSLT_DATA_DEFAULT 0x0
 	/*[field] DATA*/
-	#define HOST_TBL_RD_RSLT_DATA0_DATA
-	#define HOST_TBL_RD_RSLT_DATA0_DATA_OFFSET  0
-	#define HOST_TBL_RD_RSLT_DATA0_DATA_LEN     32
-	#define HOST_TBL_RD_RSLT_DATA0_DATA_DEFAULT 0x0
+	#define HOST_TBL_RD_RSLT_DATA_DATA
+	#define HOST_TBL_RD_RSLT_DATA_DATA_OFFSET  0
+	#define HOST_TBL_RD_RSLT_DATA_DATA_LEN     32
+	#define HOST_TBL_RD_RSLT_DATA_DATA_DEFAULT 0x0
 
-struct host_tbl_rd_rslt_data0 {
+struct host_tbl_rd_rslt_data {
 	a_uint32_t  data:32;
 };
 
-union host_tbl_rd_rslt_data0_u {
+union host_tbl_rd_rslt_data_u {
 	a_uint32_t val;
-	struct host_tbl_rd_rslt_data0 bf;
-};
-
-/*[register] HOST_TBL_RD_RSLT_DATA1*/
-#define HOST_TBL_RD_RSLT_DATA1
-#if defined(APPE)
-#define HOST_TBL_RD_RSLT_DATA1_ADDRESS 0x7e8
-#else
-#define HOST_TBL_RD_RSLT_DATA1_ADDRESS 0x520
-#endif
-#define HOST_TBL_RD_RSLT_DATA1_NUM     1
-#define HOST_TBL_RD_RSLT_DATA1_INC     0x4
-#define HOST_TBL_RD_RSLT_DATA1_TYPE    REG_TYPE_RO
-#define HOST_TBL_RD_RSLT_DATA1_DEFAULT 0x0
-	/*[field] DATA*/
-	#define HOST_TBL_RD_RSLT_DATA1_DATA
-	#define HOST_TBL_RD_RSLT_DATA1_DATA_OFFSET  0
-	#define HOST_TBL_RD_RSLT_DATA1_DATA_LEN     32
-	#define HOST_TBL_RD_RSLT_DATA1_DATA_DEFAULT 0x0
-
-struct host_tbl_rd_rslt_data1 {
-	a_uint32_t  data:32;
-};
-
-union host_tbl_rd_rslt_data1_u {
-	a_uint32_t val;
-	struct host_tbl_rd_rslt_data1 bf;
-};
-
-/*[register] HOST_TBL_RD_RSLT_DATA2*/
-#define HOST_TBL_RD_RSLT_DATA2
-#if defined(APPE)
-#define HOST_TBL_RD_RSLT_DATA2_ADDRESS 0x7ec
-#else
-#define HOST_TBL_RD_RSLT_DATA2_ADDRESS 0x524
-#endif
-#define HOST_TBL_RD_RSLT_DATA2_NUM     1
-#define HOST_TBL_RD_RSLT_DATA2_INC     0x4
-#define HOST_TBL_RD_RSLT_DATA2_TYPE    REG_TYPE_RO
-#define HOST_TBL_RD_RSLT_DATA2_DEFAULT 0x0
-	/*[field] DATA*/
-	#define HOST_TBL_RD_RSLT_DATA2_DATA
-	#define HOST_TBL_RD_RSLT_DATA2_DATA_OFFSET  0
-	#define HOST_TBL_RD_RSLT_DATA2_DATA_LEN     32
-	#define HOST_TBL_RD_RSLT_DATA2_DATA_DEFAULT 0x0
-
-struct host_tbl_rd_rslt_data2 {
-	a_uint32_t  data:32;
-};
-
-union host_tbl_rd_rslt_data2_u {
-	a_uint32_t val;
-	struct host_tbl_rd_rslt_data2 bf;
-};
-
-/*[register] HOST_TBL_RD_RSLT_DATA3*/
-#define HOST_TBL_RD_RSLT_DATA3
-#if defined(APPE)
-#define HOST_TBL_RD_RSLT_DATA3_ADDRESS 0x7f0
-#else
-#define HOST_TBL_RD_RSLT_DATA3_ADDRESS 0x528
-#endif
-#define HOST_TBL_RD_RSLT_DATA3_NUM     1
-#define HOST_TBL_RD_RSLT_DATA3_INC     0x4
-#define HOST_TBL_RD_RSLT_DATA3_TYPE    REG_TYPE_RO
-#define HOST_TBL_RD_RSLT_DATA3_DEFAULT 0x0
-	/*[field] DATA*/
-	#define HOST_TBL_RD_RSLT_DATA3_DATA
-	#define HOST_TBL_RD_RSLT_DATA3_DATA_OFFSET  0
-	#define HOST_TBL_RD_RSLT_DATA3_DATA_LEN     32
-	#define HOST_TBL_RD_RSLT_DATA3_DATA_DEFAULT 0x0
-
-struct host_tbl_rd_rslt_data3 {
-	a_uint32_t  data:32;
-};
-
-union host_tbl_rd_rslt_data3_u {
-	a_uint32_t val;
-	struct host_tbl_rd_rslt_data3 bf;
-};
-
-/*[register] HOST_TBL_RD_RSLT_DATA4*/
-#define HOST_TBL_RD_RSLT_DATA4
-#if defined(APPE)
-#define HOST_TBL_RD_RSLT_DATA4_ADDRESS 0x7f4
-#else
-#define HOST_TBL_RD_RSLT_DATA4_ADDRESS 0x52c
-#endif
-#define HOST_TBL_RD_RSLT_DATA4_NUM     1
-#define HOST_TBL_RD_RSLT_DATA4_INC     0x4
-#define HOST_TBL_RD_RSLT_DATA4_TYPE    REG_TYPE_RO
-#define HOST_TBL_RD_RSLT_DATA4_DEFAULT 0x0
-	/*[field] DATA*/
-	#define HOST_TBL_RD_RSLT_DATA4_DATA
-	#define HOST_TBL_RD_RSLT_DATA4_DATA_OFFSET  0
-	#define HOST_TBL_RD_RSLT_DATA4_DATA_LEN     32
-	#define HOST_TBL_RD_RSLT_DATA4_DATA_DEFAULT 0x0
-
-struct host_tbl_rd_rslt_data4 {
-	a_uint32_t  data:32;
-};
-
-union host_tbl_rd_rslt_data4_u {
-	a_uint32_t val;
-	struct host_tbl_rd_rslt_data4 bf;
-};
-
-/*[register] HOST_TBL_RD_RSLT_DATA5*/
-#define HOST_TBL_RD_RSLT_DATA5
-#if defined(APPE)
-#define HOST_TBL_RD_RSLT_DATA5_ADDRESS 0x7f8
-#else
-#define HOST_TBL_RD_RSLT_DATA5_ADDRESS 0x530
-#endif
-#define HOST_TBL_RD_RSLT_DATA5_NUM     1
-#define HOST_TBL_RD_RSLT_DATA5_INC     0x4
-#define HOST_TBL_RD_RSLT_DATA5_TYPE    REG_TYPE_RO
-#define HOST_TBL_RD_RSLT_DATA5_DEFAULT 0x0
-	/*[field] DATA*/
-	#define HOST_TBL_RD_RSLT_DATA5_DATA
-	#define HOST_TBL_RD_RSLT_DATA5_DATA_OFFSET  0
-	#define HOST_TBL_RD_RSLT_DATA5_DATA_LEN     32
-	#define HOST_TBL_RD_RSLT_DATA5_DATA_DEFAULT 0x0
-
-struct host_tbl_rd_rslt_data5 {
-	a_uint32_t  data:32;
-};
-
-union host_tbl_rd_rslt_data5_u {
-	a_uint32_t val;
-	struct host_tbl_rd_rslt_data5 bf;
-};
-
-/*[register] HOST_TBL_RD_RSLT_DATA6*/
-#define HOST_TBL_RD_RSLT_DATA6
-#if defined(APPE)
-#define HOST_TBL_RD_RSLT_DATA6_ADDRESS 0x7fc
-#else
-#define HOST_TBL_RD_RSLT_DATA6_ADDRESS 0x534
-#endif
-#define HOST_TBL_RD_RSLT_DATA6_NUM     1
-#define HOST_TBL_RD_RSLT_DATA6_INC     0x4
-#define HOST_TBL_RD_RSLT_DATA6_TYPE    REG_TYPE_RO
-#define HOST_TBL_RD_RSLT_DATA6_DEFAULT 0x0
-	/*[field] DATA*/
-	#define HOST_TBL_RD_RSLT_DATA6_DATA
-	#define HOST_TBL_RD_RSLT_DATA6_DATA_OFFSET  0
-	#define HOST_TBL_RD_RSLT_DATA6_DATA_LEN     32
-	#define HOST_TBL_RD_RSLT_DATA6_DATA_DEFAULT 0x0
-
-struct host_tbl_rd_rslt_data6 {
-	a_uint32_t  data:32;
-};
-
-union host_tbl_rd_rslt_data6_u {
-	a_uint32_t val;
-	struct host_tbl_rd_rslt_data6 bf;
-};
-
-/*[register] HOST_TBL_RD_RSLT_DATA7*/
-#define HOST_TBL_RD_RSLT_DATA7
-#if defined(APPE)
-#define HOST_TBL_RD_RSLT_DATA7_ADDRESS 0x800
-#else
-#define HOST_TBL_RD_RSLT_DATA7_ADDRESS 0x538
-#endif
-#define HOST_TBL_RD_RSLT_DATA7_NUM     1
-#define HOST_TBL_RD_RSLT_DATA7_INC     0x4
-#define HOST_TBL_RD_RSLT_DATA7_TYPE    REG_TYPE_RO
-#define HOST_TBL_RD_RSLT_DATA7_DEFAULT 0x0
-	/*[field] DATA*/
-	#define HOST_TBL_RD_RSLT_DATA7_DATA
-	#define HOST_TBL_RD_RSLT_DATA7_DATA_OFFSET  0
-	#define HOST_TBL_RD_RSLT_DATA7_DATA_LEN     32
-	#define HOST_TBL_RD_RSLT_DATA7_DATA_DEFAULT 0x0
-
-struct host_tbl_rd_rslt_data7 {
-	a_uint32_t  data:32;
-};
-
-union host_tbl_rd_rslt_data7_u {
-	a_uint32_t val;
-	struct host_tbl_rd_rslt_data7 bf;
-};
-
-/*[register] HOST_TBL_RD_RSLT_DATA8*/
-#define HOST_TBL_RD_RSLT_DATA8
-#if defined(APPE)
-#define HOST_TBL_RD_RSLT_DATA8_ADDRESS 0x804
-#else
-#define HOST_TBL_RD_RSLT_DATA8_ADDRESS 0x53c
-#endif
-#define HOST_TBL_RD_RSLT_DATA8_NUM     1
-#define HOST_TBL_RD_RSLT_DATA8_INC     0x4
-#define HOST_TBL_RD_RSLT_DATA8_TYPE    REG_TYPE_RO
-#define HOST_TBL_RD_RSLT_DATA8_DEFAULT 0x0
-	/*[field] DATA*/
-	#define HOST_TBL_RD_RSLT_DATA8_DATA
-	#define HOST_TBL_RD_RSLT_DATA8_DATA_OFFSET  0
-	#define HOST_TBL_RD_RSLT_DATA8_DATA_LEN     32
-	#define HOST_TBL_RD_RSLT_DATA8_DATA_DEFAULT 0x0
-
-struct host_tbl_rd_rslt_data8 {
-	a_uint32_t  data:32;
-};
-
-union host_tbl_rd_rslt_data8_u {
-	a_uint32_t val;
-	struct host_tbl_rd_rslt_data8 bf;
-};
-
-/*[register] HOST_TBL_RD_RSLT_DATA9*/
-#define HOST_TBL_RD_RSLT_DATA9
-#if defined(APPE)
-#define HOST_TBL_RD_RSLT_DATA9_ADDRESS 0x808
-#else
-#define HOST_TBL_RD_RSLT_DATA9_ADDRESS 0x540
-#endif
-#define HOST_TBL_RD_RSLT_DATA9_NUM     1
-#define HOST_TBL_RD_RSLT_DATA9_INC     0x4
-#define HOST_TBL_RD_RSLT_DATA9_TYPE    REG_TYPE_RO
-#define HOST_TBL_RD_RSLT_DATA9_DEFAULT 0x0
-	/*[field] DATA*/
-	#define HOST_TBL_RD_RSLT_DATA9_DATA
-	#define HOST_TBL_RD_RSLT_DATA9_DATA_OFFSET  0
-	#define HOST_TBL_RD_RSLT_DATA9_DATA_LEN     32
-	#define HOST_TBL_RD_RSLT_DATA9_DATA_DEFAULT 0x0
-
-struct host_tbl_rd_rslt_data9 {
-	a_uint32_t  data:32;
-};
-
-union host_tbl_rd_rslt_data9_u {
-	a_uint32_t val;
-	struct host_tbl_rd_rslt_data9 bf;
+	struct host_tbl_rd_rslt_data bf;
 };
 
 /*[register] L3_DBG_CMD*/
@@ -2329,21 +1629,37 @@ union in_l3_if_tbl_u {
 	#define HOST_IPV6_MCAST_TBL_GIPV6_ADDR_LEN     128
 	#define HOST_IPV6_MCAST_TBL_GIPV6_ADDR_DEFAULT 0x0
 
-struct host_tbl {
+struct host_ipv6_mcast_tbl {
 	a_uint32_t  valid:1;
 	a_uint32_t  key_type:2;
 	a_uint32_t  fwd_cmd:2;
 	a_uint32_t  syn_toggle:1;
 	a_uint32_t  dst_info:14;
 	a_uint32_t  lan_wan:1;
-	a_uint32_t  _reserved0:11;
-	a_uint32_t  ip_addr:32;
-	a_uint32_t  _reserved1:32;
+#if defined(APPE)
+	a_uint32_t  vsi:6;
+	a_uint32_t  _reserved0_0:5;
+#else
+	a_uint32_t  vsi:5;
+	a_uint32_t  _reserved0_0:6;
+#endif
+	a_uint32_t  _reserved0_1:12;
+	a_uint32_t  sipv6_addr_0:20;
+	a_uint32_t  sipv6_addr_1:32;
+	a_uint32_t  sipv6_addr_2:32;
+	a_uint32_t  sipv6_addr_3:32;
+	a_uint32_t  sipv6_addr_4:12;
+	a_uint32_t  gipv6_addr_0:20;
+	a_uint32_t  gipv6_addr_1:32;
+	a_uint32_t  gipv6_addr_2:32;
+	a_uint32_t  gipv6_addr_3:32;
+	a_uint32_t  gipv6_addr_4:12;
+	a_uint32_t  _reserved1:20;
 };
 
-union host_tbl_u {
-	a_uint32_t val[3];
-	struct host_tbl bf;
+union host_ipv6_mcast_tbl_u {
+	a_uint32_t val[10];
+	struct host_ipv6_mcast_tbl bf;
 };
 
 /*[table] HOST_IPV4_MCAST_TBL*/
@@ -2411,25 +1727,39 @@ union host_tbl_u {
 	#define HOST_IPV4_MCAST_TBL_GIP_ADDR_LEN     32
 	#define HOST_IPV4_MCAST_TBL_GIP_ADDR_DEFAULT 0x0
 
-struct host_ipv6_tbl {
+struct host_ipv4_mcast_tbl {
 	a_uint32_t  valid:1;
 	a_uint32_t  key_type:2;
 	a_uint32_t  fwd_cmd:2;
 	a_uint32_t  syn_toggle:1;
 	a_uint32_t  dst_info:14;
 	a_uint32_t  lan_wan:1;
-	a_uint32_t  _reserved0:1;
-	a_uint32_t  ipv6_addr_0:10;
-	a_uint32_t  ipv6_addr_1:32;
-	a_uint32_t  ipv6_addr_2:32;
-	a_uint32_t  ipv6_addr_3:32;
-	a_uint32_t  ipv6_addr_4:22;
+#if defined(APPE)
+	a_uint32_t  vsi:6;
+	a_uint32_t  _reserved0_0:5;
+	a_uint32_t  _reserved0_1:32;
+	a_uint32_t  _reserved0_2:22;
+	a_uint32_t  sip_addr_0:10;
+	a_uint32_t  sip_addr_1:22;
+	a_uint32_t  gip_addr_0:10;
+	a_uint32_t  gip_addr_1:22;
 	a_uint32_t  _reserved1:10;
+#else
+	a_uint32_t  vsi:5;
+	a_uint32_t  _reserved0_0:6;
+	a_uint32_t  _reserved0_1:32;
+	a_uint32_t  _reserved0_2:21;
+	a_uint32_t  sip_addr_0:11;
+	a_uint32_t  sip_addr_1:21;
+	a_uint32_t  gip_addr_0:11;
+	a_uint32_t  gip_addr_1:21;
+	a_uint32_t  _reserved1:11;
+#endif
 };
 
-union host_ipv6_tbl_u {
+union host_ipv4_mcast_tbl_u {
 	a_uint32_t val[5];
-	struct host_ipv6_tbl bf;
+	struct host_ipv4_mcast_tbl bf;
 };
 
 /*[table] HOST_TBL*/
@@ -2475,39 +1805,21 @@ union host_ipv6_tbl_u {
 	#define HOST_TBL_IP_ADDR_LEN     32
 	#define HOST_TBL_IP_ADDR_DEFAULT 0x0
 
-struct host_ipv4_mcast_tbl {
+struct host_tbl {
 	a_uint32_t  valid:1;
 	a_uint32_t  key_type:2;
 	a_uint32_t  fwd_cmd:2;
 	a_uint32_t  syn_toggle:1;
 	a_uint32_t  dst_info:14;
 	a_uint32_t  lan_wan:1;
-#if defined(APPE)
-	a_uint32_t  vsi:6;
-	a_uint32_t  _reserved0_0:5;
-	a_uint32_t  _reserved0_1:32;
-	a_uint32_t  _reserved0_2:22;
-	a_uint32_t  sip_addr_0:10;
-	a_uint32_t  sip_addr_1:22;
-	a_uint32_t  gip_addr_0:10;
-	a_uint32_t  gip_addr_1:22;
-	a_uint32_t  _reserved1:10;
-#else
-	a_uint32_t  vsi:5;
-	a_uint32_t  _reserved0_0:6;
-	a_uint32_t  _reserved0_1:32;
-	a_uint32_t  _reserved0_2:21;
-	a_uint32_t  sip_addr_0:11;
-	a_uint32_t  sip_addr_1:21;
-	a_uint32_t  gip_addr_0:11;
-	a_uint32_t  gip_addr_1:21;
-	a_uint32_t  _reserved1:11;
-#endif
+	a_uint32_t  _reserved0:11;
+	a_uint32_t  ip_addr:32;
+	a_uint32_t  _reserved1:32;
 };
 
-union host_ipv4_mcast_tbl_u {
-	a_uint32_t val[5];
-	struct host_ipv4_mcast_tbl bf;
+union host_tbl_u {
+	a_uint32_t val[3];
+	struct host_tbl bf;
 };
 
 /*[table] HOST_IPV6_TBL*/
@@ -2553,37 +1865,25 @@ union host_ipv4_mcast_tbl_u {
 	#define HOST_IPV6_TBL_IPV6_ADDR_LEN     128
 	#define HOST_IPV6_TBL_IPV6_ADDR_DEFAULT 0x0
 
-struct host_ipv6_mcast_tbl {
+struct host_ipv6_tbl {
 	a_uint32_t  valid:1;
 	a_uint32_t  key_type:2;
 	a_uint32_t  fwd_cmd:2;
 	a_uint32_t  syn_toggle:1;
 	a_uint32_t  dst_info:14;
 	a_uint32_t  lan_wan:1;
-#if defined(APPE)
-	a_uint32_t  vsi:6;
-	a_uint32_t  _reserved0_0:5;
-#else
-	a_uint32_t  vsi:5;
-	a_uint32_t  _reserved0_0:6;
-#endif
-	a_uint32_t  _reserved0_1:12;
-	a_uint32_t  sipv6_addr_0:20;
-	a_uint32_t  sipv6_addr_1:32;
-	a_uint32_t  sipv6_addr_2:32;
-	a_uint32_t  sipv6_addr_3:32;
-	a_uint32_t  sipv6_addr_4:12;
-	a_uint32_t  gipv6_addr_0:20;
-	a_uint32_t  gipv6_addr_1:32;
-	a_uint32_t  gipv6_addr_2:32;
-	a_uint32_t  gipv6_addr_3:32;
-	a_uint32_t  gipv6_addr_4:12;
-	a_uint32_t  _reserved1:20;
+	a_uint32_t  _reserved0:1;
+	a_uint32_t  ipv6_addr_0:10;
+	a_uint32_t  ipv6_addr_1:32;
+	a_uint32_t  ipv6_addr_2:32;
+	a_uint32_t  ipv6_addr_3:32;
+	a_uint32_t  ipv6_addr_4:22;
+	a_uint32_t  _reserved1:10;
 };
 
-union host_ipv6_mcast_tbl_u {
-	a_uint32_t val[10];
-	struct host_ipv6_mcast_tbl bf;
+union host_ipv6_tbl_u {
+	a_uint32_t val[5];
+	struct host_ipv6_tbl bf;
 };
 
 /*[table] IN_NEXTHOP_TBL*/

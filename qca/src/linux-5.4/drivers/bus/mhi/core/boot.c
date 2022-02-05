@@ -278,6 +278,21 @@ int mhi_download_rddm_image(struct mhi_controller *mhi_cntrl, bool in_panic)
 		{ NULL },
 	};
 
+	/*
+	 * Allocate RDDM table if specified, this table is for debugging purpose
+	 */
+	if (mhi_cntrl->disable_rddm_prealloc && mhi_cntrl->rddm_size) {
+		ret = mhi_alloc_bhie_table(mhi_cntrl, &mhi_cntrl->rddm_image,
+				     mhi_cntrl->rddm_size, false);
+		if (ret) {
+			dev_err(dev, "Failed to allocale RDDM table memory\n");
+			return ret;
+		}
+
+		/* setup the RX vector table */
+		mhi_rddm_prepare(mhi_cntrl, mhi_cntrl->rddm_image);
+	}
+
 	if (in_panic)
 		return __mhi_download_rddm_in_panic(mhi_cntrl);
 
@@ -481,8 +496,14 @@ void mhi_free_bhie_table(struct mhi_controller *mhi_cntrl,
 		if (is_fbc && i == (image_info->entries - 2))
 			continue;
 
-		mhi_fw_free_coherent(mhi_cntrl, mhi_buf->len, mhi_buf->buf,
-				  mhi_buf->dma_addr);
+		if (!is_fbc && mhi_cntrl->disable_rddm_prealloc)
+			mhi_free_coherent(mhi_cntrl, mhi_buf->len,
+					mhi_buf->buf,
+					mhi_buf->dma_addr);
+		else
+			mhi_fw_free_coherent(mhi_cntrl, mhi_buf->len,
+					mhi_buf->buf,
+					mhi_buf->dma_addr);
 	}
 
 	kfree(image_info->mhi_buf);
@@ -537,7 +558,7 @@ int mhi_alloc_bhie_table(struct mhi_controller *mhi_cntrl,
 			 size_t alloc_size, bool is_fbc)
 {
 	size_t seg_size = mhi_cntrl->seg_len;
-	int segments = DIV_ROUND_UP(alloc_size, seg_size) + 1;
+	int segments = 0;
 	int i;
 	struct image_info *img_info;
 	struct mhi_buf *mhi_buf;
@@ -545,6 +566,10 @@ int mhi_alloc_bhie_table(struct mhi_controller *mhi_cntrl,
 	/* Allocate one extra entry for Dynamic Pageable in FBC */
 	if (is_fbc)
 		segments++;
+	else if (mhi_cntrl->disable_rddm_prealloc)
+		seg_size = mhi_cntrl->rddm_seg_len;
+
+	segments += DIV_ROUND_UP(alloc_size, seg_size) + 1;
 
 	img_info = kzalloc(sizeof(*img_info), GFP_KERNEL);
 	if (!img_info)
@@ -579,9 +604,17 @@ int mhi_alloc_bhie_table(struct mhi_controller *mhi_cntrl,
 			if (!mhi_buf->buf)
 				goto error_alloc_segment;
 		} else {
-			mhi_buf->buf = mhi_fw_alloc_coherent(mhi_cntrl, vec_size,
-							     &mhi_buf->dma_addr,
-							     GFP_KERNEL);
+			if (!is_fbc && mhi_cntrl->disable_rddm_prealloc)
+				mhi_buf->buf = mhi_alloc_coherent(mhi_cntrl,
+							vec_size,
+							&mhi_buf->dma_addr,
+							GFP_KERNEL);
+			else
+				mhi_buf->buf = mhi_fw_alloc_coherent(mhi_cntrl,
+							vec_size,
+							&mhi_buf->dma_addr,
+							GFP_KERNEL);
+
 			if (!mhi_buf->buf)
 				goto error_alloc_segment;
 		}
@@ -632,7 +665,6 @@ static void mhi_firmware_copy(struct mhi_controller *mhi_cntrl,
 void mhi_fw_load_handler(struct mhi_controller *mhi_cntrl)
 {
 	const struct firmware *firmware = NULL;
-	struct image_info *image_info;
 	struct device *dev = &mhi_cntrl->mhi_dev->dev;
 	const char *fw_name;
 	void *buf;
@@ -640,18 +672,6 @@ void mhi_fw_load_handler(struct mhi_controller *mhi_cntrl)
 	size_t size;
 	int i, ret;
 	u32 instance;
-	rwlock_t *pm_lock = &mhi_cntrl->pm_lock;
-	u32 val;
-	struct {
-		char *name;
-		u32 offset;
-	} error_reg[] = {
-		{ "ERROR_CODE", BHI_ERRCODE },
-		{ "ERROR_DBG1", BHI_ERRDBG1 },
-		{ "ERROR_DBG2", BHI_ERRDBG2 },
-		{ "ERROR_DBG3", BHI_ERRDBG3 },
-		{ NULL },
-	};
 
 	if (MHI_PM_IN_ERROR_STATE(mhi_cntrl->pm_state)) {
 		dev_err(dev, "Device MHI is not in valid state\n");
@@ -673,9 +693,9 @@ void mhi_fw_load_handler(struct mhi_controller *mhi_cntrl)
 		}
 	}
 
-	/* If device is in pass through, do reset to ready state transition */
-	if (mhi_cntrl->ee == MHI_EE_PTHRU)
-		goto fw_load_ee_pthru;
+	/* wait for ready on pass through or any other execution environment */
+	if (mhi_cntrl->ee != MHI_EE_EDL && mhi_cntrl->ee != MHI_EE_PBL)
+		goto fw_load_ready_state;
 
 	fw_name = (mhi_cntrl->ee == MHI_EE_EDL) ?
 		mhi_cntrl->edl_image : mhi_cntrl->fw_image;
@@ -717,9 +737,10 @@ void mhi_fw_load_handler(struct mhi_controller *mhi_cntrl)
 		goto error_fw_load;
 	}
 
-	if (mhi_cntrl->ee == MHI_EE_EDL) {
+	/* Wait for ready since EDL image was loaded */
+	if (fw_name == mhi_cntrl->edl_image) {
 		release_firmware(firmware);
-		return;
+		goto fw_load_ready_state;
 	}
 
 	if (!ret && mhi_cntrl->cntrl_dev->of_node) {
@@ -759,59 +780,45 @@ void mhi_fw_load_handler(struct mhi_controller *mhi_cntrl)
 
 	release_firmware(firmware);
 
-fw_load_ee_pthru:
+fw_load_ready_state:
 	/* Transitioning into MHI RESET->READY state */
 	ret = mhi_ready_state_transition(mhi_cntrl);
-
-	if (!mhi_cntrl->fbc_download)
-		return;
-
 	if (ret) {
 		dev_err(dev, "MHI did not enter READY state\n");
 		goto error_ready_state;
 	}
 
-	/* Wait for the SBL event */
-	ret = wait_event_timeout(mhi_cntrl->state_event,
-				 mhi_cntrl->ee == MHI_EE_SBL ||
-				 MHI_PM_IN_ERROR_STATE(mhi_cntrl->pm_state),
-				 msecs_to_jiffies(mhi_cntrl->timeout_ms));
-
-	if (!ret || MHI_PM_IN_ERROR_STATE(mhi_cntrl->pm_state)) {
-		dev_err(dev, "MHI did not enter SBL\n");
-		goto error_ready_state;
-	}
-
-	/* Start full firmware image download */
-	image_info = mhi_cntrl->fbc_image;
-	ret = mhi_fw_load_bhie(mhi_cntrl,
-			       /* Vector table is the last entry */
-			       &image_info->mhi_buf[image_info->entries - 1]);
-	if (ret) {
-		dev_err(dev, "MHI did not load image over BHIe, ret: %d\n",
-			ret);
-		goto error_fw_load;
-	}
-
+	dev_info(dev, "Wait for device to enter SBL or Mission mode\n");
 	return;
 
 error_ready_state:
-	read_lock_bh(pm_lock);
-	if (MHI_REG_ACCESS_VALID(mhi_cntrl->pm_state)) {
-		for (i = 0; error_reg[i].name; i++) {
-			ret = mhi_read_reg(mhi_cntrl, mhi_cntrl->bhi,
-					   error_reg[i].offset, &val);
-			if (ret)
-				break;
-			dev_err(dev, "reg:%s value:0x%x\n",
-				error_reg[i].name, val);
-		}
+	if (mhi_cntrl->fbc_download) {
+		mhi_free_bhie_table(mhi_cntrl, mhi_cntrl->fbc_image, true);
+		mhi_cntrl->fbc_image = NULL;
 	}
-	read_unlock_bh(pm_lock);
-	mhi_free_bhie_table(mhi_cntrl, mhi_cntrl->fbc_image, true);
-	mhi_cntrl->fbc_image = NULL;
 
 error_fw_load:
 	mhi_cntrl->pm_state = MHI_PM_FW_DL_ERR;
 	wake_up_all(&mhi_cntrl->state_event);
+}
+
+int mhi_download_amss_image(struct mhi_controller *mhi_cntrl)
+{
+	struct image_info *image_info = mhi_cntrl->fbc_image;
+	struct device *dev = &mhi_cntrl->mhi_dev->dev;
+	int ret;
+
+	if (!image_info)
+		return -EIO;
+
+	ret = mhi_fw_load_bhie(mhi_cntrl,
+			       /* Vector table is the last entry */
+			       &image_info->mhi_buf[image_info->entries - 1]);
+	if (ret) {
+		dev_err(dev, "MHI did not load AMSS, ret:%d\n", ret);
+		mhi_cntrl->pm_state = MHI_PM_FW_DL_ERR;
+		wake_up_all(&mhi_cntrl->state_event);
+	}
+
+	return ret;
 }

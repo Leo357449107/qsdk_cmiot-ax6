@@ -26,6 +26,8 @@ extern "C" {
 #define UNIPHY_XPCS_TWL_TIMER         0x16
 #define UNIPHY_XPCS_100US_TIMER       0xc8
 #define UNIPHY_XPCS_TWR_TIMER         0x1c
+#define UNIPHY_1000BASE_X_MODE        0x0
+#define UNIPHY_SGMII_MAC_MODE         0x2
 
 sw_error_t
 adpt_hppe_uniphy_usxgmii_status_get(a_uint32_t dev_id, a_uint32_t uniphy_index,

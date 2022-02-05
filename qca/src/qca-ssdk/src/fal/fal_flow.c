@@ -22,7 +22,6 @@
 #include "hsl_api.h"
 #include "adpt.h"
 
-#ifndef IN_FLOW_MINI
 sw_error_t
 _fal_flow_host_add(
 		a_uint32_t dev_id,
@@ -105,7 +104,6 @@ _fal_flow_status_get(a_uint32_t dev_id, a_bool_t *enable)
 	rv = p_api->adpt_flow_status_get(dev_id, enable);
 	return rv;
 }
-#endif
 sw_error_t
 _fal_flow_mgmt_set(
 		a_uint32_t dev_id,
@@ -124,21 +122,7 @@ _fal_flow_mgmt_set(
 	rv = p_api->adpt_flow_ctrl_set(dev_id, type, dir, mgmt);
 	return rv;
 }
-#ifndef IN_FLOW_MINI
-sw_error_t
-_fal_flow_age_timer_get(a_uint32_t dev_id, fal_flow_age_timer_t *age_timer)
-{
-	adpt_api_t *p_api;
-	sw_error_t rv = SW_OK;
 
-	SW_RTN_ON_NULL(p_api = adpt_api_ptr_get(dev_id));
-
-	if (NULL == p_api->adpt_flow_age_timer_get)
-		return SW_NOT_SUPPORTED;
-
-	rv = p_api->adpt_flow_age_timer_get(dev_id, age_timer);
-	return rv;
-}
 sw_error_t
 _fal_flow_status_set(a_uint32_t dev_id, a_bool_t enable)
 {
@@ -187,7 +171,6 @@ _fal_flow_host_del(
 	rv = p_api->adpt_flow_host_del(dev_id, del_mode, flow_host_entry);
 	return rv;
 }
-#endif
 sw_error_t
 _fal_flow_mgmt_get(
 		a_uint32_t dev_id,
@@ -206,7 +189,23 @@ _fal_flow_mgmt_get(
 	rv = p_api->adpt_flow_ctrl_get(dev_id, type, dir, mgmt);
 	return rv;
 }
-#ifndef IN_FLOW_MINI
+
+#if !defined(IN_FLOW_MINI)
+sw_error_t
+_fal_flow_age_timer_get(a_uint32_t dev_id, fal_flow_age_timer_t *age_timer)
+{
+	adpt_api_t *p_api;
+	sw_error_t rv = SW_OK;
+
+	SW_RTN_ON_NULL(p_api = adpt_api_ptr_get(dev_id));
+
+	if (NULL == p_api->adpt_flow_age_timer_get)
+		return SW_NOT_SUPPORTED;
+
+	rv = p_api->adpt_flow_age_timer_get(dev_id, age_timer);
+	return rv;
+}
+
 sw_error_t
 _fal_flow_age_timer_set(a_uint32_t dev_id, fal_flow_age_timer_t *age_timer)
 {
@@ -221,6 +220,7 @@ _fal_flow_age_timer_set(a_uint32_t dev_id, fal_flow_age_timer_t *age_timer)
 	rv = p_api->adpt_flow_age_timer_set(dev_id, age_timer);
 	return rv;
 }
+#endif
 sw_error_t
 _fal_flow_entry_add(
 		a_uint32_t dev_id,
@@ -285,6 +285,21 @@ _fal_flow_counter_get(a_uint32_t dev_id, a_uint32_t flow_index, fal_entry_counte
 		return SW_NOT_SUPPORTED;
 
 	rv = p_api->adpt_flow_counter_get(dev_id, flow_index, flow_counter);
+	return rv;
+}
+
+sw_error_t
+_fal_flow_counter_cleanup(a_uint32_t dev_id, a_uint32_t flow_index)
+{
+	adpt_api_t *p_api;
+	sw_error_t rv = SW_OK;
+
+	SW_RTN_ON_NULL(p_api = adpt_api_ptr_get(dev_id));
+
+	if (NULL == p_api->adpt_flow_counter_cleanup)
+		return SW_NOT_SUPPORTED;
+
+	rv = p_api->adpt_flow_counter_cleanup(dev_id, flow_index);
 	return rv;
 }
 
@@ -411,7 +426,6 @@ fal_flow_status_get(a_uint32_t dev_id, a_bool_t *enable)
 	FAL_API_UNLOCK;
 	return rv;
 }
-#endif
 sw_error_t
 fal_flow_mgmt_set(
 		a_uint32_t dev_id,
@@ -426,7 +440,19 @@ fal_flow_mgmt_set(
 	FAL_API_UNLOCK;
 	return rv;
 }
-#ifndef IN_FLOW_MINI
+
+#if !defined(IN_FLOW_MINI)
+sw_error_t
+fal_flow_age_timer_set(a_uint32_t dev_id, fal_flow_age_timer_t *age_timer)
+{
+	sw_error_t rv = SW_OK;
+
+	FAL_API_LOCK;
+	rv = _fal_flow_age_timer_set(dev_id, age_timer);
+	FAL_API_UNLOCK;
+	return rv;
+}
+
 sw_error_t
 fal_flow_age_timer_get(a_uint32_t dev_id, fal_flow_age_timer_t *age_timer)
 {
@@ -437,6 +463,8 @@ fal_flow_age_timer_get(a_uint32_t dev_id, fal_flow_age_timer_t *age_timer)
 	FAL_API_UNLOCK;
 	return rv;
 }
+#endif
+
 sw_error_t
 fal_flow_status_set(a_uint32_t dev_id, a_bool_t enable)
 {
@@ -473,7 +501,6 @@ fal_flow_host_del(
 	FAL_API_UNLOCK;
 	return rv;
 }
-#endif
 sw_error_t
 fal_flow_mgmt_get(
 		a_uint32_t dev_id,
@@ -488,17 +515,7 @@ fal_flow_mgmt_get(
 	FAL_API_UNLOCK;
 	return rv;
 }
-#ifndef IN_FLOW_MINI
-sw_error_t
-fal_flow_age_timer_set(a_uint32_t dev_id, fal_flow_age_timer_t *age_timer)
-{
-	sw_error_t rv = SW_OK;
 
-	FAL_API_LOCK;
-	rv = _fal_flow_age_timer_set(dev_id, age_timer);
-	FAL_API_UNLOCK;
-	return rv;
-}
 sw_error_t
 fal_flow_entry_add(
 		a_uint32_t dev_id,
@@ -551,6 +568,17 @@ fal_flow_counter_get(a_uint32_t dev_id, a_uint32_t flow_index, fal_entry_counter
 }
 
 sw_error_t
+fal_flow_counter_cleanup(a_uint32_t dev_id, a_uint32_t flow_index)
+{
+	sw_error_t rv = SW_OK;
+
+	FAL_API_LOCK;
+	rv = _fal_flow_counter_cleanup(dev_id, flow_index);
+	FAL_API_UNLOCK;
+	return rv;
+}
+
+sw_error_t
 fal_flow_entry_en_set(a_uint32_t dev_id, a_uint32_t flow_index, a_bool_t enable)
 {
 	sw_error_t rv = SW_OK;
@@ -594,25 +622,28 @@ fal_flow_qos_get(a_uint32_t dev_id, a_uint32_t flow_index, fal_flow_qos_t *flow_
 	return rv;
 }
 
-EXPORT_SYMBOL(fal_flow_host_add);
-EXPORT_SYMBOL(fal_flow_entry_get);
-EXPORT_SYMBOL(fal_flow_entry_del);
-EXPORT_SYMBOL(fal_flow_status_get);
+#if !defined(IN_FLOW_MINI)
 EXPORT_SYMBOL(fal_flow_age_timer_get);
-EXPORT_SYMBOL(fal_flow_status_set);
+EXPORT_SYMBOL(fal_flow_age_timer_set);
+#endif
+
+EXPORT_SYMBOL(fal_flow_host_add);
 EXPORT_SYMBOL(fal_flow_host_get);
 EXPORT_SYMBOL(fal_flow_host_del);
-EXPORT_SYMBOL(fal_flow_age_timer_set);
 EXPORT_SYMBOL(fal_flow_entry_add);
+EXPORT_SYMBOL(fal_flow_entry_get);
+EXPORT_SYMBOL(fal_flow_entry_next);
+EXPORT_SYMBOL(fal_flow_entry_del);
+EXPORT_SYMBOL(fal_flow_status_get);
+EXPORT_SYMBOL(fal_flow_status_set);
 EXPORT_SYMBOL(fal_flow_global_cfg_get);
 EXPORT_SYMBOL(fal_flow_global_cfg_set);
-EXPORT_SYMBOL(fal_flow_entry_next);
 EXPORT_SYMBOL(fal_flow_entry_en_set);
 EXPORT_SYMBOL(fal_flow_entry_en_get);
 EXPORT_SYMBOL(fal_flow_qos_set);
 EXPORT_SYMBOL(fal_flow_qos_get);
-#endif
-
+EXPORT_SYMBOL(fal_flow_counter_get);
+EXPORT_SYMBOL(fal_flow_counter_cleanup);
 EXPORT_SYMBOL(fal_flow_mgmt_get);
 EXPORT_SYMBOL(fal_flow_mgmt_set);
 

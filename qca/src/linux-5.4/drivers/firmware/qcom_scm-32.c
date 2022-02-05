@@ -594,6 +594,30 @@ void __qcom_scm_cpu_power_down(u32 flags)
 			flags & QCOM_SCM_FLUSH_FLAG_MASK);
 }
 
+int __qti_scm_qseecom_remove_xpu(struct device *dev)
+{
+	int ret = 0;
+
+	if (is_scm_armv8()) {
+		uint32_t smc_id = 0;
+		struct scm_desc desc = {0};
+		ret = __qcom_remove_xpu_scm_call_available(dev, QTI_SVC_APP_MGR,
+						QTI_ARMv8_CMD_REMOVE_XPU);
+		if (ret <= 0)
+			return -ENOTSUPP;
+
+		smc_id = QTI_SYSCALL_CREATE_SMC_ID(QTI_OWNER_QSEE_OS,
+						 QTI_SVC_APP_MGR,
+						 QTI_ARMv8_CMD_REMOVE_XPU);
+
+		ret = qti_scm_call2(dev, smc_id, &desc);
+
+	} else
+		 return -ENOTSUPP;
+
+	return ret;
+}
+
 int __qti_scm_qseecom_notify(struct device *dev,
 			     struct qsee_notify_app *request, size_t req_size,
 			     struct qseecom_command_scm_resp *response,
@@ -786,6 +810,28 @@ int __qti_scm_aes(struct device *dev, uint32_t req_addr, uint32_t req_size,
 	scm_ret = desc.ret[0];
 	if (!ret)
 		return le32_to_cpu(scm_ret);
+
+	return ret;
+}
+
+int __qcom_remove_xpu_scm_call_available(struct device *dev, u32 svc_id, u32 cmd_id)
+{
+	int ret;
+
+	if (is_scm_armv8()) {
+		__le32 scm_ret;
+		struct scm_desc desc = {0};
+
+		desc.args[0] = SCM_QSEEOS_FNID(svc_id, cmd_id);
+		desc.arginfo = SCM_ARGS(1);
+		ret = qti_scm_call2(dev, SCM_SIP_FNID(QCOM_SCM_SVC_INFO,
+					QCOM_IS_CALL_AVAIL_CMD), &desc);
+		scm_ret = desc.ret[0];
+
+		if (!ret)
+			return le32_to_cpu(scm_ret);
+	} else
+		return -ENOTSUPP;
 
 	return ret;
 }
@@ -1212,25 +1258,30 @@ int __qti_fuseipq_scm_call(struct device *dev, u32 svc_id, u32 cmd_id,
 	int ret;
 	struct scm_desc desc = {0};
 	uint32_t *status;
+	struct fuse_blow *fuse_blow = cmd_buf;
 
 	if (is_scm_armv8()) {
 
-		desc.arginfo = SCM_ARGS(1, QCOM_SCM_RO);
-		desc.args[0] = *((uint32_t *)cmd_buf);
+		desc.args[0] = fuse_blow->address;
+		if (fuse_blow->size) {
+			desc.args[1] = fuse_blow->size;
+			desc.arginfo = SCM_ARGS(2, QCOM_SCM_RO, QCOM_SCM_VAL);
+		} else {
+			desc.arginfo = SCM_ARGS(1, QCOM_SCM_RO);
+		}
 
 		ret = qti_scm_call2(dev, SCM_SIP_FNID(svc_id, cmd_id), &desc);
-		status = (uint32_t *)(((uint32_t *)cmd_buf) + 1);
+		status = (uint32_t *)fuse_blow->status;
 		*status = desc.ret[0];
 
 	} else {
-
 		return -ENOTSUPP;
 	}
 
 	return ret ? : le32_to_cpu(desc.ret[0]);
 }
 
-static int __qti_scm_dload_v8(struct device *dev, void *cmd_buf)
+static int __qti_scm_dload_v8(struct device *dev, void *cmd_buf, void *dload_reg)
 {
 	struct scm_desc desc = {0};
 	int ret;
@@ -1242,6 +1293,14 @@ static int __qti_scm_dload_v8(struct device *dev, void *cmd_buf)
 		desc.args[1] = DLOAD_MODE_ENABLE_WARMRESET;
 	else
 		desc.args[1] = enable ? DLOAD_MODE_ENABLE : DLOAD_MODE_DISABLE;
+
+	if (dload_reg) {
+		if (desc.args[1] == DLOAD_MODE_DISABLE)
+	                desc.args[1] = readl(dload_reg) & ~DLOAD_MODE_ENABLE;
+		else
+			desc.args[1] |= readl(dload_reg);
+	}
+
 	desc.arginfo = SCM_ARGS(2, QCOM_SCM_VAL, QCOM_SCM_VAL);
 	ret = qti_scm_call2(dev, SCM_SIP_FNID(QCOM_SCM_SVC_IO,
 					QCOM_SCM_IO_WRITE), &desc);
@@ -1399,12 +1458,12 @@ int __qti_scm_int_radio_powerdown(struct device *dev, u32 peripheral)
 		return -ENOTSUPP;
 }
 
-int __qti_scm_dload(struct device *dev, u32 svc_id, u32 cmd_id, void *cmd_buf)
+int __qti_scm_dload(struct device *dev, u32 svc_id, u32 cmd_id, void *cmd_buf, void *dload_reg)
 {
 	long ret;
 
 	if (is_scm_armv8())
-		return __qti_scm_dload_v8(dev, cmd_buf);
+		return __qti_scm_dload_v8(dev, cmd_buf, dload_reg);
 
 	if (cmd_buf)
 		ret = qcom_scm_call(dev, svc_id, cmd_id, cmd_buf,
@@ -1834,4 +1893,30 @@ int __qti_scm_toggle_bt_eco(struct device *dev, u32 peripheral, u32 arg)
 					QTI_SCM_CMD_BT_ECO), &desc);
 
 	return ret ? : le32_to_cpu(desc.ret[0]);
+}
+
+static int __qti_scm_set_kernel_boot_complete_v8(struct device *dev, u32 val)
+{
+	struct scm_desc desc = {0};
+	int ret;
+
+	desc.args[0] = TCSR_BOOT_MISC_REG;
+	desc.args[1] = val;
+
+	desc.arginfo = SCM_ARGS(2, QCOM_SCM_VAL, QCOM_SCM_VAL);
+	ret = qti_scm_call2(dev, SCM_SIP_FNID(QCOM_SCM_SVC_IO,
+					QCOM_SCM_IO_WRITE), &desc);
+	if (ret)
+		return ret;
+
+	return le32_to_cpu(desc.ret[0]);
+}
+
+int __qti_scm_set_kernel_boot_complete(struct device *dev, u32 svc_id, u32 val)
+{
+	if (!is_scm_armv8())
+		return -ENOTSUPP;
+
+	return __qti_scm_set_kernel_boot_complete_v8(dev, val);
+
 }

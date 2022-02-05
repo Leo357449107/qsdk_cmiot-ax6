@@ -88,27 +88,17 @@ static const char *tunnel_decapentry[] = {
 	"tunnel_type",
 	"entry_id",
 	"ip_ver",
-	"key_sip_en",
 	"sip_addr",
-	"key_dip_en",
 	"dip_addr",
-	"key_l4proto_en",
 	"l4_proto",
-	"key_sport_en",
 	"sport",
-	"key_dport_en",
 	"dport",
 	"key_tlinfo_en",
-	"tunnel_info_mask",
 	"tunnel_info",
 	"key_udf0_en",
-	"udf0_idx",
 	"udf0",
-	"udf0_mask",
 	"key_udf1_en",
-	"udf1_idx",
 	"udf1",
-	"udf1_mask",
 	"decap_en",
 	"fwd_cmd",
 	"svlan_check",
@@ -189,6 +179,10 @@ static const char *tunnel_portintf[] = {
 	"port_id",
 	"tunnel_id_en",
 	"tunnel_id",
+	"dmac_addr",
+	"pppoe_en",
+	"pppoe_group_id",
+	"vlan_group_id",
 };
 
 static const char *tunnel_encapheaderctrl[] = {
@@ -221,6 +215,23 @@ static const char *tunnel_decapexpfmtctrl[] = {
 	"decap_exp_fmt_ctrl_en",
 };
 
+static const char *tunnel_decapkey[] = {
+	"tunnel_type",
+	"key_sip_en",
+	"key_dip_en",
+	"key_l4proto_en",
+	"key_sport_en",
+	"key_dport_en",
+	"key_tlinfo_en",
+	"tunnel_info_mask",
+	"key_udf0_en",
+	"udf0_idx",
+	"udf0_mask",
+	"key_udf1_en",
+	"udf1_idx",
+	"udf1_mask",
+};
+
 int parse_tunnel(a_uint32_t dev_id, const char *command_name, struct switch_val *val)
 {
 	int rv = -1;
@@ -231,43 +242,46 @@ int parse_tunnel(a_uint32_t dev_id, const char *command_name, struct switch_val 
 		rv = parse_tunnel_udfprofilecfg(val);
 	} else if (!strcmp(command_name, "Intf")) {
 		rv = parse_uci_option(val, tunnel_intf,
-				sizeof(tunnel_intf)/sizeof(char *));
+				ARRAY_SIZE(tunnel_intf));
 	} else if (!strcmp(command_name, "Encaprule")) {
 		rv = parse_uci_option(val, tunnel_encaprule,
-				sizeof(tunnel_encaprule)/sizeof(char *));
+				ARRAY_SIZE(tunnel_encaprule));
 	} else if (!strcmp(command_name, "Encapintftunnelid")) {
 		rv = parse_uci_option(val, tunnel_encapintftunnelid,
-				sizeof(tunnel_encapintftunnelid)/sizeof(char *));
+				ARRAY_SIZE(tunnel_encapintftunnelid));
 	} else if (!strcmp(command_name, "Vlanintf")) {
 		rv = parse_uci_option(val, tunnel_vlanintf,
-				sizeof(tunnel_vlanintf)/sizeof(char *));
+				ARRAY_SIZE(tunnel_vlanintf));
 	} else if (!strcmp(command_name, "Encapporttunnelid")) {
 		rv = parse_uci_option(val, tunnel_encapporttunnelid,
-				sizeof(tunnel_encapporttunnelid)/sizeof(char *));
+				ARRAY_SIZE(tunnel_encapporttunnelid));
 	} else if (!strcmp(command_name, "Decapentry")) {
 		rv = parse_uci_option(val, tunnel_decapentry,
-				sizeof(tunnel_decapentry)/sizeof(char *));
+				ARRAY_SIZE(tunnel_decapentry));
 	} else if (!strcmp(command_name, "Encapentry")) {
 		rv = parse_uci_option(val, tunnel_encapentry,
-				sizeof(tunnel_encapentry)/sizeof(char *));
+				ARRAY_SIZE(tunnel_encapentry));
 	} else if (!strcmp(command_name, "Globalcfg")) {
 		rv = parse_uci_option(val, tunnel_globalcfg,
-				sizeof(tunnel_globalcfg)/sizeof(char *));
+				ARRAY_SIZE(tunnel_globalcfg));
 	} else if (!strcmp(command_name, "Portintf")) {
 		rv = parse_uci_option(val, tunnel_portintf,
-				sizeof(tunnel_portintf)/sizeof(char *));
+				ARRAY_SIZE(tunnel_portintf));
 	} else if (!strcmp(command_name, "Encapheaderctrl")) {
 		rv = parse_uci_option(val, tunnel_encapheaderctrl,
-				sizeof(tunnel_encapheaderctrl)/sizeof(char *));
+				ARRAY_SIZE(tunnel_encapheaderctrl));
 	} else if (!strcmp(command_name, "Decapecn")) {
 		rv = parse_uci_option(val, tunnel_decapecn,
-				sizeof(tunnel_decapecn)/sizeof(char *));
+				ARRAY_SIZE(tunnel_decapecn));
 	} else if (!strcmp(command_name, "Encapecn")) {
 		rv = parse_uci_option(val, tunnel_encapecn,
-				sizeof(tunnel_encapecn)/sizeof(char *));
+				ARRAY_SIZE(tunnel_encapecn));
 	} else if (!strcmp(command_name, "Decapexpfmtctrl")) {
 		rv = parse_uci_option(val, tunnel_decapexpfmtctrl,
-				sizeof(tunnel_decapexpfmtctrl)/sizeof(char *));
+				ARRAY_SIZE(tunnel_decapexpfmtctrl));
+	} else if (!strcmp(command_name, "Decapkey")) {
+		rv = parse_uci_option(val, tunnel_decapkey,
+				ARRAY_SIZE(tunnel_decapkey));
 	}
 
 	return rv;

@@ -1,0 +1,20 @@
+Source-Makefile: package/network/utils/layerscape/restool/Makefile
+
+Package: restool
+Version: lsdk-1903-1
+Depends: +libc +GCC_LIBSSP:libssp +USE_GLIBC:librt +USE_GLIBC:libpthread @TARGET_layerscape
+Conflicts: 
+Menu-Depends: 
+Provides: 
+Section: net
+Category: Network
+Repository: base
+Title: Layerscape DPAA2 dynamical management tool
+Maintainer: 
+Source: restool-lsdk-1903.tar.xz
+Type: ipkg
+Description: Layerscape DPAA2 dynamical management tool
+
+@@
+
+

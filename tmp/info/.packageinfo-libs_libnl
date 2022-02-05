@@ -1,0 +1,104 @@
+Source-Makefile: package/libs/libnl/Makefile
+
+Package: libnl-core
+Version: 3.4.0-2
+ABIVersion: 200
+Depends: +libc +GCC_LIBSSP:libssp +USE_GLIBC:librt +USE_GLIBC:libpthread +libpthread
+Conflicts: 
+Menu-Depends: 
+Provides: 
+Section: libs
+Category: Libraries
+Repository: base
+Title: Core Netlink Library
+Maintainer: 
+Source: libnl-3.4.0.tar.gz
+License: LGPL-2.1
+Type: ipkg
+Description:  Common code for all netlink libraries
+http://www.infradead.org/~tgr/libnl/
+
+@@
+
+Package: libnl-genl
+Version: 3.4.0-2
+ABIVersion: 200
+Depends: +libc +GCC_LIBSSP:libssp +USE_GLIBC:librt +USE_GLIBC:libpthread +libnl-core
+Conflicts: 
+Menu-Depends: 
+Provides: 
+Section: libs
+Category: Libraries
+Repository: base
+Title: Generic Netlink Library
+Maintainer: 
+Source: libnl-3.4.0.tar.gz
+License: LGPL-2.1
+Type: ipkg
+Description:  Generic Netlink Library Functions
+http://www.infradead.org/~tgr/libnl/
+
+@@
+
+Package: libnl-route
+Version: 3.4.0-2
+ABIVersion: 200
+Depends: +libc +GCC_LIBSSP:libssp +USE_GLIBC:librt +USE_GLIBC:libpthread +libnl-core
+Conflicts: 
+Menu-Depends: 
+Provides: 
+Section: libs
+Category: Libraries
+Repository: base
+Title: Routing Netlink Library
+Maintainer: 
+Source: libnl-3.4.0.tar.gz
+License: LGPL-2.1
+Type: ipkg
+Description:  Routing Netlink Library Functions
+http://www.infradead.org/~tgr/libnl/
+
+@@
+
+Package: libnl-nf
+Version: 3.4.0-2
+ABIVersion: 200
+Depends: +libc +GCC_LIBSSP:libssp +USE_GLIBC:librt +USE_GLIBC:libpthread +libnl-route
+Conflicts: 
+Menu-Depends: 
+Provides: 
+Section: libs
+Category: Libraries
+Repository: base
+Title: Netfilter Netlink Library
+Maintainer: 
+Source: libnl-3.4.0.tar.gz
+License: LGPL-2.1
+Type: ipkg
+Description:  Netfilter Netlink Library Functions
+http://www.infradead.org/~tgr/libnl/
+
+@@
+
+Package: libnl
+Version: 3.4.0-2
+ABIVersion: 200
+Depends: +libc +GCC_LIBSSP:libssp +USE_GLIBC:librt +USE_GLIBC:libpthread +libnl-genl +libnl-route +libnl-nf
+Conflicts: 
+Menu-Depends: 
+Provides: 
+Section: libs
+Category: Libraries
+Repository: base
+Title: Full Netlink Library
+Maintainer: 
+Source: libnl-3.4.0.tar.gz
+License: LGPL-2.1
+Type: ipkg
+Description:  Socket handling, connection management, sending and receiving of data,
+ message construction and parsing, object caching system, etc.
+http://www.infradead.org/~tgr/libnl/
+
+@@
+
+

@@ -1,0 +1,49 @@
+Source-Makefile: package/utils/bzip2/Makefile
+Build-Types: host
+
+Package: libbz2
+Submenu: Compression
+Version: 1.0.8-1
+ABIVersion: 1.0
+Depends: +libc +GCC_LIBSSP:libssp +USE_GLIBC:librt +USE_GLIBC:libpthread 
+Conflicts: 
+Menu-Depends: 
+Provides: 
+Section: libs
+Category: Libraries
+Repository: base
+Title: bzip2 library.
+Maintainer: Steven Barth <cyrus@openwrt.org>
+Source: bzip2-1.0.8.tar.gz
+License: bzip2-1.0.8
+LicenseFiles: LICENSE
+Type: ipkg
+Description: 	bzip2 is a freely available, patent free, high-quality
+	data compressor. This packages provides libbz2 library.
+https://sourceware.org/bzip2/
+Steven Barth <cyrus@openwrt.org>
+@@
+
+Package: bzip2
+Submenu: Compression
+Version: 1.0.8-1
+Depends: +libc +GCC_LIBSSP:libssp +USE_GLIBC:librt +USE_GLIBC:libpthread +libbz2
+Conflicts: 
+Menu-Depends: 
+Provides: 
+Section: utils
+Category: Utilities
+Repository: base
+Title: bzip2 is a compression utility.
+Maintainer: Steven Barth <cyrus@openwrt.org>
+Source: bzip2-1.0.8.tar.gz
+License: bzip2-1.0.8
+LicenseFiles: LICENSE
+Type: ipkg
+Description: 	bzip2 is a freely available, patent free, high-quality
+	data compressor. This package provides the binary.
+https://sourceware.org/bzip2/
+Steven Barth <cyrus@openwrt.org>
+@@
+
+

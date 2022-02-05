@@ -1,0 +1,19 @@
+Source-Makefile: package/utils/oseama/Makefile
+
+Package: oseama
+Version: 1
+Depends: +libc +GCC_LIBSSP:libssp +USE_GLIBC:librt +USE_GLIBC:libpthread @TARGET_bcm53xx
+Conflicts: 
+Menu-Depends: 
+Provides: 
+Section: utils
+Category: Base system
+Title: Utility for handling Seama firmware images
+Maintainer: Rafał Miłecki <zajec5@gmail.com>
+Source: 
+Type: ipkg
+Description:  This package contains an utility that allows handling Seama images.
+Rafał Miłecki <zajec5@gmail.com>
+@@
+
+

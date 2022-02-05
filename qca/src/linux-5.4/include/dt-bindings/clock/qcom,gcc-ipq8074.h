@@ -243,6 +243,8 @@
 #define QDSS_AT_CLK_SRC 			234
 #define GCC_QDSS_AT_CLK 			235
 #define GCC_QDSS_DAP_CLK 			236
+#define AUDIO_PLL                               237
+#define AUDIO_PLL_MAIN                          238
 
 #define GCC_BLSP1_BCR				0
 #define GCC_BLSP1_QUP1_BCR			1

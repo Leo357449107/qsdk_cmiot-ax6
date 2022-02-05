@@ -1,4 +1,5 @@
 /* Copyright (c) 2017-2020 The Linux Foundation. All rights reserved.
+ * Copyright (c) 2022 Qualcomm Innovation Center, Inc. All rights reserved.
  *
  * Permission to use, copy, modify, and/or distribute this software for any
  * purpose with or without fee is hereby granted, provided that the above
@@ -393,6 +394,14 @@ int nss_cryptoapi_ahash_update(struct ahash_request *req)
 		tot_len += cur->length;
 		if (!sg_next(cur))
 			break;
+	}
+
+	/*
+	 * We only support (2^16 - 1) length.
+	 */
+	if (tot_len > U16_MAX) {
+		ctx->stats.failed_len++;
+		return -EFBIG;
 	}
 
 	info.ahash_skip = tot_len - req->nbytes;

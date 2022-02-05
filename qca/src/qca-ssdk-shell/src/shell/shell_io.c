@@ -1,5 +1,8 @@
 /*
  * Copyright (c) 2014-2021, The Linux Foundation. All rights reserved.
+ *
+ * Copyright (c) 2022, Qualcomm Innovation Center, Inc. All rights reserved.
+ *
  * Permission to use, copy, modify, and/or distribute this software for
  * any purpose with or without fee is hereby granted, provided that the
  * above copyright notice and this permission notice appear in all copies.
@@ -24,7 +27,7 @@
     do { if ((rtn) == NULL) return SW_BAD_PARAM; } while(0);
 
 #define DEFAULT_FLAG "default"
-#define MAX_ARRT_NUM 32
+#define MAX_ARRT_NUM 16
 #define INVALID_ARRT_VALUE 0xFFFFFFFF
 static char **full_cmdstrp;
 static int talk_mode = 1;
@@ -550,6 +553,7 @@ static sw_data_type_t sw_data_type[] =
     SW_TYPE_DEF(SW_ACL_UDF_TYPE, cmd_data_check_udf_type, cmd_data_print_udf_type),
     SW_TYPE_DEF(SW_ACL_UDF_PROFILE_ENTRY, cmd_data_check_acl_udf_profile_entry,
             cmd_data_print_acl_udf_profile_entry),
+    SW_TYPE_DEF(SW_ACL_MAC_ENTRY, cmd_data_check_acl_mac_entry, cmd_data_print_acl_mac_entry),
     SW_TYPE_DEF(SW_IP_HOSTENTRY, cmd_data_check_host_entry, cmd_data_print_host_entry),
     SW_TYPE_DEF(SW_ARP_LEARNMODE, cmd_data_check_arp_learn_mode, cmd_data_print_arp_learn_mode),
     SW_TYPE_DEF(SW_IP_GUARDMODE, cmd_data_check_ip_guard_mode, cmd_data_print_ip_guard_mode),
@@ -813,6 +817,7 @@ static sw_data_type_t sw_data_type[] =
     SW_TYPE_DEF(SW_TUNNEL_KEY, cmd_data_check_tunnel_key, cmd_data_print_tunnel_key),
     SW_TYPE_DEF(SW_TUNNEL_DECAP_ACTION, cmd_data_check_tunnel_action,
 		    cmd_data_print_tunnel_action),
+    SW_TYPE_DEF(SW_PPE_CAPACITY, NULL, cmd_data_print_ppe_capacity),
 /* auto_insert_flag */
 /*qca808x_start*/
 };
@@ -5961,10 +5966,6 @@ cmd_data_print_acl_udf_profile_entry(a_uint8_t * param_name, a_uint32_t * buf, a
         dprintf("\n[l3_type_incl]:yes");
         cmd_data_print_attr("l3_type", " [l3_type]:", &tmpdata, sizeof(tmpdata));
     }
-    else
-    {
-        dprintf("\n[l3_type]:all");
-    }
 
     if (FAL_FIELD_FLG_TST(entry->field_flag, FAL_ACL_UDF_PROFILE_ENTRY_FIELD_L4_TYPE))
     {
@@ -5972,12 +5973,67 @@ cmd_data_print_acl_udf_profile_entry(a_uint8_t * param_name, a_uint32_t * buf, a
         dprintf("\n[l4_type_incl]:yes");
         cmd_data_print_attr("l4_type", " [l4_type]:", &tmpdata, sizeof(tmpdata));
     }
-    else
-    {
-        dprintf("\n[l4_type]:all");
-    }
     dprintf("\n");
     return;
+}
+
+sw_error_t
+cmd_data_check_acl_mac_entry(char *info, void *val, a_uint32_t size)
+{
+    char *cmd;
+    a_uint32_t tmp = 0;
+    fal_acl_mac_entry_t entry;
+    sw_error_t rv;
+
+    memset(&entry, 0, sizeof (fal_acl_mac_entry_t));
+
+    cmd_data_check_element("src mac addr", NULL,
+                               "usage: the format is xx-xx-xx-xx-xx-xx \n",
+                               cmd_data_check_macaddr, (cmd,
+                                       &(entry.src_mac),
+                                       sizeof(fal_mac_addr_t)));
+
+    do
+    {
+        cmd = get_sub_cmd("ifname", "eth0");
+        SW_RTN_ON_NULL_PARAM(cmd);
+
+        if (!strncasecmp(cmd, "quit", 4))
+        {
+            return SW_BAD_VALUE;
+        }
+        else if (!strncasecmp(cmd, "help", 4))
+        {
+            dprintf("usage: ifname \n");
+            rv = SW_BAD_VALUE;
+        }
+        else
+        {
+            strlcpy(entry.ifname, cmd, IFNAMSIZ);
+            rv = SW_OK;
+        }
+    }
+    while (talk_mode && (SW_OK != rv));
+
+    cmd_data_check_element("acl_policy", "0", "usage: 0 deny, 1 accept\n",
+                           cmd_data_check_uint8, (cmd, &tmp, sizeof (tmp)));
+    entry.acl_policy = tmp;
+    *(fal_acl_mac_entry_t *) val = entry;
+    return SW_OK;
+}
+
+void
+cmd_data_print_acl_mac_entry(a_uint8_t * param_name, a_uint32_t * buf, a_uint32_t size)
+{
+    fal_acl_mac_entry_t *entry;
+
+    entry = (fal_acl_mac_entry_t *) buf;
+    dprintf("\n[acl mac entry]:");
+    cmd_data_print_macaddr("\n[mac_src_addr]:",
+                               (a_uint32_t *) &(entry->src_mac),
+                               sizeof (fal_mac_addr_t));
+    dprintf("\n[ifname]:%s", entry->ifname);
+    dprintf("\n[acl_policy]:0x%x", entry->acl_policy);
 }
 
 sw_error_t
@@ -21714,7 +21770,7 @@ cmd_data_check_flow_global(char *cmd_str, void * val, a_uint32_t size)
 
     do
     {
-        cmd = get_sub_cmd("hash_mode)0", "0");
+        cmd = get_sub_cmd("hash_mode_0", "0");
         SW_RTN_ON_NULL_PARAM(cmd);
 
         if (!strncasecmp(cmd, "quit", 4))
@@ -37669,10 +37725,6 @@ cmd_data_print_tunnel_udf_profile_entry(a_uint8_t * param_name, a_uint32_t * buf
         dprintf("\n[l3_type_incl]:yes");
         cmd_data_print_attr("l3_type", " [l3_type]:", &tmpdata, sizeof(tmpdata));
     }
-    else
-    {
-        dprintf("\n[l3_type]:all");
-    }
 
     if (FAL_TUNNEL_UDF_PROFILE_ENTRY_FIELD_FLG_TST(entry->field_flag,
         FAL_TUNNEL_UDF_PROFILE_ENTRY_FIELD_L4_TYPE))
@@ -37681,10 +37733,7 @@ cmd_data_print_tunnel_udf_profile_entry(a_uint8_t * param_name, a_uint32_t * buf
         dprintf("\n[l4_type_incl]:yes");
         cmd_data_print_attr("l4_type", " [l4_type]:", &tmpdata, sizeof(tmpdata));
     }
-    else
-    {
-        dprintf("\n[l4_type]:all");
-    }
+
     if (FAL_TUNNEL_UDF_PROFILE_ENTRY_FIELD_FLG_TST(entry->field_flag,
         FAL_TUNNEL_UDF_PROFILE_ENTRY_FIELD_OVERLAY_TYPE))
     {
@@ -37692,20 +37741,13 @@ cmd_data_print_tunnel_udf_profile_entry(a_uint8_t * param_name, a_uint32_t * buf
         dprintf("\n[overlay_type_incl]:yes");
         cmd_data_print_attr("tunnel_overlay_type", " [overlay_type]:", &tmpdata, sizeof(tmpdata));
     }
-    else
-    {
-        dprintf("\n[overlay_type]:all");
-    }
+
     if (FAL_TUNNEL_UDF_PROFILE_ENTRY_FIELD_FLG_TST(entry->field_flag,
         FAL_TUNNEL_UDF_PROFILE_ENTRY_FIELD_PROGRAM_TYPE))
     {
         tmpdata = entry->program_type;
         dprintf("\n[program_type_incl]:yes");
         cmd_data_print_attr("tunnel_program_type", " [program_type]:", &tmpdata, sizeof(tmpdata));
-    }
-    else
-    {
-        dprintf("\n[program_type]:all");
     }
     dprintf("\n");
     return;
@@ -38026,14 +38068,11 @@ cmd_data_check_tunnel_program_cfg(char * cmd_str, void * val, a_uint32_t size)
                                &tmpdata, sizeof(tmpdata)));
     entry.inner_type_mode = tmpdata & 0x1;
 
-    if(entry.inner_type_mode == 0)
-    {
-        cmd_data_check_element("inner hdr type", "ethernet",
-                           "usage: ethernet, ethernet-tag, ipv4, ipv6\n",
-                           cmd_data_check_attr, ("hdr_type", cmd,
-                                   &tmpdata, sizeof(tmpdata)));
-        entry.inner_hdr_type = tmpdata & 0x3;
-    }
+    cmd_data_check_element("inner hdr type", "ethernet",
+                       "usage: ethernet, ethernet-tag, ipv4, ipv6\n",
+                       cmd_data_check_attr, ("hdr_type", cmd,
+                               &tmpdata, sizeof(tmpdata)));
+    entry.inner_hdr_type = tmpdata & 0x3;
 
     cmd_data_check_element("basic hdr length", "0",
                        "usage: the format is 0x0-0x7e or 0-126, must be even\n",
@@ -38088,12 +38127,9 @@ cmd_data_print_tunnel_program_cfg(a_uint8_t * param_name, a_uint32_t * buf, a_ui
     tmpdata = entry->inner_type_mode;
     cmd_data_print_attr("tunnel_program_inner_type_mode", "  [inner_type_mode]:",
                     &tmpdata, sizeof(tmpdata));
-    if(entry->inner_type_mode == 0)
-    {
-        tmpdata = entry->inner_hdr_type;
-        cmd_data_print_attr("hdr_type", " [inner_type]:",
+    tmpdata = entry->inner_hdr_type;
+    cmd_data_print_attr("hdr_type", " [inner_type]:",
                     &tmpdata, sizeof(tmpdata));
-    }
     dprintf("\n[basic_hdr_len]:0x%x", entry->basic_hdr_len);
     tmpdata = entry->opt_len_unit;
     cmd_data_print_attr("tunnel_program_opt_len_unit", "  [opt_len_unit]:",
@@ -40566,20 +40602,9 @@ cmd_data_print_pppoe_ctrl(a_uint8_t *param_name, a_ulong_t *buf, a_uint32_t size
 sw_error_t
 cmd_data_check_tunnel_type(char *cmd_str, fal_tunnel_type_t *arg_val, a_uint32_t size)
 {
-	char *cmd;
-	a_uint32_t tmp = 0;
 
-        cmd_data_check_element("tunnel type", "gre_tap_ipv4",
-               "usage: gre_tap_ipv4, gre_tap_ipv6, vxlan_ipv4, vxlan_ipv6, "
-               "vxlan_gpe_ipv4, vxlan_gpe_ipv6, ipv4_ipv6, program0, "
-               "program1, program2, program3, program4, program5, "
-               "geneve_ipv4, geneve_ipv6\n",
-               cmd_data_check_attr, ("tunnel_type", cmd,
-                             &tmp, sizeof(tmp)));
-
-	*arg_val = (fal_tunnel_type_t)tmp;
-
-	return SW_OK;
+	return cmd_data_check_attr("tunnel_type", cmd_str,
+			arg_val, sizeof(*arg_val));
 }
 
 void
@@ -40787,6 +40812,30 @@ cmd_data_print_tunnel_action(a_uint8_t *param_name, a_ulong_t *buf, a_uint32_t s
 	cmd_data_print_uint32("update_fields", &entry->update_bmp, sizeof(a_uint32_t));
 	cmd_data_print_tunnel_decap_action_entry(param_name,
 			(a_ulong_t *)entry, sizeof(fal_tunnel_action_t));
+
+	dprintf("\n");
+}
+
+void
+cmd_data_print_ppe_capacity(a_uint8_t *param_name, a_ulong_t *buf, a_uint32_t size)
+{
+	fal_ppe_tbl_caps_t *entry;
+
+	entry = (fal_ppe_tbl_caps_t *)buf;
+
+	dprintf("\n[%s] \n", param_name);
+
+	dprintf("[flow_table_capacity]:%d\n", entry->flow_caps);
+	dprintf("[host_table_capacity]:%d\n", entry->host_caps);
+	dprintf("[nexthop_table_capacity]:%d\n", entry->nexthop_caps);
+	dprintf("[pub_ip_table_capacity]:%d\n", entry->pub_ip_caps);
+	dprintf("[vsi_capacity]:%d\n", entry->vsi_caps);
+	dprintf("[port_capacity]:%d\n", entry->port_caps);
+	dprintf("[l3_if_capacity]:%d\n", entry->l3_if_caps);
+	dprintf("[my_mac_table_capacity]:%d\n", entry->my_mac_caps);
+	dprintf("[queues_capacity]:%d\n", entry->queue_caps);
+	dprintf("[service_codes_capacity]:%d\n", entry->service_code_caps);
+	dprintf("[pppoe_session_capacity]:%d\n", entry->pppoe_session_caps);
 
 	dprintf("\n");
 }

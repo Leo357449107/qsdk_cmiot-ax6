@@ -153,7 +153,6 @@
 	tzlog: qti,tzlog {
 		compatible = "qti,tzlog-ipq9574";
 		interrupts = <GIC_SPI 244 IRQ_TYPE_EDGE_RISING>;
-		qti,tzbsp-diag-buf-start = <0x4a7df000>;
 		qti,tz-diag-buf-size = <0x3000>;
 		qti,tz-ring-off = <7>;
 		qti,tz-log-pos-info-off = <810>;
@@ -171,6 +170,36 @@
 		compatible = "ipq9574-qseecom";
 		memory-region = <&tzapp>;
 		status = "ok";
+	};
+
+	qcn9224_legacy_irq1: qcn9224_legacy_irq1 {
+		compatible = "qcom,qcn9224_legacy_irq";
+		status = "ok";
+		qrtr_node_id = <0x31>;
+		qcn9224_in1: legacy_interrupt {
+			interrupt-controller;
+			#interrupt-cells = <2>;
+		};
+	};
+
+	qcn9224_legacy_irq2: qcn9224_legacy_irq2 {
+		compatible = "qcom,qcn9224_legacy_irq";
+		status = "ok";
+		qrtr_node_id = <0x32>;
+		qcn9224_in2: legacy_interrupt {
+			interrupt-controller;
+			#interrupt-cells = <2>;
+		};
+	};
+
+	qcn9224_legacy_irq3: qcn9224_legacy_irq3 {
+		compatible = "qcom,qcn9224_legacy_irq";
+		status = "ok";
+		qrtr_node_id = <0x33>;
+		qcn9224_in3: legacy_interrupt {
+			interrupt-controller;
+			#interrupt-cells = <2>;
+		};
 	};
 
 	soc: soc {
@@ -776,7 +805,6 @@
 			reg = <0xb017000 0x1000>;
 			interrupts = <GIC_SPI 3 IRQ_TYPE_EDGE_RISING>;
 			clocks = <&sleep_clk>;
-			max-timeout-sec = <32>;
 		};
 
 		timer@b120000 {
@@ -858,6 +886,11 @@
 				compatible = "qcom,msm-imem-mem_dump_table";
 				reg = <0x10 8>;
 			};
+
+			tz-log-buf-addr@720 {
+				compatible = "qcom,msm-imem-tz-log-buf-addr";
+				reg = <0x720 4>;
+			};
 		};
 
 		dcc: dcc_v2@797F000 {
@@ -909,6 +942,7 @@
 			gpio-controller;
 			#gpio-cells = <2>;
 			gpio-ranges = <&tlmm 0 0 65>;
+			gpio-reserved-ranges = <59 1>;
 			interrupt-controller;
 			#interrupt-cells = <2>;
 		};
@@ -1108,9 +1142,8 @@
 			compatible = "qcom,edma";
 			reg = <0x3ab00000 0xef800>;
 			reg-names = "edma-reg-base";
-			resets = <&nsscc PPE_EDMA_ARES>,
-				 <&nsscc PPE_EDMA_CFG_ARES>;
-			reset-names = "edma_rst", "edma_cfg_reset";
+			resets = <&nsscc EDMA_HW_RESET>;
+			reset-names = "edma_rst";
 			clocks = <&nsscc NSS_CC_NSS_CSR_CLK>,
 				 <&nsscc NSS_CC_NSSNOC_NSS_CSR_CLK>,
 				 <&nsscc NSS_CC_IMEM_QSB_CLK>,
@@ -2058,8 +2091,9 @@
 			       <0x28000F20 0xa8>,
 			       <0x28001000 0x1000>,
 			       <0x00080000 0x2000>,
-			       <0x28100000 0x1000>;
-			reg-names = "dbi", "elbi", "atu", "parf", "config";
+			       <0x28100000 0x1000>,
+			       <0x00618088 0x4>;
+			reg-names = "dbi", "elbi", "atu", "parf", "config", "aggr_noc";
 			device_type = "pci";
 			linux,pci-domain = <1>;
 			bus-range = <0x00 0xff>;
@@ -2067,6 +2101,7 @@
 			#address-cells = <3>;
 			#size-cells = <2>;
 			slv-addr-space-sz = <0x8000000>;
+			axi-halt-val = <0x1e>; /* increase halt window size to 1GB */
 
 			ranges = <0x81000000 0 0x28200000 0x28200000
 				  0 0x00100000   /* downstream I/O */
@@ -2131,8 +2166,9 @@
 			       <0x10000F20 0xa8>,
 			       <0x10001000 0x1000>,
 			       <0x000F8000 0x2000>,
-			       <0x10100000 0x1000>;
-			reg-names = "dbi", "elbi", "atu", "parf", "config";
+			       <0x10100000 0x1000>,
+			       <0x00618108 0x4>;
+			reg-names = "dbi", "elbi", "atu", "parf", "config", "aggr_noc";
 			device_type = "pci";
 			linux,pci-domain = <2>;
 			bus-range = <0x00 0xff>;
@@ -2140,6 +2176,7 @@
 			#address-cells = <3>;
 			#size-cells = <2>;
 			slv-addr-space-sz = <0x8000000>;
+			axi-halt-val = <0x1e>; /* increase halt window size to 1GB */
 
 			ranges = <0x81000000 0 0x10200000 0x10200000
 				  0 0x00100000   /* downstream I/O */
@@ -2213,6 +2250,7 @@
 			#address-cells = <3>;
 			#size-cells = <2>;
 			slv-addr-space-sz = <0x8000000>;
+			axi-halt-val = <0x1e>; /* increase halt window size to 1GB */
 
 			ranges = <0x81000000 0 0x20200000 0x20200000
 				  0 0x00100000   /* downstream I/O */
@@ -2286,6 +2324,7 @@
 			#address-cells = <3>;
 			#size-cells = <2>;
 			slv-addr-space-sz = <0x8000000>;
+			axi-halt-val = <0x1e>; /* increase halt window size to 1GB */
 
 			ranges = <0x81000000 0 0x18200000 0x18200000
 				  0 0x00100000   /* downstream I/O */
@@ -2355,6 +2394,12 @@
 			qti,offset-page-indices = <56>;
 		};
 
+		qti,scm_restart_reason {
+			compatible = "qti,scm_restart_reason";
+			reg = <0x0193d100 0x4>;
+			qti,runtime-failsafe = <0>;
+		};
+
 		wifi0: wifi@c0000000 {
 			compatible = "qcom,cnss-qca9574", "qcom,ipq9574-wifi";
 			reg = <0xc000000 0x1000000>;
@@ -2369,10 +2414,14 @@
 			qcom,rproc = <&q6v5_wcss>;
 			qcom,bdf-addr = <0x4B700000 0x4B700000 0x4B700000
 					 0x0 0x0>;
-			qcom,caldb-addr = <0x4D800000 0x4D800000 0x0
+			qcom,caldb-addr = <0x4D800000 0x4CA00000 0x0
 					   0x0 0x0>;
 			qcom,caldb-size = <0x500000>;
+		#ifdef __IPQ_MEM_PROFILE_512_MB__
+			m3-dump-addr = <0x4C800000>;
+		#else
 			m3-dump-addr = <0x4D600000>;
+		#endif
 			interrupts = <0 320 1>, /* o_wcss_apps_intr[0] =  */
 				<0 319 1>,
 				<0 318 1>,
@@ -2424,6 +2473,7 @@
 				<0 163 1>,
 				<0 162 1>,
 				<0 160 1>,
+				<0 414 1>,
 				<0 159 1>,
 				<0 158 1>,
 				<0 157 1>,
@@ -2476,6 +2526,7 @@
 				"host2tcl-input-ring3",
 				"host2tcl-input-ring2",
 				"host2tcl-input-ring1",
+				"wbm2host-tx-completions-ring4",
 				"wbm2host-tx-completions-ring3",
 				"wbm2host-tx-completions-ring2",
 				"wbm2host-tx-completions-ring1",
@@ -2498,6 +2549,663 @@
 			qca,auto-restart;
 			status = "disabled";
 		};
+
+		wifi3: wifi3@f00000 {
+			compatible  = "qcom,cnss-qcn9224";
+			qcom,wlan-ramdump-dynamic = <0x600000>;
+			qrtr_node_id = <0x31>;
+			qca,auto-restart;
+			status = "disabled";
+			qca,extended-intc;
+			interrupts-extended =
+				<&qcn9224_in1 5 0>,
+				<&qcn9224_in1 6 0>,
+				<&qcn9224_in1 7 0>,
+				<&qcn9224_in1 8 0>,
+				<&qcn9224_in1 9 0>,
+				<&qcn9224_in1 10 0>,
+				<&qcn9224_in1 11 0>,
+				<&qcn9224_in1 12 0>,
+				<&qcn9224_in1 13 0>,
+				<&qcn9224_in1 14 0>,
+				<&qcn9224_in1 15 0>,
+				<&qcn9224_in1 16 0>,
+				<&qcn9224_in1 17 0>,
+				<&qcn9224_in1 18 0>,
+				<&qcn9224_in1 19 0>,
+				<&qcn9224_in1 20 0>,
+				<&qcn9224_in1 49 0>,
+				<&qcn9224_in1 48 0>,
+				<&qcn9224_in1 47 0>,
+				<&qcn9224_in1 46 0>,
+				<&qcn9224_in1 45 0>,
+				<&qcn9224_in1 44 0>,
+				<&qcn9224_in1 43 0>,
+				<&qcn9224_in1 42 0>,
+				<&qcn9224_in1 50 0>,
+				<&qcn9224_in1 52 0>,
+				<&qcn9224_in1 51 0>,
+				<&qcn9224_in1 30 0>,
+				<&qcn9224_in1 29 0>,
+				<&qcn9224_in1 28 0>,
+				<&qcn9224_in1 27 0>,
+				<&qcn9224_in1 26 0>,
+				<&qcn9224_in1 25 0>,
+				<&qcn9224_in1 31 0>,
+				<&qcn9224_in1 80 0>,
+				<&qcn9224_in1 71 0>,
+				<&qcn9224_in1 96 0>,
+				<&qcn9224_in1 97 0>,
+				<&qcn9224_in1 67 0>,
+				<&qcn9224_in1 100 0>,
+				<&qcn9224_in1 99 0>,
+				<&qcn9224_in1 68 0>,
+				<&qcn9224_in1 69 0>,
+				<&qcn9224_in1 121 0>,
+				<&qcn9224_in1 119 0>,
+				<&qcn9224_in1 122 0>,
+				<&qcn9224_in1 120 0>,
+				<&qcn9224_in1 116 0>,
+				<&qcn9224_in1 113 0>,
+				<&qcn9224_in1 115 0>,
+				<&qcn9224_in1 112 0>,
+				<&qcn9224_in1 114 0>,
+				<&qcn9224_in1 111 0>,
+				<&qcn9224_in1 110 0>,
+				<&qcn9224_in1 109 0>,
+				<&qcn9224_in1 108 0>,
+				<&qcn9224_in1 39 0>,
+				<&qcn9224_in1 38 0>,
+				<&qcn9224_in1 37 0>,
+				<&qcn9224_in1 36 0>,
+				<&qcn9224_in1 35 0>,
+				<&qcn9224_in1 34 0>,
+				<&qcn9224_in1 33 0>,
+				<&qcn9224_in1 41 0>,
+				<&qcn9224_in1 40 0>,
+				<&qcn9224_in1 32 0>,
+				<&qcn9224_in1 24 0>,
+				<&qcn9224_in1 23 0>,
+				<&qcn9224_in1 22 0>,
+				<&qcn9224_in1 21 0>,
+				<&qcn9224_in1 66 0>,
+				<&qcn9224_in1 78 0>,
+				<&qcn9224_in1 117 0>,
+				<&qcn9224_in1 118 0>,
+				<&qcn9224_in1 61 0>,
+				<&qcn9224_in1 60 0>,
+				<&qcn9224_in1 57 0>,
+				<&qcn9224_in1 56 0>,
+				<&qcn9224_in1 63 0>,
+				<&qcn9224_in1 62 0>,
+				<&qcn9224_in1 59 0>,
+				<&qcn9224_in1 58 0>,
+				<&qcn9224_in1 65 0>,
+				<&qcn9224_in1 83 0>,
+				<&qcn9224_in1 75 0>,
+				<&qcn9224_in1 82 0>,
+				<&qcn9224_in1 81 0>,
+				<&qcn9224_in1 74 0>,
+				<&qcn9224_in1 73 0>,
+				<&qcn9224_in1 72 0>,
+				<&qcn9224_in1 98 0>,
+				<&qcn9224_in1 107 0>,
+				<&qcn9224_in1 106 0>,
+				<&qcn9224_in1 105 0>,
+				<&qcn9224_in1 104 0>,
+				<&qcn9224_in1 103 0>,
+				<&qcn9224_in1 102 0>,
+				<&qcn9224_in1 101 0>,
+				<&qcn9224_in1 76 0>,
+				<&qcn9224_in1 77 0>,
+				<&qcn9224_in1 143 0>,
+				<&qcn9224_in1 142 0>,
+				<&qcn9224_in1 141 0>,
+				<&intc GIC_SPI 35 IRQ_TYPE_LEVEL_HIGH>;
+
+			interrupt-names = "ce0",
+				"ce1",
+				"ce2",
+				"ce3",
+				"ce4",
+				"ce5",
+				"ce6",
+				"ce7",
+				"ce8",
+				"ce9",
+				"ce10",
+				"ce11",
+				"ce12",
+				"ce13",
+				"ce14",
+				"ce15",
+				"reo2sw8_intr2",
+				"reo2sw7_intr2",
+				"reo2sw6_intr2",
+				"reo2sw5_intr2",
+				"reo2sw4_intr2",
+				"reo2sw3_intr2",
+				"reo2sw2_intr2",
+				"reo2sw1_intr2",
+				"reo2sw0_intr2",
+				"reo2sw8_intr",
+				"reo2sw7_intr",
+				"reo2sw6_inrr",
+				"reo2sw5_intr",
+				"reo2sw4_intr",
+				"reo2sw3_intr",
+				"reo2sw2_intr",
+				"reo2sw1_intr",
+				"reo2sw0_intr",
+				"reo2status_intr2",
+				"reo_status",
+				"reo2rxdma_out_2",
+				"reo2rxdma_out_1",
+				"reo_cmd",
+				"sw2reo6",
+				"sw2reo5",
+				"sw2reo1",
+				"sw2reo",
+				"rxdma2reo_mlo_0_dst_ring1",
+				"rxdma2reo_mlo_0_dst_ring0",
+				"rxdma2reo_mlo_1_dst_ring1",
+				"rxdma2reo_mlo_1_dst_ring0",
+				"rxdma2reo_dst_ring1",
+				"rxdma2reo_dst_ring0",
+				"rxdma2sw_dst_ring1",
+				"rxdma2sw_dst_ring0",
+				"rxdma2release_dst_ring1",
+				"rxdma2release_dst_ring0",
+				"sw2rxdma_2_src_ring",
+				"sw2rxdma_1_src_ring",
+				"sw2rxdma_0",
+				"wbm2sw6_release2",
+				"wbm2sw5_release2",
+				"wbm2sw4_release2",
+				"wbm2sw3_release2",
+				"wbm2sw2_release2",
+				"wbm2sw1_release2",
+				"wbm2sw0_release2",
+				"wbm2sw6_release",
+				"wbm2sw5_release",
+				"wbm2sw4_release",
+				"wbm2sw3_release",
+				"wbm2sw2_release",
+				"wbm2sw1_release",
+				"wbm2sw0_release",
+				"wbm2sw_link",
+				"wbm_error_release",
+				"sw2txmon_src_ring",
+				"sw2rxmon_src_ring",
+				"txmon2sw_p1_intr1",
+				"txmon2sw_p1_intr0",
+				"txmon2sw_p0_dest1",
+				"txmon2sw_p0_dest0",
+				"rxmon2sw_p1_intr1",
+				"rxmon2sw_p1_intr0",
+				"rxmon2sw_p0_dest1",
+				"rxmon2sw_p0_dest0",
+				"sw_release",
+				"sw2tcl_credit2",
+				"sw2tcl_credit",
+				"sw2tcl4",
+				"sw2tcl5",
+				"sw2tcl3",
+				"sw2tcl2",
+				"sw2tcl1",
+				"sw2wbm1",
+				"misc_8",
+				"misc_7",
+				"misc_6",
+				"misc_5",
+				"misc_4",
+				"misc_3",
+				"misc_2",
+				"misc_1",
+				"misc_0",
+				"mhi2",
+				"mhi1",
+				"mhi0",
+				"inta";
+		};
+
+		wifi4: wifi4@f00000 {
+			compatible  = "qcom,cnss-qcn9224";
+			qcom,wlan-ramdump-dynamic = <0x600000>;
+			qrtr_node_id = <0x32>;
+			qca,auto-restart;
+			status = "disabled";
+			qca,extended-intc;
+			interrupts-extended =
+				<&qcn9224_in2 5 0>,
+				<&qcn9224_in2 6 0>,
+				<&qcn9224_in2 7 0>,
+				<&qcn9224_in2 8 0>,
+				<&qcn9224_in2 9 0>,
+				<&qcn9224_in2 10 0>,
+				<&qcn9224_in2 11 0>,
+				<&qcn9224_in2 12 0>,
+				<&qcn9224_in2 13 0>,
+				<&qcn9224_in2 14 0>,
+				<&qcn9224_in2 15 0>,
+				<&qcn9224_in2 16 0>,
+				<&qcn9224_in2 17 0>,
+				<&qcn9224_in2 18 0>,
+				<&qcn9224_in2 19 0>,
+				<&qcn9224_in2 20 0>,
+				<&qcn9224_in2 49 0>,
+				<&qcn9224_in2 48 0>,
+				<&qcn9224_in2 47 0>,
+				<&qcn9224_in2 46 0>,
+				<&qcn9224_in2 45 0>,
+				<&qcn9224_in2 44 0>,
+				<&qcn9224_in2 43 0>,
+				<&qcn9224_in2 42 0>,
+				<&qcn9224_in2 50 0>,
+				<&qcn9224_in2 52 0>,
+				<&qcn9224_in2 51 0>,
+				<&qcn9224_in2 30 0>,
+				<&qcn9224_in2 29 0>,
+				<&qcn9224_in2 28 0>,
+				<&qcn9224_in2 27 0>,
+				<&qcn9224_in2 26 0>,
+				<&qcn9224_in2 25 0>,
+				<&qcn9224_in2 31 0>,
+				<&qcn9224_in2 80 0>,
+				<&qcn9224_in2 71 0>,
+				<&qcn9224_in2 96 0>,
+				<&qcn9224_in2 97 0>,
+				<&qcn9224_in2 67 0>,
+				<&qcn9224_in2 100 0>,
+				<&qcn9224_in2 99 0>,
+				<&qcn9224_in2 68 0>,
+				<&qcn9224_in2 69 0>,
+				<&qcn9224_in2 121 0>,
+				<&qcn9224_in2 119 0>,
+				<&qcn9224_in2 122 0>,
+				<&qcn9224_in2 120 0>,
+				<&qcn9224_in2 116 0>,
+				<&qcn9224_in2 113 0>,
+				<&qcn9224_in2 115 0>,
+				<&qcn9224_in2 112 0>,
+				<&qcn9224_in2 114 0>,
+				<&qcn9224_in2 111 0>,
+				<&qcn9224_in2 110 0>,
+				<&qcn9224_in2 109 0>,
+				<&qcn9224_in2 108 0>,
+				<&qcn9224_in2 39 0>,
+				<&qcn9224_in2 38 0>,
+				<&qcn9224_in2 37 0>,
+				<&qcn9224_in2 36 0>,
+				<&qcn9224_in2 35 0>,
+				<&qcn9224_in2 34 0>,
+				<&qcn9224_in2 33 0>,
+				<&qcn9224_in2 41 0>,
+				<&qcn9224_in2 40 0>,
+				<&qcn9224_in2 32 0>,
+				<&qcn9224_in2 24 0>,
+				<&qcn9224_in2 23 0>,
+				<&qcn9224_in2 22 0>,
+				<&qcn9224_in2 21 0>,
+				<&qcn9224_in2 66 0>,
+				<&qcn9224_in2 78 0>,
+				<&qcn9224_in2 117 0>,
+				<&qcn9224_in2 118 0>,
+				<&qcn9224_in2 61 0>,
+				<&qcn9224_in2 60 0>,
+				<&qcn9224_in2 57 0>,
+				<&qcn9224_in2 56 0>,
+				<&qcn9224_in2 63 0>,
+				<&qcn9224_in2 62 0>,
+				<&qcn9224_in2 59 0>,
+				<&qcn9224_in2 58 0>,
+				<&qcn9224_in2 65 0>,
+				<&qcn9224_in2 83 0>,
+				<&qcn9224_in2 75 0>,
+				<&qcn9224_in2 82 0>,
+				<&qcn9224_in2 81 0>,
+				<&qcn9224_in2 74 0>,
+				<&qcn9224_in2 73 0>,
+				<&qcn9224_in2 72 0>,
+				<&qcn9224_in2 98 0>,
+				<&qcn9224_in2 107 0>,
+				<&qcn9224_in2 106 0>,
+				<&qcn9224_in2 105 0>,
+				<&qcn9224_in2 104 0>,
+				<&qcn9224_in2 103 0>,
+				<&qcn9224_in2 102 0>,
+				<&qcn9224_in2 101 0>,
+				<&qcn9224_in2 76 0>,
+				<&qcn9224_in2 77 0>,
+				<&qcn9224_in2 143 0>,
+				<&qcn9224_in2 142 0>,
+				<&qcn9224_in2 141 0>,
+				<&intc GIC_SPI 164 IRQ_TYPE_LEVEL_HIGH>;
+
+			interrupt-names = "ce0",
+				"ce1",
+				"ce2",
+				"ce3",
+				"ce4",
+				"ce5",
+				"ce6",
+				"ce7",
+				"ce8",
+				"ce9",
+				"ce10",
+				"ce11",
+				"ce12",
+				"ce13",
+				"ce14",
+				"ce15",
+				"reo2sw8_intr2",
+				"reo2sw7_intr2",
+				"reo2sw6_intr2",
+				"reo2sw5_intr2",
+				"reo2sw4_intr2",
+				"reo2sw3_intr2",
+				"reo2sw2_intr2",
+				"reo2sw1_intr2",
+				"reo2sw0_intr2",
+				"reo2sw8_intr",
+				"reo2sw7_intr",
+				"reo2sw6_inrr",
+				"reo2sw5_intr",
+				"reo2sw4_intr",
+				"reo2sw3_intr",
+				"reo2sw2_intr",
+				"reo2sw1_intr",
+				"reo2sw0_intr",
+				"reo2status_intr2",
+				"reo_status",
+				"reo2rxdma_out_2",
+				"reo2rxdma_out_1",
+				"reo_cmd",
+				"sw2reo6",
+				"sw2reo5",
+				"sw2reo1",
+				"sw2reo",
+				"rxdma2reo_mlo_0_dst_ring1",
+				"rxdma2reo_mlo_0_dst_ring0",
+				"rxdma2reo_mlo_1_dst_ring1",
+				"rxdma2reo_mlo_1_dst_ring0",
+				"rxdma2reo_dst_ring1",
+				"rxdma2reo_dst_ring0",
+				"rxdma2sw_dst_ring1",
+				"rxdma2sw_dst_ring0",
+				"rxdma2release_dst_ring1",
+				"rxdma2release_dst_ring0",
+				"sw2rxdma_2_src_ring",
+				"sw2rxdma_1_src_ring",
+				"sw2rxdma_0",
+				"wbm2sw6_release2",
+				"wbm2sw5_release2",
+				"wbm2sw4_release2",
+				"wbm2sw3_release2",
+				"wbm2sw2_release2",
+				"wbm2sw1_release2",
+				"wbm2sw0_release2",
+				"wbm2sw6_release",
+				"wbm2sw5_release",
+				"wbm2sw4_release",
+				"wbm2sw3_release",
+				"wbm2sw2_release",
+				"wbm2sw1_release",
+				"wbm2sw0_release",
+				"wbm2sw_link",
+				"wbm_error_release",
+				"sw2txmon_src_ring",
+				"sw2rxmon_src_ring",
+				"txmon2sw_p1_intr1",
+				"txmon2sw_p1_intr0",
+				"txmon2sw_p0_dest1",
+				"txmon2sw_p0_dest0",
+				"rxmon2sw_p1_intr1",
+				"rxmon2sw_p1_intr0",
+				"rxmon2sw_p0_dest1",
+				"rxmon2sw_p0_dest0",
+				"sw_release",
+				"sw2tcl_credit2",
+				"sw2tcl_credit",
+				"sw2tcl4",
+				"sw2tcl5",
+				"sw2tcl3",
+				"sw2tcl2",
+				"sw2tcl1",
+				"sw2wbm1",
+				"misc_8",
+				"misc_7",
+				"misc_6",
+				"misc_5",
+				"misc_4",
+				"misc_3",
+				"misc_2",
+				"misc_1",
+				"misc_0",
+				"mhi2",
+				"mhi1",
+				"mhi0",
+				"inta";
+		};
+
+		wifi5: wifi5@f00000 {
+                        compatible  = "qcom,cnss-qcn9224";
+                        qcom,wlan-ramdump-dynamic = <0x600000>;
+                        qrtr_node_id = <0x33>;
+                        qca,auto-restart;
+                        status = "disabled";
+			qca,extended-intc;
+			interrupts-extended =
+				<&qcn9224_in3 5 0>,
+				<&qcn9224_in3 6 0>,
+				<&qcn9224_in3 7 0>,
+				<&qcn9224_in3 8 0>,
+				<&qcn9224_in3 9 0>,
+				<&qcn9224_in3 10 0>,
+				<&qcn9224_in3 11 0>,
+				<&qcn9224_in3 12 0>,
+				<&qcn9224_in3 13 0>,
+				<&qcn9224_in3 14 0>,
+				<&qcn9224_in3 15 0>,
+				<&qcn9224_in3 16 0>,
+				<&qcn9224_in3 17 0>,
+				<&qcn9224_in3 18 0>,
+				<&qcn9224_in3 19 0>,
+				<&qcn9224_in3 20 0>,
+				<&qcn9224_in3 49 0>,
+				<&qcn9224_in3 48 0>,
+				<&qcn9224_in3 47 0>,
+				<&qcn9224_in3 46 0>,
+				<&qcn9224_in3 45 0>,
+				<&qcn9224_in3 44 0>,
+				<&qcn9224_in3 43 0>,
+				<&qcn9224_in3 42 0>,
+				<&qcn9224_in3 50 0>,
+				<&qcn9224_in3 52 0>,
+				<&qcn9224_in3 51 0>,
+				<&qcn9224_in3 30 0>,
+				<&qcn9224_in3 29 0>,
+				<&qcn9224_in3 28 0>,
+				<&qcn9224_in3 27 0>,
+				<&qcn9224_in3 26 0>,
+				<&qcn9224_in3 25 0>,
+				<&qcn9224_in3 31 0>,
+				<&qcn9224_in3 80 0>,
+				<&qcn9224_in3 71 0>,
+				<&qcn9224_in3 96 0>,
+				<&qcn9224_in3 97 0>,
+				<&qcn9224_in3 67 0>,
+				<&qcn9224_in3 100 0>,
+				<&qcn9224_in3 99 0>,
+				<&qcn9224_in3 68 0>,
+				<&qcn9224_in3 69 0>,
+				<&qcn9224_in3 121 0>,
+				<&qcn9224_in3 119 0>,
+				<&qcn9224_in3 122 0>,
+				<&qcn9224_in3 120 0>,
+				<&qcn9224_in3 116 0>,
+				<&qcn9224_in3 113 0>,
+				<&qcn9224_in3 115 0>,
+				<&qcn9224_in3 112 0>,
+				<&qcn9224_in3 114 0>,
+				<&qcn9224_in3 111 0>,
+				<&qcn9224_in3 110 0>,
+				<&qcn9224_in3 109 0>,
+				<&qcn9224_in3 108 0>,
+				<&qcn9224_in3 39 0>,
+				<&qcn9224_in3 38 0>,
+				<&qcn9224_in3 37 0>,
+				<&qcn9224_in3 36 0>,
+				<&qcn9224_in3 35 0>,
+				<&qcn9224_in3 34 0>,
+				<&qcn9224_in3 33 0>,
+				<&qcn9224_in3 41 0>,
+				<&qcn9224_in3 40 0>,
+				<&qcn9224_in3 32 0>,
+				<&qcn9224_in3 24 0>,
+				<&qcn9224_in3 23 0>,
+				<&qcn9224_in3 22 0>,
+				<&qcn9224_in3 21 0>,
+				<&qcn9224_in3 66 0>,
+				<&qcn9224_in3 78 0>,
+				<&qcn9224_in3 117 0>,
+				<&qcn9224_in3 118 0>,
+				<&qcn9224_in3 61 0>,
+				<&qcn9224_in3 60 0>,
+				<&qcn9224_in3 57 0>,
+				<&qcn9224_in3 56 0>,
+				<&qcn9224_in3 63 0>,
+				<&qcn9224_in3 62 0>,
+				<&qcn9224_in3 59 0>,
+				<&qcn9224_in3 58 0>,
+				<&qcn9224_in3 65 0>,
+				<&qcn9224_in3 83 0>,
+				<&qcn9224_in3 75 0>,
+				<&qcn9224_in3 82 0>,
+				<&qcn9224_in3 81 0>,
+				<&qcn9224_in3 74 0>,
+				<&qcn9224_in3 73 0>,
+				<&qcn9224_in3 72 0>,
+				<&qcn9224_in3 98 0>,
+				<&qcn9224_in3 107 0>,
+				<&qcn9224_in3 106 0>,
+				<&qcn9224_in3 105 0>,
+				<&qcn9224_in3 104 0>,
+				<&qcn9224_in3 103 0>,
+				<&qcn9224_in3 102 0>,
+				<&qcn9224_in3 101 0>,
+				<&qcn9224_in3 76 0>,
+				<&qcn9224_in3 77 0>,
+				<&qcn9224_in3 143 0>,
+				<&qcn9224_in3 142 0>,
+				<&qcn9224_in3 141 0>,
+				<&intc GIC_SPI 189 IRQ_TYPE_LEVEL_HIGH>;
+
+			interrupt-names = "ce0",
+				"ce1",
+				"ce2",
+				"ce3",
+				"ce4",
+				"ce5",
+				"ce6",
+				"ce7",
+				"ce8",
+				"ce9",
+				"ce10",
+				"ce11",
+				"ce12",
+				"ce13",
+				"ce14",
+				"ce15",
+				"reo2sw8_intr2",
+				"reo2sw7_intr2",
+				"reo2sw6_intr2",
+				"reo2sw5_intr2",
+				"reo2sw4_intr2",
+				"reo2sw3_intr2",
+				"reo2sw2_intr2",
+				"reo2sw1_intr2",
+				"reo2sw0_intr2",
+				"reo2sw8_intr",
+				"reo2sw7_intr",
+				"reo2sw6_inrr",
+				"reo2sw5_intr",
+				"reo2sw4_intr",
+				"reo2sw3_intr",
+				"reo2sw2_intr",
+				"reo2sw1_intr",
+				"reo2sw0_intr",
+				"reo2status_intr2",
+				"reo_status",
+				"reo2rxdma_out_2",
+				"reo2rxdma_out_1",
+				"reo_cmd",
+				"sw2reo6",
+				"sw2reo5",
+				"sw2reo1",
+				"sw2reo",
+				"rxdma2reo_mlo_0_dst_ring1",
+				"rxdma2reo_mlo_0_dst_ring0",
+				"rxdma2reo_mlo_1_dst_ring1",
+				"rxdma2reo_mlo_1_dst_ring0",
+				"rxdma2reo_dst_ring1",
+				"rxdma2reo_dst_ring0",
+				"rxdma2sw_dst_ring1",
+				"rxdma2sw_dst_ring0",
+				"rxdma2release_dst_ring1",
+				"rxdma2release_dst_ring0",
+				"sw2rxdma_2_src_ring",
+				"sw2rxdma_1_src_ring",
+				"sw2rxdma_0",
+				"wbm2sw6_release2",
+				"wbm2sw5_release2",
+				"wbm2sw4_release2",
+				"wbm2sw3_release2",
+				"wbm2sw2_release2",
+				"wbm2sw1_release2",
+				"wbm2sw0_release2",
+				"wbm2sw6_release",
+				"wbm2sw5_release",
+				"wbm2sw4_release",
+				"wbm2sw3_release",
+				"wbm2sw2_release",
+				"wbm2sw1_release",
+				"wbm2sw0_release",
+				"wbm2sw_link",
+				"wbm_error_release",
+				"sw2txmon_src_ring",
+				"sw2rxmon_src_ring",
+				"txmon2sw_p1_intr1",
+				"txmon2sw_p1_intr0",
+				"txmon2sw_p0_dest1",
+				"txmon2sw_p0_dest0",
+				"rxmon2sw_p1_intr1",
+				"rxmon2sw_p1_intr0",
+				"rxmon2sw_p0_dest1",
+				"rxmon2sw_p0_dest0",
+				"sw_release",
+				"sw2tcl_credit2",
+				"sw2tcl_credit",
+				"sw2tcl4",
+				"sw2tcl5",
+				"sw2tcl3",
+				"sw2tcl2",
+				"sw2tcl1",
+				"sw2wbm1",
+				"misc_8",
+				"misc_7",
+				"misc_6",
+				"misc_5",
+				"misc_4",
+				"misc_3",
+				"misc_2",
+				"misc_1",
+				"misc_0",
+				"mhi2",
+				"mhi1",
+				"mhi0",
+				"inta";
+                };
 
 		qfprom@a4000 {
 			compatible = "qcom,qfprom";
@@ -2613,10 +3321,6 @@
 				};
 			};
 		};
-	};
-
-	qti,scm_restart_reason {
-		compatible = "qti,scm_restart_reason";
 	};
 
 	qti,gadget_diag@0 {

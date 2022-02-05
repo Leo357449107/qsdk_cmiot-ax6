@@ -1,0 +1,22 @@
+Source-Makefile: package/network/ipv6/464xlat/Makefile
+
+Package: 464xlat
+Version: 12
+Depends: +libc +GCC_LIBSSP:libssp +USE_GLIBC:librt +USE_GLIBC:libpthread @IPV6 +kmod-nat46 +ip
+Conflicts: 
+Menu-Depends: 
+Provides: 
+Section: net
+Category: Network
+Repository: base
+Title: 464xlat CLAT support
+Maintainer: Hans Dedecker <dedeckeh@gmail.com>
+Source: 
+License: GPL-2.0
+Type: ipkg
+Description:   464xlat provides support to deploy limited IPv4 access services to mobile
+  and wireline IPv6-only edge networks without encapsulation (RFC6877)
+Hans Dedecker <dedeckeh@gmail.com>
+@@
+
+

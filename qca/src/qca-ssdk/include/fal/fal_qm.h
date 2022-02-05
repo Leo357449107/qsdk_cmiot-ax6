@@ -169,13 +169,11 @@ fal_ac_ctrl_set(
 		fal_ac_obj_t *obj,
 		fal_ac_ctrl_t *cfg);
 
-#ifndef IN_QM_MINI
 sw_error_t
 fal_ac_ctrl_get(
 		a_uint32_t dev_id,
 		fal_ac_obj_t *obj,
 		fal_ac_ctrl_t *cfg);
-#endif
 
 sw_error_t
 fal_ac_prealloc_buffer_set(
@@ -183,13 +181,11 @@ fal_ac_prealloc_buffer_set(
 		fal_ac_obj_t *obj,
 		a_uint16_t num);
 
-#ifndef IN_QM_MINI
 sw_error_t
 fal_ac_prealloc_buffer_get(
 		a_uint32_t dev_id,
 		fal_ac_obj_t *obj,
 		a_uint16_t *num);
-#endif
 
 sw_error_t
 fal_ac_queue_group_set(
@@ -197,13 +193,11 @@ fal_ac_queue_group_set(
 		a_uint32_t queue_id,
 		a_uint8_t group_id);
 
-#ifndef IN_QM_MINI
 sw_error_t
 fal_ac_queue_group_get(
 		a_uint32_t dev_id,
 		a_uint32_t queue_id,
 		a_uint8_t *group_id);
-#endif
 
 sw_error_t
 fal_ac_static_threshold_set(
@@ -211,13 +205,11 @@ fal_ac_static_threshold_set(
 		fal_ac_obj_t *obj,
 		fal_ac_static_threshold_t *cfg);
 
-#ifndef IN_QM_MINI
 sw_error_t
 fal_ac_static_threshold_get(
 		a_uint32_t dev_id,
 		fal_ac_obj_t *obj,
 		fal_ac_static_threshold_t *cfg);
-#endif
 
 sw_error_t
 fal_ac_dynamic_threshold_set(
@@ -225,13 +217,11 @@ fal_ac_dynamic_threshold_set(
 		a_uint32_t queue_id,
 		fal_ac_dynamic_threshold_t *cfg);
 
-#ifndef IN_QM_MINI
 sw_error_t
 fal_ac_dynamic_threshold_get(
 		a_uint32_t dev_id,
 		a_uint32_t queue_id,
 		fal_ac_dynamic_threshold_t *cfg);
-#endif
 
 sw_error_t
 fal_ac_group_buffer_set(
@@ -239,13 +229,11 @@ fal_ac_group_buffer_set(
 		a_uint8_t group_id,
 		fal_ac_group_buffer_t *cfg);
 
-#ifndef IN_QM_MINI
 sw_error_t
 fal_ac_group_buffer_get(
 		a_uint32_t dev_id,
 		a_uint8_t group_id,
 		fal_ac_group_buffer_t *cfg);
-#endif
 
 sw_error_t
 fal_ucast_queue_base_profile_set(
@@ -253,14 +241,11 @@ fal_ucast_queue_base_profile_set(
 		fal_ucast_queue_dest_t *queue_dest,
 		a_uint32_t queue_base, a_uint8_t profile);
 
-#ifndef IN_QM_MINI
 sw_error_t
 fal_ucast_queue_base_profile_get(
 		a_uint32_t dev_id,
 		fal_ucast_queue_dest_t *queue_dest,
 		a_uint32_t *queue_base, a_uint8_t *profile);
-
-#endif
 
 sw_error_t
 fal_ucast_priority_class_set(
@@ -276,7 +261,6 @@ fal_ucast_hash_map_set(
 		a_uint8_t rss_hash,
 		a_int8_t queue_hash);
 
-#ifndef IN_QM_MINI
 sw_error_t
 fal_ucast_priority_class_get(
 		a_uint32_t dev_id,
@@ -291,6 +275,7 @@ fal_ucast_hash_map_get(
 		a_uint8_t rss_hash,
 		a_int8_t *queue_hash);
 
+#if !defined(IN_QM_MINI)
 sw_error_t
 fal_mcast_cpu_code_class_set(
 		a_uint32_t dev_id,
@@ -316,15 +301,14 @@ fal_port_mcast_priority_class_get(
 		fal_port_t port,
 		a_uint8_t priority,
 		a_uint8_t *queue_class);
-
 #endif
+
 sw_error_t
 fal_queue_flush(
 		a_uint32_t dev_id,
 		fal_port_t port,
 		a_uint16_t queue_id);
 
-#ifndef IN_QM_MINI
 sw_error_t
 fal_ucast_default_hash_set(
 		a_uint32_t dev_id,
@@ -334,12 +318,10 @@ sw_error_t
 fal_ucast_default_hash_get(
 		a_uint32_t dev_id,
 		a_uint8_t *hash_value);
-#endif
 
 sw_error_t
 fal_queue_counter_ctrl_set(a_uint32_t dev_id, a_bool_t cnt_en);
 
-#ifndef IN_QM_MINI
 sw_error_t
 fal_queue_counter_ctrl_get(a_uint32_t dev_id, a_bool_t *cnt_en);
 
@@ -348,12 +330,10 @@ fal_queue_counter_get(a_uint32_t dev_id, a_uint32_t queue_id, fal_queue_stats_t 
 
 sw_error_t
 fal_queue_counter_cleanup(a_uint32_t dev_id, a_uint32_t queue_id);
-#endif
 
 sw_error_t
 fal_qm_enqueue_ctrl_set(a_uint32_t dev_id, a_uint32_t queue_id, a_bool_t enable);
 
-#ifndef IN_QM_MINI
 sw_error_t
 fal_qm_enqueue_ctrl_get(a_uint32_t dev_id, a_uint32_t queue_id, a_bool_t *enable);
 
@@ -369,7 +349,6 @@ fal_qm_port_source_profile_get(
 		fal_port_t port,
 		a_uint32_t *src_profile);
 
-#endif
 
 sw_error_t
 fal_qm_enqueue_config_set(a_uint32_t dev_id,

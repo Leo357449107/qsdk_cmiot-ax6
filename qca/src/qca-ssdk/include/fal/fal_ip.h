@@ -415,7 +415,6 @@ fal_ip_intf_dmac_check_set(a_uint32_t dev_id, a_uint32_t l3_if, a_bool_t enable)
 sw_error_t
 fal_ip_intf_dmac_check_get(a_uint32_t dev_id, a_uint32_t l3_if, a_bool_t *enable);
 
-#ifndef IN_IP_MINI
 sw_error_t
 fal_ip_host_add(a_uint32_t dev_id, fal_host_entry_t * host_entry);
 
@@ -431,6 +430,7 @@ sw_error_t
 fal_ip_host_next(a_uint32_t dev_id, a_uint32_t next_mode,
                  fal_host_entry_t * host_entry);
 
+#if !defined(IN_IP_MINI)
 sw_error_t
 fal_ip_host_counter_bind(a_uint32_t dev_id, a_uint32_t entry_id,
                          a_uint32_t cnt_id, a_bool_t enable);
@@ -579,6 +579,7 @@ fal_default_rt_flow_cmd_set(a_uint32_t dev_id, a_uint32_t vrf_id,
 sw_error_t
 fal_default_rt_flow_cmd_get(a_uint32_t dev_id, a_uint32_t vrf_id,
 		fal_flow_type_t type, fal_default_flow_cmd_t * cmd);
+#endif
 
 sw_error_t
 fal_ip_vsi_arp_sg_cfg_get(a_uint32_t dev_id, a_uint32_t vsi,
@@ -588,6 +589,7 @@ sw_error_t
 fal_ip_vsi_arp_sg_cfg_set(a_uint32_t dev_id, a_uint32_t vsi,
 			fal_arp_sg_cfg_t *arp_sg_cfg);
 
+#if !defined(IN_IP_MINI)
 sw_error_t
 fal_ip_network_route_add(a_uint32_t dev_id, a_uint32_t index,
 			fal_network_route_entry_t *entry);
@@ -600,6 +602,7 @@ fal_ip_network_route_get(a_uint32_t dev_id,
 sw_error_t
 fal_ip_network_route_del(a_uint32_t dev_id,
 			a_uint32_t index, a_uint8_t type);
+#endif
 
 sw_error_t
 fal_ip_intf_set(a_uint32_t dev_id,
@@ -690,7 +693,6 @@ fal_ip_global_ctrl_get(a_uint32_t dev_id, fal_ip_global_cfg_t *cfg);
 
 sw_error_t
 fal_ip_global_ctrl_set(a_uint32_t dev_id, fal_ip_global_cfg_t *cfg);
-#endif
 
 #ifdef __cplusplus
 }

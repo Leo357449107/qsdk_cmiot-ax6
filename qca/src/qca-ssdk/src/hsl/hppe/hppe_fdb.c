@@ -469,7 +469,7 @@ hppe_port_bridge_ctrl_set(
 				index * PORT_BRIDGE_CTRL_INC,
 				value->val);
 }
-#ifndef IN_FDB_MINI
+
 sw_error_t
 hppe_port_lrn_limit_ctrl_get(
 		a_uint32_t dev_id,
@@ -498,6 +498,7 @@ hppe_port_lrn_limit_ctrl_set(
 				value->val);
 }
 
+#ifndef IN_FDB_MINI
 sw_error_t
 hppe_port_lrn_limit_counter_get(
 		a_uint32_t dev_id,
@@ -1503,7 +1504,7 @@ hppe_port_bridge_ctrl_port_isolation_bitmap_set(
 	ret = hppe_port_bridge_ctrl_set(dev_id, index, &reg_val);
 	return ret;
 }
-
+#endif
 sw_error_t
 hppe_port_bridge_ctrl_station_move_lrn_en_get(
 		a_uint32_t dev_id,
@@ -1689,7 +1690,7 @@ hppe_port_lrn_limit_ctrl_lrn_lmt_en_set(
 	ret = hppe_port_lrn_limit_ctrl_set(dev_id, index, &reg_val);
 	return ret;
 }
-
+#ifndef IN_FDB_MINI
 sw_error_t
 hppe_port_lrn_limit_ctrl_lrn_lmt_cnt_get(
 		a_uint32_t dev_id,
@@ -1720,7 +1721,7 @@ hppe_port_lrn_limit_ctrl_lrn_lmt_cnt_set(
 	ret = hppe_port_lrn_limit_ctrl_set(dev_id, index, &reg_val);
 	return ret;
 }
-
+#endif
 sw_error_t
 hppe_port_lrn_limit_ctrl_lrn_lmt_exceed_fwd_get(
 		a_uint32_t dev_id,
@@ -1751,7 +1752,7 @@ hppe_port_lrn_limit_ctrl_lrn_lmt_exceed_fwd_set(
 	ret = hppe_port_lrn_limit_ctrl_set(dev_id, index, &reg_val);
 	return ret;
 }
-
+#ifndef IN_FDB_MINI
 sw_error_t
 hppe_port_lrn_limit_counter_lrn_cnt_get(
 		a_uint32_t dev_id,

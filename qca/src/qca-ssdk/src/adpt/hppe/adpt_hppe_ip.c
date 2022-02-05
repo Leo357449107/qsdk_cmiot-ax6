@@ -36,7 +36,6 @@ struct ppe_ip_mac {
 
 static struct ppe_ip_mac ppe_l3_mac_g[SW_MAX_NR_DEV] = {0};
 
-#ifndef IN_IP_MINI
 a_uint8_t adpt_ppe_l3_mac_bitmap_alloc(a_uint32_t dev_id, fal_mac_addr_t mac_addr)
 {
 	a_uint32_t i;
@@ -146,88 +145,6 @@ void adpt_ppe_l3_mac_addr_get(a_uint32_t dev_id, a_uint8_t mac_bitmap, fal_mac_a
 	eth_zero_addr(mac_addr->uc);
 
 	return;
-}
-
-sw_error_t
-adpt_hppe_ip_network_route_get(a_uint32_t dev_id,
-			a_uint32_t index, a_uint8_t type,
-			fal_network_route_entry_t *entry)
-{
-	sw_error_t rv = SW_OK;
-	union network_route_ip_u network_route_ip;
-	union network_route_ip_ext_u network_route_ip_ext;
-	union network_route_action_u network_route_action;
-	fal_ip6_addr_t ipv6, ipv6_mask;
-
-	ADPT_DEV_ID_CHECK(dev_id);
-	ADPT_NULL_POINT_CHECK(entry);
-	memset(&network_route_ip, 0, sizeof(network_route_ip));
-	memset(&network_route_ip_ext, 0, sizeof(network_route_ip_ext));
-	memset(&network_route_action, 0, sizeof(network_route_action));
-
-	if (type > 1 || (type == 0 && index > 31) || (type == 1 && index > 7))
-		return SW_BAD_VALUE;
-
-	if (type == 0) {
-		rv = hppe_network_route_ip_get(dev_id, index,
-							&network_route_ip);
-		if( rv != SW_OK )
-			return rv;
-		rv = hppe_network_route_ip_ext_get(dev_id, index,
-							&network_route_ip_ext);
-		if( rv != SW_OK )
-			return rv;
-		rv = hppe_network_route_action_get(dev_id, index,
-							&network_route_action);
-		if( rv != SW_OK )
-			return rv;
-	} else {
-		rv = hppe_network_route_ip_get(dev_id, index * 4, &network_route_ip);
-		if( rv != SW_OK )
-			return rv;
-		ipv6.ul[3] = network_route_ip.val[0];
-		ipv6.ul[2] = network_route_ip.val[1];
-		rv = hppe_network_route_ip_get(dev_id, index * 4 + 1, &network_route_ip);
-		if( rv != SW_OK )
-			return rv;
-		ipv6.ul[1] = network_route_ip.val[0];
-		ipv6.ul[0] = network_route_ip.val[1];
-		rv = hppe_network_route_ip_get(dev_id, index * 4 + 2, &network_route_ip);
-		if( rv != SW_OK )
-			return rv;
-		ipv6_mask.ul[3] = network_route_ip.val[0];
-		ipv6_mask.ul[2] = network_route_ip.val[1];
-		rv = hppe_network_route_ip_get(dev_id, index * 4 + 3, &network_route_ip);
-		if( rv != SW_OK )
-			return rv;
-		ipv6_mask.ul[1] = network_route_ip.val[0];
-		ipv6_mask.ul[0] = network_route_ip.val[1];
-		rv = hppe_network_route_ip_ext_get(dev_id, index * 4,
-							&network_route_ip_ext);
-		if( rv != SW_OK )
-			return rv;
-		rv = hppe_network_route_action_get(dev_id, index * 4,
-							&network_route_action);
-		if( rv != SW_OK )
-			return rv;
-	}
-
-	if (!network_route_ip_ext.bf.valid)
-		return SW_FAIL;
-	entry->action = (fal_fwd_cmd_t)network_route_action.bf.fwd_cmd;
-	entry->lan_wan = network_route_action.bf.lan_wan;
-	entry->dst_info = network_route_action.bf.dst_info;
-	entry->type = network_route_ip_ext.bf.entry_type;
-	if (type == 0) {
-		entry->route_addr.ip4_addr = network_route_ip.bf.ip_addr;
-		entry->route_addr_mask.ip4_addr_mask = network_route_ip.bf.ip_addr_mask;
-	} else {
-		memcpy(&entry->route_addr.ip6_addr , &ipv6, sizeof(ipv6));
-		memcpy(&entry->route_addr_mask.ip6_addr_mask,
-							&ipv6_mask, sizeof(ipv6_mask));
-	}
-
-	return SW_OK;
 }
 
 sw_error_t
@@ -531,6 +448,7 @@ adpt_hppe_ip_vsi_intf_get(a_uint32_t dev_id, a_uint32_t vsi, fal_intf_id_t *id)
 	return SW_OK;
 }
 
+#if !defined(IN_IP_MINI)
 sw_error_t
 adpt_hppe_ip_network_route_add(a_uint32_t dev_id,
 			a_uint32_t index,
@@ -608,6 +526,90 @@ adpt_hppe_ip_network_route_del(a_uint32_t dev_id,
 	}
 	return SW_OK;
 }
+
+sw_error_t
+adpt_hppe_ip_network_route_get(a_uint32_t dev_id,
+			a_uint32_t index, a_uint8_t type,
+			fal_network_route_entry_t *entry)
+{
+	sw_error_t rv = SW_OK;
+	union network_route_ip_u network_route_ip;
+	union network_route_ip_ext_u network_route_ip_ext;
+	union network_route_action_u network_route_action;
+	fal_ip6_addr_t ipv6, ipv6_mask;
+
+	ADPT_DEV_ID_CHECK(dev_id);
+	ADPT_NULL_POINT_CHECK(entry);
+	memset(&network_route_ip, 0, sizeof(network_route_ip));
+	memset(&network_route_ip_ext, 0, sizeof(network_route_ip_ext));
+	memset(&network_route_action, 0, sizeof(network_route_action));
+
+	if (type > 1 || (type == 0 && index > 31) || (type == 1 && index > 7))
+		return SW_BAD_VALUE;
+
+	if (type == 0) {
+		rv = hppe_network_route_ip_get(dev_id, index,
+							&network_route_ip);
+		if( rv != SW_OK )
+			return rv;
+		rv = hppe_network_route_ip_ext_get(dev_id, index,
+							&network_route_ip_ext);
+		if( rv != SW_OK )
+			return rv;
+		rv = hppe_network_route_action_get(dev_id, index,
+							&network_route_action);
+		if( rv != SW_OK )
+			return rv;
+	} else {
+		rv = hppe_network_route_ip_get(dev_id, index * 4, &network_route_ip);
+		if( rv != SW_OK )
+			return rv;
+		ipv6.ul[3] = network_route_ip.val[0];
+		ipv6.ul[2] = network_route_ip.val[1];
+		rv = hppe_network_route_ip_get(dev_id, index * 4 + 1, &network_route_ip);
+		if( rv != SW_OK )
+			return rv;
+		ipv6.ul[1] = network_route_ip.val[0];
+		ipv6.ul[0] = network_route_ip.val[1];
+		rv = hppe_network_route_ip_get(dev_id, index * 4 + 2, &network_route_ip);
+		if( rv != SW_OK )
+			return rv;
+		ipv6_mask.ul[3] = network_route_ip.val[0];
+		ipv6_mask.ul[2] = network_route_ip.val[1];
+		rv = hppe_network_route_ip_get(dev_id, index * 4 + 3, &network_route_ip);
+		if( rv != SW_OK )
+			return rv;
+		ipv6_mask.ul[1] = network_route_ip.val[0];
+		ipv6_mask.ul[0] = network_route_ip.val[1];
+		rv = hppe_network_route_ip_ext_get(dev_id, index * 4,
+							&network_route_ip_ext);
+		if( rv != SW_OK )
+			return rv;
+		rv = hppe_network_route_action_get(dev_id, index * 4,
+							&network_route_action);
+		if( rv != SW_OK )
+			return rv;
+	}
+
+	if (!network_route_ip_ext.bf.valid)
+		return SW_FAIL;
+	entry->action = (fal_fwd_cmd_t)network_route_action.bf.fwd_cmd;
+	entry->lan_wan = network_route_action.bf.lan_wan;
+	entry->dst_info = network_route_action.bf.dst_info;
+	entry->type = network_route_ip_ext.bf.entry_type;
+	if (type == 0) {
+		entry->route_addr.ip4_addr = network_route_ip.bf.ip_addr;
+		entry->route_addr_mask.ip4_addr_mask = network_route_ip.bf.ip_addr_mask;
+	} else {
+		memcpy(&entry->route_addr.ip6_addr , &ipv6, sizeof(ipv6));
+		memcpy(&entry->route_addr_mask.ip6_addr_mask,
+							&ipv6_mask, sizeof(ipv6_mask));
+	}
+
+	return SW_OK;
+}
+
+#endif
 
 sw_error_t
 adpt_hppe_ip_port_sg_cfg_get(a_uint32_t dev_id, fal_port_t port_id,
@@ -1723,7 +1725,6 @@ adpt_hppe_ip_intf_macaddr_get(a_uint32_t dev_id, a_uint32_t l3_if,
 
 	return rv;
 }
-#endif
 
 void adpt_hppe_ip_func_bitmap_init(a_uint32_t dev_id)
 {
@@ -1734,8 +1735,51 @@ void adpt_hppe_ip_func_bitmap_init(a_uint32_t dev_id)
 	if(p_adpt_api == NULL)
 		return;
 
-	p_adpt_api->adpt_ip_func_bitmap[0] = 0;
-	p_adpt_api->adpt_ip_func_bitmap[1] = 0;
+	p_adpt_api->adpt_ip_func_bitmap[0] = BIT(FUNC_IP_NETWORK_ROUTE_GET) |
+		BIT(FUNC_IP_HOST_ADD) |
+		BIT(FUNC_IP_VSI_SG_CFG_GET) |
+		BIT(FUNC_IP_PUB_ADDR_SET) |
+		BIT(FUNC_IP_PORT_SG_CFG_SET) |
+		BIT(FUNC_IP_PORT_INTF_GET) |
+		BIT(FUNC_IP_VSI_ARP_SG_CFG_SET) |
+		BIT(FUNC_IP_PUB_ADDR_GET) |
+		BIT(FUNC_IP_PORT_INTF_SET) |
+		BIT(FUNC_IP_VSI_SG_CFG_SET) |
+		BIT(FUNC_IP_HOST_NEXT) |
+		BIT(FUNC_IP_PORT_MACADDR_SET) |
+		BIT(FUNC_IP_VSI_INTF_GET) |
+		BIT(FUNC_IP_NETWORK_ROUTE_ADD) |
+		BIT(FUNC_IP_PORT_SG_CFG_GET) |
+		BIT(FUNC_IP_INTF_GET) |
+		BIT(FUNC_IP_NETWORK_ROUTE_DEL) |
+		BIT(FUNC_IP_HOST_DEL) |
+		BIT(FUNC_IP_ROUTE_MISMATCH_GET) |
+		BIT(FUNC_IP_VSI_ARP_SG_CFG_GET) |
+		BIT(FUNC_IP_PORT_ARP_SG_CFG_SET) |
+		BIT(FUNC_IP_VSI_MC_MODE_SET) |
+		BIT(FUNC_IP_VSI_INTF_SET) |
+		BIT(FUNC_IP_NEXTHOP_GET) |
+		BIT(FUNC_IP_ROUTE_MISMATCH_SET) |
+		BIT(FUNC_IP_HOST_GET) |
+		BIT(FUNC_IP_INTF_SET) |
+		BIT(FUNC_IP_VSI_MC_MODE_GET) |
+		BIT(FUNC_IP_PORT_MACADDR_GET) |
+		BIT(FUNC_IP_PORT_ARP_SG_CFG_GET) |
+		BIT(FUNC_IP_NEXTHOP_SET) |
+		BIT(FUNC_IP_GLOBAL_CTRL_GET);
+
+	p_adpt_api->adpt_ip_func_bitmap[1] = BIT(FUNC_IP_GLOBAL_CTRL_SET % 32) |
+		BIT(FUNC_IP_INTF_MTU_MRU_SET % 32) |
+		BIT(FUNC_IP_INTF_MTU_MRU_GET % 32) |
+		BIT(FUNC_IP6_INTF_MTU_MRU_SET % 32) |
+		BIT(FUNC_IP6_INTF_MTU_MRU_GET % 32) |
+		BIT(FUNC_IP_INTF_MACADDR_ADD % 32) |
+		BIT(FUNC_IP_INTF_MACADDR_DEL % 32) |
+		BIT(FUNC_IP_INTF_MACADDR_GET_FIRST % 32) |
+		BIT(FUNC_IP_INTF_MACADDR_GET_NEXT % 32) |
+		BIT(FUNC_IP_INTF_DMAC_CHECK_SET % 32) |
+		BIT(FUNC_IP_INTF_DMAC_CHECK_GET % 32);
+
 	return;
 }
 
@@ -1800,9 +1844,14 @@ sw_error_t adpt_hppe_ip_init(a_uint32_t dev_id)
 		return SW_FAIL;
 
 	adpt_hppe_ip_func_unregister(dev_id, p_adpt_api);
-#ifndef IN_IP_MINI
+#if !defined(IN_IP_MINI)
+	if (p_adpt_api->adpt_ip_func_bitmap[0] & (1 << FUNC_IP_NETWORK_ROUTE_ADD))
+		p_adpt_api->adpt_ip_network_route_add = adpt_hppe_ip_network_route_add;
+	if (p_adpt_api->adpt_ip_func_bitmap[0] & (1 << FUNC_IP_NETWORK_ROUTE_DEL))
+		p_adpt_api->adpt_ip_network_route_del = adpt_hppe_ip_network_route_del;
 	if (p_adpt_api->adpt_ip_func_bitmap[0] & (1 << FUNC_IP_NETWORK_ROUTE_GET))
 		p_adpt_api->adpt_ip_network_route_get = adpt_hppe_ip_network_route_get;
+#endif
 	if (p_adpt_api->adpt_ip_func_bitmap[0] & (1 << FUNC_IP_HOST_ADD))
 		p_adpt_api->adpt_ip_host_add = adpt_hppe_ip_host_add;
 	if (p_adpt_api->adpt_ip_func_bitmap[0] & (1 << FUNC_IP_VSI_SG_CFG_GET))
@@ -1827,14 +1876,10 @@ sw_error_t adpt_hppe_ip_init(a_uint32_t dev_id)
 		p_adpt_api->adpt_ip_port_macaddr_set = adpt_hppe_ip_port_macaddr_set;
 	if (p_adpt_api->adpt_ip_func_bitmap[0] & (1 << FUNC_IP_VSI_INTF_GET))
 		p_adpt_api->adpt_ip_vsi_intf_get = adpt_hppe_ip_vsi_intf_get;
-	if (p_adpt_api->adpt_ip_func_bitmap[0] & (1 << FUNC_IP_NETWORK_ROUTE_ADD))
-		p_adpt_api->adpt_ip_network_route_add = adpt_hppe_ip_network_route_add;
 	if (p_adpt_api->adpt_ip_func_bitmap[0] & (1 << FUNC_IP_PORT_SG_CFG_GET))
 		p_adpt_api->adpt_ip_port_sg_cfg_get = adpt_hppe_ip_port_sg_cfg_get;
 	if (p_adpt_api->adpt_ip_func_bitmap[0] & (1 << FUNC_IP_INTF_GET))
 		p_adpt_api->adpt_ip_intf_get = adpt_hppe_ip_intf_get;
-	if (p_adpt_api->adpt_ip_func_bitmap[0] & (1 << FUNC_IP_NETWORK_ROUTE_DEL))
-		p_adpt_api->adpt_ip_network_route_del = adpt_hppe_ip_network_route_del;
 	if (p_adpt_api->adpt_ip_func_bitmap[0] & (1 << FUNC_IP_HOST_DEL))
 		p_adpt_api->adpt_ip_host_del = adpt_hppe_ip_host_del;
 	if (p_adpt_api->adpt_ip_func_bitmap[0] & (1 << FUNC_IP_ROUTE_MISMATCH_GET))
@@ -1889,7 +1934,6 @@ sw_error_t adpt_hppe_ip_init(a_uint32_t dev_id)
 		p_adpt_api->adpt_ip_intf_macaddr_get_first = adpt_hppe_ip_intf_macaddr_get;
 	if (p_adpt_api->adpt_ip_func_bitmap[1] & BIT(FUNC_IP_INTF_MACADDR_GET_NEXT % 32))
 		p_adpt_api->adpt_ip_intf_macaddr_get_next = adpt_hppe_ip_intf_macaddr_get;
-#endif
 
 	spin_lock_init(&ppe_l3_mac_g[dev_id].lock);
 

@@ -1,0 +1,83 @@
+Source-Makefile: package/kernel/lantiq/ltq-atm/Makefile
+
+Package: kmod-ltq-atm-danube
+Submenu: Network Devices
+Version: <LINUX_VERSION>-2
+Depends: @(TARGET_lantiq_xway||TARGET_lantiq_xway_legacy) +kmod-ltq-adsl-danube-mei +kmod-atm +br2684ctl
+Conflicts: 
+Menu-Depends: 
+Provides: 
+Build-Variant: danube
+Section: sys
+Category: Kernel modules
+Title: atm driver for danube
+Maintainer: John Crispin <john@phrozen.org>
+Source: 
+License: GPL-2.0+
+Type: ipkg
+Description: atm driver for danube
+http://www.lantiq.com/
+John Crispin <john@phrozen.org>
+@@
+
+Package: kmod-ltq-atm-ase
+Submenu: Network Devices
+Version: <LINUX_VERSION>-2
+Depends: @TARGET_lantiq_ase +kmod-ltq-adsl-ase-mei +kmod-atm +br2684ctl
+Conflicts: 
+Menu-Depends: 
+Provides: 
+Build-Variant: ase
+Section: sys
+Category: Kernel modules
+Title: atm driver for ase
+Maintainer: John Crispin <john@phrozen.org>
+Source: 
+License: GPL-2.0+
+Type: ipkg
+Description: atm driver for ase
+http://www.lantiq.com/
+John Crispin <john@phrozen.org>
+@@
+
+Package: kmod-ltq-atm-ar9
+Submenu: Network Devices
+Version: <LINUX_VERSION>-2
+Depends: @TARGET_lantiq_xway +kmod-ltq-adsl-ar9-mei +kmod-atm +br2684ctl
+Conflicts: 
+Menu-Depends: 
+Provides: 
+Build-Variant: ar9
+Section: sys
+Category: Kernel modules
+Title: atm driver for ar9
+Maintainer: John Crispin <john@phrozen.org>
+Source: 
+License: GPL-2.0+
+Type: ipkg
+Description: atm driver for ar9
+http://www.lantiq.com/
+John Crispin <john@phrozen.org>
+@@
+
+Package: kmod-ltq-atm-vr9
+Submenu: Network Devices
+Version: <LINUX_VERSION>-2
+Depends: @TARGET_lantiq_xrx200 +kmod-ltq-vdsl-vr9-mei +kmod-atm +br2684ctl
+Conflicts: 
+Menu-Depends: 
+Provides: 
+Build-Variant: vr9
+Section: sys
+Category: Kernel modules
+Title: atm driver for vr9
+Maintainer: John Crispin <john@phrozen.org>
+Source: 
+License: GPL-2.0+
+Type: ipkg
+Description: atm driver for vr9
+http://www.lantiq.com/
+John Crispin <john@phrozen.org>
+@@
+
+

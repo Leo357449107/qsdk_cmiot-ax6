@@ -11,6 +11,8 @@
 #include <linux/remoteproc/qcom_rproc.h>
 #include <linux/slab.h>
 
+#include <linux/of.h>
+
 /**
  * struct do_cleanup_msg - The data structure for an SSR do_cleanup message
  * version:     The G-Link SSR protocol version
@@ -88,21 +90,11 @@ static int qcom_glink_ssr_notify(struct notifier_block *nb, unsigned long event,
 	struct glink_ssr *ssr = container_of(nb, struct glink_ssr, nb);
 	struct do_cleanup_msg msg;
 	char *ssr_name = data;
-	int ret, num_subdev = 0, tmp;
-	char **ssr_subdev_name;
+	int ret;
 
-	ssr_subdev_name = qcom_get_ssr_subdev_name(ssr->dev->parent,
-							&num_subdev);
-	if (!ssr_subdev_name)
-		return NOTIFY_DONE;
-
-	for (tmp = 0; tmp < num_subdev; tmp++) {
-		if (!strcmp(ssr_name, ssr_subdev_name[tmp]))
-			break;
-	}
-	kfree(ssr_subdev_name);
-	if (tmp == num_subdev)
-		return NOTIFY_DONE;
+	ret = of_property_match_string(ssr->dev->parent->of_node, "qcom,glink-hosts", ssr_name);
+	if (ret == -ENODATA)
+		return ret;
 
 	ssr->seq_num++;
 	reinit_completion(&ssr->completion);

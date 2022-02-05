@@ -1,0 +1,54 @@
+Source-Makefile: package/utils/fritz-tools/Makefile
+
+Package: fritz-tffs
+Version: 1
+Depends: +libc +GCC_LIBSSP:libssp +USE_GLIBC:librt +USE_GLIBC:libpthread 
+Conflicts: 
+Menu-Depends: 
+Provides: 
+Section: utils
+Category: Utilities
+Repository: base
+Title: Utility to partially read the TFFS filesystems
+Maintainer: 
+Source: 
+Type: ipkg
+Description:  Utility to partially read the TFFS filesystems.
+
+@@
+
+Package: fritz-tffs-nand
+Version: 1
+Depends: +libc +GCC_LIBSSP:libssp +USE_GLIBC:librt +USE_GLIBC:libpthread 
+Conflicts: 
+Menu-Depends: 
+Provides: 
+Section: utils
+Category: Utilities
+Repository: base
+Title: Utility to partially read the TFFS filesystems on NAND flash
+Maintainer: 
+Source: 
+Type: ipkg
+Description:  Utility to partially read the TFFS filesystems on NAND flash.
+
+@@
+
+Package: fritz-caldata
+Version: 1
+Depends: +libc +GCC_LIBSSP:libssp +USE_GLIBC:librt +USE_GLIBC:libpthread +zlib
+Conflicts: 
+Menu-Depends: 
+Provides: 
+Section: utils
+Category: Utilities
+Repository: base
+Title: Utility to extract WLAN calibration data
+Maintainer: 
+Source: 
+Type: ipkg
+Description:  Utility to extract the zlib compress calibration data from flash.
+
+@@
+
+

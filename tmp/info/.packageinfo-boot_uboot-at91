@@ -1,0 +1,301 @@
+Source-Makefile: package/boot/uboot-at91/Makefile
+
+Package: u-boot-at91sam9m10g45ek_nandflash
+Default: y if (TARGET_at91_sam9x_Default || TARGET_at91_sam9x_DEVICE_at91sam9m10g45ek || TARGET_DEVICE_at91_sam9x_DEVICE_at91sam9m10g45ek)
+Version: linux4sam_5.8-1
+Depends: +libc +GCC_LIBSSP:libssp +USE_GLIBC:librt +USE_GLIBC:libpthread @!IN_SDK @TARGET_at91_sam9x
+Conflicts: 
+Menu-Depends: 
+Provides: 
+Build-Variant: at91sam9m10g45ek_nandflash
+Section: boot
+Category: Boot Loaders
+Title: U-Boot for AT91SAM9M10G45-EK board (NandFlash)
+Maintainer: 
+Source: u-boot-linux4sam_5.8.tar.xz
+License: GPL-2.0 GPL-2.0+
+LicenseFiles: Licenses/README
+Type: bin
+Hidden: 1
+Description: U-Boot for AT91SAM9M10G45-EK board (NandFlash)
+http://www.denx.de/wiki/U-Boot
+
+@@
+
+
+Package: u-boot-at91sam9x5ek_nandflash
+Default: y if (TARGET_at91_sam9x_Default || TARGET_at91_sam9x_DEVICE_at91sam9g15ek || TARGET_at91_sam9x_DEVICE_at91sam9g25ek || TARGET_at91_sam9x_DEVICE_at91sam9g35ek || TARGET_at91_sam9x_DEVICE_at91sam9x25ek || TARGET_at91_sam9x_DEVICE_at91sam9x35ek || TARGET_DEVICE_at91_sam9x_DEVICE_at91sam9g15ek || TARGET_DEVICE_at91_sam9x_DEVICE_at91sam9g25ek || TARGET_DEVICE_at91_sam9x_DEVICE_at91sam9g35ek || TARGET_DEVICE_at91_sam9x_DEVICE_at91sam9x25ek || TARGET_DEVICE_at91_sam9x_DEVICE_at91sam9x35ek)
+Version: linux4sam_5.8-1
+Depends: +libc +GCC_LIBSSP:libssp +USE_GLIBC:librt +USE_GLIBC:libpthread @!IN_SDK @TARGET_at91_sam9x
+Conflicts: 
+Menu-Depends: 
+Provides: 
+Build-Variant: at91sam9x5ek_nandflash
+Section: boot
+Category: Boot Loaders
+Title: U-Boot for AT91SAM9X5-EK board (NandFlash)
+Maintainer: 
+Source: u-boot-linux4sam_5.8.tar.xz
+License: GPL-2.0 GPL-2.0+
+LicenseFiles: Licenses/README
+Type: bin
+Hidden: 1
+Description: U-Boot for AT91SAM9X5-EK board (NandFlash)
+http://www.denx.de/wiki/U-Boot
+
+@@
+
+
+Package: u-boot-sama5d3_xplained_nandflash
+Default: y if (TARGET_at91_sama5_Default || TARGET_at91_sama5_DEVICE_at91-sama5d3_xplained || TARGET_DEVICE_at91_sama5_DEVICE_at91-sama5d3_xplained)
+Version: linux4sam_5.8-1
+Depends: +libc +GCC_LIBSSP:libssp +USE_GLIBC:librt +USE_GLIBC:libpthread @!IN_SDK @TARGET_at91_sama5
+Conflicts: 
+Menu-Depends: 
+Provides: 
+Build-Variant: sama5d3_xplained_nandflash
+Section: boot
+Category: Boot Loaders
+Title: U-Boot for SAMA5D3 Xplained board (NandFlash)
+Maintainer: 
+Source: u-boot-linux4sam_5.8.tar.xz
+License: GPL-2.0 GPL-2.0+
+LicenseFiles: Licenses/README
+Type: bin
+Hidden: 1
+Description: U-Boot for SAMA5D3 Xplained board (NandFlash)
+http://www.denx.de/wiki/U-Boot
+
+@@
+
+
+Package: u-boot-sama5d3_xplained_mmc
+Default: y if (TARGET_at91_sama5_Default || TARGET_at91_sama5_DEVICE_at91-sama5d3_xplained || TARGET_DEVICE_at91_sama5_DEVICE_at91-sama5d3_xplained)
+Version: linux4sam_5.8-1
+Depends: +libc +GCC_LIBSSP:libssp +USE_GLIBC:librt +USE_GLIBC:libpthread @!IN_SDK @TARGET_at91_sama5
+Conflicts: 
+Menu-Depends: 
+Provides: 
+Build-Variant: sama5d3_xplained_mmc
+Section: boot
+Category: Boot Loaders
+Title: U-Boot for SAMA5D3 Xplained board (SDcard)
+Maintainer: 
+Source: u-boot-linux4sam_5.8.tar.xz
+License: GPL-2.0 GPL-2.0+
+LicenseFiles: Licenses/README
+Type: bin
+Hidden: 1
+Description: U-Boot for SAMA5D3 Xplained board (SDcard)
+http://www.denx.de/wiki/U-Boot
+
+@@
+
+
+Package: u-boot-sama5d2_xplained_mmc
+Default: y if (TARGET_at91_sama5_Default || TARGET_at91_sama5_DEVICE_at91-sama5d2_xplained || TARGET_DEVICE_at91_sama5_DEVICE_at91-sama5d2_xplained)
+Version: linux4sam_5.8-1
+Depends: +libc +GCC_LIBSSP:libssp +USE_GLIBC:librt +USE_GLIBC:libpthread @!IN_SDK @TARGET_at91_sama5
+Conflicts: 
+Menu-Depends: 
+Provides: 
+Build-Variant: sama5d2_xplained_mmc
+Section: boot
+Category: Boot Loaders
+Title: U-Boot for SAMA5D2 Xplained board (SDcard/EMMC)
+Maintainer: 
+Source: u-boot-linux4sam_5.8.tar.xz
+License: GPL-2.0 GPL-2.0+
+LicenseFiles: Licenses/README
+Type: bin
+Hidden: 1
+Description: U-Boot for SAMA5D2 Xplained board (SDcard/EMMC)
+http://www.denx.de/wiki/U-Boot
+
+@@
+
+
+Package: u-boot-sama5d2_xplained_spiflash
+Default: y if (TARGET_at91_sama5_Default || TARGET_at91_sama5_DEVICE_at91-sama5d2_xplained || TARGET_DEVICE_at91_sama5_DEVICE_at91-sama5d2_xplained)
+Version: linux4sam_5.8-1
+Depends: +libc +GCC_LIBSSP:libssp +USE_GLIBC:librt +USE_GLIBC:libpthread @!IN_SDK @TARGET_at91_sama5
+Conflicts: 
+Menu-Depends: 
+Provides: 
+Build-Variant: sama5d2_xplained_spiflash
+Section: boot
+Category: Boot Loaders
+Title: U-Boot for SAMA5D2 Xplained board (SPI Flash)
+Maintainer: 
+Source: u-boot-linux4sam_5.8.tar.xz
+License: GPL-2.0 GPL-2.0+
+LicenseFiles: Licenses/README
+Type: bin
+Hidden: 1
+Description: U-Boot for SAMA5D2 Xplained board (SPI Flash)
+http://www.denx.de/wiki/U-Boot
+
+@@
+
+
+Package: u-boot-sama5d4_xplained_mmc
+Default: y if (TARGET_at91_sama5_Default || TARGET_at91_sama5_DEVICE_at91-sama5d4_xplained || TARGET_DEVICE_at91_sama5_DEVICE_at91-sama5d4_xplained)
+Version: linux4sam_5.8-1
+Depends: +libc +GCC_LIBSSP:libssp +USE_GLIBC:librt +USE_GLIBC:libpthread @!IN_SDK @TARGET_at91_sama5
+Conflicts: 
+Menu-Depends: 
+Provides: 
+Build-Variant: sama5d4_xplained_mmc
+Section: boot
+Category: Boot Loaders
+Title: U-Boot for SAMA5D4 Xplained board (SDcard)
+Maintainer: 
+Source: u-boot-linux4sam_5.8.tar.xz
+License: GPL-2.0 GPL-2.0+
+LicenseFiles: Licenses/README
+Type: bin
+Hidden: 1
+Description: U-Boot for SAMA5D4 Xplained board (SDcard)
+http://www.denx.de/wiki/U-Boot
+
+@@
+
+
+Package: u-boot-sama5d4_xplained_spiflash
+Default: y if (TARGET_at91_sama5_Default || TARGET_at91_sama5_DEVICE_at91-sama5d4_xplained || TARGET_DEVICE_at91_sama5_DEVICE_at91-sama5d4_xplained)
+Version: linux4sam_5.8-1
+Depends: +libc +GCC_LIBSSP:libssp +USE_GLIBC:librt +USE_GLIBC:libpthread @!IN_SDK @TARGET_at91_sama5
+Conflicts: 
+Menu-Depends: 
+Provides: 
+Build-Variant: sama5d4_xplained_spiflash
+Section: boot
+Category: Boot Loaders
+Title: U-Boot for SAMA5D4 Xplained board (SPI Flash)
+Maintainer: 
+Source: u-boot-linux4sam_5.8.tar.xz
+License: GPL-2.0 GPL-2.0+
+LicenseFiles: Licenses/README
+Type: bin
+Hidden: 1
+Description: U-Boot for SAMA5D4 Xplained board (SPI Flash)
+http://www.denx.de/wiki/U-Boot
+
+@@
+
+
+Package: u-boot-sama5d4_xplained_nandflash
+Default: y if (TARGET_at91_sama5_Default || TARGET_at91_sama5_DEVICE_at91-sama5d4_xplained || TARGET_DEVICE_at91_sama5_DEVICE_at91-sama5d4_xplained)
+Version: linux4sam_5.8-1
+Depends: +libc +GCC_LIBSSP:libssp +USE_GLIBC:librt +USE_GLIBC:libpthread @!IN_SDK @TARGET_at91_sama5
+Conflicts: 
+Menu-Depends: 
+Provides: 
+Build-Variant: sama5d4_xplained_nandflash
+Section: boot
+Category: Boot Loaders
+Title: U-Boot for SAMA5D4 Xplained board (NandFlash)
+Maintainer: 
+Source: u-boot-linux4sam_5.8.tar.xz
+License: GPL-2.0 GPL-2.0+
+LicenseFiles: Licenses/README
+Type: bin
+Hidden: 1
+Description: U-Boot for SAMA5D4 Xplained board (NandFlash)
+http://www.denx.de/wiki/U-Boot
+
+@@
+
+
+Package: u-boot-sama5d27_som1_ek_mmc
+Default: y if (TARGET_at91_sama5_Default || TARGET_at91_sama5_DEVICE_at91-sama5d27_som1_ek || TARGET_DEVICE_at91_sama5_DEVICE_at91-sama5d27_som1_ek)
+Version: linux4sam_5.8-1
+Depends: +libc +GCC_LIBSSP:libssp +USE_GLIBC:librt +USE_GLIBC:libpthread @!IN_SDK @TARGET_at91_sama5
+Conflicts: 
+Menu-Depends: 
+Provides: 
+Build-Variant: sama5d27_som1_ek_mmc
+Section: boot
+Category: Boot Loaders
+Title: U-Boot for SAMA5D27 SOM1 Ek (SDCard)
+Maintainer: 
+Source: u-boot-linux4sam_5.8.tar.xz
+License: GPL-2.0 GPL-2.0+
+LicenseFiles: Licenses/README
+Type: bin
+Hidden: 1
+Description: U-Boot for SAMA5D27 SOM1 Ek (SDCard)
+http://www.denx.de/wiki/U-Boot
+
+@@
+
+
+Package: u-boot-sama5d27_som1_ek_spiflash
+Default: y if (TARGET_at91_sama5_Default || TARGET_at91_sama5_DEVICE_at91-sama5d27_som1_ek || TARGET_DEVICE_at91_sama5_DEVICE_at91-sama5d27_som1_ek)
+Version: linux4sam_5.8-1
+Depends: +libc +GCC_LIBSSP:libssp +USE_GLIBC:librt +USE_GLIBC:libpthread @!IN_SDK @TARGET_at91_sama5
+Conflicts: 
+Menu-Depends: 
+Provides: 
+Build-Variant: sama5d27_som1_ek_spiflash
+Section: boot
+Category: Boot Loaders
+Title: U-Boot for SAMA5D27 SOM1 Ek (QSPI Flash)
+Maintainer: 
+Source: u-boot-linux4sam_5.8.tar.xz
+License: GPL-2.0 GPL-2.0+
+LicenseFiles: Licenses/README
+Type: bin
+Hidden: 1
+Description: U-Boot for SAMA5D27 SOM1 Ek (QSPI Flash)
+http://www.denx.de/wiki/U-Boot
+
+@@
+
+
+Package: u-boot-sama5d2_ptc_ek_nandflash
+Default: y if (TARGET_at91_sama5_Default || TARGET_at91_sama5_DEVICE_at91-sama5d2_ptc_ek || TARGET_DEVICE_at91_sama5_DEVICE_at91-sama5d2_ptc_ek)
+Version: linux4sam_5.8-1
+Depends: +libc +GCC_LIBSSP:libssp +USE_GLIBC:librt +USE_GLIBC:libpthread @!IN_SDK @TARGET_at91_sama5
+Conflicts: 
+Menu-Depends: 
+Provides: 
+Build-Variant: sama5d2_ptc_ek_nandflash
+Section: boot
+Category: Boot Loaders
+Title: U-Boot for SAMA5D2 PTC Ek (Nand Flash)
+Maintainer: 
+Source: u-boot-linux4sam_5.8.tar.xz
+License: GPL-2.0 GPL-2.0+
+LicenseFiles: Licenses/README
+Type: bin
+Hidden: 1
+Description: U-Boot for SAMA5D2 PTC Ek (Nand Flash)
+http://www.denx.de/wiki/U-Boot
+
+@@
+
+
+Package: u-boot-sama5d2_ptc_ek_mmc
+Default: y if (TARGET_at91_sama5_Default || TARGET_at91_sama5_DEVICE_at91-sama5d2_ptc_ek || TARGET_DEVICE_at91_sama5_DEVICE_at91-sama5d2_ptc_ek)
+Version: linux4sam_5.8-1
+Depends: +libc +GCC_LIBSSP:libssp +USE_GLIBC:librt +USE_GLIBC:libpthread @!IN_SDK @TARGET_at91_sama5
+Conflicts: 
+Menu-Depends: 
+Provides: 
+Build-Variant: sama5d2_ptc_ek_mmc
+Section: boot
+Category: Boot Loaders
+Title: U-Boot for SAMA5D2 PTC Ek (SDCard)
+Maintainer: 
+Source: u-boot-linux4sam_5.8.tar.xz
+License: GPL-2.0 GPL-2.0+
+LicenseFiles: Licenses/README
+Type: bin
+Hidden: 1
+Description: U-Boot for SAMA5D2 PTC Ek (SDCard)
+http://www.denx.de/wiki/U-Boot
+
+@@
+
+

@@ -36,6 +36,10 @@ NSS_CLIENTS_256MB:= kmod-qca-nss-drv-bridge-mgr kmod-qca-nss-drv-pppoe
 
 NSS_PPE:= kmod-qca-nss-ppe-bridge-mgr
 
+NSS_CLIENTS_HOST_DP:= \
+	kmod-qca-ovsmgr \
+	kmod-qca-nss-drv-mscs
+
 NSS_CLIENTS_STANDARD:= kmod-qca-nss-drv-qdisc kmod-qca-nss-drv-igs \
 	kmod-qca-nss-drv-tun6rd kmod-qca-nss-drv-tunipip6 \
 	kmod-qca-nss-drv-l2tpv2 kmod-qca-nss-drv-pptp \
@@ -66,15 +70,15 @@ SWITCH_SSDK_PKGS:= kmod-qca-ssdk-hnat kmod-qca-ssdk-nohnat qca-ssdk-shell swconf
 MACSEC_OPEN_PKGS:= kmod-qca-nss-macsec wpa-supplicant-macsec hostapd-macsec
 
 WIFI_OPEN_PKGS:= kmod-ath11k wpad-mesh hostapd-utils \
-	 sigma-dut-open wpa-cli qcmbr-10.4-netlink iwinfo \
+	 sigma-dut-open wpa-cli qcmbr-netlink iwinfo \
 	 athtestcmd qca-wifi-scripts
 
 WIFI_PKGS:=kmod-qca-wifi-unified-profile-nonss \
 	qca-hostap qca-hostapd-cli qca-wpa-supplicant \
 	qca-wpa-cli qca-cfg80211tool qca-wifi-scripts \
-	qca-acfg qca-wrapd athtestcmd-lith qca-iface-mgr-10.4 \
+	qca-acfg qca-wrapd athtestcmd-lith qca-iface-mgr \
 	qca-wapid qca-lowi athdiag whc-mesh whc-ui \
-	qca-spectral qca-icm qcmbr-10.4 sigma-dut \
+	qca-spectral qca-icm qcmbr sigma-dut \
 	qca-wpc qca-cfg80211 qca-cnss-daemon
 
 WIFI_PKGS_256MB:=kmod-qca-wifi-lowmem-profile-nonss \
@@ -82,15 +86,16 @@ WIFI_PKGS_256MB:=kmod-qca-wifi-lowmem-profile-nonss \
 	qca-wpa-cli qca-cfg80211tool qca-wifi-scripts \
 	qca-wpc sigma-dut \
 	qca-wrapd qca-wapid qca-acfg whc-mesh whc-ui \
-	qca-iface-mgr-10.4 qca-icm qca-cfg80211 athdiag qca-cnss-daemon \
+	qca-iface-mgr qca-icm qca-cfg80211 athdiag qca-cnss-daemon \
 	athtestcmd-lith
 
-WIFI_FW_PKGS:=qca-wifi-hk-fw-hw1-10.4-asic
+WIFI_FW_PKGS:=qca-wifi-hk-fw-hw1-10.4-asic qca-wifi-wkk-fw-hw1-asic
+
 
 OPENWRT_STANDARD:= \
 	luci openssl-util
 
-OPENWRT_256MB:=luci pm-utils wififw_mount_script qca-thermald-10.4 qca-wlanfw-upgrade -file \
+OPENWRT_256MB:=luci pm-utils wififw_mount_script qca-thermald qca-wlanfw-upgrade -file \
 	-kmod-ata-core -kmod-ata-ahci -kmod-ata-ahci-platform \
 	-kmod-usb2 -kmod-usb3 -kmod-usb-dwc3-qcom \
 	-kmod-usb-phy-qcom-dwc3 -kmod-usb-dwc3-of-simple \
@@ -103,9 +108,9 @@ USB_ETHERNET:= kmod-usb-net-rtl8152 kmod-usb-net
 
 TEST_TOOLS:=ethtool i2c-tools tcpdump
 
-UTILS:=file luci-app-samba rng-tools -profilerd
+UTILS:=file luci-app-samba4 rng-tools -profilerd
 
-COREBSP_UTILS:=pm-utils wififw_mount_script qca-thermald-10.4 qca-qmi-framework qca-time-services \
+COREBSP_UTILS:=pm-utils wififw_mount_script qca-thermald qca-qmi-framework qca-time-services \
 	qca-wlanfw-upgrade dashboard
 
 FAILSAFE:= kmod-bootconfig
@@ -114,7 +119,7 @@ NETWORKING:=mcproxy -dnsmasq dnsmasq-dhcpv6 bridge ip-full trace-cmd mwan3 \
 	rp-pppoe-relay iptables-mod-extra iputils-tracepath iputils-tracepath6 \
 	luci-app-upnp luci-app-ddns luci-proto-ipv6 \
 	kmod-nf-nathelper-extra kmod-nf-nathelper \
-	kmod-ipt-nathelper-rtsp
+	kmod-ipt-nathelper-rtsp vxlan
 
 NETWORKING_256MB:=-dnsmasq dnsmasq-dhcpv6 bridge ip-full trace-cmd \
 	rp-pppoe-relay iptables-mod-extra iputils-tracepath iputils-tracepath6 \
@@ -126,7 +131,7 @@ CD_ROUTER:=kmod-ipt-ipopt kmod-bonding kmod-nat-sctp lacpd \
 	arptables ds-lite 6rd ddns-scripts xl2tpd \
 	quagga quagga-ripd quagga-zebra quagga-watchquagga quagga-vtysh \
 	kmod-ipv6 ip6tables iptables-mod-ipsec iptables-mod-filter \
-	isc-dhcp-relay-ipv6 rp-pppoe-server ppp-mod-pptp -iptables-mod-physdev
+	isc-dhcp-relay-ipv6 rp-pppoe-server ppp-mod-pptp iptables-mod-physdev
 
 CD_ROUTER_256MB:=kmod-ipt-ipopt kmod-ipt-sctp lacpd \
 	arptables ddns-scripts \
@@ -191,14 +196,14 @@ define Profile/QSDK_Premium
 	PACKAGES:=$(OPENWRT_STANDARD) $(STORAGE) $(TEST_TOOLS) $(COREBSP_UTILS) \
 		$(AQ_PHY) $(FAILSAFE) -lacpd $(USB_DIAG) $(KPI) $(UTILS) \
 		$(MINIDUMP) $(SWITCH_SSDK_PKGS) $(MAP_PKGS) $(CD_ROUTER) \
-		$(NSS_COMMON) $(QCA_ECM_PREMIUM) $(NSS_PPE)\
+		$(NSS_COMMON) $(QCA_ECM_PREMIUM) $(NSS_PPE) $(NSS_CLIENTS_HOST_DP) $(NSS_RMNET) \
 		$(NETWORKING) $(QOS) \
 		$(HW_CRYPTO) $(IPSEC) $(NSS_MACSEC) \
 		$(WIFI_PKGS) $(WIFI_FW_PKGS) $(FTM) kmod-qca-hyfi-bridge \
-		$(IGMPSNOOPING_RSTP) $(CNSS_DIAG) $(NSS_SFE) $(HYFI) $(QCA_EZMESH) $(QCA_MAD)
+		$(IGMPSNOOPING_RSTP) $(CNSS_DIAG) $(NSS_SFE) $(HYFI) $(QCA_EZMESH) $(QCA_MAD) $(EMESH_SP)
 endef
 #		$(QMSCT_CLIENT) \
-#		$(OPENVPN) $(HYFI) $(NSS_RMNET) \
+#		$(OPENVPN) $(HYFI) \
 #		$(NSS_SFE) $(CNSS_DIAG) \
 #		$(QCA_EDMA) $(QCA_RFS) $(EMESH_SP) kmod-macvlan
 
@@ -214,7 +219,7 @@ define Profile/QSDK_Enterprise
 	PACKAGES:=$(OPENWRT_STANDARD) $(SWITCH_SSDK_NOHNAT_PKGS) $(STORAGE) \
 		$(UTILS) $(TEST_TOOLS) $(COREBSP_UTILS) $(CD_ROUTER) $(AQ_PHY) \
 		$(NETWORKING) $(QOS) $(QCA_ECM_ENTERPRISE) $(NSS_COMMON) $(NSS_SFE) \
-		$(WIFI_PKGS) $(WIFI_FW_PKGS) $(NSS_MACSEC) $(IPSEC) $(NSS_PPE) \
+		$(WIFI_PKGS) $(WIFI_FW_PKGS) $(NSS_MACSEC) $(IPSEC) $(NSS_PPE) kmod-qca-nss-drv-mscs \
 		-lacpd $(USB_DIAG) $(KPI) $(FAILSAFE)
 endef
 
@@ -237,14 +242,15 @@ define Profile/QSDK_Open
 		$(COREBSP_UTILS) $(FAILSAFE) $(USB_DIAG) $(SWITCH_SSDK_PKGS) \
 		$(FTM) $(KPI) $(UTILS) $(NETWORKING) $(CD_ROUTER) \
 		$(WIFI_OPEN_PKGS) $(USB_ETHERNET) $(NSS_COMMON) \
-		$(QCA_ECM_PREMIUM) -lacpd $(MAP_PKGS) $(NSS_PPE) $(NSS_SFE) \
+		$(QCA_ECM_PREMIUM) $(IGMPSNOOPING_RSTP) -rstp $(IPSEC) $(QOS) -lacpd \
+		$(MAP_PKGS) $(NSS_PPE) $(NSS_SFE) \
 		qca-cnss-daemon qca-wifi-hk-fw-hw1-10.4-asic $(CNSS_DIAG) athdiag\
-		qrtr $(QMI_SAMPLE_APP) ath11k-fwtest ath11k-qdss \
+		qrtr $(QMI_SAMPLE_APP) ath11k-fwtest ath11k-qdss kmod-qca-ovsmgr \
 		$(AQ_PHY) libtirpc $(MACSEC_OPEN_PKGS)
 endef
 
-#	$(SHORTCUT_FE) $(HW_CRYPTO) $(QCA_RFS) $(IPSEC) $(QOS) \
-#	$(NSS_CRYPTO) $(NSS_CLIENTS_STANDARD) $(IGMPSNOOPING_RSTP) -rstp \
+#	$(SHORTCUT_FE) $(HW_CRYPTO) $(QCA_RFS) \
+#	$(NSS_CRYPTO) $(NSS_CLIENTS_STANDARD) \
 
 define Profile/QSDK_Open/Description
 	QSDK Open package set configuration.
@@ -260,7 +266,7 @@ define Profile/QSDK_512
 		$(NETWORKING) $(QOS) -lacpd $(USB_DIAG) $(KPI) $(NSS_COMMON) \
 		$(NSS_SFE) $(QCA_ECM_PREMIUM) $(NSS_PPE) $(IGMPSNOOPING_RSTP) \
 		$(HYFI) kmod-qca-hyfi-bridge $(QCA_EZMESH) $(MAP_PKGS) \
-		$(WIFI_PKGS) $(WIFI_FW_PKGS) \
+		$(WIFI_PKGS) $(WIFI_FW_PKGS) $(NSS_CLIENTS_HOST_DP) $(NSS_RMNET) \
 		$(MINIDUMP) $(MAP_PKGS) $(HW_CRYPTO) $(IPSEC) $(NSS_MACSEC)
 endef
 

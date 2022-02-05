@@ -22,9 +22,7 @@
 #include <linux/netdevice.h>
 #include <nss_dp_arch.h>
 
-#define EDMA_BUF_SIZE			2000
 #define EDMA_DEVICE_NODE_NAME		"edma"
-#define EDMA_RX_BUFF_SIZE		(EDMA_BUF_SIZE + EDMA_RX_PREHDR_SIZE)
 #define EDMA_RX_PREHDR_SIZE		(sizeof(struct edma_rx_preheader))
 #define EDMA_TX_PREHDR_SIZE		(sizeof(struct edma_tx_preheader))
 #define EDMA_RING_SIZE			128
@@ -264,6 +262,8 @@ struct edma_hw {
 			/* number of interfaces overriden */
 	bool edma_initialized;
 			/* flag to check initialization status */
+	uint32_t rx_alloc_size;
+			/* Buffer size to allocate */
 };
 
 extern struct edma_hw edma_hw;

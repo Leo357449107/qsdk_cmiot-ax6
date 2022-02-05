@@ -375,7 +375,15 @@ void adpt_hppe_pppoe_func_bitmap_init(a_uint32_t dev_id)
 	if(p_adpt_api == NULL)
 		return;
 
-	p_adpt_api->adpt_pppoe_func_bitmap = 0x0;
+	p_adpt_api->adpt_pppoe_func_bitmap = BIT(FUNC_PPPOE_SESSION_TABLE_ADD) |
+		BIT(FUNC_PPPOE_SESSION_TABLE_DEL) |
+		BIT(FUNC_PPPOE_SESSION_TABLE_GET) |
+		BIT(FUNC_PPPOE_EN_SET) |
+		BIT(FUNC_PPPOE_EN_GET) |
+		BIT(FUNC_PPPOE_L3_INTF_SET) |
+		BIT(FUNC_PPPOE_L3_INTF_GET) |
+		BIT(FUNC_PPPOE_GLOBAL_CTRL_SET) |
+		BIT(FUNC_PPPOE_GLOBAL_CTRL_GET);
 
 	return;
 }

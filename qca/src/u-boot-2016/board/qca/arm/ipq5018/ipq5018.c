@@ -22,6 +22,16 @@
 #include <asm/arch-qca-common/scm.h>
 #include <asm/arch-qca-common/iomap.h>
 #include <ipq5018.h>
+#include <spi.h>
+#include <spi_flash.h>
+#if defined(CONFIG_ART_COMPRESSED) &&   \
+        (defined(CONFIG_GZIP) || defined(CONFIG_LZMA))
+#ifndef CONFIG_COMPRESSED_LOAD_ADDR
+#define CONFIG_COMPRESSED_LOAD_ADDR CONFIG_SYS_LOAD_ADDR
+#endif
+#include <mapmem.h>
+#include <lzma/LzmaTools.h>
+#endif
 #ifdef CONFIG_QCA_MMC
 #include <mmc.h>
 #include <sdhci.h>
@@ -31,6 +41,7 @@
 #endif
 #ifdef CONFIG_QPIC_NAND
 #include <asm/arch-qca-common/qpic_nand.h>
+#include <nand.h>
 #endif
 #ifdef CONFIG_IPQ_BT_SUPPORT
 #include <malloc.h>
@@ -1330,6 +1341,7 @@ int board_eth_init(bd_t *bis)
 		 gmac_cfg[loop].unit = -1;
 
 	status = ipq_gmac_init(gmac_cfg);
+	board_update_caldata();
 
 	return status;
 }
@@ -1893,6 +1905,200 @@ void board_pci_deinit()
 }
 #endif
 
+ /*
+  * Gets the Caldata from the ART partition table and return the value
+  */
+int get_eth_caldata(u32 *caldata, u32 offset)
+{
+	s32 ret = 0 ;
+	u32 flash_type=0u;
+        u32 start_blocks;
+        u32 size_blocks;
+	u32 art_offset=0U ;
+	u32 length = 4;
+	qca_smem_flash_info_t *sfi = &qca_smem_flash_info;
+
+        struct spi_flash *flash = NULL;
+
+#if defined(CONFIG_ART_COMPRESSED) && (defined(CONFIG_GZIP) || defined(CONFIG_LZMA))
+        void *load_buf, *image_buf;
+        unsigned long img_size;
+        unsigned long desMaxSize;
+#endif
+
+#ifdef CONFIG_QCA_MMC
+        block_dev_desc_t *blk_dev;
+        disk_partition_t disk_info;
+        struct mmc *mmc;
+        char mmc_blks[512];
+#endif
+
+	if ((sfi->flash_type == SMEM_BOOT_SPI_FLASH) ||
+		(sfi->flash_type == SMEM_BOOT_NOR_FLASH) ||
+		(sfi->flash_type == SMEM_BOOT_NORPLUSNAND) ||
+		(sfi->flash_type == SMEM_BOOT_NORPLUSEMMC))
+	{
+		ret = smem_getpart("0:ART", &start_blocks, &size_blocks);
+                if (ret < 0) {
+                        printf("No ART partition found\n");
+                        return ret;
+                }
+
+                /*
+                 * ART partition 0th position.
+                 */
+                art_offset = (u32)((u32) qca_smem_flash_info.flash_block_size * start_blocks);
+
+#ifndef CONFIG_ART_COMPRESSED
+		art_offset = (art_offset + offset);
+#endif
+
+                flash = spi_flash_probe(CONFIG_SF_DEFAULT_BUS, CONFIG_SF_DEFAULT_CS,
+                                CONFIG_SF_DEFAULT_SPEED, CONFIG_SF_DEFAULT_MODE);
+
+
+                if (flash == NULL){
+                        printf("No SPI flash device found\n");
+                        ret = -1;
+                }
+		else {
+#if defined(CONFIG_ART_COMPRESSED) && defined(CONFIG_LZMA)
+                image_buf = map_sysmem(CONFIG_COMPRESSED_LOAD_ADDR, 0);
+                load_buf = map_sysmem(CONFIG_COMPRESSED_LOAD_ADDR + 0x100000, 0);
+                img_size = qca_smem_flash_info.flash_block_size * size_blocks;
+                desMaxSize = 0x100000;
+                ret = spi_flash_read(flash, art_offset, img_size, image_buf);
+                if (ret == 0) {
+                        ret = -1;
+#ifdef CONFIG_LZMA
+                        if (ret != 0){
+
+                                ret = lzmaBuffToBuffDecompress(load_buf,
+                                        (SizeT *)&desMaxSize,
+                                        image_buf,
+                                        (SizeT)img_size);
+			}
+#endif
+                        if((!ret) && (memcpy(caldata, load_buf + offset , length))){}
+			else {
+				printf("Invalid compression type..\n");
+				ret = -1;
+			}
+                }
+#else
+			ret = spi_flash_read(flash, art_offset, length, caldata);
+#endif
+		}
+
+                if (ret < 0)
+                        printf("ART partition read failed..\n");
+	}
+#ifdef CONFIG_QPIC_NAND
+	else if ((sfi->flash_type == SMEM_BOOT_NAND_FLASH ) || (sfi->flash_type == SMEM_BOOT_QSPI_NAND_FLASH))
+	{
+		if (qca_smem_flash_info.flash_type == SMEM_BOOT_SPI_FLASH)
+                        flash_type = CONFIG_SPI_FLASH_INFO_IDX;
+		else{
+			flash_type = CONFIG_NAND_FLASH_INFO_IDX;
+		}
+
+		ret = smem_getpart("0:ART", &start_blocks, &size_blocks);
+                if (ret < 0) {
+                        printf("No ART partition found\n");
+                        return ret;
+                }
+
+                /*
+                 * ART partition 0th position.
+                 */
+                art_offset = (u32)((u32) qca_smem_flash_info.flash_block_size * start_blocks);
+                art_offset = /*(loff_t)*/(art_offset + offset);
+
+		ret = nand_read(&nand_info[flash_type],art_offset, &length,(u_char*) caldata);
+
+		if (ret < 0)
+                        printf("ART partition read failed..\n");
+	}
+#endif
+	else{
+#ifdef CONFIG_QCA_MMC
+		blk_dev = mmc_get_dev(mmc_host.dev_num);
+                ret = get_partition_info_efi_by_name(blk_dev, "0:ART", &disk_info);
+                /*
+                 * ART partition 0th position will contain MAC address.
+                 * Read 1 block.
+                 */
+                if (ret == 0) {
+                        mmc = mmc_host.mmc;
+                        ret = mmc->block_dev.block_read
+                                (mmc_host.dev_num, (disk_info.start+(offset/512)),
+                                                1, mmc_blks);
+                        memcpy(caldata, (mmc_blks+(offset%512)), length);
+                }
+                if (ret < 0)
+                        printf("ART partition read failed..\n");
+#endif
+	}
+
+	/*
+	*  Avoid unused warning
+	*  */
+	(void)flash_type;
+
+	return ret;
+
+}
+
+void board_update_caldata()
+{
+	u32 reg_val=0u;
+	s32 ret = 0 ;
+	u32 u32_calDataOffset = 0U;
+	u32 u32_calData = 0u;
+	u32 u32_CDACIN =0U, u32_CDACOUT = 0u;
+	int node_off,slotId;
+
+	node_off = fdt_path_offset(gd->fdt_blob, "/slot_Id");
+	if (node_off < 0) {
+                 printf("%s: Unable to find slot-Id, Default CapIn/CapOut values used\n",
+                                 __func__);
+                 return;
+         }
+
+	slotId = fdtdec_get_uint(gd->fdt_blob,node_off, "slotId", 0);
+
+	u32_calDataOffset  = (u32)(((slotId*150)+4)*1024 + 0x106E4);
+	ret = get_eth_caldata(&u32_calData,u32_calDataOffset);
+	if (ret < 0)
+		return;
+
+	u32_CDACIN = u32_calData & 0x3FF;
+	u32_CDACOUT = (u32_calData >> 16) & 0x1FFu;
+
+	if(((u32_CDACIN == 0x0u) || (u32_CDACIN == 0x3FFu)) && ((u32_CDACOUT == 0x0u) || (u32_CDACOUT == 0x1FFu)))
+	{
+		u32_CDACIN = 0x230;
+		u32_CDACOUT = 0xB0;
+	}
+	u32_CDACIN = u32_CDACIN<<22u;
+	u32_CDACOUT = u32_CDACOUT<<13u;
+
+	qca_scm_call_read(0x2, 0x22, (u32 *)IRON2G_RFA_RFA_OTP_OTP_OV_1,&reg_val);
+	reg_val = (reg_val & 0xFFF9FFFF) | (0x3 << 17u);
+	qca_scm_call_write(0x2, 0x23,(u32 *)IRON2G_RFA_RFA_OTP_OTP_OV_1, reg_val);
+
+	qca_scm_call_read(0x2, 0x22, (u32 *)IRON2G_RFA_RFA_OTP_OTP_XO_0,&reg_val);
+
+	if((u32_CDACIN == (reg_val & (0x3FF<<22u))) && (u32_CDACOUT == (reg_val & (0x1FF<<13u))))
+	{
+		printf("ART data same as IRON2G_RFA_RFA_OTP_OTP_XO_0\n");
+		return;
+	}
+
+	reg_val = ((reg_val&0x00001FFF) | ((u32_CDACIN | u32_CDACOUT)&(~0x00001FFF)));
+	qca_scm_call_write(0x2, 0x23,(u32 *)IRON2G_RFA_RFA_OTP_OTP_XO_0, reg_val);
+}
+
 void fdt_fixup_qpic(void *blob)
 {
 	int node_off, ret;
@@ -2021,6 +2227,39 @@ int bring_sec_core_up(unsigned int cpuid, unsigned int entry, unsigned int arg)
 	return 0;
 }
 #endif
+
+unsigned int get_dts_machid(unsigned int machid)
+{
+	switch (machid)
+	{
+		case MACH_TYPE_IPQ5018_AP_MP05_1:
+			return MACH_TYPE_IPQ5018_AP_MP03_1;
+		default:
+			return machid;
+	}
+}
+
+void ipq_uboot_fdt_fixup(void)
+{
+	int ret, len;
+	const char *config = "config@mp05.1";
+	len = fdt_totalsize(gd->fdt_blob) + strlen(config) + 1;
+	if (gd->bd->bi_arch_number == MACH_TYPE_IPQ5018_AP_MP05_1)
+	{
+		/*
+		* Open in place with a new length.
+		*/
+		ret = fdt_open_into(gd->fdt_blob, (void *)gd->fdt_blob, len);
+		if (ret)
+			printf("uboot-fdt-fixup: Cannot expand FDT: %s\n", fdt_strerror(ret));
+
+		ret = fdt_setprop((void *)gd->fdt_blob, 0, "config_name",
+			config, (strlen(config)+1));
+		if (ret)
+			printf("uboot-fdt-fixup: unable to set config_name(%d)\n", ret);
+	}
+	return;
+}
 
 int get_soc_hw_version(void)
 {

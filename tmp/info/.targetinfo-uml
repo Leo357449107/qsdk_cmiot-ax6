@@ -1,0 +1,18 @@
+Source-Makefile: target/linux/uml/Makefile
+Target: uml
+Target-Board: uml
+Target-Name: User Mode Linux
+Target-Arch: x86_64
+Target-Arch-Packages: x86_64
+Target-Features: audio ext4 source-only squashfs
+Target-Depends: 
+Target-Optimization: -Os -pipe
+CPU-Type: 
+Linux-Version: 4.14.254
+Linux-Release: 1
+Linux-Kernel-Arch: um
+Target-Description:
+
+@@
+Default-Packages: base-files libc libgcc busybox dropbear mtd uci opkg netifd fstools uclient-fetch logd urandom-seed urngd dnsmasq iptables ip6tables ppp ppp-mod-pppoe firewall odhcpd-ipv6only odhcp6c kmod-ipt-offload wpad-basic kmod-mac80211-hwsim mkf2fs e2fsprogs iwinfo
+

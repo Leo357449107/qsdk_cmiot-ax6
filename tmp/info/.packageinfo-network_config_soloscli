@@ -1,0 +1,23 @@
+Source-Makefile: package/network/config/soloscli/Makefile
+
+Package: soloscli
+Version: 1.04-2
+Depends: +libc +GCC_LIBSSP:libssp +USE_GLIBC:librt +USE_GLIBC:libpthread +kmod-solos-pci
+Conflicts: 
+Menu-Depends: 
+Provides: 
+Section: net
+Category: Network
+Repository: base
+Title: Configuration utility for Solos ADSL2+ modems
+Maintainer: 
+Source: solos-pci-1.04.tar.gz
+License: GPL-2.0
+Type: ipkg
+Description:   This package contains the soloscli utility
+  for interrogating Traverse Technologies' Solos ADSL2+ modems.
+http://sourceforge.net/projects/openadsl
+
+@@
+
+

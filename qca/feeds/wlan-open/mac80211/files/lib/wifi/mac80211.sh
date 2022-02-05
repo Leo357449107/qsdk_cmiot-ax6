@@ -82,6 +82,17 @@ check_mac80211_device() {
 }
 
 detect_mac80211() {
+	if [ $(cat /sys/bus/coresight/devices/coresight-stm/enable) -eq 0 ]
+	then
+		chipset=$(grep -o "IPQ.*" /proc/device-tree/model | awk -F/ '{print $1}')
+		board=$(grep -o "IPQ.*" /proc/device-tree/model | awk -F/ '{print $2}')
+		if [ "$chipset" == "IPQ9574" ]; then
+			echo 0 > /sys/bus/coresight/devices/coresight-stm/enable
+			echo "q6mem" > /sys/bus/coresight/devices/coresight-tmc-etr/out_mode
+			echo 1 > /sys/bus/coresight/devices/coresight-tmc-etr/curr_sink
+			echo 1 > /sys/bus/coresight/devices/coresight-stm/enable
+		fi
+	fi
 	devidx=0
 
 	config_load wireless
@@ -257,18 +268,33 @@ post_mac80211() {
 		;;
 	esac
 
-	if [ -e "/sys/module/ath11k/parameters/enable_qdss_trace" ]; then
-		qdss_tracing=`cat /sys/module/ath11k/parameters/enable_qdss_trace`
-		if [ $qdss_tracing = 1 ]; then
-			echo "q6mem" > /sys/bus/coresight/devices/coresight-tmc-etr/out_mode
-			echo 1 > /sys/bus/coresight/devices/coresight-tmc-etr/curr_sink
-			echo "0x06021FB0 0xc5acce55" > /sys/bus/coresight/devices/coresight-hwevent/setreg
-			echo "0x06130FB0 0xc5acce55" > /sys/bus/coresight/devices/coresight-hwevent/setreg
-			echo "0x06021000 0x00000320" > /sys/bus/coresight/devices/coresight-hwevent/setreg
-			echo "0x06130000 0x00000340" > /sys/bus/coresight/devices/coresight-hwevent/setreg
-			echo 1 > /sys/bus/coresight/devices/coresight-stm/enable
-		fi
+	chipset=$(grep -o "IPQ.*" /proc/device-tree/model | awk -F/ '{print $1}')
+	board=$(grep -o "IPQ.*" /proc/device-tree/model | awk -F/ '{print $2}')
+	if [ "$chipset" == "IPQ5018" ]; then
+		echo "q6mem" > /sys/bus/coresight/devices/coresight-tmc-etr/out_mode
+		echo 1 > /sys/bus/coresight/devices/coresight-tmc-etr/curr_sink
+		echo 5 > /sys/bus/coresight/devices/coresight-funnel-mm/funnel_ctrl
+		echo 7 >/sys/bus/coresight/devices/coresight-funnel-in0/funnel_ctrl
+		echo 1 > /sys/bus/coresight/devices/coresight-stm/enable
+	elif [ "$chipset" == "IPQ8074" ] && [ "$board" != "AP-HK10-C2" ]; then
+		echo "q6mem" > /sys/bus/coresight/devices/coresight-tmc-etr/out_mode
+		echo 1 > /sys/bus/coresight/devices/coresight-tmc-etr/curr_sink
+		echo 5 > /sys/bus/coresight/devices/coresight-funnel-mm/funnel_ctrl
+		echo 6 > /sys/bus/coresight/devices/coresight-funnel-in0/funnel_ctrl
+		echo 1 > /sys/bus/coresight/devices/coresight-stm/enable
+	elif [ "$chipset" == "IPQ6018" ] || [ "$chipset" == "IPQ807x" ]; then
+		echo "q6mem" > /sys/bus/coresight/devices/coresight-tmc-etr/out_mode
+		echo 1 > /sys/bus/coresight/devices/coresight-tmc-etr/curr_sink
+		echo 5 > /sys/bus/coresight/devices/coresight-funnel-mm/funnel_ctrl
+		echo 6 > /sys/bus/coresight/devices/coresight-funnel-in0/funnel_ctrl
+		echo 1 > /sys/bus/coresight/devices/coresight-stm/enable
+	elif [ "$chipset" == "IPQ9574" ]; then
+                echo 0 > /sys/bus/coresight/devices/coresight-stm/enable
+                echo "q6mem" > /sys/bus/coresight/devices/coresight-tmc-etr/out_mode
+                echo 1 > /sys/bus/coresight/devices/coresight-tmc-etr/curr_sink
+                echo 1 > /sys/bus/coresight/devices/coresight-stm/enable
 	fi
+
 	return 0
 }
 

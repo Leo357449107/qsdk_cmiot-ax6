@@ -82,6 +82,12 @@
 #include "skbuff_recycle.h"
 #include "skbuff_debug.h"
 
+
+#if defined(CONFIG_SKB_FIXED_SIZE_2K) && !defined(__LP64__)
+struct kmem_cache *skb_data_cache;
+#define SKB_DATA_CACHE_SIZE	2176
+#endif
+
 struct kmem_cache *skbuff_head_cache __ro_after_init;
 static struct kmem_cache *skbuff_fclone_cache __ro_after_init;
 #ifdef CONFIG_SKB_EXTENSIONS
@@ -142,7 +148,15 @@ static void *__kmalloc_reserve(size_t size, gfp_t flags, int node,
 	 * Try a regular allocation, when that fails and we're not entitled
 	 * to the reserves, fail.
 	 */
-	obj = kmalloc_node_track_caller(size,
+
+#if defined(CONFIG_SKB_FIXED_SIZE_2K) && !defined(__LP64__)
+	if (size > SZ_2K && size <= SKB_DATA_CACHE_SIZE)
+		obj = kmem_cache_alloc_node(skb_data_cache,
+						flags | __GFP_NOMEMALLOC | __GFP_NOWARN,
+						node);
+	else
+#endif
+		obj = kmalloc_node_track_caller(size,
 					flags | __GFP_NOMEMALLOC | __GFP_NOWARN,
 					node);
 	if (obj || !(gfp_pfmemalloc_allowed(flags)))
@@ -150,7 +164,12 @@ static void *__kmalloc_reserve(size_t size, gfp_t flags, int node,
 
 	/* Try again but now we are using pfmemalloc reserves */
 	ret_pfmemalloc = true;
-	obj = kmalloc_node_track_caller(size, flags, node);
+#if defined(CONFIG_SKB_FIXED_SIZE_2K) && !defined(__LP64__)
+	if (size > SZ_2K && size <= SKB_DATA_CACHE_SIZE)
+		obj = kmem_cache_alloc_node(skb_data_cache, flags, node);
+	else
+#endif
+		obj = kmalloc_node_track_caller(size, flags, node);
 
 out:
 	if (pfmemalloc)
@@ -472,9 +491,13 @@ struct sk_buff *__netdev_alloc_skb(struct net_device *dev,
 #ifdef CONFIG_ALLOC_SKB_PAGE_FRAG_DISABLE
 	page_frag_alloc_enable = false;
 #endif
-	if ((len > SKB_WITH_OVERHEAD(PAGE_SIZE)) ||
+	/* If requested length is either too small or too big,
+	 * we use kmalloc() for skb->head allocation.
+	 */
+	if (len <= SKB_WITH_OVERHEAD(1024) ||
+	    len > SKB_WITH_OVERHEAD(PAGE_SIZE) ||
 	    (gfp_mask & (__GFP_DIRECT_RECLAIM | GFP_DMA)) ||
-	    !page_frag_alloc_enable) {
+		!page_frag_alloc_enable) {
 		skb = __alloc_skb(len, gfp_mask, SKB_ALLOC_RX, NUMA_NO_NODE);
 		if (!skb)
 			goto skb_fail;
@@ -539,13 +562,17 @@ EXPORT_SYMBOL(__netdev_alloc_skb);
 struct sk_buff *__napi_alloc_skb(struct napi_struct *napi, unsigned int len,
 				 gfp_t gfp_mask)
 {
-	struct napi_alloc_cache *nc = this_cpu_ptr(&napi_alloc_cache);
+	struct napi_alloc_cache *nc;
 	struct sk_buff *skb;
 	void *data;
 
 	len += NET_SKB_PAD + NET_IP_ALIGN;
 
-	if ((len > SKB_WITH_OVERHEAD(PAGE_SIZE)) ||
+	/* If requested length is either too small or too big,
+	 * we use kmalloc() for skb->head allocation.
+	 */
+	if (len <= SKB_WITH_OVERHEAD(1024) ||
+	    len > SKB_WITH_OVERHEAD(PAGE_SIZE) ||
 	    (gfp_mask & (__GFP_DIRECT_RECLAIM | GFP_DMA))) {
 		skb = __alloc_skb(len, gfp_mask, SKB_ALLOC_RX, NUMA_NO_NODE);
 		if (!skb)
@@ -553,6 +580,7 @@ struct sk_buff *__napi_alloc_skb(struct napi_struct *napi, unsigned int len,
 		goto skb_success;
 	}
 
+	nc = this_cpu_ptr(&napi_alloc_cache);
 	len += SKB_DATA_ALIGN(sizeof(struct skb_shared_info));
 	len = SKB_DATA_ALIGN(len);
 
@@ -2115,6 +2143,12 @@ int pskb_trim_rcsum_slow(struct sk_buff *skb, unsigned int len)
 		skb->csum = csum_block_sub(skb->csum,
 					   skb_checksum(skb, len, delta, 0),
 					   len);
+	} else if (skb->ip_summed == CHECKSUM_PARTIAL) {
+		int hdlen = (len > skb_headlen(skb)) ? skb_headlen(skb) : len;
+		int offset = skb_checksum_start_offset(skb) + skb->csum_offset;
+
+		if (offset + sizeof(__sum16) > hdlen)
+			return -EINVAL;
 	}
 	return __pskb_trim(skb, len);
 }
@@ -3004,8 +3038,11 @@ skb_zerocopy_headlen(const struct sk_buff *from)
 
 	if (!from->head_frag ||
 	    skb_headlen(from) < L1_CACHE_BYTES ||
-	    skb_shinfo(from)->nr_frags >= MAX_SKB_FRAGS)
+	    skb_shinfo(from)->nr_frags >= MAX_SKB_FRAGS) {
 		hlen = skb_headlen(from);
+		if (!hlen)
+			hlen = from->len;
+	}
 
 	if (skb_has_frag_list(from))
 		hlen = from->len;
@@ -3373,7 +3410,19 @@ EXPORT_SYMBOL(skb_split);
  */
 static int skb_prepare_for_shift(struct sk_buff *skb)
 {
-	return skb_cloned(skb) && pskb_expand_head(skb, 0, 0, GFP_ATOMIC);
+	int ret = 0;
+
+	if (skb_cloned(skb)) {
+		/* Save and restore truesize: pskb_expand_head() may reallocate
+		 * memory where ksize(kmalloc(S)) != ksize(kmalloc(S)), but we
+		 * cannot change truesize at this point.
+		 */
+		unsigned int save_truesize = skb->truesize;
+
+		ret = pskb_expand_head(skb, 0, 0, GFP_ATOMIC);
+		skb->truesize = save_truesize;
+	}
+	return ret;
 }
 
 /**
@@ -4241,6 +4290,14 @@ static void skb_extensions_init(void) {}
 
 void __init skb_init(void)
 {
+
+#if defined(CONFIG_SKB_FIXED_SIZE_2K) && !defined(__LP64__)
+	skb_data_cache = kmem_cache_create_usercopy("skb_data_cache",
+						SKB_DATA_CACHE_SIZE,
+						0, 0, 0, SKB_DATA_CACHE_SIZE,
+						NULL);
+#endif
+
 	skbuff_head_cache = kmem_cache_create_usercopy("skbuff_head_cache",
 					      sizeof(struct sk_buff),
 					      0,

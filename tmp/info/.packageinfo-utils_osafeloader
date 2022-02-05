@@ -1,0 +1,19 @@
+Source-Makefile: package/utils/osafeloader/Makefile
+
+Package: osafeloader
+Version: 1
+Depends: +libc +GCC_LIBSSP:libssp +USE_GLIBC:librt +USE_GLIBC:libpthread @TARGET_bcm53xx
+Conflicts: 
+Menu-Depends: 
+Provides: 
+Section: utils
+Category: Base system
+Title: Utility for handling TP-LINK SafeLoader images
+Maintainer: Rafał Miłecki <rafal@milecki.pl>
+Source: 
+Type: ipkg
+Description:  This package contains an utility that allows handling SafeLoader images.
+Rafał Miłecki <rafal@milecki.pl>
+@@
+
+

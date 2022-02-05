@@ -126,6 +126,13 @@ mount_wifi_fw (){
 		mkdir -p /lib/firmware/qcn9000 && cd /lib/firmware/qcn9000 && create_soft_link /lib/firmware/$arch/WIFI_FW/qcn9000/qdss* .
 	fi
 
+	if [ -d /lib/firmware/$arch/WIFI_FW/qcn9224 ]; then
+		cd  $fwfolder && mkdir -p qcn9224 && mkdir -p /vendor/firmware/qcn9224
+		cd qcn9224 && ln -s /lib/firmware/$arch/WIFI_FW/qcn9224/*.* .
+		cd /vendor/firmware/qcn9224 && ln -s /lib/firmware/$arch/WIFI_FW/qcn9224/Data.msc .
+		mkdir -p /lib/firmware/qcn9224 && cd /lib/firmware/qcn9224 && create_soft_link /lib/firmware/$arch/WIFI_FW/qcn9224/qdss* .
+	fi
+
 	if [ -d /lib/firmware/$arch/WIFI_FW/qcn9100 ]; then
 		cd $fwfolder && mkdir -p qcn9100 && mkdir -p /vendor/firmware/qcn9100
 		cd qcn9100 && ln -s /lib/firmware/$arch/WIFI_FW/qcn9100/*.* . && ln -s /lib/firmware/$arch/WIFI_FW/q6_fw.* .
@@ -156,6 +163,9 @@ mount_wifi_fw (){
 		elif [ -f /lib/firmware/$arch/WIFI_FW/qcn9000/firmware_rdp_feature_512P.ini ]; then
 			cd /lib/firmware
 			create_soft_link /lib/firmware/$arch/WIFI_FW/qcn9000/firmware_rdp_feature_512P.ini .
+		elif [ -f /lib/firmware/$arch/WIFI_FW/qcn9224/firmware_rdp_feature_512P.ini ]; then
+			cd /lib/firmware
+			create_soft_link /lib/firmware/$arch/WIFI_FW/qcn9224/firmware_rdp_feature_512P.ini .
 		fi
 	else
 		if [ -f /lib/firmware/$arch/WIFI_FW/firmware_rdp_feature.ini ]; then
@@ -164,6 +174,9 @@ mount_wifi_fw (){
 		elif [ -f /lib/firmware/$arch/WIFI_FW/qcn9000/firmware_rdp_feature.ini ]; then
 			cd /lib/firmware
 			create_soft_link /lib/firmware/$arch/WIFI_FW/qcn9000/firmware_rdp_feature.ini .
+		elif [ -f /lib/firmware/$arch/WIFI_FW/qcn9224/firmware_rdp_feature.ini ]; then
+			cd /lib/firmware
+			create_soft_link /lib/firmware/$arch/WIFI_FW/qcn9224/firmware_rdp_feature.ini .
 		fi
 	fi
 

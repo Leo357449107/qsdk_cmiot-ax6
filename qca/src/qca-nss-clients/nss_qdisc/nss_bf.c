@@ -317,10 +317,19 @@ static int nss_bf_delete_class(struct Qdisc *sch, unsigned long arg)
 	qdisc_class_hash_remove(&q->clhash, &cl->cl_common);
 	refcnt = nss_qdisc_atomic_sub_return(&cl->nq);
 	sch_tree_unlock(sch);
+
+	/*
+	 * For 5.4 and above kernels, calling nss_htb_destroy_class
+	 * explicitly as there is no put_class which would have called
+	 * nss_bf_destroy_class when refcnt becomes zero.
+	 */
+#if (LINUX_VERSION_CODE >= KERNEL_VERSION(4, 14, 0))
+	nss_bf_destroy_class(sch, cl);
+#else
 	if (!refcnt) {
 		nss_qdisc_error("Reference count should not be zero for class %px\n", cl);
 	}
-
+#endif
 	return 0;
 }
 

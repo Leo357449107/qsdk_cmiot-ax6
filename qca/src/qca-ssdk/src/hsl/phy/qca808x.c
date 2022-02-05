@@ -395,10 +395,71 @@ static int qca808x_aneg_done(struct phy_device *phydev)
 	return (phy_data < 0) ? phy_data : (phy_data & QCA808X_STATUS_AUTO_NEG_DONE);
 }
 
+#if(LINUX_VERSION_CODE < KERNEL_VERSION(5, 0, 0))
+void qca808x_lp_adv_to_ethtool_adv(struct phy_device *phydev, a_uint32_t lp_adv)
+{
+	phydev->lp_advertising = 0;
+
+	if (lp_adv & FAL_PHY_PART_10T_HD)
+		phydev->lp_advertising |= ADVERTISED_10baseT_Half;
+	if (lp_adv& FAL_PHY_PART_10T_FD)
+		phydev->lp_advertising |= ADVERTISED_10baseT_Full;
+	if (lp_adv & FAL_PHY_PART_100TX_HD)
+		phydev->lp_advertising |= ADVERTISED_100baseT_Half;
+	if (lp_adv & FAL_PHY_PART_100TX_FD)
+		phydev->lp_advertising |= ADVERTISED_100baseT_Full;
+	if (lp_adv & FAL_PHY_PART_1000T_FD)
+		phydev->lp_advertising |= ADVERTISED_1000baseT_Full;
+	if (lp_adv & FAL_PHY_PART_2500T_FD)
+		phydev->lp_advertising |= ADVERTISED_2500baseX_Full;
+	if (lp_adv & FAL_PHY_PART_PAUSE)
+		phydev->lp_advertising |= ADVERTISED_Pause;
+	if (lp_adv & FAL_PHY_PART_ASY_PAUSE)
+		phydev->lp_advertising |= ADVERTISED_Asym_Pause;
+	if (lp_adv & FAL_PHY_PART_AUTONEG)
+		phydev->lp_advertising |= ADVERTISED_Autoneg;
+
+	return;
+}
+#else
+void qca808x_lp_adv_to_ethtool_adv(struct phy_device *phydev, a_uint32_t lp_adv)
+{
+	linkmode_zero(phydev->lp_advertising);
+
+	linkmode_mod_bit(ETHTOOL_LINK_MODE_10baseT_Half_BIT,
+		phydev->lp_advertising, lp_adv & FAL_PHY_PART_10T_HD);
+
+	linkmode_mod_bit(ETHTOOL_LINK_MODE_10baseT_Full_BIT,
+		phydev->lp_advertising, lp_adv & FAL_PHY_PART_10T_FD);
+
+	linkmode_mod_bit(ETHTOOL_LINK_MODE_100baseT_Half_BIT,
+		phydev->lp_advertising, lp_adv & FAL_PHY_PART_100TX_HD);
+
+	linkmode_mod_bit(ETHTOOL_LINK_MODE_100baseT_Full_BIT,
+		phydev->lp_advertising, lp_adv & FAL_PHY_PART_100TX_FD);
+
+	linkmode_mod_bit(ETHTOOL_LINK_MODE_1000baseT_Full_BIT,
+		phydev->lp_advertising, lp_adv & FAL_PHY_PART_1000T_FD);
+
+	linkmode_mod_bit(ETHTOOL_LINK_MODE_2500baseT_Full_BIT,
+		phydev->lp_advertising, lp_adv & FAL_PHY_PART_2500T_FD);
+
+	linkmode_mod_bit(ETHTOOL_LINK_MODE_Pause_BIT,
+		phydev->lp_advertising, lp_adv & FAL_PHY_PART_PAUSE);
+
+	linkmode_mod_bit(ETHTOOL_LINK_MODE_Asym_Pause_BIT,
+		phydev->lp_advertising, lp_adv & FAL_PHY_PART_ASY_PAUSE);
+
+	linkmode_mod_bit(ETHTOOL_LINK_MODE_Autoneg_BIT,
+		phydev->lp_advertising, lp_adv & FAL_PHY_PART_AUTONEG);
+
+	return;
+}
+#endif
 static int qca808x_read_status(struct phy_device *phydev)
 {
 	struct port_phy_status phy_status = {0};
-	a_uint32_t dev_id = 0, phy_id = 0;
+	a_uint32_t dev_id = 0, phy_id = 0, lp_adv = 0;
 	qca808x_priv *priv = phydev->priv;
 	const struct qca808x_phy_info *pdata = priv->phy_info;
 
@@ -445,6 +506,9 @@ static int qca808x_read_status(struct phy_device *phydev)
 	} else {
 		phydev->duplex = DUPLEX_HALF;
 	}
+	/*get the link partner ability*/
+	SW_RTN_ON_ERROR(qca808x_phy_get_partner_ability(dev_id, phy_id, &lp_adv));
+	qca808x_lp_adv_to_ethtool_adv(phydev, lp_adv);
 
 	return 0;
 }

@@ -31,11 +31,13 @@ Signed-off-by: Sathishkumar Muruganandam <murugana@codeaurora.org>
  drivers/net/wireless/ath/ath11k/wmi.h  |   2 +
  3 files changed, 154 insertions(+), 5 deletions(-)
 
---- a/drivers/net/wireless/ath/ath11k/core.h
-+++ b/drivers/net/wireless/ath/ath11k/core.h
-@@ -276,9 +276,8 @@ struct ath11k_vif {
- 	struct ieee80211_chanctx_conf chanctx;
- 	struct dentry *debugfs_twt;
+Index: backports-20210222_001-5.4.89-b157d2276/drivers/net/wireless/ath/ath11k/core.h
+===================================================================
+--- backports-20210222_001-5.4.89-b157d2276.orig/drivers/net/wireless/ath/ath11k/core.h
++++ backports-20210222_001-5.4.89-b157d2276/drivers/net/wireless/ath/ath11k/core.h
+@@ -279,9 +279,8 @@ struct ath11k_vif {
+ 	struct dentry *amsdu_aggr_size;
+ 	struct dentry *wmi_ctrl_stat;
  	struct ath11k_mgmt_frame_stats mgmt_stats;
 -#ifdef CPTCFG_ATH11K_NSS_SUPPORT
  	struct arvif_nss nss;
@@ -44,8 +46,10 @@ Signed-off-by: Sathishkumar Muruganandam <murugana@codeaurora.org>
  };
  
  struct ath11k_vif_iter {
---- a/drivers/net/wireless/ath/ath11k/mac.c
-+++ b/drivers/net/wireless/ath/ath11k/mac.c
+Index: backports-20210222_001-5.4.89-b157d2276/drivers/net/wireless/ath/ath11k/mac.c
+===================================================================
+--- backports-20210222_001-5.4.89-b157d2276.orig/drivers/net/wireless/ath/ath11k/mac.c
++++ backports-20210222_001-5.4.89-b157d2276/drivers/net/wireless/ath/ath11k/mac.c
 @@ -4248,6 +4248,11 @@ static void ath11k_sta_rc_update_wk(stru
  	arvif = arsta->arvif;
  	ar = arvif->ar;
@@ -324,16 +328,15 @@ Signed-off-by: Sathishkumar Muruganandam <murugana@codeaurora.org>
  	}
  
  	reinit_completion(&ar->vdev_delete_done);
-@@ -6440,7 +6615,7 @@ err_vdev_del:
- 	/* Remove TWT related files and directory */
- 	debugfs_remove_recursive(arvif->debugfs_twt);
- 	arvif->debugfs_twt = NULL;
--
+@@ -6447,6 +6622,7 @@ err_vdev_del:
+ 	debugfs_remove(arvif->wmi_ctrl_stat);
+ 	arvif->wmi_ctrl_stat = NULL;
+ 
 +unlock:
  	mutex_unlock(&ar->conf_mutex);
  }
  
-@@ -6505,16 +6680,17 @@ static int ath11k_mac_op_ampdu_action(st
+@@ -6511,16 +6687,17 @@ static int ath11k_mac_op_ampdu_action(st
  				      struct ieee80211_ampdu_params *params)
  {
  	struct ath11k *ar = hw->priv;
@@ -353,7 +356,7 @@ Signed-off-by: Sathishkumar Muruganandam <murugana@codeaurora.org>
  		break;
  	case IEEE80211_AMPDU_TX_START:
  	case IEEE80211_AMPDU_TX_STOP_CONT:
-@@ -8013,6 +8189,7 @@ static void ath11k_mac_op_sta_statistics
+@@ -8019,6 +8196,7 @@ static void ath11k_mac_op_sta_statistics
  					 struct station_info *sinfo)
  {
  	struct ath11k_sta *arsta = (struct ath11k_sta *)sta->drv_priv;
@@ -361,7 +364,7 @@ Signed-off-by: Sathishkumar Muruganandam <murugana@codeaurora.org>
  
  	sinfo->rx_duration = arsta->rx_duration;
  	sinfo->filled |= BIT_ULL(NL80211_STA_INFO_RX_DURATION);
-@@ -8040,7 +8217,8 @@ static void ath11k_mac_op_sta_statistics
+@@ -8046,7 +8224,8 @@ static void ath11k_mac_op_sta_statistics
  	sinfo->signal = arsta->rssi_comb + ATH11K_DEFAULT_NOISE_FLOOR;
  	sinfo->filled |= BIT_ULL(NL80211_STA_INFO_SIGNAL);
  
@@ -371,8 +374,10 @@ Signed-off-by: Sathishkumar Muruganandam <murugana@codeaurora.org>
  }
  
  #define ATH11K_WLAN_PRIO_MAX	0x63
---- a/drivers/net/wireless/ath/ath11k/wmi.h
-+++ b/drivers/net/wireless/ath/ath11k/wmi.h
+Index: backports-20210222_001-5.4.89-b157d2276/drivers/net/wireless/ath/ath11k/wmi.h
+===================================================================
+--- backports-20210222_001-5.4.89-b157d2276.orig/drivers/net/wireless/ath/ath11k/wmi.h
++++ backports-20210222_001-5.4.89-b157d2276/drivers/net/wireless/ath/ath11k/wmi.h
 @@ -4849,6 +4849,8 @@ enum wmi_vdev_subtype {
  	WMI_VDEV_SUBTYPE_MESH_11S,
  };
@@ -382,8 +387,10 @@ Signed-off-by: Sathishkumar Muruganandam <murugana@codeaurora.org>
  enum wmi_sta_powersave_param {
  	WMI_STA_PS_PARAM_RX_WAKE_POLICY = 0,
  	WMI_STA_PS_PARAM_TX_WAKE_THRESHOLD = 1,
---- a/drivers/net/wireless/ath/ath11k/dp_rx.c
-+++ b/drivers/net/wireless/ath/ath11k/dp_rx.c
+Index: backports-20210222_001-5.4.89-b157d2276/drivers/net/wireless/ath/ath11k/dp_rx.c
+===================================================================
+--- backports-20210222_001-5.4.89-b157d2276.orig/drivers/net/wireless/ath/ath11k/dp_rx.c
++++ backports-20210222_001-5.4.89-b157d2276/drivers/net/wireless/ath/ath11k/dp_rx.c
 @@ -1116,12 +1116,13 @@ err_mem_free:
  	return ret;
  }
@@ -441,8 +448,10 @@ Signed-off-by: Sathishkumar Muruganandam <murugana@codeaurora.org>
  			ath11k_nss_update_sta_rxrate(ppdu_info, peer, NULL);
  		} else if ((ppdu_info->fc_valid) &&
  			   (ppdu_info->ast_index != HAL_AST_IDX_INVALID)) {
---- a/drivers/net/wireless/ath/ath11k/dp_rx.h
-+++ b/drivers/net/wireless/ath/ath11k/dp_rx.h
+Index: backports-20210222_001-5.4.89-b157d2276/drivers/net/wireless/ath/ath11k/dp_rx.h
+===================================================================
+--- backports-20210222_001-5.4.89-b157d2276.orig/drivers/net/wireless/ath/ath11k/dp_rx.h
++++ backports-20210222_001-5.4.89-b157d2276/drivers/net/wireless/ath/ath11k/dp_rx.h
 @@ -88,9 +88,9 @@ static inline u32 ath11k_he_gi_to_nl8021
          return ret;
  }
@@ -455,8 +464,10 @@ Signed-off-by: Sathishkumar Muruganandam <murugana@codeaurora.org>
  			    struct ieee80211_ampdu_params *params);
  int ath11k_dp_peer_rx_pn_replay_config(struct ath11k_vif *arvif,
  				       const u8 *peer_addr,
---- a/drivers/net/wireless/ath/ath11k/peer.c
-+++ b/drivers/net/wireless/ath/ath11k/peer.c
+Index: backports-20210222_001-5.4.89-b157d2276/drivers/net/wireless/ath/ath11k/peer.c
+===================================================================
+--- backports-20210222_001-5.4.89-b157d2276.orig/drivers/net/wireless/ath/ath11k/peer.c
++++ backports-20210222_001-5.4.89-b157d2276/drivers/net/wireless/ath/ath11k/peer.c
 @@ -140,6 +140,24 @@ struct ath11k_ast_entry *ath11k_peer_ast
  	return NULL;
  }
@@ -512,8 +523,10 @@ Signed-off-by: Sathishkumar Muruganandam <murugana@codeaurora.org>
  
  	if (ast_entry->is_mapped)
  		list_del(&ast_entry->ase_list);
---- a/drivers/net/wireless/ath/ath11k/peer.h
-+++ b/drivers/net/wireless/ath/ath11k/peer.h
+Index: backports-20210222_001-5.4.89-b157d2276/drivers/net/wireless/ath/ath11k/peer.h
+===================================================================
+--- backports-20210222_001-5.4.89-b157d2276.orig/drivers/net/wireless/ath/ath11k/peer.h
++++ backports-20210222_001-5.4.89-b157d2276/drivers/net/wireless/ath/ath11k/peer.h
 @@ -33,6 +33,7 @@ enum ath11k_ast_entry_type {
  enum ath11k_wds_wmi_action {
  	ATH11K_WDS_WMI_ADD = 1,
@@ -544,8 +557,10 @@ Signed-off-by: Sathishkumar Muruganandam <murugana@codeaurora.org>
  
  static inline int ath11k_peer_add_ast(struct ath11k *ar, struct ath11k_peer *peer,
  				      u8* mac_addr, enum ath11k_ast_entry_type type)
---- a/drivers/net/wireless/ath/ath11k/nss.c
-+++ b/drivers/net/wireless/ath/ath11k/nss.c
+Index: backports-20210222_001-5.4.89-b157d2276/drivers/net/wireless/ath/ath11k/nss.c
+===================================================================
+--- backports-20210222_001-5.4.89-b157d2276.orig/drivers/net/wireless/ath/ath11k/nss.c
++++ backports-20210222_001-5.4.89-b157d2276/drivers/net/wireless/ath/ath11k/nss.c
 @@ -996,6 +996,9 @@ int ath11k_nss_vdev_set_cmd(struct ath11
  	case ATH11K_NSS_WIFI_VDEV_DECAP_TYPE_CMD:
  		cmd = NSS_WIFI_VDEV_DECAP_TYPE_CMD;
@@ -556,8 +571,10 @@ Signed-off-by: Sathishkumar Muruganandam <murugana@codeaurora.org>
  	default:
  		return -EINVAL;
  	}
---- a/drivers/net/wireless/ath/ath11k/nss.h
-+++ b/drivers/net/wireless/ath/ath11k/nss.h
+Index: backports-20210222_001-5.4.89-b157d2276/drivers/net/wireless/ath/ath11k/nss.h
+===================================================================
+--- backports-20210222_001-5.4.89-b157d2276.orig/drivers/net/wireless/ath/ath11k/nss.h
++++ backports-20210222_001-5.4.89-b157d2276/drivers/net/wireless/ath/ath11k/nss.h
 @@ -108,6 +108,7 @@ enum ath11k_nss_vdev_cmd {
  	ATH11K_NSS_WIFI_VDEV_SECURITY_TYPE_CMD,
  	ATH11K_NSS_WIFI_VDEV_ENCAP_TYPE_CMD,

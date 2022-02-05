@@ -3,7 +3,7 @@
  *	Shortcut forwarding engine header file for IPv6.
  *
  * Copyright (c) 2015-2016, 2019-2020, The Linux Foundation. All rights reserved.
- * Copyright (c) 2021 Qualcomm Innovation Center, Inc. All rights reserved.
+ * Copyright (c) 2021-2022 Qualcomm Innovation Center, Inc. All rights reserved.
  *
  * Permission to use, copy, modify, and/or distribute this software for any
  * purpose with or without fee is hereby granted, provided that the above
@@ -66,7 +66,16 @@ struct sfe_ipv6_tcp_connection_match {
 					/* remark priority of SKB */
 #define SFE_IPV6_CONNECTION_MATCH_FLAG_DSCP_REMARK (1<<6)
 					/* remark DSCP of packet */
-
+#define SFE_IPV6_CONNECTION_MATCH_FLAG_CSUM_OFFLOAD (1<<7)
+					/* checksum offload.*/
+#define SFE_IPV6_CONNECTION_MATCH_FLAG_PPPOE_DECAP (1<<8)
+					/* Indicates that PPPoE should be decapsulated */
+#define SFE_IPV6_CONNECTION_MATCH_FLAG_PPPOE_ENCAP (1<<9)
+					/* Indicates that PPPoE should be encapsulated */
+#define SFE_IPV6_CONNECTION_MATCH_FLAG_BRIDGE_FLOW (1<<10)
+					/* Bridge flow */
+#define SFE_IPV6_CONNECTION_MATCH_FLAG_MARK (1<<11)
+					/* set skb mark*/
 /*
  * IPv6 connection matching structure.
  */
@@ -88,6 +97,7 @@ struct sfe_ipv6_connection_match {
 	__be16 match_src_port;		/* Source port/connection ident */
 	__be16 match_dest_port;		/* Destination port/connection ident */
 
+	struct udp_sock *up;		/* Stores UDP sock information; valid only in decap path */
 	/*
 	 * Control the operations of the match.
 	 */
@@ -123,6 +133,7 @@ struct sfe_ipv6_connection_match {
 	__be16 xlate_dest_port;	/* Port/connection ident after destination translation */
 	u16 xlate_dest_csum_adjustment;
 					/* Transport layer checksum adjustment after destination translation */
+	u32 mark;			/* mark for outgoing packet */
 
 	/*
 	 * QoS information
@@ -146,6 +157,12 @@ struct sfe_ipv6_connection_match {
 	 */
 	u64 rx_packet_count64;
 	u64 rx_byte_count64;
+
+	/*
+	 * PPPoE information.
+	 */
+	u16 pppoe_session_id;
+	u8 pppoe_remote_mac[ETH_ALEN];
 };
 
 /*
@@ -179,7 +196,6 @@ struct sfe_ipv6_connection {
 					/* Pointer to the previous entry in the list of all connections */
 	bool removed;			/* Indicates the connection is removed */
 	struct rcu_head rcu;		/* delay rcu free */
-	u32 mark;			/* mark for outgoing packet */
 	u32 debug_read_seq;		/* sequence number for debug dump */
 };
 
@@ -228,6 +244,10 @@ enum sfe_ipv6_exception_events {
 	SFE_IPV6_EXCEPTION_EVENT_IP_OPTIONS_INCOMPLETE,
 	SFE_IPV6_EXCEPTION_EVENT_UNHANDLED_PROTOCOL,
 	SFE_IPV6_EXCEPTION_EVENT_FLOW_COOKIE_ADD_FAIL,
+	SFE_IPV6_EXCEPTION_EVENT_NO_HEADROOM,
+	SFE_IPV6_EXCEPTION_EVENT_INVALID_PPPOE_SESSION,
+	SFE_IPV6_EXCEPTION_EVENT_INCORRECT_PPPOE_PARSING,
+	SFE_IPV6_EXCEPTION_EVENT_PPPOE_NOT_SET_IN_CME,
 	SFE_IPV6_EXCEPTION_EVENT_LAST
 };
 
@@ -255,9 +275,12 @@ struct sfe_ipv6_stats {
 	u64 connection_match_hash_reorders64;
 					/* Number of IPv6 connection match hash reorders */
 	u64 connection_flushes64;		/* Number of IPv6 connection flushes */
+	u64 packets_dropped64;			/* Number of IPv4 packets dropped */
 	u64 packets_forwarded64;		/* Number of IPv6 packets forwarded */
 	u64 packets_not_forwarded64;	/* Number of IPv6 packets not forwarded */
 	u64 exception_events64[SFE_IPV6_EXCEPTION_EVENT_LAST];
+	u64 pppoe_encap_packets_forwarded64;	/* Number of IPv6 PPPOE encap packets forwarded */
+	u64 pppoe_decap_packets_forwarded64;	/* Number of IPv6 PPPOE decap packets forwarded */
 };
 
 /*
@@ -296,7 +319,7 @@ struct sfe_ipv6 {
 	/*
 	 * Control state.
 	 */
-	struct kobject *sys_sfe_ipv6;	/* sysfs linkage */
+	struct kobject *sys_ipv6;	/* sysfs linkage */
 	int debug_dev;			/* Major number of the debug char device */
 	u32 debug_read_seq;		/* sequence number for debug dump */
 };
@@ -328,6 +351,48 @@ struct sfe_ipv6_debug_xml_write_state {
 
 typedef bool (*sfe_ipv6_debug_xml_write_method_t)(struct sfe_ipv6 *si, char *buffer, char *msg, size_t *length,
 						  int *total_read, struct sfe_ipv6_debug_xml_write_state *ws);
+
+/*
+ * sfe_ipv6_is_ext_hdr()
+ *	check if we recognize ipv6 extension header
+ */
+static inline bool sfe_ipv6_is_ext_hdr(u8 hdr)
+{
+	return (hdr == NEXTHDR_HOP) ||
+		(hdr == NEXTHDR_ROUTING) ||
+		(hdr == NEXTHDR_FRAGMENT) ||
+		(hdr == NEXTHDR_AUTH) ||
+		(hdr == NEXTHDR_DEST) ||
+		(hdr == NEXTHDR_MOBILITY);
+}
+
+/*
+ * sfe_ipv6_change_dsfield()
+ *	change dscp field in IPv6 packet
+ */
+static inline void sfe_ipv6_change_dsfield(struct ipv6hdr *iph, u8 dscp)
+{
+	__be16 *p = (__be16 *)iph;
+
+	*p = ((*p & htons(SFE_IPV6_DSCP_MASK)) | htons((u16)dscp << 4));
+}
+
+void sfe_ipv6_exception_stats_inc(struct sfe_ipv6 *si, enum sfe_ipv6_exception_events reason);
+
+struct sfe_ipv6_connection_match *
+sfe_ipv6_find_connection_match_rcu(struct sfe_ipv6 *si, struct net_device *dev, u8 protocol,
+					struct sfe_ipv6_addr *src_ip, __be16 src_port,
+					struct sfe_ipv6_addr *dest_ip, __be16 dest_port);
+
+bool sfe_ipv6_remove_connection(struct sfe_ipv6 *si, struct sfe_ipv6_connection *c);
+
+void sfe_ipv6_flush_connection(struct sfe_ipv6 *si,
+				      struct sfe_ipv6_connection *c,
+				      sfe_sync_reason_t reason);
+
+void sfe_ipv6_sync_status(struct sfe_ipv6 *si,
+				      struct sfe_ipv6_connection *c,
+				      sfe_sync_reason_t reason);
 
 void sfe_ipv6_exit(void);
 int sfe_ipv6_init(void);

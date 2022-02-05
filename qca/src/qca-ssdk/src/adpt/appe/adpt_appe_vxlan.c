@@ -343,7 +343,12 @@ void adpt_appe_vxlan_func_bitmap_init(a_uint32_t dev_id)
 	{
 		return;
 	}
-	p_adpt_api->adpt_vxlan_func_bitmap = 0;
+	p_adpt_api->adpt_vxlan_func_bitmap = ((1<<FUNC_VXLAN_ENTRY_ADD) |
+						(1<<FUNC_VXLAN_ENTRY_DEL) |
+						(1<<FUNC_VXLAN_ENTRY_GETFIRST) |
+						(1<<FUNC_VXLAN_ENTRY_GETNEXT) |
+						(1<<FUNC_VXLAN_GPE_PROTO_CFG_SET) |
+						(1<<FUNC_VXLAN_GPE_PROTO_CFG_GET));
 	return;
 }
 

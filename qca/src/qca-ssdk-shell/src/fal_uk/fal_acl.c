@@ -1,5 +1,8 @@
 /*
  * Copyright (c) 2014, 2016-2017, The Linux Foundation. All rights reserved.
+ *
+ * Copyright (c) 2022, Qualcomm Innovation Center, Inc. All rights reserved.
+ *
  * Permission to use, copy, modify, and/or distribute this software for
  * any purpose with or without fee is hereby granted, provided that the
  * above copyright notice and this permission notice appear in all copies.
@@ -282,5 +285,23 @@ fal_acl_vpgroup_get(a_uint32_t dev_id, a_uint32_t vport_id,
     sw_error_t rv;
 
     rv = sw_uk_exec(SW_API_ACL_VPGROUP_GET, dev_id, vport_id, vport_type, vpgroup_id);
+    return rv;
+}
+
+sw_error_t
+fal_acl_mac_entry_set(a_uint32_t dev_id, fal_acl_mac_entry_t *entry)
+{
+    sw_error_t rv;
+
+    rv = sw_uk_exec(SW_API_ACL_MAC_ENTRY_SET, dev_id, entry);
+    return rv;
+}
+
+sw_error_t
+fal_acl_mac_entry_dump(a_uint32_t dev_id)
+{
+    sw_error_t rv;
+
+    rv = sw_uk_exec(SW_API_ACL_MAC_ENTRY_DUMP, dev_id);
     return rv;
 }

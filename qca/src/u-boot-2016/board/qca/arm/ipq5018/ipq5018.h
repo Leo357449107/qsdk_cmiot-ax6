@@ -351,6 +351,13 @@
 	 setbits_le32(addr, value);			\
 	 mdelay(delay);					\
 	 clrbits_le32(addr, value);			\
+
+/*
+ * OTP Register
+ */
+#define IRON2G_RFA_RFA_OTP_OTP_XO_0             0xC4D44A0
+#define IRON2G_RFA_RFA_OTP_OTP_OV_1             0xC4D4484
+
 /*
  * PCIE Register
  */
@@ -558,6 +565,8 @@ struct smem_ram_ptable {
 	struct smem_ram_ptn parts[32];
 } __attribute__ ((__packed__));
 
+int get_eth_caldata(u32 *caldata, u32 offset);
+void board_update_caldata(void);
 int smem_ram_ptable_init(struct smem_ram_ptable *smem_ram_ptable);
 void reset_crashdump(void);
 void reset_board(void);

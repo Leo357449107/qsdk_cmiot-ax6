@@ -1,0 +1,39 @@
+Source-Makefile: target/linux/mxs/Makefile
+Target: mxs
+Target-Board: mxs
+Target-Name: Freescale i.MX23/i.MX28
+Target-Arch: arm
+Target-Arch-Packages: arm_arm926ej-s
+Target-Features: dt ext4 gpio rtc usb usbgadget
+Target-Depends: 
+Target-Optimization: -Os -pipe
+CPU-Type: arm926ej-s
+Linux-Version: 4.14.254
+Linux-Release: 1
+Linux-Kernel-Arch: arm
+Target-Description:
+	Support for Freescale i.MX23/i.MX28 boards
+@@
+Default-Packages: base-files libc libgcc busybox dropbear mtd uci opkg netifd fstools uclient-fetch logd urandom-seed urngd dnsmasq iptables ip6tables ppp ppp-mod-pppoe firewall odhcpd-ipv6only odhcp6c kmod-ipt-offload 
+Target-Profile: duckbill
+Target-Profile-Name: I2SE Duckbill boards
+Target-Profile-Packages:  -dnsmasq -firewall -ppp -ip6tables -iptables -6relayd -mtd uboot-envtools kmod-leds-gpio kmod-ledtrig-timer -kmod-ipt-nathelper uboot-mxs-duckbill 
+Target-Profile-Description:
+	I2SE's Duckbill devices
+@@
+
+Target-Profile: olinuxino-maxi
+Target-Profile-Name: Olimex OLinuXino Maxi/Mini boards
+Target-Profile-Packages:  imx-bootlets uboot-mxs-mx23_olinuxino kmod-usb-net kmod-usb-net-smsc95xx kmod-gpio-mcp23s08 kmod-leds-gpio kmod-ledtrig-heartbeat kmod-sound-core 
+Target-Profile-Description:
+	Olimex OLinuXino Maxi/Mini boards
+@@
+
+Target-Profile: olinuxino-micro
+Target-Profile-Name: Olimex OLinuXino Micro/Nano boards
+Target-Profile-Packages:  imx-bootlets uboot-mxs-mx23_olinuxino kmod-gpio-mcp23s08 kmod-leds-gpio kmod-ledtrig-heartbeat 
+Target-Profile-Description:
+	Olimex OLinuXino Micro/Nano boards
+@@
+
+

@@ -26,6 +26,7 @@
 #include <linux/irqreturn.h>
 #include <linux/io.h>
 #include <linux/of.h>
+#include <linux/of_address.h>
 #include <linux/irq.h>
 #include <linux/platform_device.h>
 #include <linux/threads.h>
@@ -70,7 +71,7 @@ struct tzbsp_log_pos_t {
  * @ker_buf: kernel buffer shared with TZ to get the diag log
  * @copy_buf: kernel buffer used to copy the diag log
  * @copy_len: length of the diag log that has been copied into the buffer
- * @log_buf_start: start address of the tz log buffer only available for ipq6018
+ * @log_buf_start: start address of the tz log buffer only available for ipq6018 and ipq9574
  * @tz_ring_off: offset in tz log buffer that contains the ring start offset
  * @tz_log_pos_info_off: offset in tz log buffer that contains log position info
  * @hvc_ring_off: offset in hvc log buffer that contains the ring start offset
@@ -375,12 +376,14 @@ static irqreturn_t tzerr_irq(int irq, void *data)
 static int qti_tzlog_probe(struct platform_device *pdev)
 {
 	struct device_node *np = pdev->dev.of_node;
+	struct device_node *imem_np;
 	struct tz_hvc_log_struct *tz_hvc_log;
 	struct dentry *fileret;
 	struct page *page_buf;
 	bool tz_legacy_scm = false;
 	int ret = 0;
 	int irq;
+	void __iomem *imem_base;
 
 	tz_hvc_log = (struct tz_hvc_log_struct *)
 			kzalloc(sizeof(struct tz_hvc_log_struct), GFP_KERNEL);
@@ -393,15 +396,30 @@ static int qti_tzlog_probe(struct platform_device *pdev)
 				   of_device_is_compatible(np, "qti,tzlog-ipq9574") ||
 				   qti_scm_is_tz_log_encryption_supported());
 	if (!tz_hvc_log->is_diag_id) {
-		ret = of_property_read_u32(np, "qti,tzbsp-diag-buf-start",
-				     &tz_hvc_log->log_buf_start);
-		if (ret) {
-			dev_err(&pdev->dev, "Error Start address required\n");
-			return ret;
+		imem_np = of_find_compatible_node(NULL, NULL,
+						  "qcom,msm-imem-tz-log-buf-addr");
+		if (!imem_np) {
+			dev_err(&pdev->dev,
+				"tz_log_buf_addr imem DT node does not exist\n");
+			return -ENODEV;
 		}
 
-		tz_hvc_log->is_encrypted = (qti_qfprom_show_authenticate() &&
-					    qti_scm_is_tz_log_encrypted());
+		imem_base = of_iomap(imem_np, 0);
+		if (!imem_base) {
+			dev_err(&pdev->dev,
+				"tz_log_buf_addr imem offset mapping failed\n");
+			return -ENOMEM;
+		}
+
+		memcpy_fromio(&tz_hvc_log->log_buf_start, imem_base, 4);
+		dev_dbg(&pdev->dev, "Log Buf Start address is 0x%x\n",
+			tz_hvc_log->log_buf_start);
+		iounmap(imem_base);
+
+		if (qti_scm_is_tz_log_encryption_supported()) {
+			tz_hvc_log->is_encrypted = (qti_qfprom_show_authenticate() &&
+						    qti_scm_is_tz_log_encrypted());
+		}
 	}
 
 	tz_hvc_log->tz_kpss = of_property_read_bool(np, "qti,tz_kpss");

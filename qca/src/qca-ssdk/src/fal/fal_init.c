@@ -100,6 +100,13 @@ _fal_module_func_ctrl_get(a_uint32_t dev_id, a_uint32_t module, fal_func_ctrl_t 
 {
     return adpt_module_func_ctrl_get(dev_id, module, func_ctrl);
 }
+
+static sw_error_t
+_fal_ppe_capacity_get(a_uint32_t dev_id, fal_ppe_tbl_caps_t *ppe_capacity)
+{
+    return adpt_ppe_capacity_get(dev_id, ppe_capacity);
+}
+
 /*qca808x_start*/
 sw_error_t
 fal_cleanup(a_uint32_t dev_id)
@@ -203,9 +210,21 @@ fal_module_func_init(a_uint32_t dev_id, ssdk_init_cfg *cfg)
     return rv;
 }
 
+sw_error_t
+fal_ppe_capacity_get(a_uint32_t dev_id, fal_ppe_tbl_caps_t *ppe_capacity)
+{
+    sw_error_t rv;
+
+    FAL_API_LOCK;
+    rv = _fal_ppe_capacity_get(dev_id, ppe_capacity);
+    FAL_API_UNLOCK;
+    return rv;
+}
+
 EXPORT_SYMBOL(fal_switch_devid_get);
 EXPORT_SYMBOL(fal_module_func_ctrl_set);
 EXPORT_SYMBOL(fal_module_func_ctrl_get);
+EXPORT_SYMBOL(fal_ppe_capacity_get);
 
 /**
  * @}

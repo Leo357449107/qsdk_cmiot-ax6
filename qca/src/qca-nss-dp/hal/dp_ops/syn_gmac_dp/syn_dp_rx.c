@@ -1,7 +1,7 @@
 /*
  * Copyright (c) 2020-2021, The Linux Foundation. All rights reserved.
  *
- * Copyright (c) 2021 Qualcomm Innovation Center, Inc. All rights reserved.
+ * Copyright (c) 2021-2022 Qualcomm Innovation Center, Inc. All rights reserved.
  *
  * Permission to use, copy, modify, and/or distribute this software for any
  * purpose with or without fee is hereby granted, provided that the above
@@ -95,6 +95,8 @@ void syn_dp_rx_refill_page_mode(struct syn_dp_info_rx *rx_info)
 			break;
 		}
 
+		skb_reserve(skb, SYN_DP_SKB_HEADROOM + NET_IP_ALIGN);
+
 		pg = alloc_page(GFP_ATOMIC);
 		if (unlikely(!pg)) {
 			dev_kfree_skb_any(skb);
@@ -111,7 +113,7 @@ void syn_dp_rx_refill_page_mode(struct syn_dp_info_rx *rx_info)
 
 		skb_fill_page_desc(skb, 0, pg, 0, PAGE_SIZE);
 
-		dmac_inv_range(page_addr, (page_addr + PAGE_SIZE));
+		dmac_inv_range_no_dsb(page_addr, (page_addr + PAGE_SIZE));
 		rx_refill_idx = rx_info->rx_refill_idx;
 		rx_desc = rx_info->rx_desc + rx_refill_idx;
 
@@ -130,12 +132,13 @@ void syn_dp_rx_refill_page_mode(struct syn_dp_info_rx *rx_info)
 	 * Batched flush and invalidation of the rx descriptors
 	 */
 	if (end > start) {
-		dmac_flush_range((void *)&rx_info->rx_desc[start], (void *)&rx_info->rx_desc[end] + sizeof(struct dma_desc_rx));
+		dmac_flush_range_no_dsb((void *)&rx_info->rx_desc[start], (void *)&rx_info->rx_desc[end] + sizeof(struct dma_desc_rx));
 	} else {
-		dmac_flush_range((void *)&rx_info->rx_desc[start], (void *)&rx_info->rx_desc[SYN_DP_RX_DESC_MAX_INDEX] + sizeof(struct dma_desc_rx));
-		dmac_flush_range((void *)&rx_info->rx_desc[0], (void *)&rx_info->rx_desc[end] + sizeof(struct dma_desc_rx));
+		dmac_flush_range_no_dsb((void *)&rx_info->rx_desc[start], (void *)&rx_info->rx_desc[SYN_DP_RX_DESC_MAX_INDEX] + sizeof(struct dma_desc_rx));
+		dmac_flush_range_no_dsb((void *)&rx_info->rx_desc[0], (void *)&rx_info->rx_desc[end] + sizeof(struct dma_desc_rx));
 	}
 
+	dsb(st);
 	syn_resume_dma_rx(rx_info->mac_base);
 }
 
@@ -169,7 +172,7 @@ void syn_dp_rx_refill(struct syn_dp_info_rx *rx_info)
 		skb_reserve(skb, SYN_DP_SKB_HEADROOM + NET_IP_ALIGN);
 
 		dma_addr = (dma_addr_t)virt_to_phys(skb->data);
-		dmac_inv_range((void *)skb->data, (void *)(skb->data + inval_len));
+		dmac_inv_range_no_dsb((void *)skb->data, (void *)(skb->data + inval_len));
 		rx_refill_idx = rx_info->rx_refill_idx;
 		rx_desc = rx_info->rx_desc + rx_refill_idx;
 
@@ -188,12 +191,13 @@ void syn_dp_rx_refill(struct syn_dp_info_rx *rx_info)
 	 * Batched flush and invalidation of the rx descriptors
 	 */
 	if (end > start) {
-		dmac_flush_range((void *)&rx_info->rx_desc[start], (void *)&rx_info->rx_desc[end] + sizeof(struct dma_desc_rx));
+		dmac_flush_range_no_dsb((void *)&rx_info->rx_desc[start], (void *)&rx_info->rx_desc[end] + sizeof(struct dma_desc_rx));
 	} else {
-		dmac_flush_range((void *)&rx_info->rx_desc[start], (void *)&rx_info->rx_desc[SYN_DP_RX_DESC_MAX_INDEX] + sizeof(struct dma_desc_rx));
-		dmac_flush_range((void *)&rx_info->rx_desc[0], (void *)&rx_info->rx_desc[end] + sizeof(struct dma_desc_rx));
+		dmac_flush_range_no_dsb((void *)&rx_info->rx_desc[start], (void *)&rx_info->rx_desc[SYN_DP_RX_DESC_MAX_INDEX] + sizeof(struct dma_desc_rx));
+		dmac_flush_range_no_dsb((void *)&rx_info->rx_desc[0], (void *)&rx_info->rx_desc[end] + sizeof(struct dma_desc_rx));
 	}
 
+	dsb(st);
 	syn_resume_dma_rx(rx_info->mac_base);
 }
 
@@ -201,7 +205,7 @@ void syn_dp_rx_refill(struct syn_dp_info_rx *rx_info)
  * syn_dp_handle_jumbo_packets
  * 	Process received scattered packets
  */
-static void syn_dp_handle_jumbo_packets(struct syn_dp_info_rx *rx_info, struct sk_buff *rx_skb, uint32_t status)
+static bool syn_dp_handle_jumbo_packets(struct syn_dp_info_rx *rx_info, struct sk_buff *rx_skb, uint32_t status)
 {
 	int frame_length, temp_len;
 	skb_frag_t *frag;
@@ -223,10 +227,25 @@ static void syn_dp_handle_jumbo_packets(struct syn_dp_info_rx *rx_info, struct s
 			 * that have been transferred for the current frame.
 			 */
 			rx_info->prev_len = frame_length;
-			return;
+			return true;
 		}
 
-		BUG_ON(!rx_info->head);
+		/*
+		 * If head is not present, which means broken frame.
+		 */
+		if (unlikely(!rx_info->head)) {
+			netdev_dbg(rx_info->netdev, "Broken frame received for jumbo packet (page mode)");
+			return false;
+		}
+
+		/*
+		 * Frame length of current skb contains length of previous one also.
+		 * Drop the Skb if wrong length received.
+		 */
+		if (unlikely(frame_length <= rx_info->prev_len)) {
+			netdev_dbg(rx_info->netdev, "Incorrect frame length received for jumbo packet (page mode)");
+			return false;
+		}
 
 		temp_len = frame_length - rx_info->prev_len;
 
@@ -243,7 +262,7 @@ static void syn_dp_handle_jumbo_packets(struct syn_dp_info_rx *rx_info, struct s
 		rx_info->prev_len = frame_length;
 		skb_shinfo(rx_skb)->nr_frags = 0;
 		dev_kfree_skb_any(rx_skb);
-		return;
+		return true;
 	}
 
 	/*
@@ -258,13 +277,25 @@ static void syn_dp_handle_jumbo_packets(struct syn_dp_info_rx *rx_info, struct s
 		rx_info->head = rx_skb;
 		rx_info->tail = NULL;
 		rx_info->prev_len = frame_length;
-		return;
+		return true;
 	}
 
 	/*
 	 * If head is not present, which means broken frame.
 	 */
-	BUG_ON(!rx_info->head);
+	if (unlikely(!rx_info->head)) {
+		netdev_dbg(rx_info->netdev, "Broken frame received for jumbo packet (non page mode)");
+		return false;
+	}
+
+	/*
+	 * Frame length of current skb contains length of previous one also.
+	 * Drop the Skb if wrong length received.
+	 */
+	if (unlikely(frame_length <= rx_info->prev_len)) {
+		netdev_dbg(rx_info->netdev, "Incorrect frame length received for jumbo packet (non page mode)");
+		return false;
+	}
 
 	/*
 	 * If head is present and got next desc.
@@ -288,7 +319,7 @@ static void syn_dp_handle_jumbo_packets(struct syn_dp_info_rx *rx_info, struct s
 	rx_info->head->truesize += rx_skb->truesize;
 
 	rx_info->prev_len = frame_length;
-	return;
+	return true;
 }
 
 /*
@@ -307,6 +338,7 @@ int syn_dp_rx(struct syn_dp_info_rx *rx_info, int budget)
 	struct syn_dp_rx_buf *rx_buf;
 	struct dma_desc_rx *rx_desc_next = NULL;
 	uint8_t *next_skb_ptr;
+	skb_frag_t *frag = NULL;
 
 	busy = atomic_read((atomic_t *)&rx_info->busy_rx_desc_cnt);
 	if (unlikely(!busy)) {
@@ -334,23 +366,33 @@ int syn_dp_rx(struct syn_dp_info_rx *rx_info, int budget)
 	 */
 	end = syn_dp_rx_inc_index(rx_info->rx_idx, busy);
 	if (end > start) {
-		dmac_inv_range((void *)&rx_info->rx_desc[start], (void *)&rx_info->rx_desc[end] + sizeof(struct dma_desc_rx));
+		dmac_inv_range_no_dsb((void *)&rx_info->rx_desc[start], (void *)&rx_info->rx_desc[end] + sizeof(struct dma_desc_rx));
 	} else {
-		dmac_inv_range((void *)&rx_info->rx_desc[start], (void *)&rx_info->rx_desc[SYN_DP_RX_DESC_MAX_INDEX] + sizeof(struct dma_desc_rx));
-		dmac_inv_range((void *)&rx_info->rx_desc[0], (void *)&rx_info->rx_desc[end] + sizeof(struct dma_desc_rx));
+		dmac_inv_range_no_dsb((void *)&rx_info->rx_desc[start], (void *)&rx_info->rx_desc[SYN_DP_RX_DESC_MAX_INDEX] + sizeof(struct dma_desc_rx));
+		dmac_inv_range_no_dsb((void *)&rx_info->rx_desc[0], (void *)&rx_info->rx_desc[end] + sizeof(struct dma_desc_rx));
 	}
+
+	dsb(st);
 
 	do {
 		status = rx_desc->status;
 		if (syn_dp_gmac_is_rx_desc_owned_by_dma(status)) {
 
 			/*
-			 * Rx descriptor still hold by GMAC DMA, so we are done
+			 * Rx descriptor still hold by GMAC DMA, so we are done.
+			 * Before we return, invalidation needs to be done
+			 * for prefetch of next data.
 			 */
 			break;
 		}
 
+		/*
+		 * Prefetch a cacheline (64B) packet header data of current SKB.
+		 */
 		rx_idx = rx_info->rx_idx;
+		rx_buf = &rx_info->rx_buf_pool[rx_idx];
+		prefetch((void *)rx_buf->map_addr_virt);
+
 		rx_next_idx = syn_dp_rx_inc_index(rx_idx, 1);
 		rx_desc_next = rx_info->rx_desc + rx_next_idx;
 
@@ -359,12 +401,7 @@ int syn_dp_rx(struct syn_dp_info_rx *rx_info, int budget)
 		 * for us to read.
 		 */
 		prefetch(rx_desc_next);
-		rx_buf = &rx_info->rx_buf_pool[rx_idx];
 
-		/*
-		 * Prefetch a cacheline (64B) of packet header data for the current SKB.
-		 */
-		prefetch((void *)rx_buf->map_addr_virt);
 		rx_skb = rx_buf->skb;
 		next_skb_ptr = (uint8_t *)rx_info->rx_buf_pool[rx_next_idx].skb;
 		extstatus = rx_desc->extstatus;
@@ -380,11 +417,7 @@ int syn_dp_rx(struct syn_dp_info_rx *rx_info, int budget)
 				rx_packets++;
 				rx_bytes += frame_length;
 
-				/*
-				 * Type_trans and deliver to linux
-				 */
 				skb_put(rx_skb, frame_length);
-				rx_skb->protocol = eth_type_trans(rx_skb, netdev);
 				if (likely(!(extstatus & DESC_RX_CHK_SUM_BYPASS))) {
 					rx_skb->ip_summed = CHECKSUM_UNNECESSARY;
 				}
@@ -397,22 +430,36 @@ int syn_dp_rx(struct syn_dp_info_rx *rx_info, int budget)
 				 * first and third cache line provides better performance.
 				 */
 				if (likely(next_skb_ptr)) {
-					prefetch(next_skb_ptr + SYN_DP_RX_SKB_DATA_OFFSET_CACHE_LINE1);
-					prefetch(next_skb_ptr + SYN_DP_RX_SKB_DATA_OFFSET_CACHE_LINE3);
+					prefetch(next_skb_ptr + SYN_DP_RX_SKB_CACHE_LINE1);
+					prefetch(next_skb_ptr + SYN_DP_RX_SKB_CACHE_LINE3);
 				}
+
+				/*
+				 * Type_trans and deliver to linux
+				 */
+				rx_skb->protocol = eth_type_trans(rx_skb, netdev);
+
 				/*
 				 * Deliver the packet to linux
 				 */
+#if defined(NSS_DP_ENABLE_NAPI_GRO)
 				napi_gro_receive(&rx_info->napi_rx, rx_skb);
+#else
+				netif_receive_skb(rx_skb);
+#endif
 				goto next_desc;
 			}
 
 			/*
 			 * Process packet when page_mode is enabled.
 			 */
+			frag = &skb_shinfo(rx_skb)->frags[0];
+
 			rx_skb->len = frame_length;
 			rx_skb->data_len = frame_length;
 			rx_skb->truesize = PAGE_SIZE;
+
+			skb_fill_page_desc(rx_skb, 0, skb_frag_page(frag), 0, frame_length);
 
 			if (!unlikely(pskb_may_pull(rx_skb, ETH_HLEN))) {
 				dev_kfree_skb_any(rx_skb);
@@ -432,8 +479,8 @@ int syn_dp_rx(struct syn_dp_info_rx *rx_info, int budget)
 			rx_bytes += frame_length;
 
 			if (likely(next_skb_ptr)) {
-				prefetch(next_skb_ptr + SYN_DP_RX_SKB_DATA_OFFSET_CACHE_LINE1);
-				prefetch(next_skb_ptr + SYN_DP_RX_SKB_DATA_OFFSET_CACHE_LINE3);
+				prefetch(next_skb_ptr + SYN_DP_RX_SKB_CACHE_LINE1);
+				prefetch(next_skb_ptr + SYN_DP_RX_SKB_CACHE_LINE3);
 			}
 
 			napi_gro_receive(&rx_info->napi_rx, rx_skb);
@@ -446,7 +493,10 @@ int syn_dp_rx(struct syn_dp_info_rx *rx_info, int budget)
 		if (likely(syn_dp_gmac_is_rx_desc_valid(status, extstatus))) {
 			uint32_t rx_scatter_packets = 0, rx_scatter_bytes = 0;
 
-			syn_dp_handle_jumbo_packets(rx_info, rx_skb, status);
+			if (!syn_dp_handle_jumbo_packets(rx_info, rx_skb, status)) {
+				goto free_skb;
+			}
+
 			if ((status & DESC_RX_LAST) == DESC_RX_LAST) {
 				/*
 				 * Send packet to upper stack only for last descriptor.
@@ -484,14 +534,15 @@ int syn_dp_rx(struct syn_dp_info_rx *rx_info, int budget)
 				atomic64_add(rx_scatter_bytes, (atomic64_t *)&rx_info->rx_stats.rx_scatter_bytes);
 
 				if (unlikely(likely(next_skb_ptr))) {
-					prefetch(next_skb_ptr + SYN_DP_RX_SKB_DATA_OFFSET_CACHE_LINE1);
-					prefetch(next_skb_ptr + SYN_DP_RX_SKB_DATA_OFFSET_CACHE_LINE3);
+					prefetch(next_skb_ptr + SYN_DP_RX_SKB_CACHE_LINE1);
+					prefetch(next_skb_ptr + SYN_DP_RX_SKB_CACHE_LINE3);
 				}
 
 				napi_gro_receive(&rx_info->napi_rx, rx_info->head);
 				rx_info->head = NULL;
 			}
 		} else {
+free_skb:
 			/*
 			 * Drop the packet if we encounter error in middle of S/G.
 			 */

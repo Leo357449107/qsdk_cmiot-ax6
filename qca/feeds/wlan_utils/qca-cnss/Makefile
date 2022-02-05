@@ -5,6 +5,7 @@ PKG_NAME:=qca-cnss
 PKG_SOURCE_PROTO:=git
 PKG_BRANCH:=master
 PKG_RELEASE:=1
+PKG_BUILD_ID:=1
 
 include $(INCLUDE_DIR)/local-development.mk
 ifeq ($(DUMP)$(PKG_VERSION),)
@@ -18,7 +19,7 @@ define KernelPackage/$(PKG_NAME)
 	CATEGORY:=Kernel modules
 	SUBMENU:=Network Devices
 	TITLE:=CNSS Platform Driver
-	FILES:=$(PKG_BUILD_DIR)/cnss2.ko
+	FILES:=$(PKG_BUILD_DIR)/ipq_cnss2.ko
 endef
 
 define KernelPackage/$(PKG_NAME)/Description

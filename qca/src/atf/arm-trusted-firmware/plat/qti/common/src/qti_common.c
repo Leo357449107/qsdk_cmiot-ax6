@@ -32,7 +32,7 @@ const mmap_region_t plat_qti_mmap[] = {
 CASSERT(ARRAY_SIZE(plat_qti_mmap) <= MAX_MMAP_REGIONS, assert_max_mmap_regions);
 bool qti_is_overlap_atf_rg(unsigned long long addr, size_t size)
 {
-	if (addr > addr + size || (BL31_BASE < addr + size && BL31_LIMIT > addr))
+	if (addr > addr + size || ((BL31_BASE < addr + size) && (BL31_LIMIT > addr) && (BL31_LIMIT > (addr + size))))
 		return true;
 	return false;
 }
@@ -85,7 +85,7 @@ void qti_setup_page_tables(uintptr_t total_base,
 	 */
 	total_ddr_size = qtiseclib_get_ddr_size();
         mmap_add_region(QTI_DDR_BASE, QTI_DDR_BASE,
-                        (total_ddr_size), MT_MEMORY | MT_RW | MT_NS);
+                        (total_ddr_size), MT_MEMORY | MT_RW | MT_SECURE);
 
 	VERBOSE("Trusted SRAM seen by this BL image: %p - %p\n",
 		(void *)total_base, (void *)(total_base + total_size));
@@ -121,6 +121,12 @@ void qti_setup_page_tables(uintptr_t total_base,
 	mmap_add_region(QTI_SHARED_IMEM_RW_BASE,QTI_SHARED_IMEM_RW_BASE,
 					QTI_SHARED_IMEM_RW_SIZE, MT_NON_CACHEABLE | MT_RW | MT_SECURE);
 
+	/* Remap the region beyond BL31_END for making it accessible for any other secure operations */
+	if ((BL31_LIMIT > BL31_END) && (BL31_LIMIT - BL31_END) > 0) {
+	    mmap_add_region(BL31_END, BL31_END,
+			   (BL31_LIMIT - BL31_END),
+			    MT_MEMORY | MT_RW | MT_SECURE);
+	}
 	/* Now (re-)map the platform-specific memory regions */
 	mmap_add(plat_qti_mmap);
 

@@ -40,6 +40,8 @@ extern int __qcom_scm_io_writel(struct device *dev, phys_addr_t addr, unsigned i
 
 extern int __qcom_scm_is_call_available(struct device *dev, u32 svc_id,
 		u32 cmd_id);
+extern int __qcom_remove_xpu_scm_call_available(struct device *dev, u32 svc_id,
+		u32 cmd_id);
 
 #define QCOM_SCM_SVC_HDCP		0x11
 #define QCOM_SCM_CMD_HDCP		0x01
@@ -116,6 +118,8 @@ extern int  __qcom_scm_assign_mem(struct device *dev,
 
 #define SCM_SIP_FNID(s, c) (((((s) & 0xFF) << 8) | ((c) & 0xFF)) | 0x02000000)
 #define QTI_SMC_ATOMIC_MASK		0x80000000
+#define SCM_QSEEOS_FNID(s, c) (((((s) & 0xFF) << 8) | ((c) & 0xFF)) | \
+			      0x32000000)
 #define SCM_ARGS_IMPL(num, a, b, c, d, e, f, g, h, i, j, ...) (\
 			(((a) & 0xff) << 4) | \
 			(((b) & 0xff) << 6) | \
@@ -212,6 +216,7 @@ extern int __qti_fuseipq_scm_call(struct device *dev, u32 svc_id, u32 cmd_id,
 #define SET_MAGIC_WARMRESET			0x2
 #define DLOAD_MODE_ENABLE_WARMRESET		0x20ull
 #define TCSR_Q6SS_BOOT_TRIG_REG			0x193d204ull
+#define SET_KERNEL_COMPLETE			(~BIT(10))
 
 #define PD_LOAD_SVC_ID          0x2
 #define PD_LOAD_CMD_ID          0x16
@@ -222,7 +227,10 @@ extern int __qti_scm_wcss_boot(struct device *, u32 svc_id, u32 cmd_id,
 				void *cmd_buf);
 extern int qti_scm_wcss_boot(u32 svc_id, u32 cmd_id, void *cmd_buf);
 extern int __qti_scm_dload(struct device *dev, u32 svc_id, u32 cmd_id,
-				void *cmd_buf);
+				void *cmd_buf, void *dload_reg);
+extern int __qti_scm_set_kernel_boot_complete(struct device *dev, u32 svc_id,
+				u32 val);
+extern int qti_scm_set_kernel_boot_complete(u32 svc_id, u32 val);
 extern int __qti_scm_pdseg_memcpy_v2(struct device *dev, u32 peripheral,
 				int phno, dma_addr_t dma, int seg_cnt);
 extern int qti_scm_pdseg_memcpy_v2(u32 peripheral, int phno, dma_addr_t dma,
@@ -254,7 +262,7 @@ int __qti_scm_regsave(struct device *dev, u32 svc_id, u32 cmd_id,
 #define QCOM_SCM_QCE_UNLOCK_CMD		0x4
 extern int __qti_set_qcekey_sec(struct device *dev, void *confBuf, int size);
 extern int __qti_qcekey_release_xpu_prot(struct device *dev);
-
+extern int __qti_scm_qseecom_remove_xpu(struct device *);
 extern int __qti_scm_qseecom_notify(struct device *dev,
 				    struct qsee_notify_app *req,
 				    size_t req_size,

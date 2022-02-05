@@ -200,40 +200,11 @@ void qcom_unregister_ssr_notifier(struct notifier_block *nb)
 }
 EXPORT_SYMBOL_GPL(qcom_unregister_ssr_notifier);
 
-static void ssr_notify_unprepare(struct rproc_subdev *subdev)
+static void ssr_notify_stop(struct rproc_subdev *subdev, bool crashed)
 {
 	struct qcom_rproc_ssr *ssr = to_ssr_subdev(subdev);
 
 	blocking_notifier_call_chain(&ssr_notifiers, 0, (void *)ssr->name);
-}
-
-char **qcom_get_ssr_subdev_name(struct device *dev, int *num_subdev)
-{
-	int tmp = 0;
-	char **subdev_name;
-	struct qcom_rproc_ssr *ssr;
-	struct rproc_subdev *subdev;
-	struct rproc *rproc = rproc_get_by_child(dev);
-
-	if (!rproc) {
-		pr_info("rproc null\n");
-		return NULL;
-	}
-
-	list_for_each_entry(subdev, &rproc->subdevs, node)
-		(*num_subdev)++;
-
-	subdev_name = kcalloc(*num_subdev, sizeof(char *), GFP_KERNEL);
-	if (!subdev_name) {
-		pr_info("subdev name alloc failed\n");
-		return NULL;
-	}
-
-	list_for_each_entry(subdev, &rproc->subdevs, node) {
-		ssr = to_ssr_subdev(subdev);
-		subdev_name[tmp++] = (char *)ssr->name;
-	}
-	return subdev_name;
 }
 
 /**
@@ -249,7 +220,7 @@ void qcom_add_ssr_subdev(struct rproc *rproc, struct qcom_rproc_ssr *ssr,
 			 const char *ssr_name)
 {
 	ssr->name = ssr_name;
-	ssr->subdev.unprepare = ssr_notify_unprepare;
+	ssr->subdev.stop = ssr_notify_stop;
 
 	rproc_add_subdev(rproc, &ssr->subdev);
 }

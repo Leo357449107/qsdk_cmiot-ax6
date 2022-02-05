@@ -1,5 +1,8 @@
 /*
  * Copyright (c) 2014, 2016-2018, 2021, The Linux Foundation. All rights reserved.
+ *
+ * Copyright (c) 2022, Qualcomm Innovation Center, Inc. All rights reserved.
+ *
  * Permission to use, copy, modify, and/or distribute this software for
  * any purpose with or without fee is hereby granted, provided that the
  * above copyright notice and this permission notice appear in all copies.
@@ -746,6 +749,14 @@ typedef struct
         FAL_ACL_BIND_TUNNEL_VP_GROUP = 7, /** <  Acl will work on tunnel decap vp group*/
         FAL_ACL_BIND_SERVICE_PORTBITMAP = 8, /** <  Acl will work on service port bitmap*/
     } fal_acl_bind_obj_t;
+
+#define	IFNAMSIZ	16
+typedef struct
+{
+    fal_mac_addr_t src_mac; /*src mac address*/
+    char ifname[IFNAMSIZ]; /*interface name*/
+    a_uint8_t acl_policy; /*0 deny, 1 accept*/
+} fal_acl_mac_entry_t;
 
 enum
 {

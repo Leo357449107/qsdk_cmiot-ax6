@@ -283,6 +283,10 @@ ifeq (TRUE, $(REG_ACCESS_SPEEDUP))
   MODULE_CFLAG += -DREG_ACCESS_SPEEDUP
 endif
 
+ifeq (TRUE, $(IN_NETLINK))
+  MODULE_CFLAG += -DIN_NETLINK
+endif
+
 ifeq (TRUE, $(DEBUG_ON))
   MODULE_CFLAG += -g
 endif

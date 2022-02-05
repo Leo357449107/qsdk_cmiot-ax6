@@ -28,9 +28,11 @@
 #include <i2c.h>
 #include <dm.h>
 #include <command.h>
+#include <watchdog.h>
 
 #define DLOAD_MAGIC_COOKIE	0x10
 #define DLOAD_DISABLED		0x40
+#define DLOAD_BITS		0xFF
 
 #define TCSR_SOC_HW_VERSION_REG 0x194D000
 
@@ -45,6 +47,8 @@ const char *del_node[] = {"uboot",
 			  NULL};
 const add_node_t add_fdt_node[] = {{}};
 static int aq_phy_initialised;
+extern unsigned ipq_runtime_fs_feature_enabled;
+
 struct dumpinfo_t dumpinfo_n[] = {
 	/* TZ stores the DDR physical address at which it stores the
 	 * APSS regs, UTCM copy dump. We will have the TZ IMEM
@@ -133,6 +137,31 @@ void qca_serial_init(struct ipq_serial_platdata *plat)
 	return;
 }
 
+#ifdef CONFIG_IPQ_RUNTIME_FAILSAFE
+void fdt_fixup_runtime_failsafe(void *blob)
+{
+	int node_off, ret;
+	const char *fs_node = {"/soc/qti,scm_restart_reason"};
+
+	/* This fixup is for informing HLOS whether
+	 * runtime failsafe feature is enabled or not
+	 */
+	node_off = fdt_path_offset(blob, fs_node);
+	if (node_off < 0) {
+		printf("%s: Failsafe: unable to find node '%s'\n",
+				__func__, fs_node);
+		return;
+	}
+
+	ret = fdt_setprop_u32(blob, node_off, "qti,runtime-failsafe",
+			ipq_runtime_fs_feature_enabled);
+	if (ret) {
+		printf("%s : Unable to set property 'ipq,runtime_failsafe'\n",__func__);
+		return;
+	}
+}
+#endif
+
 int do_pmic_reset()
 {
 	struct udevice *bus, *dev;
@@ -167,11 +196,26 @@ int do_pmic_reset()
 	return 0;
 }
 
+#ifdef CONFIG_HW_WATCHDOG
+void hw_watchdog_reset(void)
+{
+	writel(1, APCS_WDT_RST);
+}
+#endif
+
 void reset_crashdump(void)
 {
 	unsigned int ret = 0;
+	unsigned int cookie = 0;
+
+#ifdef CONFIG_IPQ_RUNTIME_FAILSAFE
+	cookie = ipq_read_tcsr_boot_misc();
+	fs_debug("\nFailsafe: %s: Clearing DLOAD and NonHLOS bits\n", __func__);
+	cookie &= ~(DLOAD_BITS);
+	cookie &= ~(IPQ_FS_NONHLOS_BIT);
+#endif
 	qca_scm_sdi();
-	ret = qca_scm_dload(CLEAR_MAGIC);
+	ret = qca_scm_dload(cookie);
 	if (ret)
 		printf ("Error in reseting the Magic cookie\n");
 	return;
@@ -803,11 +847,29 @@ __weak int ipq_get_tz_version(char *version_name, int buf_size)
 	return 1;
 }
 
+#ifdef CONFIG_IPQ_RUNTIME_FAILSAFE
+int ipq_read_tcsr_boot_misc(void)
+{
+	u32 *dmagic = (u32 *)CONFIG_IPQ6018_DMAGIC_ADDR;
+	return *dmagic;
+}
+
+int is_hlos_crashed(void)
+{
+	u32 *dmagic = (u32 *)CONFIG_IPQ6018_DMAGIC_ADDR;
+
+	if (*dmagic & IPQ_FS_HLOS_BIT)
+		return 1;
+
+	return 0;
+}
+#endif
+
 int apps_iscrashed_crashdump_disabled(void)
 {
 	u32 *dmagic = (u32 *)CONFIG_IPQ6018_DMAGIC_ADDR;
 
-	if (*dmagic == DLOAD_DISABLED)
+	if (*dmagic & DLOAD_DISABLED)
 		return 1;
 
 	return 0;
@@ -817,7 +879,7 @@ int apps_iscrashed(void)
 {
 	u32 *dmagic = (u32 *)CONFIG_IPQ6018_DMAGIC_ADDR;
 
-	if (*dmagic == DLOAD_MAGIC_COOKIE)
+	if (*dmagic & DLOAD_MAGIC_COOKIE)
 		return 1;
 
 	return 0;
@@ -1383,8 +1445,12 @@ void fdt_fixup_set_qca_cold_reboot_enable(void *blob)
 
 void fdt_fixup_wcss_rproc_for_atf(void *blob)
 {
-	parse_fdt_fixup("/soc/qcom_q6v5_wcss@CD00000%qcom,nosecure%1", blob);
-	parse_fdt_fixup("/soc/qcom_q6v5_wcss@CD00000%qca,wcss-aon-reset-seq%1", blob);
+	if (fdt_path_offset(blob, "/soc/remoteproc@cd00000") >= 0)
+		parse_fdt_fixup("/soc/remoteproc@cd00000%qcom,nosecure%1", blob);
+	else {
+		parse_fdt_fixup("/soc/qcom_q6v5_wcss@CD00000%qcom,nosecure%1", blob);
+		parse_fdt_fixup("/soc/qcom_q6v5_wcss@CD00000%qca,wcss-aon-reset-seq%1", blob);
+	}
 }
 
 int get_soc_hw_version(void)

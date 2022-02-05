@@ -43,8 +43,18 @@ class DebugImage_v3():
         data = ram_dump.read_u32(0x8600764, False)
         print_out_str('Reading from address 0x{0:x} : 0x{1:x}'.format(0x8600764, data))
         regs = TZRegDump_v3()
-        if regs.init_regs(version, start, end, core, ram_dump) is False:
-            print_out_str('!!! Could not get registers from TZ dump')
-            return
-        regs.dump_core_pc(ram_dump)
-        regs.dump_all_regs(ram_dump)
+
+        if ram_dump.scan_dump_output is None:
+            if regs.init_regs(version, start, end, core, ram_dump) is False:
+                print_out_str('!!! Could not get registers from TZ dump')
+                return
+            regs.dump_core_pc(ram_dump)
+            regs.dump_all_regs(ram_dump)
+        else:
+            # This block is only for DCC Scan applicable dump.
+            if regs.init_dcc_scan_dump_regs(version, start, end, core, ram_dump) is False:
+                print_out_str('!!! Could not get registers from DCC Scan dump')
+                return
+            print_out_str('\n======== PC/LR and BackTrace for DCC Scan Dump ==========\n')
+            regs.dump_core_pc(ram_dump, True)
+            print_out_str('======== End of PC/LR and BackTrace for DCC Scan Dump ==========\n')

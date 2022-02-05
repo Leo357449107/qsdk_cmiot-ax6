@@ -312,6 +312,7 @@ CONFIG_SUPPORT_OF_CONTROL=y
 #
 # Device Tree Control
 #
+# CONFIG_OF_BOARD_FIXUP is not set
 # CONFIG_OF_CONTROL is not set
 CONFIG_NET=y
 # CONFIG_NET_RANDOM_ETHADDR is not set

@@ -199,6 +199,16 @@ fal_flow_counter_get(a_uint32_t dev_id, a_uint32_t flow_index, fal_entry_counter
 }
 
 sw_error_t
+fal_flow_counter_cleanup(a_uint32_t dev_id, a_uint32_t flow_index)
+{
+	sw_error_t rv;
+
+	rv = sw_uk_exec(SW_API_FLOW_COUNTER_CLEANUP, dev_id, flow_index);
+
+	return rv;
+}
+
+sw_error_t
 fal_flow_entry_en_set(a_uint32_t dev_id, a_uint32_t flow_index, a_bool_t enable)
 {
 	sw_error_t rv;

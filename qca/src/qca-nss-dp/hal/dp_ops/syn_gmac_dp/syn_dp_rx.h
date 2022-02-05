@@ -1,7 +1,7 @@
 /*
  * Copyright (c) 2020-2021, The Linux Foundation. All rights reserved.
  *
- * Copyright (c) 2021 Qualcomm Innovation Center, Inc. All rights reserved.
+ * Copyright (c) 2021-2022 Qualcomm Innovation Center, Inc. All rights reserved.
  *
  * Permission to use, copy, modify, and/or distribute this software for any
  * purpose with or without fee is hereby granted, provided that the above
@@ -30,8 +30,7 @@
  * which falls on either first or third cache lines. So, prefetching
  * first and third cache line provides better performance.
  */
-#define SYN_DP_RX_SKB_DATA_OFFSET_CACHE_LINE1	64
-#define SYN_DP_RX_SKB_DATA_OFFSET_CACHE_LINE3	128
+#define SYN_DP_RX_SKB_CACHE_LINE1	64
 #define SYN_DP_RX_SKB_CACHE_LINE3	128
 
 /*
