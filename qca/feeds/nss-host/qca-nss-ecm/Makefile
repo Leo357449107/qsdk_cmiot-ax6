@@ -66,7 +66,7 @@ define KernelPackage/qca-nss-ecm-nonss/Default
   DEPENDS:=@TARGET_ipq50xx +PACKAGE_kmod-qca-hyfi-bridge:kmod-qca-hyfi-bridge +PACKAGE_kmod-qca-mcs:kmod-qca-mcs +kmod-nat46 \
 	+iptables-mod-extra +kmod-ipt-conntrack +kmod-pppoe @!LINUX_3_18 +PACKAGE_kmod-qca-ovsmgr:kmod-qca-ovsmgr \
 	+kmod-l2tp +kmod-pppol2tp +kmod-pptp +kmod-qca-nss-sfe \
-	+kmod-bonding PACKAGE_kmod-emesh-sp:kmod-emesh-sp
+	+kmod-bonding +PACKAGE_kmod-emesh-sp:kmod-emesh-sp
   TITLE:=QCA NSS Enhanced Connection Manager (ECM)
   FILES:=$(PKG_BUILD_DIR)/*.ko $(FILES_EXAMPLES) $(PKG_BUILD_DIR)/examples/ecm_ae_select.ko
   KCONFIG:=CONFIG_BRIDGE_NETFILTER=y \
@@ -122,7 +122,7 @@ $(call KernelPackage/qca-nss-ecm/Default)
   VARIANT:=premium
   DEPENDS+=+PACKAGE_kmod-qca-hyfi-bridge:kmod-qca-hyfi-bridge +PACKAGE_kmod-qca-mcs:kmod-qca-mcs +kmod-nat46 \
 	+kmod-l2tp +kmod-pppol2tp +kmod-pptp +kmod-qca-nss-sfe \
-	+kmod-bonding PACKAGE_kmod-emesh-sp:kmod-emesh-sp
+	+kmod-bonding +PACKAGE_kmod-emesh-sp:kmod-emesh-sp
 endef
 
 define KernelPackage/qca-nss-ecm-nonss

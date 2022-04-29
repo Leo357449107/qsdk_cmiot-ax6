@@ -390,7 +390,8 @@ define KernelPackage/ath11k
   DEPENDS+= +kmod-ath +TARGET_ipq_ipq807x:kmod-qrtr_mproc +TARGET_ipq_ipq807x_64:kmod-qrtr_mproc \
 	+TARGET_ipq_ipq60xx:kmod-qrtr_mproc +TARGET_ipq_ipq60xx_64:kmod-qrtr_mproc \
 	+TARGET_ipq_ipq50xx:kmod-qrtr_mproc +TARGET_ipq_ipq50xx_64:kmod-qrtr_mproc \
-	+TARGET_ipq_ipq95xx:kmod-qrtr_mproc +TARGET_ipq_ipq95xx_64:kmod-qrtr_mproc +@DRIVER_11N_SUPPORT +@DRIVER_11W_SUPPORT 
+	+TARGET_ipq_ipq95xx:kmod-qrtr_mproc +TARGET_ipq_ipq95xx_64:kmod-qrtr_mproc +@DRIVER_11N_SUPPORT +@DRIVER_11W_SUPPORT \
+	+@DRIVER_11AC_SUPPORT +@DRIVER_11AX_SUPPORT
   FILES:= \
 	$(PKG_BUILD_DIR)/drivers/net/wireless/ath/ath11k/ath11k.ko \
 	$(PKG_BUILD_DIR)/drivers/net/wireless/ath/ath11k/ath11k_ahb.ko \
